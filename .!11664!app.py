@@ -16,9 +16,6 @@ from werkzeug.utils import secure_filename
 import logging
 from datetime import datetime
 
-# Import configuration
-from config import get_config, create_secure_directories
-
 # Import authentication components
 from src.auth.models import User, db, init_db
 from src.auth.routes import auth_bp
@@ -49,17 +46,22 @@ def create_app():
     Returns:
         Flask: Configured Flask application instance
     """
-    # Create secure directories first
-    create_secure_directories()
-    
     # Initialize Flask application
     app = Flask(__name__, 
                template_folder='src/web/templates',
                static_folder='src/web/static')
     
-    # Load configuration from secure config
+    # Application configuration
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    app.config['UPLOAD_FOLDER'] = 'data/policies/pdf_originals'
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+    app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'txt', 'docx'}
+    
+    # Database configuration
+    from config import get_config
     config_obj = get_config()
     app.config.from_object(config_obj)
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     # Initialize extensions
     db.init_app(app)
@@ -77,13 +79,7 @@ def create_app():
         return User.query.get(int(user_id))
     
     # Register blueprints
-    app.register_blueprint(auth_bp, url_prefix='/auth')
-
-# Debug - show all routes
-    print("=== ALL ROUTES ===")
-    for rule in app.url_map.iter_rules():
-        print(f"Route: {rule.rule} -> {rule.endpoint}")
-    print("=== END ROUTES ===")
+    app.register_blueprint(auth_bp)
     
     # Make current_user available in all templates
     @app.context_processor
@@ -134,7 +130,6 @@ def create_upload_folder():
 @app.route('/')
 def index():
     """Landing page route - shows content for all users."""
-    print(f"DEBUG INDEX: current_user.is_authenticated = {current_user.is_authenticated}")
     logger.info("Landing page accessed")
     return render_template("index.html")
 
@@ -148,8 +143,6 @@ def dashboard():
     Returns:
         str: Rendered HTML template for dashboard
     """
-    def dashboard():
-     print("=== DASHBOARD FUNCTION CALLED ===")
     try:
         logger.info(f"Dashboard accessed by user: {current_user.username}")
         
@@ -439,18 +432,16 @@ def internal_error(error):
     logger.error(f"500 error: {str(error)}")
     return render_template('errors/500.html'), 500
 
-@app.before_request
-def log_request_info():
-    print(f"=== REQUEST: {request.method} {request.url} -> endpoint: {request.endpoint} ===")
 if __name__ == '__main__':
     """
     Run the Flask application in debug mode for development.
     """
     # Create necessary directories
     os.makedirs('logs', exist_ok=True)
+    os.makedirs('data/database', exist_ok=True)
     create_upload_folder()
     
-    logger.info("Starting PolicyCraft Application with Secure Authentication")
+    logger.info("Starting PolicyCraft Application with Authentication")
     
     # Run the application
     app.run(debug=True, host='0.0.0.0', port=5001)

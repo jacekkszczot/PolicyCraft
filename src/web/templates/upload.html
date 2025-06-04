@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Upload - PolicyCraft{% endblock %}
+
+{% block content %}
+<!-- Upload form heading -->
+<h1>Upload Policy Document</h1>
+<p>Please select a university AI policy document for analysis</p>
+
+<!-- File upload form -->
+<form method="POST" enctype="multipart/form-data">
+    <div class="upload-area">
+        <label for="file">Select Policy Document (PDF, DOCX, TXT):</label>
+        <input type="file" name="file" id="file" accept=".pdf,.docx,.txt" required>
+        <small>Maximum file size: 16MB</small>
+    </div>
+    
+    <button type="submit" class="btn">Upload and Analyse</button>
+</form>
+
+<!-- Instructions -->
+<div class="instructions">
+    <h3>Supported Formats</h3>
+    <ul>
+        <li>PDF documents (.pdf)</li>
+        <li>Word documents (.docx)</li>
+        <li>Text files (.txt)</li>
+    </ul>
+</div>
+{% endblock %}

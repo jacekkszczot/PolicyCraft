@@ -27,11 +27,18 @@ class Config:
     DATABASE_DIR = os.path.join(os.path.dirname(BASE_DIR), 'PolicyCraft-Databases')
     
     # File size and type restrictions
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB maximum file size
+    MAX_CONTENT_LENGTH = 128 * 1024 * 1024  # 128MB maximum file size
     ALLOWED_EXTENSIONS = {'pdf', 'txt', 'docx', 'doc'}
     
-    # Session configuration
+    # Multi-file upload configuration
+    MAX_FILES_PER_UPLOAD = 10  # Maximum 10 files at once
+    UPLOAD_TIMEOUT = 300  # 5 minutes timeout for large files
+    
+    # Session configuration - FIXED for localhost consistency
     PERMANENT_SESSION_LIFETIME = timedelta(hours=2)
+    SESSION_COOKIE_DOMAIN = None  # Allow localhost and 127.0.0.1
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_HTTPONLY = True
     
     # Logging configuration
     LOG_FOLDER = os.path.join(os.getcwd(), 'logs')
@@ -72,9 +79,12 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = f'sqlite:///{DATABASE_PATH}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # Development server settings
-    HOST = '127.0.0.1'
+    # FIXED: Development server settings - use localhost consistently
+    HOST = 'localhost'  # Changed from 127.0.0.1
     PORT = 5001
+    
+    # Session configuration for development
+    SESSION_COOKIE_SECURE = False  # HTTP in development
     
     # Disable CSRF in development for easier testing
     WTF_CSRF_ENABLED = False
@@ -181,7 +191,9 @@ def get_database_info():
         'database_directory': config_obj.DATABASE_DIR,
         'database_path': getattr(config_obj, 'DATABASE_PATH', 'In-memory'),
         'is_outside_app': '../' in str(getattr(config_obj, 'DATABASE_PATH', '')),
-        'environment': os.environ.get('FLASK_ENV', 'development')
+        'environment': os.environ.get('FLASK_ENV', 'development'),
+        'host': getattr(config_obj, 'HOST', 'localhost'),
+        'port': getattr(config_obj, 'PORT', 5001)
     }
 
 if __name__ == '__main__':
@@ -197,4 +209,5 @@ if __name__ == '__main__':
     print(f"Database directory: {db_info['database_directory']}")
     print(f"Database path: {db_info['database_path']}")
     print(f"Outside application folder: {db_info['is_outside_app']}")
+    print(f"Server will run on: http://{db_info['host']}:{db_info['port']}")
     print("=====================================")

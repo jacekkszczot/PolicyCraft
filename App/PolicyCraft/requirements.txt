@@ -10,6 +10,9 @@ Flask-Bcrypt>=1.0.1
 Flask-SQLAlchemy>=3.1.0
 Flask-Migrate>=4.0.5
 
+# Email validation - ADDED
+email-validator>=2.0.0
+
 # NLP Libraries
 spacy>=3.7.0
 nltk>=3.8.1

@@ -3,52 +3,967 @@
 {% block title %}Dashboard - PolicyCraft{% endblock %}
 
 {% block content %}
-<!-- Dashboard heading -->
-<h1>Policy Analysis Dashboard</h1>
-<p>Comparative insights across university AI policies</p>
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1>Policy Analysis Dashboard</h1>
+        <p>Comprehensive insights across university AI policies</p>
+        <div class="user-greeting">
+            <!-- FIXED: Używa danych z user dictionary zamiast get_full_name() -->
+            Welcome back, <strong>{{ data.user.full_name or data.user.username }}</strong>!
+        </div>
+    </div>
 
-{% if data %}
-    <!-- Summary statistics -->
-    <div class="dashboard-stats">
+    {% if data.total_policies > 0 %}
+    
+    <!-- Summary Statistics -->
+    <div class="stats-overview">
         <div class="stat-card">
-            <h3>{{ data.total_policies }}</h3>
-            <p>Total Policies Analysed</p>
+            <div class="stat-icon">📊</div>
+            <div class="stat-content">
+                <h3>{{ data.total_policies }}</h3>
+                <p>Total Policies Analysed</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-content">
+                <h3>{{ data.statistics.avg_confidence or 0 }}%</h3>
+                <p>Average Confidence</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">🏷️</div>
+            <div class="stat-content">
+                <h3>{{ data.statistics.avg_themes_per_analysis or 0 }}</h3>
+                <p>Avg Themes per Policy</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div class="stat-content">
+                <h3>{{ data.recent_analyses|length }}</h3>
+                <p>Recent Analyses</p>
+            </div>
         </div>
     </div>
-    
-    <!-- Classification breakdown -->
-    <div class="classification-chart">
-        <h3>Policy Approach Distribution</h3>
-        <div class="chart-container">
+
+    <!-- Classification Distribution -->
+    <div class="dashboard-section">
+        <h2>Policy Approach Distribution</h2>
+        <div class="classification-visual">
             {% for classification, count in data.classification_counts.items() %}
-                <div class="chart-bar">
-                    <span class="bar-label">{{ classification }}</span>
-                    <div class="bar" style="width: {{ (count / data.total_policies * 100) }}%">
-                        <span class="bar-value">{{ count }}</span>
-                    </div>
+            <div class="classification-bar">
+                <div class="classification-info">
+                    <span class="classification-label">{{ classification }}</span>
+                    <span class="classification-count">{{ count }}</span>
                 </div>
+                <div class="bar-container">
+                    <div class="bar bar-{{ classification.lower() }}" 
+                         style="width: {{ (count / data.total_policies * 100) }}%"></div>
+                </div>
+                <span class="percentage">{{ "%.1f"|format(count / data.total_policies * 100) }}%</span>
+            </div>
             {% endfor %}
         </div>
     </div>
+
+    <!-- Top Themes -->
+    {% if data.theme_frequencies %}
+<div class="dashboard-section">
+    <h2>Most Common Themes</h2>
+    <div class="themes-cloud">
+        {% for theme, frequency in data.theme_frequencies.items() %}
+        {% if loop.index <= 15 %}
+        <button class="theme-badge clickable-theme" 
+                style="font-size: {{ 0.8 + (frequency / (data.theme_frequencies.values()|list|max) * 0.8) }}rem;"
+                onclick="exploreTheme('{{ theme }}', {{ frequency }})"
+                title="Click to explore {{ theme }} theme ({{ frequency }} occurrences)">
+            {{ theme }} ({{ frequency }})
+        </button>
+        {% endif %}
+        {% endfor %}
+    </div>
     
-    <!-- Recent analyses -->
-    {% if data.recent_analyses %}
-    <div class="recent-analyses">
-        <h3>Recent Analyses</h3>
-        <ul>
-            {% for analysis in data.recent_analyses %}
-                <li>{{ analysis.get('filename', 'Unknown') }} - {{ analysis.get('classification', 'Unknown') }}</li>
-            {% endfor %}
-        </ul>
+    <!-- Theme Details Modal -->
+    <div id="themeModal" class="theme-modal" style="display: none;">
+        <div class="theme-modal-content">
+            <div class="theme-modal-header">
+                <h3 id="modalThemeTitle">Theme Details</h3>
+                <span class="close-modal" onclick="closeThemeModal()">&times;</span>
+            </div>
+            <div class="theme-modal-body">
+                <div id="themeDetails">
+                    <!-- Theme details will be populated here -->
+                </div>
+                <div class="theme-actions">
+                    <button onclick="searchAnalysesByTheme()" class="btn btn-primary">
+                        View Related Analyses
+                    </button>
+                    <button onclick="exportThemeData()" class="btn btn-secondary">
+                        Export Theme Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+    <!-- Interactive Charts (if available) -->
+    {% if data.charts %}
+    <div class="dashboard-section">
+        <h2>Interactive Visualizations</h2>
+        <div class="charts-grid">
+            {% if data.charts.classification_distribution %}
+            <div class="chart-container">
+                <div id="classificationChart"></div>
+            </div>
+            {% endif %}
+            
+            {% if data.charts.theme_frequency %}
+            <div class="chart-container">
+                <div id="themeChart"></div>
+            </div>
+            {% endif %}
+        </div>
     </div>
     {% endif %}
-    
-{% else %}
-    <!-- Empty state -->
-    <div class="empty-state">
-        <h2>No Data Available</h2>
-        <p>No policy analyses have been completed yet.</p>
-        <a href="{{ url_for('upload_file') }}" class="btn">Upload Your First Document</a>
+
+    <!-- Recent Analyses -->
+    <div class="dashboard-section">
+        <h2>Recent Analyses</h2>
+        <div class="recent-analyses">
+            {% for analysis in data.recent_analyses %}
+            <div class="analysis-card">
+                <!-- FIXED: Bezpieczna obsługa dat -->
+                <div class="analysis-header">
+                    <h4>{{ analysis.filename.split('_', 2)[-1] if '_' in analysis.filename else analysis.filename }}</h4>
+                    <span class="analysis-date">
+                        {% if analysis.analysis_date %}
+                            {% if analysis.analysis_date is string %}
+                                {{ analysis.analysis_date.split(' ')[0] }}
+                            {% else %}
+                                {{ analysis.analysis_date.strftime('%Y-%m-%d') }}
+                            {% endif %}
+                        {% else %}
+                            Unknown
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="analysis-content">
+                    <div class="classification-result">
+                        <span class="classification-badge classification-{{ analysis.classification.classification.lower() if analysis.classification else 'unknown' }}">
+                            {{ analysis.classification.classification if analysis.classification else 'Unknown' }}
+                        </span>
+                        <span class="confidence">
+                            {{ analysis.classification.confidence if analysis.classification else 0 }}% confidence
+                        </span>
+                    </div>
+                    
+                    {% if analysis.themes %}
+                    <div class="top-themes">
+                        <strong>Top themes:</strong>
+                        {% for theme in analysis.themes[:3] %}
+                        <span class="mini-theme">{{ theme.name if theme.name else theme }}</span>{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                        {% if analysis.themes|length > 3 %}
+                        <span class="theme-more">+{{ analysis.themes|length - 3 }} more</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="analysis-actions">
+                    <a href="{{ url_for('analyse_document', filename=analysis.filename) }}" 
+                       class="btn btn-sm btn-primary">View Details</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
     </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <div class="empty-icon">📄</div>
+        <h2>No Analyses Yet</h2>
+        <p>Upload your first AI policy document to get started with analysis.</p>
+        <a href="{{ url_for('upload_file') }}" class="btn btn-primary btn-large">Upload Your First Document</a>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <a href="{{ url_for('upload_file') }}" class="action-button primary">
+            <span class="action-icon">📤</span>
+            <span class="action-text">Upload New Policy</span>
+        </a>
+        <a href="#" onclick="exportDashboard()" class="action-button secondary">
+            <span class="action-icon">📊</span>
+            <span class="action-text">Export Data</span>
+        </a>
+        <a href="{{ url_for('about') }}" class="action-button secondary">
+            <span class="action-icon">ℹ️</span>
+            <span class="action-text">About PolicyCraft</span>
+        </a>
+    </div>
+</div>
+
+<style>
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(155, 89, 182, 0.1));
+    padding: 2rem;
+    border-radius: 15px;
+}
+
+.dashboard-header h1 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 2.5rem;
+}
+
+.user-greeting {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    display: inline-block;
+    margin-top: 1rem;
+}
+
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    opacity: 0.8;
+}
+
+.stat-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+.stat-content p {
+    margin: 0;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.dashboard-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.dashboard-section h2 {
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.classification-visual {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.classification-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.classification-info {
+    min-width: 150px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.classification-label {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.classification-count {
+    background: #ecf0f1;
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.bar-container {
+    flex: 1;
+    height: 30px;
+    background: #ecf0f1;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.bar {
+    height: 100%;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 0.5rem;
+    color: white;
+    font-weight: bold;
+    transition: width 0.8s ease;
+}
+
+.bar-restrictive {
+    background: linear-gradient(45deg, #e74c3c, #c0392b);
+}
+
+.bar-moderate {
+    background: linear-gradient(45deg, #f39c12, #e67e22);
+}
+
+.bar-permissive {
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+}
+
+.percentage {
+    min-width: 50px;
+    text-align: right;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.themes-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.theme-badge {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+    transition: transform 0.2s ease;
+}
+
+.theme-badge:hover {
+    transform: scale(1.05);
+}
+
+.recent-analyses {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.analysis-card {
+    border: 1px solid #ecf0f1;
+    border-radius: 10px;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    transition: all 0.2s ease;
+}
+
+.analysis-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.analysis-header h4 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.1rem;
+    word-break: break-word;
+}
+
+.analysis-date {
+    color: #7f8c8d;
+    font-size: 0.8rem;
+}
+
+.classification-result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.classification-badge {
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-weight: bold;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.classification-restrictive { background: #e74c3c; }
+.classification-moderate { background: #f39c12; }
+.classification-permissive { background: #2ecc71; }
+.classification-unknown { background: #95a5a6; }
+
+.confidence {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.top-themes {
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #2c3e50;
+}
+
+.mini-theme {
+    color: #3498db;
+    font-weight: 500;
+}
+
+.theme-more {
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.analysis-actions {
+    text-align: center;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #7f8c8d;
+}
+
+.empty-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state h2 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.quick-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 3rem;
+    flex-wrap: wrap;
+}
+
+.action-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.action-button.primary {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+}
+
+.action-button.secondary {
+    background: #ecf0f1;
+    color: #2c3e50;
+}
+
+.action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.action-icon {
+    font-size: 1.2rem;
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+    
+    .stats-overview {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .recent-analyses {
+        grid-template-columns: 1fr;
+    }
+    
+    .classification-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .quick-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    /* Clickable theme badges */
+.clickable-theme {
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.clickable-theme:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    filter: brightness(1.1);
+}
+
+.clickable-theme:active {
+    transform: scale(0.95);
+}
+
+/* Theme Modal Styles */
+.theme-modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease;
+}
+
+.theme-modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    animation: slideIn 0.3s ease;
+}
+
+.theme-modal-header {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 15px 15px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.theme-modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.close-modal {
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.close-modal:hover {
+    opacity: 1;
+}
+
+.theme-modal-body {
+    padding: 2rem;
+}
+
+.theme-overview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.theme-stat {
+    text-align: center;
+}
+
+.stat-label {
+    display: block;
+    font-weight: bold;
+    color: #7f8c8d;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.2rem;
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+.theme-description {
+    margin-bottom: 2rem;
+}
+
+.theme-description h4 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.theme-description p {
+    color: #34495e;
+    line-height: 1.6;
+}
+
+.related-analyses h4 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.analysis-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.mini-analysis-card {
+    background: #ecf0f1;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+}
+
+.mini-analysis-card strong {
+    color: #2c3e50;
+}
+
+.mini-analysis-card small {
+    color: #7f8c8d;
+}
+
+.theme-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    justify-content: center;
+}
+
+.theme-actions .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.theme-actions .btn-primary {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+}
+
+.theme-actions .btn-secondary {
+    background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+    color: white;
+}
+
+.theme-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { 
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to { 
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .theme-modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+    
+    .theme-overview {
+        grid-template-columns: 1fr;
+    }
+    
+    .theme-actions {
+        flex-direction: column;
+    }
+}
+}
+</style>
+
+<script>
+// FIXED: Bezpieczna funkcja exportu bez JSON serialization
+function exportDashboard() {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Filename,Classification,Confidence,Date\n";
+    
+    // Pobierz dane bezpośrednio z template variables
+    {% for analysis in data.recent_analyses %}
+    const filename_{{ loop.index0 }} = "{{ analysis.filename.split('_', 2)[-1] if '_' in analysis.filename else analysis.filename }}";
+    const classification_{{ loop.index0 }} = "{{ analysis.classification.classification if analysis.classification else 'Unknown' }}";
+    const confidence_{{ loop.index0 }} = {{ analysis.classification.confidence if analysis.classification else 0 }};
+    const date_{{ loop.index0 }} = "{{ analysis.analysis_date if analysis.analysis_date else 'Unknown' }}";
+    csvContent += `"${filename_{{ loop.index0 }}}","${classification_{{ loop.index0 }}}",${confidence_{{ loop.index0 }}},"${date_{{ loop.index0 }}}"\n`;
+    {% endfor %}
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `dashboard_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Animate bars on load
+document.addEventListener('DOMContentLoaded', function() {
+    const bars = document.querySelectorAll('.bar');
+    bars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 500);
+    });
+});
+// Dodaj ten JavaScript do dashboard.html w sekcji <script>
+
+    let currentTheme = null;
+
+function exploreTheme(themeName, frequency) {
+    currentTheme = themeName;
+    
+    // Update modal content
+    document.getElementById('modalThemeTitle').textContent = themeName;
+    
+    // Get theme details from analyses
+    const themeAnalyses = getAnalysesWithTheme(themeName);
+    
+    let themeDetailsHTML = `
+        <div class="theme-overview">
+            <div class="theme-stat">
+                <span class="stat-label">Frequency:</span>
+                <span class="stat-value">${frequency} occurrences</span>
+            </div>
+            <div class="theme-stat">
+                <span class="stat-label">Found in:</span>
+                <span class="stat-value">${themeAnalyses.length} analyses</span>
+            </div>
+        </div>
+        
+        <div class="theme-description">
+            <h4>Theme Analysis</h4>
+            <p>${getThemeDescription(themeName)}</p>
+        </div>
+        
+        <div class="related-analyses">
+            <h4>Related Analyses</h4>
+            <div class="analysis-list">
+    `;
+    
+    // Add related analyses
+    themeAnalyses.slice(0, 3).forEach(analysis => {
+        themeDetailsHTML += `
+            <div class="mini-analysis-card">
+                <strong>${analysis.filename}</strong>
+                <br>
+                <small>${analysis.classification} - ${analysis.date}</small>
+            </div>
+        `;
+    });
+    
+    if (themeAnalyses.length > 3) {
+        themeDetailsHTML += `<p><em>+${themeAnalyses.length - 3} more analyses</em></p>`;
+    }
+    
+    themeDetailsHTML += `
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('themeDetails').innerHTML = themeDetailsHTML;
+    
+    // Show modal
+    document.getElementById('themeModal').style.display = 'block';
+}
+
+function getAnalysesWithTheme(themeName) {
+    // Get analyses that contain this theme
+    const analyses = [];
+    
+    {% for analysis in data.recent_analyses %}
+    {% if analysis.themes %}
+    const themes_{{ loop.index0 }} = [
+        {% for theme in analysis.themes %}
+        "{{ theme.name if theme.name else theme }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    if (themes_{{ loop.index0 }}.includes(themeName)) {
+        analyses.push({
+            filename: "{{ analysis.filename.split('_', 2)[-1] if '_' in analysis.filename else analysis.filename }}",
+            classification: "{{ analysis.classification.classification if analysis.classification else 'Unknown' }}",
+            date: "{{ analysis.analysis_date if analysis.analysis_date else 'Unknown' }}"
+        });
+    }
+    {% endif %}
+    {% endfor %}
+    
+    return analyses;
+}
+
+function getThemeDescription(themeName) {
+    const descriptions = {
+        'Privacy and Data': 'Policies addressing data protection, student privacy, and information security in AI usage.',
+        'Academic Integrity': 'Guidelines ensuring honest academic work and preventing AI-assisted plagiarism.',
+        'AI Ethics': 'Ethical considerations and moral frameworks for AI implementation in education.',
+        'Transparency': 'Requirements for clear communication and disclosure of AI usage.',
+        'Accountability': 'Assignment of responsibility and oversight for AI-related decisions.',
+        'AI Technology': 'Technical aspects and capabilities of AI tools in educational contexts.',
+        'Student Guidelines': 'Specific instructions and expectations for student AI usage.',
+        'Faculty Guidelines': 'Guidance for educators on AI integration and oversight.',
+        'Assessment and Evaluation': 'Methods for evaluating AI-assisted academic work.',
+        'Research and Innovation': 'Policies supporting AI-enhanced research and creative work.',
+        'Bias and Fairness': 'Measures to ensure equitable and unbiased AI implementation.'
+    };
+    
+    return descriptions[themeName] || `Analysis of ${themeName} theme across university AI policies.`;
+}
+
+function searchAnalysesByTheme() {
+    if (currentTheme) {
+        // Create search URL (you can implement this route)
+        const searchUrl = `{{ url_for('dashboard') }}?theme_filter=${encodeURIComponent(currentTheme)}`;
+        window.location.href = searchUrl;
+    }
+}
+
+function exportThemeData() {
+    if (!currentTheme) return;
+    
+    const analyses = getAnalysesWithTheme(currentTheme);
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += `Theme Analysis Export: ${currentTheme}\n\n`;
+    csvContent += "Filename,Classification,Date\n";
+    
+    analyses.forEach(analysis => {
+        csvContent += `"${analysis.filename}","${analysis.classification}","${analysis.date}"\n`;
+    });
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `theme_${currentTheme.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    closeThemeModal();
+}
+
+function closeThemeModal() {
+    document.getElementById('themeModal').style.display = 'none';
+    currentTheme = null;
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('themeModal');
+    if (event.target === modal) {
+        closeThemeModal();
+    }
+}
+</script>
+
+<!-- Plotly Charts (if data available) -->
+{% if data.charts %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+{% if data.charts.classification_distribution %}
+    try {
+        const classificationData = {{ data.charts.classification_distribution|safe }};
+        Plotly.newPlot('classificationChart', classificationData.data, classificationData.layout);
+    } catch(e) {
+        console.log('Chart loading error:', e);
+    }
 {% endif %}
+
+{% if data.charts.theme_frequency %}
+    try {
+        const themeData = {{ data.charts.theme_frequency|safe }};
+        Plotly.newPlot('themeChart', themeData.data, themeData.layout);
+    } catch(e) {
+        console.log('Chart loading error:', e);
+    }
+{% endif %}
+</script>
+{% endif %}
+
 {% endblock %}

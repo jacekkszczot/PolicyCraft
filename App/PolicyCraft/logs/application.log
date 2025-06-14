@@ -154,3 +154,162 @@ ls -la data/policies/
 2025-06-14 22:47:40,698 - __main__ - INFO - Dashboard accessed by user: ziut
 2025-06-14 22:47:40,714 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 22:47:40] "GET /dashboard HTTP/1.1" 200 -
 2025-06-14 22:47:40,726 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 22:47:40] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 22:57:31,638 - werkzeug - INFO -  * Detected change in '/Users/jaai/Desktop/PROJECT MASTER/App and Report/App/PolicyCraft/App/PolicyCraft/app.py', reloading
+2025-06-14 22:57:32,709 - werkzeug - INFO -  * Restarting with watchdog (fsevents)
+2025-06-14 23:08:51,360 - src.recommendation.engine - INFO - Enhanced Recommendation Engine initialized with fixes
+2025-06-14 23:08:51,364 - __main__ - INFO - Starting FULLY INTEGRATED PolicyCraft Application
+2025-06-14 23:08:51,379 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://localhost:5001
+2025-06-14 23:08:51,380 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-14 23:08:51,400 - werkzeug - INFO -  * Restarting with watchdog (fsevents)
+2025-06-14 23:08:58,891 - src.recommendation.engine - INFO - Enhanced Recommendation Engine initialized with fixes
+2025-06-14 23:08:58,897 - __main__ - INFO - Starting FULLY INTEGRATED PolicyCraft Application
+2025-06-14 23:08:58,908 - werkzeug - WARNING -  * Debugger is active!
+2025-06-14 23:08:58,931 - werkzeug - INFO -  * Debugger PIN: 498-659-800
+2025-06-14 23:08:58,963 - __main__ - INFO - Dashboard accessed by user: ziut
+2025-06-14 23:08:59,180 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:08:59] "GET /dashboard HTTP/1.1" 200 -
+2025-06-14 23:08:59,217 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:08:59] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:09:29,351 - werkzeug - INFO -  * Detected change in '/Users/jaai/Desktop/PROJECT MASTER/App and Report/App/PolicyCraft/App/PolicyCraft/app.py', reloading
+2025-06-14 23:09:30,564 - werkzeug - INFO -  * Restarting with watchdog (fsevents)
+2025-06-14 23:09:38,150 - src.recommendation.engine - INFO - Enhanced Recommendation Engine initialized with fixes
+2025-06-14 23:09:38,155 - __main__ - INFO - Starting FULLY INTEGRATED PolicyCraft Application
+2025-06-14 23:09:38,168 - werkzeug - WARNING -  * Debugger is active!
+2025-06-14 23:09:38,191 - werkzeug - INFO -  * Debugger PIN: 498-659-800
+2025-06-14 23:09:42,272 - __main__ - INFO - Dashboard accessed by user: ziut
+2025-06-14 23:09:42,515 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:09:42] "GET /dashboard HTTP/1.1" 200 -
+2025-06-14 23:09:42,537 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:09:42] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:23:10,718 - __main__ - INFO - Starting INTEGRATED analysis of file: 2_20250614_220705_harvard-ai-policy.pdf by user: ziut
+2025-06-14 23:23:10,742 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:23:10,783 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:23:11,024 - __main__ - INFO - INTEGRATED analysis completed successfully for: 2_20250614_220705_harvard-ai-policy.pdf by user: ziut
+2025-06-14 23:23:11,032 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:23:11] "GET /analyse/2_20250614_220705_harvard-ai-policy.pdf HTTP/1.1" 200 -
+2025-06-14 23:23:11,049 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:23:11] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:25:43,276 - __main__ - INFO - Starting INTEGRATED analysis of file: 2_20250614_220705_harvard-ai-policy.pdf by user: ziut
+2025-06-14 23:25:43,299 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:25:43,354 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:25:43,433 - __main__ - INFO - INTEGRATED analysis completed successfully for: 2_20250614_220705_harvard-ai-policy.pdf by user: ziut
+2025-06-14 23:25:43,434 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:25:43] "GET /analyse/2_20250614_220705_harvard-ai-policy.pdf HTTP/1.1" 200 -
+2025-06-14 23:25:43,460 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:25:43] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:25:50,423 - __main__ - INFO - Dashboard accessed by user: ziut
+2025-06-14 23:25:50,466 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:25:50] "GET /dashboard HTTP/1.1" 200 -
+2025-06-14 23:25:50,482 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:25:50] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:26:15,825 - __main__ - INFO - Starting INTEGRATED analysis of file: 2_20250614_220705_harvard-ai-policy.pdf by user: ziut
+2025-06-14 23:26:15,853 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:26:15,908 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:26:15,977 - __main__ - INFO - INTEGRATED analysis completed successfully for: 2_20250614_220705_harvard-ai-policy.pdf by user: ziut
+2025-06-14 23:26:15,978 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:26:15] "GET /analyse/2_20250614_220705_harvard-ai-policy.pdf HTTP/1.1" 200 -
+2025-06-14 23:26:15,998 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:26:15] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:26:28,881 - __main__ - INFO - Generating advanced recommendations for analysis analysis_13 by user: ziut
+2025-06-14 23:26:28,882 - src.recommendation.engine - INFO - Generating comprehensive recommendations for analysis: analysis_13
+2025-06-14 23:26:28,887 - src.recommendation.engine - INFO - Enhanced recommendation generation completed successfully
+2025-06-14 23:26:28,887 - __main__ - INFO - Generated 4 advanced recommendations for user ziut
+2025-06-14 23:26:28,912 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:26:28] "GET /recommendations/analysis_13 HTTP/1.1" 200 -
+2025-06-14 23:26:28,928 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:26:28] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:26:40,749 - __main__ - INFO - Landing page accessed
+2025-06-14 23:26:40,763 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:26:40] "GET / HTTP/1.1" 200 -
+2025-06-14 23:26:40,768 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:26:40] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:26:40,787 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:26:40] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:26:43,537 - __main__ - INFO - Dashboard accessed by user: ziut
+2025-06-14 23:26:43,555 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:26:43] "GET /dashboard HTTP/1.1" 200 -
+2025-06-14 23:26:43,571 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:26:43] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:27:00,937 - __main__ - INFO - Dashboard accessed by user: ziut
+2025-06-14 23:27:00,957 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:27:00] "GET /dashboard HTTP/1.1" 200 -
+2025-06-14 23:27:00,972 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:27:00] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:27:04,258 - src.auth.routes - INFO - User ziut logged out successfully
+2025-06-14 23:27:04,259 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:27:04] "[32mGET /auth/logout HTTP/1.1[0m" 302 -
+2025-06-14 23:27:04,266 - __main__ - INFO - Landing page accessed
+2025-06-14 23:27:04,268 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:27:04] "GET / HTTP/1.1" 200 -
+2025-06-14 23:27:04,272 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:27:04] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:27:17,473 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:27:17] "GET /auth/login HTTP/1.1" 200 -
+2025-06-14 23:27:17,477 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:27:17] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:27:17,487 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:27:17] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:27:19,865 - src.auth.routes - INFO - User ziut logged in successfully
+2025-06-14 23:27:19,865 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:27:19] "[32mPOST /auth/login HTTP/1.1[0m" 302 -
+2025-06-14 23:27:19,875 - __main__ - INFO - Dashboard accessed by user: ziut
+2025-06-14 23:27:19,881 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:27:19] "GET /dashboard HTTP/1.1" 200 -
+2025-06-14 23:27:19,893 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:27:19] "GET /static/style.css HTTP/1.1" 200 -
+2025-06-14 23:27:56,503 - __main__ - INFO - Dashboard accessed by user: ziut
+2025-06-14 23:27:56,525 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:27:56] "GET /dashboard?theme_filter=Academic%20Integrity HTTP/1.1" 200 -
+2025-06-14 23:27:56,544 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:27:56] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:28:18,294 - __main__ - INFO - Dashboard accessed by user: ziut
+2025-06-14 23:28:18,315 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:28:18] "GET /dashboard?theme_filter=Privacy%20and%20Data HTTP/1.1" 200 -
+2025-06-14 23:28:18,333 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:28:18] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:28:34,411 - __main__ - INFO - Upload page accessed by user: ziut
+2025-06-14 23:28:34,416 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:28:34] "GET /upload HTTP/1.1" 200 -
+2025-06-14 23:28:34,433 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:28:34] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:29:01,103 - __main__ - INFO - File uploaded successfully by user ziut: 2_20250614_232901_tokyo_university.docx
+2025-06-14 23:29:01,116 - __main__ - INFO - File uploaded successfully by user ziut: 2_20250614_232901_belfast_university.pdf
+2025-06-14 23:29:01,126 - __main__ - INFO - File uploaded successfully by user ziut: 2_20250614_232901_Edinburgh_university.pdf
+2025-06-14 23:29:01,147 - __main__ - INFO - File uploaded successfully by user ziut: 2_20250614_232901_leeds_trinity_university.pdf
+2025-06-14 23:29:01,154 - __main__ - INFO - File uploaded successfully by user ziut: 2_20250614_232901_Jagiellonian_University.pdf
+2025-06-14 23:29:01,155 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:29:01] "[32mPOST /upload HTTP/1.1[0m" 302 -
+2025-06-14 23:29:01,163 - __main__ - INFO - Starting batch analysis of 5 files by user: ziut
+2025-06-14 23:29:01,459 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:01,459 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:01,459 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:01,459 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:01,650 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:01,650 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:01,650 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:01,650 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:01,882 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:01,883 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:01,883 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:01,883 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:01,883 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:01,883 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:01,883 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:02,021 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:02,021 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:02,021 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:02,021 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:02,021 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:02,021 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:02,021 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:04,792 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:04,925 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:29:04,998 - __main__ - INFO - Batch analysis completed for user ziut: 5/5 successful
+2025-06-14 23:29:04,998 - __main__ - ERROR - Error in batch analysis for user ziut: render_template() takes 1 positional argument but 2 were given
+2025-06-14 23:29:04,999 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:29:04] "[32mGET /batch-analyse/2_20250614_232901_tokyo_university.docx,2_20250614_232901_belfast_university.pdf,2_20250614_232901_Edinburgh_university.pdf,2_20250614_232901_leeds_trinity_university.pdf,2_20250614_232901_Jagiellonian_University.pdf HTTP/1.1[0m" 302 -
+2025-06-14 23:29:05,010 - __main__ - INFO - Upload page accessed by user: ziut
+2025-06-14 23:29:05,011 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:29:05] "GET /upload HTTP/1.1" 200 -
+2025-06-14 23:29:05,025 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:29:05] "GET /static/style.css HTTP/1.1" 200 -
+2025-06-14 23:29:48,695 - __main__ - INFO - Dashboard accessed by user: ziut
+2025-06-14 23:29:48,720 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:29:48] "GET /dashboard HTTP/1.1" 200 -
+2025-06-14 23:29:48,736 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:29:48] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:30:05,183 - __main__ - INFO - Starting INTEGRATED analysis of file: 2_20250614_232901_Edinburgh_university.pdf by user: ziut
+2025-06-14 23:30:05,258 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:30:05,258 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:30:05,258 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:30:05,259 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:30:05,259 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:30:05,259 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:30:05,259 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:30:05,402 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:30:05,403 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:30:05,403 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:30:05,403 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:30:05,403 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:30:05,403 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:30:05,403 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-14 23:30:05,664 - __main__ - INFO - INTEGRATED analysis completed successfully for: 2_20250614_232901_Edinburgh_university.pdf by user: ziut
+2025-06-14 23:30:05,665 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:30:05] "GET /analyse/2_20250614_232901_Edinburgh_university.pdf HTTP/1.1" 200 -
+2025-06-14 23:30:05,684 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:30:05] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:30:29,571 - __main__ - INFO - Generating advanced recommendations for analysis analysis_19 by user: ziut
+2025-06-14 23:30:29,571 - src.recommendation.engine - INFO - Generating comprehensive recommendations for analysis: analysis_19
+2025-06-14 23:30:29,574 - src.recommendation.engine - INFO - Enhanced recommendation generation completed successfully
+2025-06-14 23:30:29,574 - __main__ - INFO - Generated 4 advanced recommendations for user ziut
+2025-06-14 23:30:29,586 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:30:29] "GET /recommendations/analysis_19 HTTP/1.1" 200 -
+2025-06-14 23:30:29,603 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:30:29] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:30:53,485 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:30:53] "GET /about HTTP/1.1" 200 -
+2025-06-14 23:30:53,494 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:30:53] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:32:19,432 - __main__ - INFO - Starting INTEGRATED analysis of file: 2_20250614_232901_leeds_trinity_university.pdf by user: ziut
+2025-06-14 23:32:22,042 - __main__ - INFO - INTEGRATED analysis completed successfully for: 2_20250614_232901_leeds_trinity_university.pdf by user: ziut
+2025-06-14 23:32:22,043 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:32:22] "GET /analyse/2_20250614_232901_leeds_trinity_university.pdf HTTP/1.1" 200 -
+2025-06-14 23:32:22,052 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:32:22] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-14 23:33:00,935 - __main__ - INFO - Generating advanced recommendations for analysis analysis_20 by user: ziut
+2025-06-14 23:33:00,936 - src.recommendation.engine - INFO - Generating comprehensive recommendations for analysis: analysis_20
+2025-06-14 23:33:00,938 - src.recommendation.engine - INFO - Enhanced recommendation generation completed successfully
+2025-06-14 23:33:00,938 - __main__ - INFO - Generated 4 advanced recommendations for user ziut
+2025-06-14 23:33:00,952 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:33:00] "GET /recommendations/analysis_20 HTTP/1.1" 200 -
+2025-06-14 23:33:00,969 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:33:00] "[36mGET /static/style.css HTTP/1.1[0m" 304 -

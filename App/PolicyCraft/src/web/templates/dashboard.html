@@ -73,117 +73,154 @@
 
     <!-- Top Themes -->
     {% if data.theme_frequencies %}
-<div class="dashboard-section">
-    <h2>Most Common Themes</h2>
-    <div class="themes-cloud">
-        {% for theme, frequency in data.theme_frequencies.items() %}
-        {% if loop.index <= 15 %}
-        <button class="theme-badge clickable-theme" 
-                style="font-size: {{ 0.8 + (frequency / (data.theme_frequencies.values()|list|max) * 0.8) }}rem;"
-                onclick="exploreTheme('{{ theme }}', {{ frequency }})"
-                title="Click to explore {{ theme }} theme ({{ frequency }} occurrences)">
-            {{ theme }} ({{ frequency }})
-        </button>
-        {% endif %}
-        {% endfor %}
-    </div>
-    
-    <!-- Theme Details Modal -->
-    <div id="themeModal" class="theme-modal" style="display: none;">
-        <div class="theme-modal-content">
-            <div class="theme-modal-header">
-                <h3 id="modalThemeTitle">Theme Details</h3>
-                <span class="close-modal" onclick="closeThemeModal()">&times;</span>
-            </div>
-            <div class="theme-modal-body">
-                <div id="themeDetails">
-                    <!-- Theme details will be populated here -->
-                </div>
-                <div class="theme-actions">
-                    <button onclick="searchAnalysesByTheme()" class="btn btn-primary">
-                        View Related Analyses
-                    </button>
-                    <button onclick="exportThemeData()" class="btn btn-secondary">
-                        Export Theme Data
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-    <!-- Interactive Charts (if available) -->
-    {% if data.charts %}
     <div class="dashboard-section">
-        <h2>Interactive Visualizations</h2>
-        <div class="charts-grid">
-            {% if data.charts.classification_distribution %}
-            <div class="chart-container">
-                <div id="classificationChart"></div>
-            </div>
+        <h2>Most Common Themes</h2>
+        <div class="themes-cloud">
+            {% for theme, frequency in data.theme_frequencies.items() %}
+            {% if loop.index <= 15 %}
+            <button class="theme-badge clickable-theme" 
+                    style="font-size: {{ 0.8 + (frequency / (data.theme_frequencies.values()|list|max) * 0.8) }}rem;"
+                    onclick="exploreTheme('{{ theme }}', {{ frequency }})"
+                    title="Click to explore {{ theme }} theme ({{ frequency }} occurrences)">
+                {{ theme }} ({{ frequency }})
+            </button>
             {% endif %}
-            
-            {% if data.charts.theme_frequency %}
-            <div class="chart-container">
-                <div id="themeChart"></div>
+            {% endfor %}
+        </div>
+        
+        <!-- Theme Details Modal -->
+        <div id="themeModal" class="theme-modal" style="display: none;">
+            <div class="theme-modal-content">
+                <div class="theme-modal-header">
+                    <h3 id="modalThemeTitle">Theme Details</h3>
+                    <span class="close-modal" onclick="closeThemeModal()">&times;</span>
+                </div>
+                <div class="theme-modal-body">
+                    <div id="themeDetails">
+                        <!-- Theme details will be populated here -->
+                    </div>
+                    <div class="theme-actions">
+                        <button onclick="searchAnalysesByTheme()" class="btn btn-primary">
+                            View Related Analyses
+                        </button>
+                        <button onclick="exportThemeData()" class="btn btn-secondary">
+                            Export Theme Data
+                        </button>
+                    </div>
+                </div>
             </div>
-            {% endif %}
         </div>
     </div>
     {% endif %}
 
-    <!-- Recent Analyses -->
+    <!-- Recent Analyses - ENHANCED TABLE VIEW -->
     <div class="dashboard-section">
-        <h2>Recent Analyses</h2>
-        <div class="recent-analyses">
-            {% for analysis in data.recent_analyses %}
-            <div class="analysis-card">
-                <!-- FIXED: Bezpieczna obsługa dat -->
-                <div class="analysis-header">
-                    <h4>{{ analysis.filename.split('_', 2)[-1] if '_' in analysis.filename else analysis.filename }}</h4>
-                    <span class="analysis-date">
-                        {% if analysis.analysis_date %}
-                            {% if analysis.analysis_date is string %}
-                                {{ analysis.analysis_date.split(' ')[0] }}
-                            {% else %}
-                                {{ analysis.analysis_date.strftime('%Y-%m-%d') }}
-                            {% endif %}
-                        {% else %}
-                            Unknown
-                        {% endif %}
-                    </span>
-                </div>
-                
-                <div class="analysis-content">
-                    <div class="classification-result">
-                        <span class="classification-badge classification-{{ analysis.classification.classification.lower() if analysis.classification else 'unknown' }}">
-                            {{ analysis.classification.classification if analysis.classification else 'Unknown' }}
-                        </span>
-                        <span class="confidence">
-                            {{ analysis.classification.confidence if analysis.classification else 0 }}% confidence
-                        </span>
-                    </div>
-                    
-                    {% if analysis.themes %}
-                    <div class="top-themes">
-                        <strong>Top themes:</strong>
-                        {% for theme in analysis.themes[:3] %}
-                        <span class="mini-theme">{{ theme.name if theme.name else theme }}</span>{% if not loop.last %}, {% endif %}
-                        {% endfor %}
-                        {% if analysis.themes|length > 3 %}
-                        <span class="theme-more">+{{ analysis.themes|length - 3 }} more</span>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
-                
-                <div class="analysis-actions">
-                    <a href="{{ url_for('analyse_document', filename=analysis.filename) }}" 
-                       class="btn btn-sm btn-primary">View Details</a>
-                </div>
+        <div class="section-header">
+            <h2>Recent Analyses</h2>
+            <div class="table-controls">
+                <button id="showMoreBtn" class="btn btn-outline" onclick="toggleShowMore()" style="display: none;">
+                    Show More
+                </button>
+                <button class="btn btn-outline" onclick="exportAnalysesTable()">
+                    📊 Export
+                </button>
             </div>
-            {% endfor %}
+        </div>
+        
+        <div class="analyses-table-container">
+            <table class="analyses-table">
+                <thead>
+                    <tr>
+                        <th class="university-col">🏛️ University</th>
+                        <th class="classification-col">📊 Classification</th>
+                        <th class="date-col">📅 Date</th>
+                        <th class="themes-col">🎯 Top Themes</th>
+                        <th class="actions-col">⚙️ Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="analysesTableBody">
+                    {% for analysis in data.recent_analyses %}
+                    <tr class="analysis-row" {% if loop.index > 5 %}style="display: none;" data-hidden="true"{% endif %}>
+                        <td class="university-cell">
+                            <div class="university-info">
+                                <div class="university-name">
+                                    {{ analysis.filename.split('_', 2)[-1].replace('-ai-policy.pdf', '').replace('-ai-policy.docx', '').replace('-', ' ').title() if '_' in analysis.filename else analysis.filename.replace('-ai-policy.pdf', '').replace('-ai-policy.docx', '').replace('-', ' ').title() }}
+                                </div>
+                                <div class="file-name">
+                                    {{ analysis.filename.split('_', 2)[-1] if '_' in analysis.filename else analysis.filename }}
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <td class="classification-cell">
+                            <div class="classification-wrapper">
+                                <span class="classification-badge classification-{{ analysis.classification.classification.lower() if analysis.classification else 'unknown' }}">
+                                    {{ analysis.classification.classification if analysis.classification else 'Unknown' }}
+                                </span>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" style="width: {{ analysis.classification.confidence if analysis.classification else 0 }}%"></div>
+                                    <span class="confidence-text">{{ analysis.classification.confidence if analysis.classification else 0 }}%</span>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <td class="date-cell">
+                            <div class="date-wrapper">
+                                {% if analysis.analysis_date %}
+                                    {% if analysis.analysis_date is string %}
+                                        <span class="analysis-date">{{ analysis.analysis_date.split(' ')[0] }}</span>
+                                        <span class="analysis-time">{{ analysis.analysis_date.split(' ')[1] if ' ' in analysis.analysis_date else '' }}</span>
+                                    {% else %}
+                                        <span class="analysis-date">{{ analysis.analysis_date.strftime('%Y-%m-%d') }}</span>
+                                        <span class="analysis-time">{{ analysis.analysis_date.strftime('%H:%M') }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="analysis-date">Unknown</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        
+                        <td class="themes-cell">
+                            <div class="themes-wrapper">
+                                {% if analysis.themes %}
+                                {% for theme in analysis.themes[:3] %}
+                                <span class="theme-tag">{{ theme.name if theme.name else theme }}</span>
+                                {% endfor %}
+                                {% if analysis.themes|length > 3 %}
+                                <span class="theme-more" title="{% for theme in analysis.themes[3:] %}{{ theme.name if theme.name else theme }}{% if not loop.last %}, {% endif %}{% endfor %}">
+                                    +{{ analysis.themes|length - 3 }} more
+                                </span>
+                                {% endif %}
+                                {% else %}
+                                <span class="no-themes">No themes extracted</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        
+                        <td class="actions-cell">
+                            <div class="action-buttons">
+                                <a href="{{ url_for('analyse_document', filename=analysis.filename) }}" 
+                                   class="btn btn-view" title="View Analysis Details">
+                                    👁️ View
+                                </a>
+                                <a href="{{ url_for('get_recommendations', analysis_id=analysis.get('id', analysis.filename)) }}" 
+                                   class="btn btn-recommend" title="Get Recommendations">
+                                    💡 Recommend
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Show More Controls -->
+        <div class="table-footer">
+            <div class="results-count">
+                Showing <span id="visibleCount">{{ [data.recent_analyses|length, 5]|min }}</span> 
+                of <span id="totalCount">{{ data.recent_analyses|length }}</span> analyses
+            </div>
         </div>
     </div>
 
@@ -382,65 +419,109 @@
     border-radius: 20px;
     font-weight: 500;
     transition: transform 0.2s ease;
+    border: none;
+    cursor: pointer;
 }
 
 .theme-badge:hover {
     transform: scale(1.05);
 }
 
-.recent-analyses {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 1.5rem;
+/* NEW TABLE STYLES */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
 }
 
-.analysis-card {
-    border: 1px solid #ecf0f1;
+.table-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.analyses-table-container {
+    overflow-x: auto;
     border-radius: 10px;
-    padding: 1.5rem;
-    background: #f8f9fa;
-    transition: all 0.2s ease;
+    border: 1px solid #e9ecef;
 }
 
-.analysis-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+.analyses-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    min-width: 800px;
 }
 
-.analysis-header {
+.analyses-table th {
+    background: linear-gradient(135deg, #34495e, #2c3e50);
+    color: white;
+    padding: 1rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-bottom: 3px solid #2c3e50;
+}
+
+.analyses-table td {
+    padding: 1rem 0.75rem;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: top;
+}
+
+.analysis-row {
+    transition: background-color 0.2s ease;
+}
+
+.analysis-row:hover {
+    background-color: #f8f9fa;
+}
+
+.analysis-row:nth-child(even) {
+    background-color: #fdfdfd;
+}
+
+/* Column widths */
+.university-col { width: 25%; }
+.classification-col { width: 20%; }
+.date-col { width: 15%; }
+.themes-col { width: 25%; }
+.actions-col { width: 15%; }
+
+/* University cell */
+.university-info {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #dee2e6;
+    flex-direction: column;
 }
 
-.analysis-header h4 {
-    margin: 0;
+.university-name {
+    font-weight: 600;
     color: #2c3e50;
-    font-size: 1.1rem;
-    word-break: break-word;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
 }
 
-.analysis-date {
-    color: #7f8c8d;
+.file-name {
     font-size: 0.8rem;
+    color: #7f8c8d;
+    font-family: monospace;
 }
 
-.classification-result {
+/* Classification cell */
+.classification-wrapper {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .classification-badge {
-    padding: 0.4rem 1rem;
-    border-radius: 20px;
-    font-weight: bold;
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 15px;
+    font-weight: 600;
     color: white;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
+    text-align: center;
 }
 
 .classification-restrictive { background: #e74c3c; }
@@ -448,29 +529,142 @@
 .classification-permissive { background: #2ecc71; }
 .classification-unknown { background: #95a5a6; }
 
-.confidence {
+.confidence-bar {
+    position: relative;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2980b9);
+    transition: width 0.8s ease;
+    border-radius: 3px;
+}
+
+.confidence-text {
+    position: absolute;
+    right: 0;
+    top: -20px;
+    font-size: 0.7rem;
     color: #7f8c8d;
-    font-size: 0.9rem;
-}
-
-.top-themes {
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-    color: #2c3e50;
-}
-
-.mini-theme {
-    color: #3498db;
     font-weight: 500;
 }
 
-.theme-more {
-    color: #7f8c8d;
-    font-style: italic;
+/* Date cell */
+.date-wrapper {
+    display: flex;
+    flex-direction: column;
 }
 
-.analysis-actions {
+.analysis-date {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.analysis-time {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+}
+
+/* Themes cell */
+.themes-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    align-items: center;
+}
+
+.theme-tag {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid #bbdefb;
+}
+
+.theme-more {
+    background: #f5f5f5;
+    color: #757575;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-style: italic;
+    cursor: help;
+}
+
+.no-themes {
+    color: #bdc3c7;
+    font-style: italic;
+    font-size: 0.8rem;
+}
+
+/* Actions cell */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.btn-view {
+    background: #3498db;
+    color: white;
+}
+
+.btn-view:hover {
+    background: #2980b9;
+    transform: translateY(-1px);
+}
+
+.btn-recommend {
+    background: #e67e22;
+    color: white;
+}
+
+.btn-recommend:hover {
+    background: #d35400;
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: transparent;
+    color: #3498db;
+    border: 1px solid #3498db;
+}
+
+.btn-outline:hover {
+    background: #3498db;
+    color: white;
+}
+
+/* Table footer */
+.table-footer {
+    margin-top: 1rem;
     text-align: center;
+}
+
+.results-count {
+    color: #7f8c8d;
+    font-size: 0.9rem;
 }
 
 .empty-state {
@@ -528,6 +722,7 @@
     font-size: 1.2rem;
 }
 
+/* Mobile responsiveness */
 @media (max-width: 768px) {
     .dashboard-container {
         padding: 1rem;
@@ -537,37 +732,32 @@
         grid-template-columns: repeat(2, 1fr);
     }
     
-    .recent-analyses {
-        grid-template-columns: 1fr;
+    .section-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
     }
     
-    .classification-bar {
+    .analyses-table th,
+    .analyses-table td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .university-name {
+        font-size: 0.9rem;
+    }
+    
+    .action-buttons {
         flex-direction: column;
-        align-items: stretch;
     }
     
     .quick-actions {
         flex-direction: column;
         align-items: center;
     }
-    /* Clickable theme badges */
-.clickable-theme {
-    cursor: pointer;
-    border: none;
-    transition: all 0.3s ease;
 }
 
-.clickable-theme:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    filter: brightness(1.1);
-}
-
-.clickable-theme:active {
-    transform: scale(0.95);
-}
-
-/* Theme Modal Styles */
+/* Theme modal styles - keeping from original */
 .theme-modal {
     position: fixed;
     z-index: 1000;
@@ -577,7 +767,6 @@
     height: 100%;
     background-color: rgba(0,0,0,0.5);
     backdrop-filter: blur(5px);
-    animation: fadeIn 0.3s ease;
 }
 
 .theme-modal-content {
@@ -588,7 +777,6 @@
     width: 90%;
     max-width: 600px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    animation: slideIn 0.3s ease;
 }
 
 .theme-modal-header {
@@ -599,11 +787,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.theme-modal-header h3 {
-    margin: 0;
-    font-size: 1.5rem;
 }
 
 .close-modal {
@@ -621,189 +804,91 @@
 .theme-modal-body {
     padding: 2rem;
 }
-
-.theme-overview {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 10px;
-}
-
-.theme-stat {
-    text-align: center;
-}
-
-.stat-label {
-    display: block;
-    font-weight: bold;
-    color: #7f8c8d;
-    margin-bottom: 0.5rem;
-}
-
-.stat-value {
-    display: block;
-    font-size: 1.2rem;
-    color: #2c3e50;
-    font-weight: bold;
-}
-
-.theme-description {
-    margin-bottom: 2rem;
-}
-
-.theme-description h4 {
-    color: #2c3e50;
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-}
-
-.theme-description p {
-    color: #34495e;
-    line-height: 1.6;
-}
-
-.related-analyses h4 {
-    color: #2c3e50;
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-}
-
-.analysis-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.mini-analysis-card {
-    background: #ecf0f1;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    border-left: 4px solid #3498db;
-}
-
-.mini-analysis-card strong {
-    color: #2c3e50;
-}
-
-.mini-analysis-card small {
-    color: #7f8c8d;
-}
-
-.theme-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-    justify-content: center;
-}
-
-.theme-actions .btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 20px;
-    border: none;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.theme-actions .btn-primary {
-    background: linear-gradient(45deg, #3498db, #2980b9);
-    color: white;
-}
-
-.theme-actions .btn-secondary {
-    background: linear-gradient(45deg, #95a5a6, #7f8c8d);
-    color: white;
-}
-
-.theme-actions .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideIn {
-    from { 
-        transform: translateY(-50px);
-        opacity: 0;
-    }
-    to { 
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-    .theme-modal-content {
-        width: 95%;
-        margin: 10% auto;
-    }
-    
-    .theme-overview {
-        grid-template-columns: 1fr;
-    }
-    
-    .theme-actions {
-        flex-direction: column;
-    }
-}
-}
 </style>
 
 <script>
-// FIXED: Bezpieczna funkcja exportu bez JSON serialization
-function exportDashboard() {
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Filename,Classification,Confidence,Date\n";
+let showingAll = false;
+
+function toggleShowMore() {
+    const hiddenRows = document.querySelectorAll('[data-hidden="true"]');
+    const btn = document.getElementById('showMoreBtn');
+    const visibleCount = document.getElementById('visibleCount');
+    const totalCount = parseInt(document.getElementById('totalCount').textContent);
     
-    // Pobierz dane bezpośrednio z template variables
+    showingAll = !showingAll;
+    
+    hiddenRows.forEach(row => {
+        row.style.display = showingAll ? 'table-row' : 'none';
+    });
+    
+    btn.textContent = showingAll ? 'Show Less' : 'Show More';
+    visibleCount.textContent = showingAll ? totalCount : Math.min(5, totalCount);
+}
+
+function exportAnalysesTable() {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "University,Classification,Confidence,Date,Top Themes\n";
+    
     {% for analysis in data.recent_analyses %}
-    const filename_{{ loop.index0 }} = "{{ analysis.filename.split('_', 2)[-1] if '_' in analysis.filename else analysis.filename }}";
+    const university_{{ loop.index0 }} = "{{ analysis.filename.split('_', 2)[-1].replace('-ai-policy.pdf', '').replace('-ai-policy.docx', '').replace('-', ' ').title() if '_' in analysis.filename else analysis.filename.replace('-ai-policy.pdf', '').replace('-ai-policy.docx', '').replace('-', ' ').title() }}";
     const classification_{{ loop.index0 }} = "{{ analysis.classification.classification if analysis.classification else 'Unknown' }}";
     const confidence_{{ loop.index0 }} = {{ analysis.classification.confidence if analysis.classification else 0 }};
     const date_{{ loop.index0 }} = "{{ analysis.analysis_date if analysis.analysis_date else 'Unknown' }}";
-    csvContent += `"${filename_{{ loop.index0 }}}","${classification_{{ loop.index0 }}}",${confidence_{{ loop.index0 }}},"${date_{{ loop.index0 }}}"\n`;
+    const themes_{{ loop.index0 }} = "{% if analysis.themes %}{% for theme in analysis.themes[:3] %}{{ theme.name if theme.name else theme }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}";
+    
+    csvContent += `"${university_{{ loop.index0 }}}","${classification_{{ loop.index0 }}}",${confidence_{{ loop.index0 }}},"${date_{{ loop.index0 }}}","${themes_{{ loop.index0 }}}"\n`;
     {% endfor %}
     
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `dashboard_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `policy_analyses_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 }
 
-// Animate bars on load
+// Initialize show more button visibility
 document.addEventListener('DOMContentLoaded', function() {
-    const bars = document.querySelectorAll('.bar');
-    bars.forEach(bar => {
+    const totalRows = {{ data.recent_analyses|length }};
+    const showMoreBtn = document.getElementById('showMoreBtn');
+    
+    if (totalRows > 5) {
+        showMoreBtn.style.display = 'inline-block';
+    }
+    
+    // Animate confidence bars
+    const confidenceBars = document.querySelectorAll('.confidence-fill');
+    confidenceBars.forEach(bar => {
         const width = bar.style.width;
         bar.style.width = '0%';
         setTimeout(() => {
             bar.style.width = width;
         }, 500);
     });
+    
+    // Animate table rows
+    const rows = document.querySelectorAll('.analysis-row');
+    rows.forEach((row, index) => {
+        if (row.style.display !== 'none') {
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                row.style.transition = 'all 0.4s ease';
+                row.style.opacity = '1';
+                row.style.transform = 'translateY(0)';
+            }, index * 100);
+        }
+    });
 });
-// Dodaj ten JavaScript do dashboard.html w sekcji <script>
 
-    let currentTheme = null;
+// Theme exploration functions (keeping from original)
+let currentTheme = null;
 
 function exploreTheme(themeName, frequency) {
     currentTheme = themeName;
-    
-    // Update modal content
     document.getElementById('modalThemeTitle').textContent = themeName;
     
-    // Get theme details from analyses
     const themeAnalyses = getAnalysesWithTheme(themeName);
     
     let themeDetailsHTML = `
@@ -824,8 +909,7 @@ function exploreTheme(themeName, frequency) {
         </div>
         
         <div class="related-analyses">
-            <h4>Related Analyses</h4>
-            <div class="analysis-list">
+            <h4>Related Analyses</h
     `;
     
     // Add related analyses

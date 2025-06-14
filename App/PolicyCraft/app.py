@@ -28,6 +28,7 @@ from src.nlp.policy_classifier import PolicyClassifier
 from src.database.operations import DatabaseOperations
 from src.visualisation.charts import ChartGenerator
 from src.recommendation.engine import RecommendationEngine
+from clean_dataset import process_new_upload
 
 # Configure logging
 logging.basicConfig(
@@ -210,7 +211,7 @@ def dashboard():
         
         # FIXED: Convert dates to strings for JSON serialization
         processed_analyses = []
-        for analysis in user_analyses[-5:]:  # Recent analyses
+        for analysis in user_analyses:  # Recent analyses
             processed_analysis = analysis.copy()
             
             # Convert datetime objects to strings
@@ -313,7 +314,12 @@ def upload_file():
                     create_upload_folder()
                     file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
                     file.save(file_path)
-                    
+                    processing_result = process_new_upload(file_path, file.filename)
+                    if processing_result['success']:  # ← Dodaj 4 spacje wcięcia
+                        print(f"✅ Auto-processed: {processing_result['standardized_name']}")
+                    else:
+                        print(f"⚠️ Processing failed: {processing_result['error']}")
+
                     successful_uploads.append({
                         'original': file.filename,
                         'unique': unique_filename,

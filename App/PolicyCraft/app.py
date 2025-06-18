@@ -28,7 +28,8 @@ from src.nlp.policy_classifier import PolicyClassifier
 from src.database.operations import DatabaseOperations
 from src.visualisation.charts import ChartGenerator
 from src.recommendation.engine import RecommendationEngine
-from clean_dataset import process_new_upload
+from src.scripts.clean_dataset import process_new_upload
+
 
 # Configure logging
 logging.basicConfig(

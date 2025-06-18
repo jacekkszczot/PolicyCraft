@@ -1,72 +1,68 @@
-# Flask Web Framework & Authentication
+# Flask Web Framework & Core Components
 Flask==3.0.0
 Werkzeug==3.0.1
+Jinja2>=3.1.0
+click>=8.1.0
+
+# Authentication & Security
 Flask-Login>=0.6.3
 Flask-WTF>=1.2.0
 WTForms>=3.1.0
 Flask-Bcrypt>=1.0.1
+cryptography>=41.0.0
+email-validator>=2.0.0
 
-# Database for Users
+# Database & ORM
 Flask-SQLAlchemy>=3.1.0
 Flask-Migrate>=4.0.5
 
-# Email validation - ADDED
-email-validator>=2.0.0
-
-# NLP Libraries
+# Natural Language Processing
 spacy>=3.7.0
 nltk>=3.8.1
 textblob>=0.17.1
+scikit-learn>=1.3.0
 
-# PDF Processing
-PyPDF2>=3.0.1
+# Document Processing
+pypdf>=3.17.0
 pdfplumber>=0.10.0
 python-docx>=1.1.0
 
-# Data Processing
+# Data Processing & Analysis
 pandas>=2.1.0
 numpy>=1.24.0
-scikit-learn>=1.3.0
+regex>=2023.8.8
+contractions>=0.1.73
 
-# Database
+# Database Systems
 pymongo>=4.5.0
-motor>=3.3.0  # Async MongoDB driver
+motor>=3.3.0
 
-# Visualisation
+# Visualization Libraries
 matplotlib>=3.7.0
 plotly>=5.17.0
 seaborn>=0.13.0
 
-# Web Forms and Validation
-WTForms>=3.1.0
-Flask-WTF>=1.2.0
-
-# File Handling - removed python-magic as it's optional
-# python-magic>=0.4.27  # Optional for file type detection
-
-# Text Processing
-regex>=2023.8.8
-contractions>=0.1.73
+# Text Processing Utilities
 wordcloud>=1.9.2
 
-# Utilities
+# Environment & Configuration
 python-dotenv>=1.0.0
-click>=8.1.0
-Jinja2>=3.1.0
 
-# Testing (optional, for development)
+# Logging & Development
+colorlog>=6.7.0
+
+# Testing Framework (Development)
 pytest>=7.4.0
 pytest-flask>=1.3.0
 
-# Security
-cryptography>=41.0.0
+# Code Quality Tools (Development)
+black>=23.7.0
+flake8>=6.0.0
 
-# Logging
-colorlog>=6.7.0
+# Additional Requirements for Enhanced Features
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
 
-# Development dependencies (optional)
-black>=23.7.0  # Code formatting
-flake8>=6.0.0  # Code linting
-
-# spaCy English model (install with: python -m spacy download en_core_web_sm)
-# Note: This needs to be installed separately after installing spacy
+# Note: After installing requirements, run:
+# python -m spacy download en_core_web_sm

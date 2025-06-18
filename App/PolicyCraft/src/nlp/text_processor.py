@@ -13,7 +13,7 @@ from typing import Optional, Dict, List
 
 # PDF processing libraries
 try:
-    import PyPDF2
+    import pypdf
     import pdfplumber
     PDF_AVAILABLE = True
 except ImportError:
@@ -110,7 +110,7 @@ class TextProcessor:
         # Method 1: PyPDF2
         try:
             with open(file_path, 'rb') as file:
-                pdf_reader = PyPDF2.PdfReader(file)
+                pdf_reader = pypdf.PdfReader(file)
                 for page in pdf_reader.pages:
                     text_pypdf2 += page.extract_text() + "\n"
             print(f"PyPDF2 extracted {len(text_pypdf2)} characters")

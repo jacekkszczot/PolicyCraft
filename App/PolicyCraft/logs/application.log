@@ -313,3 +313,150 @@ ls -la data/policies/
 2025-06-14 23:33:00,938 - __main__ - INFO - Generated 4 advanced recommendations for user ziut
 2025-06-14 23:33:00,952 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:33:00] "GET /recommendations/analysis_20 HTTP/1.1" 200 -
 2025-06-14 23:33:00,969 - werkzeug - INFO - 127.0.0.1 - - [14/Jun/2025 23:33:00] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 13:38:44,664 - src.recommendation.engine - INFO - Enhanced Recommendation Engine initialized with fixes
+2025-06-16 13:38:44,667 - __main__ - INFO - Starting FULLY INTEGRATED PolicyCraft Application
+2025-06-16 13:38:44,689 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://localhost:5001
+2025-06-16 13:38:44,689 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-16 13:38:44,862 - werkzeug - INFO -  * Restarting with watchdog (fsevents)
+2025-06-16 13:38:52,043 - src.recommendation.engine - INFO - Enhanced Recommendation Engine initialized with fixes
+2025-06-16 13:38:52,046 - __main__ - INFO - Starting FULLY INTEGRATED PolicyCraft Application
+2025-06-16 13:38:52,052 - werkzeug - WARNING -  * Debugger is active!
+2025-06-16 13:38:52,078 - werkzeug - INFO -  * Debugger PIN: 498-659-800
+2025-06-16 13:39:54,698 - __main__ - INFO - Landing page accessed
+2025-06-16 13:39:54,722 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:39:54] "GET / HTTP/1.1" 200 -
+2025-06-16 13:39:54,728 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:39:54] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 13:39:54,755 - __main__ - WARNING - 404 error: http://localhost:5001/favicon.ico
+2025-06-16 13:39:54,757 - __main__ - WARNING - 404 error: http://localhost:5001/apple-touch-icon-precomposed.png
+2025-06-16 13:39:54,761 - __main__ - WARNING - 404 error: http://localhost:5001/apple-touch-icon.png
+2025-06-16 13:39:54,762 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:39:54] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-06-16 13:39:54,764 - __main__ - WARNING - 404 error: http://localhost:5001/favicon.ico
+2025-06-16 13:39:54,765 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:39:54] "[33mGET /apple-touch-icon-precomposed.png HTTP/1.1[0m" 404 -
+2025-06-16 13:39:54,765 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:39:54] "[33mGET /apple-touch-icon.png HTTP/1.1[0m" 404 -
+2025-06-16 13:39:54,765 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:39:54] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-06-16 13:39:58,902 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:39:58] "GET /auth/login HTTP/1.1" 200 -
+2025-06-16 13:39:58,917 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:39:58] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 13:40:02,557 - src.auth.routes - INFO - User ziut logged in successfully
+2025-06-16 13:40:02,558 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:40:02] "[32mPOST /auth/login HTTP/1.1[0m" 302 -
+2025-06-16 13:40:02,568 - __main__ - INFO - Dashboard accessed by user: ziut
+2025-06-16 13:40:04,396 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:40:04] "GET /dashboard HTTP/1.1" 200 -
+2025-06-16 13:40:04,424 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:40:04] "GET /static/style.css HTTP/1.1" 200 -
+2025-06-16 13:40:30,528 - __main__ - INFO - Starting INTEGRATED analysis of file: 2_20250614_232901_Edinburgh_university.pdf by user: ziut
+2025-06-16 13:40:30,530 - pypdf._reader - WARNING - Ignoring wrong pointing object 6 0 (offset 0)
+2025-06-16 13:40:30,530 - pypdf._reader - WARNING - Ignoring wrong pointing object 9 0 (offset 0)
+2025-06-16 13:40:30,530 - pypdf._reader - WARNING - Ignoring wrong pointing object 11 0 (offset 0)
+2025-06-16 13:40:30,530 - pypdf._reader - WARNING - Ignoring wrong pointing object 21 0 (offset 0)
+2025-06-16 13:40:30,530 - pypdf._reader - WARNING - Ignoring wrong pointing object 31 0 (offset 0)
+2025-06-16 13:40:30,530 - pypdf._reader - WARNING - Ignoring wrong pointing object 38 0 (offset 0)
+2025-06-16 13:40:30,530 - pypdf._reader - WARNING - Ignoring wrong pointing object 56 0 (offset 0)
+2025-06-16 13:40:30,624 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-16 13:40:30,624 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-16 13:40:30,624 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-16 13:40:30,624 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-16 13:40:30,624 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-16 13:40:30,625 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-16 13:40:30,625 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-16 13:40:30,798 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-16 13:40:30,798 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-16 13:40:30,798 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-16 13:40:30,798 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-16 13:40:30,798 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-16 13:40:30,798 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-16 13:40:30,798 - pdfminer.pdfpage - WARNING - CropBox missing from /Page, defaulting to MediaBox
+2025-06-16 13:40:31,295 - __main__ - INFO - INTEGRATED analysis completed successfully for: 2_20250614_232901_Edinburgh_university.pdf by user: ziut
+2025-06-16 13:40:31,303 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:40:31] "GET /analyse/2_20250614_232901_Edinburgh_university.pdf HTTP/1.1" 200 -
+2025-06-16 13:40:31,323 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:40:31] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 13:40:47,449 - __main__ - INFO - Generating advanced recommendations for analysis analysis_21 by user: ziut
+2025-06-16 13:40:47,449 - src.recommendation.engine - INFO - Generating comprehensive recommendations for analysis: analysis_21
+2025-06-16 13:40:47,454 - src.recommendation.engine - INFO - Enhanced recommendation generation completed successfully
+2025-06-16 13:40:47,454 - __main__ - INFO - Generated 4 advanced recommendations for user ziut
+2025-06-16 13:40:47,484 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:40:47] "GET /recommendations/analysis_21 HTTP/1.1" 200 -
+2025-06-16 13:40:47,502 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 13:40:47] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 14:13:23,187 - __main__ - INFO - Landing page accessed
+2025-06-16 14:13:23,189 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 14:13:23] "GET / HTTP/1.1" 200 -
+2025-06-16 14:13:23,194 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 14:13:23] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 14:13:23,204 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 14:13:23] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 14:13:23,218 - __main__ - WARNING - 404 error: http://localhost:5001/apple-touch-icon-precomposed.png
+2025-06-16 14:13:23,219 - __main__ - WARNING - 404 error: http://localhost:5001/apple-touch-icon.png
+2025-06-16 14:13:23,219 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 14:13:23] "[33mGET /apple-touch-icon-precomposed.png HTTP/1.1[0m" 404 -
+2025-06-16 14:13:23,220 - __main__ - WARNING - 404 error: http://localhost:5001/favicon.ico
+2025-06-16 14:13:23,220 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 14:13:23] "[33mGET /apple-touch-icon.png HTTP/1.1[0m" 404 -
+2025-06-16 14:13:23,221 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 14:13:23] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-06-16 14:13:43,901 - __main__ - INFO - Dashboard accessed by user: ziut
+2025-06-16 14:13:43,925 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 14:13:43] "GET /dashboard HTTP/1.1" 200 -
+2025-06-16 14:13:43,940 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 14:13:43] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 14:14:00,513 - __main__ - INFO - Upload page accessed by user: ziut
+2025-06-16 14:14:00,524 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 14:14:00] "GET /upload HTTP/1.1" 200 -
+2025-06-16 14:14:00,541 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 14:14:00] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 22:53:29,877 - src.recommendation.engine - INFO - Enhanced Recommendation Engine initialized with fixes
+2025-06-16 22:53:29,882 - __main__ - INFO - Starting FULLY INTEGRATED PolicyCraft Application
+2025-06-16 22:53:29,918 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://localhost:5001
+2025-06-16 22:53:29,918 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-06-16 22:53:29,974 - werkzeug - INFO -  * Restarting with watchdog (fsevents)
+2025-06-16 22:53:37,048 - src.recommendation.engine - INFO - Enhanced Recommendation Engine initialized with fixes
+2025-06-16 22:53:37,053 - __main__ - INFO - Starting FULLY INTEGRATED PolicyCraft Application
+2025-06-16 22:53:37,061 - werkzeug - WARNING -  * Debugger is active!
+2025-06-16 22:53:37,092 - werkzeug - INFO -  * Debugger PIN: 143-642-248
+2025-06-16 22:53:41,296 - __main__ - INFO - Landing page accessed
+2025-06-16 22:53:41,328 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:53:41] "GET / HTTP/1.1" 200 -
+2025-06-16 22:53:41,341 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:53:41] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 22:53:41,517 - __main__ - WARNING - 404 error: http://localhost:5001/favicon.ico
+2025-06-16 22:53:41,519 - __main__ - WARNING - 404 error: http://localhost:5001/apple-touch-icon-precomposed.png
+2025-06-16 22:53:41,521 - __main__ - WARNING - 404 error: http://localhost:5001/apple-touch-icon.png
+2025-06-16 22:53:41,525 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:53:41] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-06-16 22:53:41,526 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:53:41] "[33mGET /apple-touch-icon.png HTTP/1.1[0m" 404 -
+2025-06-16 22:53:41,526 - __main__ - WARNING - 404 error: http://localhost:5001/favicon.ico
+2025-06-16 22:53:41,529 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:53:41] "[33mGET /apple-touch-icon-precomposed.png HTTP/1.1[0m" 404 -
+2025-06-16 22:53:41,529 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:53:41] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-06-16 22:54:00,321 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:54:00] "GET /auth/login HTTP/1.1" 200 -
+2025-06-16 22:54:00,335 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:54:00] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 22:54:05,384 - __main__ - WARNING - 404 error: http://localhost:5001/apple-touch-icon-precomposed.png
+2025-06-16 22:54:05,385 - __main__ - WARNING - 404 error: http://localhost:5001/apple-touch-icon.png
+2025-06-16 22:54:05,385 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:54:05] "[33mGET /apple-touch-icon-precomposed.png HTTP/1.1[0m" 404 -
+2025-06-16 22:54:05,386 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:54:05] "[33mGET /apple-touch-icon.png HTTP/1.1[0m" 404 -
+2025-06-16 22:54:05,387 - __main__ - WARNING - 404 error: http://localhost:5001/favicon.ico
+2025-06-16 22:54:05,387 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:54:05] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-06-16 22:54:25,322 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:54:25] "GET /about HTTP/1.1" 200 -
+2025-06-16 22:54:25,336 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:54:25] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 22:54:45,042 - __main__ - INFO - Landing page accessed
+2025-06-16 22:54:45,043 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:54:45] "GET / HTTP/1.1" 200 -
+2025-06-16 22:54:45,046 - __main__ - WARNING - 404 error: http://localhost:5001/favicon.ico
+2025-06-16 22:54:45,047 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:54:45] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-06-16 22:54:45,047 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:54:45] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 22:54:45,058 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:54:45] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 22:54:45,074 - __main__ - WARNING - 404 error: http://localhost:5001/apple-touch-icon-precomposed.png
+2025-06-16 22:54:45,074 - __main__ - WARNING - 404 error: http://localhost:5001/apple-touch-icon.png
+2025-06-16 22:54:45,074 - __main__ - WARNING - 404 error: http://localhost:5001/favicon.ico
+2025-06-16 22:54:45,075 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:54:45] "[33mGET /apple-touch-icon-precomposed.png HTTP/1.1[0m" 404 -
+2025-06-16 22:54:45,075 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:54:45] "[33mGET /apple-touch-icon.png HTTP/1.1[0m" 404 -
+2025-06-16 22:54:45,076 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:54:45] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-06-16 22:55:03,829 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:03] "GET /auth/login HTTP/1.1" 200 -
+2025-06-16 22:55:03,845 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:03] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 22:55:05,902 - src.auth.routes - INFO - User ziut logged in successfully
+2025-06-16 22:55:05,903 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:05] "[32mPOST /auth/login HTTP/1.1[0m" 302 -
+2025-06-16 22:55:05,910 - __main__ - INFO - Dashboard accessed by user: ziut
+2025-06-16 22:55:07,776 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:07] "GET /dashboard HTTP/1.1" 200 -
+2025-06-16 22:55:07,799 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:07] "GET /static/style.css HTTP/1.1" 200 -
+2025-06-16 22:55:21,846 - src.auth.routes - INFO - User ziut logged out successfully
+2025-06-16 22:55:21,847 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:21] "[32mGET /auth/logout HTTP/1.1[0m" 302 -
+2025-06-16 22:55:21,856 - __main__ - INFO - Landing page accessed
+2025-06-16 22:55:21,857 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:21] "GET / HTTP/1.1" 200 -
+2025-06-16 22:55:21,879 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:21] "GET /static/style.css HTTP/1.1" 200 -
+2025-06-16 22:55:21,890 - __main__ - WARNING - 404 error: http://localhost:5001/apple-touch-icon-precomposed.png
+2025-06-16 22:55:21,891 - __main__ - WARNING - 404 error: http://localhost:5001/apple-touch-icon.png
+2025-06-16 22:55:21,891 - __main__ - WARNING - 404 error: http://localhost:5001/favicon.ico
+2025-06-16 22:55:21,891 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:21] "[33mGET /apple-touch-icon.png HTTP/1.1[0m" 404 -
+2025-06-16 22:55:21,891 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:21] "[33mGET /apple-touch-icon-precomposed.png HTTP/1.1[0m" 404 -
+2025-06-16 22:55:21,892 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:21] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-06-16 22:55:24,552 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:24] "GET /auth/register HTTP/1.1" 200 -
+2025-06-16 22:55:24,567 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:24] "[36mGET /static/style.css HTTP/1.1[0m" 304 -
+2025-06-16 22:55:57,405 - src.auth.routes - INFO - New user registered: ziutek
+2025-06-16 22:55:57,406 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:57] "[32mPOST /auth/register HTTP/1.1[0m" 302 -
+2025-06-16 22:55:57,616 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:57] "GET /auth/login HTTP/1.1" 200 -
+2025-06-16 22:55:57,632 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:55:57] "GET /static/style.css HTTP/1.1" 200 -
+2025-06-16 22:56:05,853 - src.auth.routes - INFO - User ziutek logged in successfully
+2025-06-16 22:56:05,856 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:56:05] "[32mPOST /auth/login HTTP/1.1[0m" 302 -
+2025-06-16 22:56:06,046 - __main__ - INFO - Dashboard accessed by user: ziutek
+2025-06-16 22:56:06,048 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:56:06] "GET /dashboard HTTP/1.1" 200 -
+2025-06-16 22:56:06,057 - werkzeug - INFO - 127.0.0.1 - - [16/Jun/2025 22:56:06] "GET /static/style.css HTTP/1.1" 200 -

@@ -5612,6 +5612,289 @@
         "confidence": 78
       },
       "_id": "analysis_20"
+    },
+    {
+      "user_id": 2,
+      "document_id": null,
+      "filename": "2_20250614_232901_Edinburgh_university.pdf",
+      "analysis_date": "2025-06-16T12:40:31.054771",
+      "text_data": {
+        "original_text": "Guidance\tfor\tworking\twith\tGenerative\tAI\t(\u201cGenAI\u201d)\tin\tyour\tstudies\tGenAI guidance for students. The technology, ethics and use of AI is a fast-moving area. This guidance is current as of October 2024 and will be reviewed by 30th June 2025. University\tposition\ton\tGenAI\tThere is currently a lot of interest in Generative AI (GenAI) systems (e.g. ChatGPT, DALL-E, Microsoft Copilot, Claude, LLama, Grammarly Pro and Google Gemini). We recognise that developing skills in the responsible use of AI is important for you and will be an important part of your future life and work. We want to help you understand how GenAI may be used to support and aid your learning, research and assessments, while making you aware of the limitations and risks. All University of Edinburgh students have free access to ELM (Edinburgh (access to) Language Models), the University\u2019s AI access and innovation platform, offering you a gateway to safer access to GenAI. ELM provides some key benefits over accessing AI through other methods. We would encourage you to use ELM over other similar tools because: 1. You can access a wider range of AI Large Language models through ELM including the very latest and most powerful versions of ChatGPT as well as, coming soon, Open Source LLMs. 2. Your data is secure and will not be retained by third party services to train their models or for any other purpose. The University has a Zero Data Retention agreement with OpenAI which assures that your data is secure and private. All your chat histories and your document downloads are kept private to you on your instance of ELM. 3. It is free to use for all staff and students, providing the same access for all. 4. You can innovate on top of ELM by writing your own AI applications through our API. \n5. ELM is fully supported by the University through your local IT teams, EdHelp and the IS Helpline. How to get started with ELM Golden\trules\tfor\tGenAI\tuse\tWhen using any GenAI tool there are a few golden rules. By following these points, you will be able to benefit from using GenAI while also reducing the likelihood of engaging in academic misconduct. 1. Learn, don\u2019t copy: Use GenAI to aid your learning, but never copy-paste any GenAI outputs into your own assessed work. Doing so constitutes academic misconduct. 2. Ask if uncertain: Always consult your Course Organiser if you are unclear about the use of GenAI in your assessed work. Some assessed work may encourage GenAI use, while others may impose restrictions. 3. Credit use of tools: Before handing in your assessed work, make sure you acknowledge the use of GenAI, where used. 4. Protect personal data: Avoid uploading personal data - yours or anyone else\u2019s - to a GenAI platform, unless you are using the University\u2019s secure platform, ELM, and complying with the University's data protection policy.  5. Respect copyrights: Never upload copyrighted materials to a GenAI platform without authorization from the copyright owner. If you are using the University\u2019s secure platform, ELM, ensure you have the right to use the material for that purpose.   6. Verify facts: Always check GenAI output for factual accuracy, including references and citations. 7. Diversify sources: Never rely solely on GenAI; it should supplement, but not replace, traditional sources. University\u2019s data protection policy. Acceptable\tuses\tof\tGenAI\tGenAI\tand\treasonable\tadjustments\tPlease note, guidance on acceptable uses of GenAI does not preclude the use of AI tools where they are being used in the context of a reasonable adjustment. Disabled students should register with the Disability and Learning Support \nService in order to put in place a Schedule of Adjustments (a list of modifications to how you experience your teaching, learning and research). Disability and Learning Support Service Before using GenAI in any assessed work, please check whether there are any restrictions. This should be mentioned in the assessment task. If not, then ask your Course Organiser. Some assessments may explicitly ask you to work with AI tools and to analyse and critique the content it generates. Other assessments may specify, for good reason, that AI tools should not be used in particular ways. Please also make sure that you follow the University\u2019s Guidance on Proofreading of Students Assessments when using GenAI for proofreading, editing and/or translation. You will never be asked to pay to use external GenAI tools. Some of the positive, and generally acceptable, ways GenAI might be used include: \u2022 Brainstorming ideas through prompts \u2022 Getting explanations of difficult ideas, questions and concepts \u2022 Self-tutoring through conversation with the GenAI tool \u2022 Creating practice questions and self-tests \u2022 Organising and summarising your notes \u2022 Planning and structuring your writing \u2022 Summarising a text, article or book (Check first that the copyright owner permits use of GenAI for this purpose) \u2022 Helping to improve your grammar, spelling, and writing (Check for restrictions whe",
+        "cleaned_text": "Guidance for working with Generative AI ( GenAI ) in your studies GenAI guidance for students. The technology, ethics and use of AI is a fast-moving area. This guidance is current as of October 2024 and will be reviewed by 30th June 2025. University position on GenAI There is currently a lot of interest in Generative AI (GenAI) systems (e. g. ChatGPT, DALL-E, Microsoft Copilot, Claude, LLama, Grammarly Pro and Google Gemini). We recognise that developing skills in the responsible use of AI is important for you and will be an important part of your future life and work. We want to help you understand how GenAI may be used to support and aid your learning, research and assessments, while making you aware of the limitations and risks. All University of Edinburgh students have free access to ELM (Edinburgh (access to) Language Models), the University s AI access and innovation platform, offering you a gateway to safer access to GenAI. ELM provides some key benefits over accessing AI through other methods. We would encourage you to use ELM over other similar tools because: 1. You can access a wider range of AI Large Language models through ELM including the very latest and most powerful versions of ChatGPT as well as, coming soon, Open Source LLMs. 2. Your data is secure and will not be retained by third party services to train their models or for any other purpose. The University has a Zero Data Retention agreement with OpenAI which assures that your data is secure and private. All your chat histories and your document downloads are kept private to you on your instance of ELM. 3. It is free to use for all staff and students, providing the same access for all. 4. You can innovate on top of ELM by writing your own AI applications through our API. 5. ELM is fully supported by the University through your local IT teams, EdHelp and the IS Helpline. How to get started with ELM Golden rules for GenAI use When using any GenAI tool there are a few golden rules. By following these points, you will be able to benefit from using GenAI while also reducing the likelihood of engaging in academic misconduct. 1. Learn, do not copy: Use GenAI to aid your learning, but never copy-paste any GenAI outputs into your own assessed work. Doing so constitutes academic misconduct. 2. Ask if uncertain: Always consult your Course Organiser if you are unclear about the use of GenAI in your assessed work. Some assessed work may encourage GenAI use, while others may impose restrictions. 3. Credit use of tools: Before handing in your assessed work, make sure you acknowledge the use of GenAI, where used. 4. Protect personal data: Avoid uploading personal data - yours or anyone else s - to a GenAI platform, unless you are using the University s secure platform, ELM, and complying with the University s data protection policy. 5. Respect copyrights: Never upload copyrighted materials to a GenAI platform without authorization from the copyright owner. If you are using the University s secure platform, ELM, ensure you have the right to use the material for that purpose. 6. Verify facts: Always check GenAI output for factual accuracy, including references and citations. 7. Diversify sources: Never rely solely on GenAI; it should supplement, but not replace, traditional sources. University s data protection policy. Acceptable uses of GenAI GenAI and reasonable adjustments Please note, guidance on acceptable uses of GenAI does not preclude the use of AI tools where they are being used in the context of a reasonable adjustment. Disabled students should register with the Disability and Learning Support Service in order to put in place a Schedule of Adjustments (a list of modifications to how you experience your teaching, learning and research). Disability and Learning Support Service Before using GenAI in any assessed work, please check whether there are any restrictions. This should be mentioned in the assessment task. If not, then ask your Course Organiser. Some assessments may explicitly ask you to work with AI tools and to analyse and critique the content it generates. Other assessments may specify, for good reason, that AI tools should not be used in particular ways. Please also make sure that you follow the University s Guidance on Proofreading of Students Assessments when using GenAI for proofreading, editing and or translation. You will never be asked to pay to use external GenAI tools. Some of the positive, and generally acceptable, ways GenAI might be used include: Brainstorming ideas through prompts Getting explanations of difficult ideas, questions and concepts Self-tutoring through conversation with the GenAI tool Creating practice questions and self-tests Organising and summarising your notes Planning and structuring your writing Summarising a text, article or book (Check first that the copyright owner permits use of GenAI for this purpose) Helping to improve your grammar, spelling, and writing (Check for restrictions where use of language ",
+        "text_length": 11710
+      },
+      "themes": [
+        {
+          "name": "Academic Integrity",
+          "score": 24.0,
+          "frequency": 24,
+          "keywords": [
+            "plagiarism",
+            "cheating",
+            "academic",
+            "misconduct",
+            "citation"
+          ],
+          "matches": [
+            "academic misconduct",
+            "academic misconduct",
+            "academic misconduct"
+          ],
+          "confidence": 100
+        },
+        {
+          "name": "Privacy and Data",
+          "score": 18.0,
+          "frequency": 18,
+          "keywords": [
+            "private",
+            "data",
+            "personal",
+            "protection",
+            "security"
+          ],
+          "matches": [
+            "personal data",
+            "personal data",
+            "data protection"
+          ],
+          "confidence": 100
+        },
+        {
+          "name": "AI Technology",
+          "score": 9.0,
+          "frequency": 9,
+          "keywords": [],
+          "matches": [],
+          "confidence": 90,
+          "entities": [
+            "Generative AI",
+            "the University s AI",
+            "GenAI"
+          ]
+        },
+        {
+          "name": "Assessment and Evaluation",
+          "score": 6.0,
+          "frequency": 6,
+          "keywords": [
+            "assessment",
+            "evaluation"
+          ],
+          "matches": [],
+          "confidence": 60
+        },
+        {
+          "name": "Student Guidelines",
+          "score": 6.0,
+          "frequency": 6,
+          "keywords": [
+            "student",
+            "students",
+            "assignment",
+            "report"
+          ],
+          "matches": [],
+          "confidence": 60
+        },
+        {
+          "name": "Faculty Guidelines",
+          "score": 3.5,
+          "frequency": 3,
+          "keywords": [
+            "staff",
+            "teaching",
+            "course"
+          ],
+          "matches": [],
+          "confidence": 35
+        },
+        {
+          "name": "Research and Innovation",
+          "score": 2.5,
+          "frequency": 2,
+          "keywords": [
+            "research",
+            "innovation",
+            "analysis"
+          ],
+          "matches": [],
+          "confidence": 25
+        },
+        {
+          "name": "AI Ethics",
+          "score": 2.0,
+          "frequency": 2,
+          "keywords": [
+            "ethics",
+            "responsible",
+            "benefit",
+            "respect"
+          ],
+          "matches": [],
+          "confidence": 20
+        },
+        {
+          "name": "Transparency",
+          "score": 1.0,
+          "frequency": 1,
+          "keywords": [
+            "transparent",
+            "open"
+          ],
+          "matches": [],
+          "confidence": 10
+        },
+        {
+          "name": "Accountability",
+          "score": 0.5,
+          "frequency": 0,
+          "keywords": [
+            "responsible"
+          ],
+          "matches": [],
+          "confidence": 5
+        }
+      ],
+      "classification": {
+        "classification": "Restrictive",
+        "confidence": 54,
+        "method": "hybrid",
+        "scores": {
+          "Restrictive": 14.218749738418419,
+          "Moderate": 10.40001895964998,
+          "Permissive": 10.701231301931605
+        },
+        "reasoning": "Classified as Restrictive based on: - 'academic misconduct' appears 6 time(s) - 'limited' appears 2 time(s) - 'required' appears 2 time(s) - Penalty/consequence language present",
+        "details": {
+          "rule_based": {
+            "classification": "Restrictive",
+            "confidence": 38,
+            "scores": {
+              "Restrictive": 20.200000000000003,
+              "Moderate": 15.0,
+              "Permissive": 17.0
+            },
+            "keyword_matches": {
+              "Restrictive": [
+                [
+                  "limited",
+                  2,
+                  3.0
+                ],
+                [
+                  "academic misconduct",
+                  6,
+                  12.0
+                ],
+                [
+                  "required",
+                  2,
+                  2.6
+                ],
+                [
+                  "must",
+                  1,
+                  1.3
+                ],
+                [
+                  "essential",
+                  1,
+                  1.3
+                ]
+              ],
+              "Moderate": [
+                [
+                  "reasonable",
+                  2,
+                  3.0
+                ],
+                [
+                  "guidelines",
+                  1,
+                  1.2
+                ],
+                [
+                  "requirements",
+                  1,
+                  1.2
+                ],
+                [
+                  "responsible",
+                  1,
+                  1.3
+                ],
+                [
+                  "respect",
+                  1,
+                  1.3
+                ],
+                [
+                  "context",
+                  2,
+                  2.8
+                ],
+                [
+                  "particular",
+                  3,
+                  4.199999999999999
+                ]
+              ],
+              "Permissive": [
+                [
+                  "support",
+                  3,
+                  5.4
+                ],
+                [
+                  "benefits",
+                  1,
+                  1.2
+                ],
+                [
+                  "improve",
+                  1,
+                  1.2
+                ],
+                [
+                  "innovation",
+                  1,
+                  1.2
+                ],
+                [
+                  "guidance",
+                  5,
+                  5.0
+                ],
+                [
+                  "support",
+                  3,
+                  3.0
+                ]
+              ]
+            },
+            "method": "rule_based"
+          },
+          "ml_based": {
+            "classification": "Restrictive",
+            "confidence": 52,
+            "scores": {
+              "Moderate": 0.3500047399124949,
+              "Permissive": 0.12530782548290156,
+              "Restrictive": 0.5246874346046043
+            },
+            "method": "ml_based"
+          },
+          "agreement": true
+        }
+      },
+      "summary": {
+        "total_themes": 10,
+        "top_theme": "Academic Integrity",
+        "classification_type": "Restrictive",
+        "confidence": 54
+      },
+      "_id": "analysis_21"
     }
   ],
   "recommendations": [
@@ -6694,6 +6977,276 @@
       "created_date": "2025-06-14T22:33:00.938539",
       "total_recommendations": 4,
       "_id": "rec_4"
+    },
+    {
+      "user_id": 2,
+      "analysis_id": "analysis_21",
+      "recommendations": [
+        {
+          "title": "Strengthen Existing Governance with Formal Accountability Metrics",
+          "description": "Enhance current governance structures by implementing quantitative accountability measures, establishing clear performance indicators for policy effectiveness, and creating systematic feedback loops from stakeholder communities.",
+          "dimension": "accountability",
+          "priority": "critical",
+          "implementation_type": "enhancement",
+          "timeframe": "1-3 months",
+          "impact_score": 68.39999999999999,
+          "current_score": 0.0,
+          "expected_improvement": "Significant improvement expected: 0.0% \u2192 55.0%",
+          "implementation_steps": [
+            "Develop KPIs for current governance structure effectiveness",
+            "Implement quarterly stakeholder satisfaction surveys",
+            "Create public transparency reports on governance activities and outcomes",
+            "Establish formal escalation procedures for unresolved policy concerns"
+          ],
+          "success_metrics": [
+            "KPI dashboard operational",
+            "Stakeholder satisfaction >75%",
+            "Response time to concerns <48 hours"
+          ],
+          "estimated_resources": {
+            "staff_time": "Substantial (2-3 FTE months)",
+            "budget_requirement": "High (\u00a310,000-\u00a325,000)",
+            "specialist_expertise": [
+              "Technical/IT specialist",
+              "Legal/Compliance expert"
+            ],
+            "external_support": "Recommended - Complex implementation benefits from external expertise"
+          },
+          "source": "PolicyCraft Enhanced Framework",
+          "academic_rationale": "Establishes clear governance structures essential for responsible AI integration in research_university contexts, addressing institutional risk management and stakeholder trust requirements. Particularly important for research integrity and scholarly communication standards.",
+          "related_literature": [
+            "Dabis & Cs\u00e1ki (2024) - AI Ethics in Higher Education Policy",
+            "UNESCO (2023) - ChatGPT and AI in Higher Education",
+            "Bond et al. (2024) - Meta-systematic Review of AI in Education"
+          ],
+          "institution_specific_notes": "Consider integration with existing research ethics and integrity frameworks; Build on established academic governance structures; Builds on existing policy foundation - focus on strengthening and expanding current provisions",
+          "stakeholder_considerations": [
+            "Senior Leadership",
+            "IT Services",
+            "Legal/Compliance",
+            "Research Office",
+            "Graduate School",
+            "Ethics Board"
+          ],
+          "potential_challenges": [
+            "Complex implementation requiring significant coordination",
+            "Faculty autonomy considerations in research contexts",
+            "Integration with existing research governance structures",
+            "Resource allocation and budget constraints",
+            "Timeline coordination with academic calendar",
+            "Change management and stakeholder buy-in"
+          ],
+          "mitigation_strategies": [
+            "Establish clear project governance with defined roles and responsibilities",
+            "Implement phased rollout approach to manage complexity and risk",
+            "Provide comprehensive training and support for all stakeholders",
+            "Create feedback mechanisms for continuous improvement during implementation",
+            "Engage faculty governance bodies early in planning process",
+            "Align implementation with research ethics review cycles"
+          ],
+          "recommendation_confidence": "High",
+          "evidence_strength": "Good - Measurable outcomes defined",
+          "implementation_complexity": "High"
+        },
+        {
+          "title": "Strengthen Existing Human Oversight with Systematic Review Processes",
+          "description": "Enhance current human oversight practices by implementing systematic review processes, establishing clear decision-making hierarchies, and creating documentation requirements for AI-assisted decisions.",
+          "dimension": "human_agency",
+          "priority": "critical",
+          "implementation_type": "enhancement",
+          "timeframe": "1-2 months",
+          "impact_score": 68.39999999999999,
+          "current_score": 0.0,
+          "expected_improvement": "Significant improvement expected: 0.0% \u2192 55.0%",
+          "implementation_steps": [
+            "Audit existing oversight practices for completeness and effectiveness",
+            "Implement standardised documentation requirements for AI-assisted decisions",
+            "Create clear escalation procedures for complex or ambiguous cases",
+            "Establish quarterly review meetings to assess oversight effectiveness"
+          ],
+          "success_metrics": [
+            "Oversight audit completed",
+            "Documentation compliance >95%",
+            "Escalation procedures tested and functional"
+          ],
+          "estimated_resources": {
+            "staff_time": "Substantial (2-3 FTE months)",
+            "budget_requirement": "High (\u00a310,000-\u00a325,000)",
+            "specialist_expertise": [
+              "Technical/IT specialist"
+            ],
+            "external_support": "Recommended - Complex implementation benefits from external expertise"
+          },
+          "source": "PolicyCraft Enhanced Framework",
+          "academic_rationale": "Preserves human authority and oversight in educational processes, ensuring AI augments rather than replaces human judgment in critical academic decisions. Particularly important for research integrity and scholarly communication standards.",
+          "related_literature": [
+            "BERA (2018) - Ethical Guidelines for Educational Research",
+            "Chan & Hu (2023) - Student Perspectives on Generative AI",
+            "UNESCO (2023) - Human-Centric AI in Education"
+          ],
+          "institution_specific_notes": "Consider integration with existing research ethics and integrity frameworks; Build on established academic governance structures; Builds on existing policy foundation - focus on strengthening and expanding current provisions",
+          "stakeholder_considerations": [
+            "Academic Affairs",
+            "Faculty Senate",
+            "Student Representatives",
+            "Research Office",
+            "Graduate School",
+            "Ethics Board"
+          ],
+          "potential_challenges": [
+            "Complex implementation requiring significant coordination",
+            "Faculty autonomy considerations in research contexts",
+            "Integration with existing research governance structures",
+            "Resource allocation and budget constraints",
+            "Timeline coordination with academic calendar",
+            "Change management and stakeholder buy-in"
+          ],
+          "mitigation_strategies": [
+            "Establish clear project governance with defined roles and responsibilities",
+            "Implement phased rollout approach to manage complexity and risk",
+            "Provide comprehensive training and support for all stakeholders",
+            "Create feedback mechanisms for continuous improvement during implementation",
+            "Engage faculty governance bodies early in planning process",
+            "Align implementation with research ethics review cycles"
+          ],
+          "recommendation_confidence": "High",
+          "evidence_strength": "Good - Measurable outcomes defined",
+          "implementation_complexity": "High"
+        },
+        {
+          "title": "Enhance Expand Existing Accessibility Measures with Cultural Competency",
+          "description": "Enhance current accessibility practices by incorporating cultural competency considerations, addressing diverse learning styles and preferences, and ensuring AI implementations respect varied cultural and linguistic backgrounds.",
+          "dimension": "inclusiveness",
+          "priority": "critical",
+          "implementation_type": "enhancement",
+          "timeframe": "2-4 months",
+          "impact_score": 66.57600000000001,
+          "current_score": 3.8,
+          "expected_improvement": "Significant improvement expected: 3.8% \u2192 57.7%",
+          "implementation_steps": [
+            "Review existing accessibility measures for cultural inclusivity gaps",
+            "Engage diverse student focus groups to identify additional needs",
+            "Develop cultural competency guidelines for AI tool selection and implementation",
+            "Create ongoing assessment mechanism for inclusive practice effectiveness"
+          ],
+          "success_metrics": [
+            "Cultural inclusivity review completed",
+            "Focus group recommendations implemented",
+            "Assessment mechanism operational"
+          ],
+          "estimated_resources": {
+            "staff_time": "Substantial (2-3 FTE months)",
+            "budget_requirement": "High (\u00a310,000-\u00a325,000)",
+            "specialist_expertise": [
+              "Assessment design expert"
+            ],
+            "external_support": "Recommended - Complex implementation benefits from external expertise"
+          },
+          "source": "PolicyCraft Enhanced Framework",
+          "academic_rationale": "Addresses equity and accessibility requirements to ensure AI implementation does not create or exacerbate educational inequalities or exclude diverse student populations. Particularly important for research integrity and scholarly communication standards.",
+          "related_literature": [
+            "Barnes & Hutson (2024) - Mitigating Bias in Educational AI",
+            "JISC (2023) - Inclusive AI Implementation",
+            "Bond et al. (2024) - Equity Considerations in AI Education"
+          ],
+          "institution_specific_notes": "Consider integration with existing research ethics and integrity frameworks; Build on established academic governance structures; Builds on existing policy foundation - focus on strengthening and expanding current provisions",
+          "stakeholder_considerations": [
+            "Disability Services",
+            "Diversity & Inclusion Office",
+            "Student Support",
+            "Research Office",
+            "Graduate School",
+            "Ethics Board"
+          ],
+          "potential_challenges": [
+            "Complex implementation requiring significant coordination",
+            "Faculty autonomy considerations in research contexts",
+            "Integration with existing research governance structures",
+            "Resource allocation and budget constraints",
+            "Timeline coordination with academic calendar",
+            "Change management and stakeholder buy-in"
+          ],
+          "mitigation_strategies": [
+            "Establish clear project governance with defined roles and responsibilities",
+            "Implement phased rollout approach to manage complexity and risk",
+            "Provide comprehensive training and support for all stakeholders",
+            "Create feedback mechanisms for continuous improvement during implementation",
+            "Engage faculty governance bodies early in planning process",
+            "Align implementation with research ethics review cycles"
+          ],
+          "recommendation_confidence": "High",
+          "evidence_strength": "Good - Measurable outcomes defined",
+          "implementation_complexity": "High"
+        },
+        {
+          "title": "Enhance Expand Existing Disclosure Requirements with Methodological Detail",
+          "description": "Enhance current disclosure practices by requiring detailed documentation of AI methodologies, decision-making processes, and outcome validation procedures. Focus on academic integrity and reproducibility standards.",
+          "dimension": "transparency",
+          "priority": "high",
+          "implementation_type": "enhancement",
+          "timeframe": "1-2 months",
+          "impact_score": 64.704,
+          "current_score": 7.7,
+          "expected_improvement": "Significant improvement expected: 7.7% \u2192 60.4%",
+          "implementation_steps": [
+            "Review and strengthen existing disclosure language for comprehensiveness",
+            "Add requirements for AI methodology documentation in research contexts",
+            "Create detailed examples and case studies for common disclosure scenarios",
+            "Implement compliance monitoring through existing academic integrity mechanisms"
+          ],
+          "success_metrics": [
+            "Enhanced disclosure guidelines published",
+            "Compliance monitoring system operational",
+            "Faculty feedback rating >4/5"
+          ],
+          "estimated_resources": {
+            "staff_time": "Substantial (2-3 FTE months)",
+            "budget_requirement": "High (\u00a310,000-\u00a325,000)",
+            "specialist_expertise": [
+              "Legal/Compliance expert"
+            ],
+            "external_support": "Recommended - Complex implementation benefits from external expertise"
+          },
+          "source": "PolicyCraft Enhanced Framework",
+          "academic_rationale": "Implements disclosure and communication frameworks critical for maintaining academic integrity and enabling informed decision-making by all institutional stakeholders. Particularly important for research integrity and scholarly communication standards.",
+          "related_literature": [
+            "UNESCO (2023) - AI Transparency Guidelines",
+            "JISC (2023) - Generative AI in Teaching and Learning",
+            "Williamson & Eynon (2020) - AI in Education Historical Analysis"
+          ],
+          "institution_specific_notes": "Consider integration with existing research ethics and integrity frameworks; Build on established academic governance structures; Builds on existing policy foundation - focus on strengthening and expanding current provisions",
+          "stakeholder_considerations": [
+            "Communications Team",
+            "Student Services",
+            "Faculty Representatives",
+            "Research Office",
+            "Graduate School",
+            "Ethics Board"
+          ],
+          "potential_challenges": [
+            "Complex implementation requiring significant coordination",
+            "Faculty autonomy considerations in research contexts",
+            "Integration with existing research governance structures",
+            "Resource allocation and budget constraints",
+            "Timeline coordination with academic calendar",
+            "Change management and stakeholder buy-in"
+          ],
+          "mitigation_strategies": [
+            "Establish clear project governance with defined roles and responsibilities",
+            "Implement phased rollout approach to manage complexity and risk",
+            "Provide comprehensive training and support for all stakeholders",
+            "Create feedback mechanisms for continuous improvement during implementation",
+            "Engage faculty governance bodies early in planning process",
+            "Align implementation with research ethics review cycles"
+          ],
+          "recommendation_confidence": "High",
+          "evidence_strength": "Good - Measurable outcomes defined",
+          "implementation_complexity": "High"
+        }
+      ],
+      "created_date": "2025-06-16T12:40:47.454571",
+      "total_recommendations": 4,
+      "_id": "rec_5"
     }
   ]
 }

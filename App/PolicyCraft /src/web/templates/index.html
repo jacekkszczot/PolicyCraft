@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}PolicyCraft - Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">PolicyCraft</h1>
+        <h2 class="hero-subtitle">AI Policy Analysis for Higher Education</h2>
+        <p class="hero-description">
+            Strategic and ethical integration of generative AI in universities. 
+            Analyse policy documents, extract key themes, and generate tailored recommendations.
+        </p>
+        
+        {% if current_user and current_user.is_authenticated %}
+            <!-- Authenticated user view -->
+            <div class="hero-actions">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-large">
+                    Go to Dashboard
+                </a>
+                <a href="{{ url_for('upload_file') }}" class="btn btn-outline btn-large">
+                    Upload Policy
+                </a>
+            </div>
+            
+            <div class="user-welcome">
+                <p>Welcome back, <strong>{{ current_user.get_full_name() }}</strong>!</p>
+            </div>
+        {% else %}
+            <!-- Non-authenticated user view -->
+            <div class="hero-actions">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-large">
+                    Get Started Free
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-large">
+                    Login
+                </a>
+            </div>
+            
+            <div class="cta-description">
+                <p>Create your account to start analysing university AI policies with advanced NLP and evidence-based recommendations.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <h2 class="section-title">Comprehensive Policy Analysis</h2>
+        
+        <div class="features-grid">
+            <a href="{% if current_user.is_authenticated %}{{ url_for('upload_file') }}{% else %}{{ url_for('auth.register') }}{% endif %}" 
+               class="feature-card clickable-card" 
+               title="Upload and analyse policy documents">
+                <div class="feature-icon">📄</div>
+                <h3>Document Analysis</h3>
+                <p>Upload and analyse university AI policy documents (PDF, DOCX, TXT) with advanced NLP processing.</p>
+                <div class="card-action">
+                    <span class="action-text">
+                        {% if current_user.is_authenticated %}View Dashboard{% else %}Get Started{% endif %}
+                    </span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+            
+            <a href="{% if current_user.is_authenticated %}{{ url_for('dashboard') }}{% else %}{{ url_for('auth.register') }}{% endif %}" 
+               class="feature-card clickable-card" 
+               title="See policy classification in action">
+                <div class="feature-icon">📊</div>
+                <h3>Policy Classification</h3>
+                <p>Classify policy approaches as restrictive, permissive, or balanced with hybrid ML classification.</p>
+                <div class="card-action">
+                    <span class="action-text">
+                        {% if current_user.is_authenticated %}View Analytics{% else %}Get Started{% endif %}
+                    </span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+            
+            <a href="{% if current_user.is_authenticated %}{{ url_for('upload_file') }}{% else %}{{ url_for('auth.register') }}{% endif %}" 
+               class="feature-card clickable-card" 
+               title="Generate evidence-based recommendations">
+                <div class="feature-icon">💡</div>
+                <h3>Smart Recommendations</h3>
+                <p>Generate tailored policy recommendations based on UNESCO 2023, JISC 2023, and BERA 2018 frameworks.</p>
+                <div class="card-action">
+                    <span class="action-text">
+                        {% if current_user.is_authenticated %}Start Analysis{% else %}Get Started{% endif %}
+                    </span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Academic Foundation Section -->
+<section class="academic-section">
+    <div class="container">
+        <h2 class="section-title">Research-Grade Analysis</h2>
+        
+        <div class="academic-grid">
+            <div class="academic-card">
+                <div class="academic-icon">🎓</div>
+                <h3>Academic Standards</h3>
+                <p>Built for MSc-level research with rigorous methodology and evidence-based frameworks from leading institutions.</p>
+            </div>
+            
+            <div class="academic-card">
+                <div class="academic-icon">📚</div>
+                <h3>Validated Framework</h3>
+                <p>Tested on policies from 14 leading universities including Oxford, Cambridge, MIT, Stanford, and Harvard.</p>
+            </div>
+            
+            <div class="academic-card">
+                <div class="academic-icon">⚡</div>
+                <h3>Real-time Processing</h3>
+                <p>Advanced NLP pipeline delivers comprehensive analysis in under 3 seconds with 85% average confidence.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}text">
+                        {% if current_user.is_authenticated %}Upload Document{% else %}Get Started{% endif %}
+                    </span>
+                    <span class="action-arrow">→</span>
+                </div>
+            </a>
+            
+            <a href="{% if current_user.is_authenticated %}{{ url_for('dashboard') }}{% else %}{{ url_for('auth.register') }}{% endif %}" 
+               class="feature-card clickable-card" 
+               title="Explore theme extraction results">
+                <div class="feature-icon">🎯</div>
+                <h3>Theme Extraction</h3>
+                <p>Automatically identify key themes like ethics, transparency, and academic integrity using ML algorithms.</p>
+                <div class="card-action">
+                    <span class="action-

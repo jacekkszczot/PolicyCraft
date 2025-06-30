@@ -1,0 +1,31 @@
+/* 
+ * PolicyCraft - Layout Styles
+ * Main content and section containers
+ */
+
+.main-content {
+    min-height: calc(100vh - 80px);
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.75), rgba(241, 245, 249, 0.7)),
+                url('/static/media/AdobeStock_1182616543.jpeg') center/cover;
+    background-attachment: fixed;
+}
+
+.hero, .hero-section {
+    position: relative;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(71, 85, 105, 0.8)),
+                url('/static/media/AdobeStock_1182616543.jpeg') center/cover;
+    color: white;
+    padding: 6rem 2rem;
+    text-align: center;
+    overflow: hidden;
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}

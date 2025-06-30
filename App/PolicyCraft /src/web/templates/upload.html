@@ -1,0 +1,496 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Documents - PolicyCraft{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">Upload Policy Documents</h1>
+        <h2 class="hero-subtitle">Drag and drop files or click to select. Support for multiple files (up to 10 files, 128MB each).</h2>
+    </div>
+</section>
+
+<div class="upload-container">
+    
+    <!-- Enhanced Upload Form with Drag & Drop -->
+    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+        <!-- Drag & Drop Zone -->
+        <div class="drag-drop-zone" id="dragDropZone">
+            <div class="drag-drop-content">
+                <div class="drag-drop-icon">📄</div>
+                <h3>Drag & Drop Policy Documents Here</h3>
+                <p>or <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">Browse Files</button></p>
+                <small>Supports: PDF, DOCX, TXT • Max: 10 files • 128MB each</small>
+            </div>
+            
+            <!-- Hidden File Input -->
+            <input type="file" 
+                   name="files[]" 
+                   id="fileInput" 
+                   multiple 
+                   accept=".pdf,.docx,.txt,.doc" 
+                   style="display: none;">
+        </div>
+        
+        <!-- File Preview Area -->
+        <div class="file-preview" id="filePreview" style="display: none;">
+            <h4>Selected Files:</h4>
+            <div class="file-list" id="fileList"></div>
+            <div class="upload-actions">
+                <button type="submit" class="btn btn-primary" id="uploadBtn">
+                    <span class="upload-text">Analyse Documents</span>
+                    <span class="upload-spinner" style="display: none;">⟳ Processing...</span>
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="clearFiles()">Clear All</button>
+            </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="upload-progress" id="uploadProgress" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Uploading files...</div>
+        </div>
+    </form>
+    
+    <!-- File Type Information -->
+    <div class="file-info">
+        <h3>Supported File Types</h3>
+        <div class="file-types">
+            <div class="file-type">
+                <span class="file-icon">📄</span>
+                <div>
+                    <strong>PDF Documents</strong>
+                    <small>Portable Document Format (.pdf)</small>
+                </div>
+            </div>
+            <div class="file-type">
+                <span class="file-icon">📝</span>
+                <div>
+                    <strong>Word Documents</strong>
+                    <small>Microsoft Word (.docx, .doc)</small>
+                </div>
+            </div>
+            <div class="file-type">
+                <span class="file-icon">📋</span>
+                <div>
+                    <strong>Text Files</strong>
+                    <small>Plain text documents (.txt)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.upload-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.upload-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.upload-header h1 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.drag-drop-zone {
+    border: 3px dashed #3498db;
+    border-radius: 15px;
+    padding: 3rem;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.05), rgba(155, 89, 182, 0.05));
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-bottom: 2rem;
+}
+
+.drag-drop-zone:hover,
+.drag-drop-zone.drag-over {
+    border-color: #2980b9;
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(155, 89, 182, 0.1));
+    transform: translateY(-2px);
+}
+
+.drag-drop-content {
+    pointer-events: none;
+}
+
+.drag-drop-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+
+.drag-drop-zone h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.file-preview {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.file-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1.5rem;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border: 1px solid #ecf0f1;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    background: #f8f9fa;
+}
+
+.file-info-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.file-icon {
+    font-size: 1.5rem;
+}
+
+.file-details h5 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.file-details small {
+    color: #7f8c8d;
+}
+
+.file-size {
+    color: #3498db;
+    font-weight: 500;
+}
+
+.remove-file {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-file:hover {
+    background: #c0392b;
+}
+
+.upload-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.upload-progress {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background: #ecf0f1;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(45deg, #3498db, #2ecc71);
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+
+.progress-text {
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.file-info {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.file-info h3 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 2rem;
+}
+
+.file-types {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.file-type {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #ecf0f1;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.file-type:hover {
+    border-color: #3498db;
+    background: rgba(52, 152, 219, 0.05);
+}
+
+.file-type .file-icon {
+    font-size: 2rem;
+}
+
+.upload-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+    .upload-container {
+        padding: 1rem;
+    }
+    
+    .drag-drop-zone {
+        padding: 2rem 1rem;
+    }
+    
+    .file-types {
+        grid-template-columns: 1fr;
+    }
+    
+    .upload-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+let selectedFiles = [];
+const maxFiles = 10;
+const maxSize = 128 * 1024 * 1024; // 128MB
+
+// Drag and drop functionality
+const dragDropZone = document.getElementById('dragDropZone');
+const fileInput = document.getElementById('fileInput');
+const filePreview = document.getElementById('filePreview');
+const fileList = document.getElementById('fileList');
+
+// Drag and drop events
+dragDropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dragDropZone.classList.add('drag-over');
+});
+
+dragDropZone.addEventListener('dragleave', () => {
+    dragDropZone.classList.remove('drag-over');
+});
+
+dragDropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dragDropZone.classList.remove('drag-over');
+    
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
+});
+
+// Click to select files
+dragDropZone.addEventListener('click', () => {
+    fileInput.click();
+});
+
+fileInput.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files);
+    handleFiles(files);
+});
+
+function handleFiles(files) {
+    // Check file limit
+    if (selectedFiles.length + files.length > maxFiles) {
+        alert(`Maximum ${maxFiles} files allowed. You have ${selectedFiles.length} files selected.`);
+        return;
+    }
+    
+    // Validate and add files
+    files.forEach(file => {
+        if (validateFile(file)) {
+            selectedFiles.push(file);
+        }
+    });
+    
+    updateFilePreview();
+}
+
+function validateFile(file) {
+    // Check file size
+    if (file.size > maxSize) {
+        alert(`File "${file.name}" is too large. Maximum size is 128MB.`);
+        return false;
+    }
+    
+    // Check file type
+    const allowedTypes = ['.pdf', '.docx', '.doc', '.txt'];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    
+    if (!allowedTypes.includes(fileExtension)) {
+        alert(`File "${file.name}" is not a supported format. Please upload PDF, DOCX, DOC, or TXT files.`);
+        return false;
+    }
+    
+    // Check if file already selected
+    if (selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+        alert(`File "${file.name}" is already selected.`);
+        return false;
+    }
+    
+    return true;
+}
+
+function updateFilePreview() {
+    if (selectedFiles.length === 0) {
+        filePreview.style.display = 'none';
+        return;
+    }
+    
+    filePreview.style.display = 'block';
+    fileList.innerHTML = '';
+    
+    selectedFiles.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        
+        const fileIcon = getFileIcon(file.name);
+        const fileSize = formatFileSize(file.size);
+        
+        fileItem.innerHTML = `
+            <div class="file-info-section">
+                <span class="file-icon">${fileIcon}</span>
+                <div class="file-details">
+                    <h5>${file.name}</h5>
+                    <small>${file.type || 'Unknown type'}</small>
+                </div>
+            </div>
+            <div class="file-size">${fileSize}</div>
+            <button type="button" class="remove-file" onclick="removeFile(${index})" title="Remove file">×</button>
+        `;
+        
+        fileList.appendChild(fileItem);
+    });
+}
+
+function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    updateFilePreview();
+}
+
+function clearFiles() {
+    selectedFiles = [];
+    fileInput.value = '';
+    updateFilePreview();
+}
+
+function getFileIcon(filename) {
+    const extension = filename.split('.').pop().toLowerCase();
+    switch(extension) {
+        case 'pdf': return '📄';
+        case 'docx':
+        case 'doc': return '📝';
+        case 'txt': return '📋';
+        default: return '📄';
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Form submission with progress
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    if (selectedFiles.length === 0) {
+        e.preventDefault();
+        alert('Please select at least one file to upload.');
+        return;
+    }
+    
+    // Update files to form data
+    const dataTransfer = new DataTransfer();
+    selectedFiles.forEach(file => {
+        dataTransfer.items.add(file);
+    });
+    fileInput.files = dataTransfer.files;
+    
+    // Show progress
+    showUploadProgress();
+});
+
+function showUploadProgress() {
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadText = uploadBtn.querySelector('.upload-text');
+    const uploadSpinner = uploadBtn.querySelector('.upload-spinner');
+    const progressDiv = document.getElementById('uploadProgress');
+    
+    uploadBtn.disabled = true;
+    uploadText.style.display = 'none';
+    uploadSpinner.style.display = 'inline';
+    progressDiv.style.display = 'block';
+    
+    // Simulate progress (in real implementation, this would be actual progress)
+    let progress = 0;
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    
+    const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 95) progress = 95;
+        
+        progressFill.style.width = progress + '%';
+        progressText.textContent = `Uploading files... ${Math.round(progress)}%`;
+        
+        if (progress >= 95) {
+            clearInterval(interval);
+            progressText.textContent = 'Processing files... This may take a few minutes.';
+        }
+    }, 500);
+}
+</script>
+{% endblock %}

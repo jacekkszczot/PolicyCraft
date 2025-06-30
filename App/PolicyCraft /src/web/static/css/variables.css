@@ -1,0 +1,25 @@
+/* 
+ * PolicyCraft - CSS Variables
+ * Academic Elegance Theme - Adobe Stock #1182616543 (Student License)
+ * Author: Jacek Robert Kszczot
+ */
+
+:root {
+    --primary: #1e293b;
+    --primary-dark: #0f172a;
+    --secondary: #d97706;
+    --secondary-dark: #b45309;
+    --accent: #475569;
+    --success: #059669;
+    --warning: #f59e0b;
+    --error: #dc2626;
+    --background: #f8fafc;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --border: #e2e8f0;
+    
+    /* Dodatkowe zmienne dla lepszej czytelności */
+    --orange: #d97706;
+    --red: #dc2626;
+    --green: #059669;
+}

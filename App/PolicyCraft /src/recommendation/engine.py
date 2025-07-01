@@ -350,7 +350,6 @@ class EthicalFrameworkAnalyzer:
                     'priority': 'high',
                     'current_score': analysis['score'],
                     'description': f"Low coverage of {analysis['description'].lower()}",
-                    'evidence': f"Only {analysis['item_count']} relevant indicators found",
                     'matched_items': analysis.get('matched_items', [])
                 })
             elif analysis['status'] == 'moderate':
@@ -360,7 +359,6 @@ class EthicalFrameworkAnalyzer:
                     'priority': 'medium',
                     'current_score': analysis['score'],
                     'description': f"Moderate coverage of {analysis['description'].lower()}",
-                    'evidence': f"{analysis['item_count']} indicators found, could be strengthened",
                     'matched_items': analysis.get('matched_items', [])
                 })
         
@@ -1212,7 +1210,6 @@ class RecommendationGenerator:
             'transparency': [
                 "UNESCO (2023) - AI Transparency Guidelines",
                 "JISC (2023) - Generative AI in Teaching and Learning",
-                "Williamson & Eynon (2020) - AI in Education Historical Analysis"
             ],
             'human_agency': [
                 "BERA (2018) - Ethical Guidelines for Educational Research",
@@ -1220,7 +1217,6 @@ class RecommendationGenerator:
                 "UNESCO (2023) - Human-Centric AI in Education"
             ],
             'inclusiveness': [
-                "Barnes & Hutson (2024) - Mitigating Bias in Educational AI",
                 "JISC (2023) - Inclusive AI Implementation",
                 "Bond et al. (2024) - Equity Considerations in AI Education"
             ]
@@ -2478,7 +2474,6 @@ class EnhancedRecommendationGenerator:
             'transparency': [
                 "UNESCO (2023) - AI Transparency Guidelines",
                 "JISC (2023) - Generative AI in Teaching and Learning",
-                "Williamson & Eynon (2020) - AI in Education Historical Analysis"
             ],
             'human_agency': [
                 "BERA (2018) - Ethical Guidelines for Educational Research",
@@ -2486,7 +2481,6 @@ class EnhancedRecommendationGenerator:
                 "UNESCO (2023) - Human-Centric AI in Education"
             ],
             'inclusiveness': [
-                "Barnes & Hutson (2024) - Mitigating Bias in Educational AI",
                 "JISC (2023) - Inclusive AI Implementation",
                 "Bond et al. (2024) - Equity Considerations in AI Education"
             ]

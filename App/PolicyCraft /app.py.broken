@@ -198,11 +198,11 @@ def index():
 @login_required
 def dashboard():
     """Dashboard with comprehensive analysis data."""
+    # Handle first login onboarding
+    handle_first_login_onboarding(current_user.id)
+
     try:
         logger.info(f"Dashboard accessed by user: {current_user.username}")
-        
-        # Handle first login onboarding
-        handle_first_login_onboarding(current_user.id)
         
         # Get user's analyses
         user_analyses = db_operations.get_user_analyses(current_user.id)
@@ -591,6 +591,38 @@ def get_recommendations(analysis_id):
         if not analysis:
             flash('Analysis not found or access denied.', 'error')
             return redirect(url_for('dashboard'))
+
+@app.route('/compare-baseline/<analysis_id>')
+@login_required
+def compare_with_baseline(analysis_id):
+    """Compare user analysis with baseline university policies."""
+    try:
+        # Get comparison results
+        comparison_data = db_operations.compare_with_baseline_policies(current_user.id, analysis_id)
+        
+        if "error" in comparison_data:
+            flash(f'Error: {comparison_data["error"]}', 'error')
+            return redirect(url_for('dashboard'))
+        
+        # Get original analysis for context
+        analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
+        
+        template_data = {
+            'analysis': {
+                'filename': analysis.get('filename', 'Unknown') if analysis else 'Unknown',
+                'analysis_id': analysis_id
+            },
+            'comparison': comparison_data,
+            'generated_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+        logger.info(f"Generated baseline comparison for analysis {analysis_id}")
+        return render_template('baseline_comparison.html', data=template_data)
+        
+    except Exception as e:
+        logger.error(f"Error in baseline comparison: {str(e)}")
+        flash('Error generating baseline comparison. Please try again.', 'error')
+        return redirect(url_for('dashboard'))
         
         logger.info(f"Generating recommendations for analysis {analysis_id}")
         
@@ -603,6 +635,38 @@ def get_recommendations(analysis_id):
         if not cleaned_text:
             flash('Analysis text not found. Cannot generate recommendations.', 'warning')
             return redirect(url_for('dashboard'))
+
+@app.route('/compare-baseline/<analysis_id>')
+@login_required
+def compare_with_baseline(analysis_id):
+    """Compare user analysis with baseline university policies."""
+    try:
+        # Get comparison results
+        comparison_data = db_operations.compare_with_baseline_policies(current_user.id, analysis_id)
+        
+        if "error" in comparison_data:
+            flash(f'Error: {comparison_data["error"]}', 'error')
+            return redirect(url_for('dashboard'))
+        
+        # Get original analysis for context
+        analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
+        
+        template_data = {
+            'analysis': {
+                'filename': analysis.get('filename', 'Unknown') if analysis else 'Unknown',
+                'analysis_id': analysis_id
+            },
+            'comparison': comparison_data,
+            'generated_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+        logger.info(f"Generated baseline comparison for analysis {analysis_id}")
+        return render_template('baseline_comparison.html', data=template_data)
+        
+    except Exception as e:
+        logger.error(f"Error in baseline comparison: {str(e)}")
+        flash('Error generating baseline comparison. Please try again.', 'error')
+        return redirect(url_for('dashboard'))
         
         # Generate recommendations
         recommendation_package = recommendation_engine.generate_recommendations(
@@ -685,6 +749,38 @@ def get_recommendations(analysis_id):
             flash('Error generating recommendations. Please try again.', 'error')
             return redirect(url_for('dashboard'))
 
+@app.route('/compare-baseline/<analysis_id>')
+@login_required
+def compare_with_baseline(analysis_id):
+    """Compare user analysis with baseline university policies."""
+    try:
+        # Get comparison results
+        comparison_data = db_operations.compare_with_baseline_policies(current_user.id, analysis_id)
+        
+        if "error" in comparison_data:
+            flash(f'Error: {comparison_data["error"]}', 'error')
+            return redirect(url_for('dashboard'))
+        
+        # Get original analysis for context
+        analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
+        
+        template_data = {
+            'analysis': {
+                'filename': analysis.get('filename', 'Unknown') if analysis else 'Unknown',
+                'analysis_id': analysis_id
+            },
+            'comparison': comparison_data,
+            'generated_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+        logger.info(f"Generated baseline comparison for analysis {analysis_id}")
+        return render_template('baseline_comparison.html', data=template_data)
+        
+    except Exception as e:
+        logger.error(f"Error in baseline comparison: {str(e)}")
+        flash('Error generating baseline comparison. Please try again.', 'error')
+        return redirect(url_for('dashboard'))
+
 # === API ROUTES ===
 
 @app.route('/api/analysis/<analysis_id>')
@@ -727,9 +823,24 @@ def internal_error(error):
 app.jinja_env.filters["clean_university_name"] = clean_university_name
 app.jinja_env.filters["clean_filename"] = clean_filename
 app.jinja_env.filters["format_british_date"] = format_british_date
+if __name__ == '__main__':
+    """Run the PolicyCraft application."""
+    os.makedirs('logs', exist_ok=True)
+    create_upload_folder()
+    
+    logger.info("Starting PolicyCraft Application")
+    print("🚀 PolicyCraft starting at: http://localhost:5001")
+    
+    app.run(debug=True, host='localhost', port=5001)
 def handle_first_login_onboarding(user_id: int) -> bool:
     """
     Handle automatic onboarding for new users - load sample policies.
+    
+    Args:
+        user_id (int): User ID for onboarding
+        
+    Returns:
+        bool: True if onboarding was needed and completed
     """
     try:
         from src.auth.models import User
@@ -749,24 +860,14 @@ def handle_first_login_onboarding(user_id: int) -> bool:
                 # Mark onboarding as completed
                 user.complete_onboarding()
                 logger.info(f"✅ Onboarding completed for user: {user.username}")
-                flash("Welcome! We have loaded 15 sample university policies to get you started.", "success")
+                flash(f'Welcome! We\'ve loaded 15 sample university policies to get you started.', 'success')
                 return True
             else:
                 logger.warning(f"⚠️ Onboarding failed for user: {user.username}")
-                flash("Welcome! There was an issue loading sample policies.", "warning")
+                flash('Welcome! There was an issue loading sample policies.', 'warning')
                 
         return False
         
     except Exception as e:
         logger.error(f"❌ Error in onboarding: {e}")
         return False
-
-if __name__ == '__main__':
-    """Run the PolicyCraft application."""
-    os.makedirs('logs', exist_ok=True)
-    create_upload_folder()
-    
-    logger.info("Starting PolicyCraft Application")
-    print("🚀 PolicyCraft starting at: http://localhost:5001")
-    
-    app.run(debug=True, host='localhost', port=5001)

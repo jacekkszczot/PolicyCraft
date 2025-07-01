@@ -292,27 +292,160 @@ class DatabaseOperations:
         }
 
 
-# Test the database operations
+    def load_sample_policies_for_user(self, user_id: int) -> bool:
+        """
+        Load all 15 sample university policies as baseline analyses for new user.
+        
+        Args:
+            user_id (int): User ID to load policies for
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            from src.auth.models import SAMPLE_UNIVERSITIES
+            from pathlib import Path
+            import os
+            
+            # Path to clean dataset
+            dataset_path = Path("data/policies/clean_dataset")
+            if not dataset_path.exists():
+                print(f"❌ Dataset path not found: {dataset_path}")
+                return False
+            
+            loaded_count = 0
+            
+            # Load each sample policy
+            for uni_key, uni_data in SAMPLE_UNIVERSITIES.items():
+                filename = uni_data['file']
+                file_path = dataset_path / filename
+                
+                if file_path.exists():
+                    # Create baseline analysis entry
+                    analysis_id = self.store_user_analysis_results(
+                        user_id=user_id,
+                        filename=f"[BASELINE] {uni_data['name']} - {filename}",
+                        original_text=f"Sample policy from {uni_data['name']}",
+                        cleaned_text=f"Sample policy from {uni_data['name']} ({uni_data['country']})",
+                        themes=[{"name": theme, "score": 0.8, "confidence": 85} for theme in uni_data.get("themes", [])],
+                        classification={
+                            'classification': uni_data.get('classification', 'Unknown'),
+                            'confidence': 85,
+                            'source': 'Sample Dataset'
+                        },
+                        document_id=f"sample_{uni_key}"
+                    )
+                    loaded_count += 1
+                    print(f"✅ Loaded sample policy: {uni_data['name']}")
+                else:
+                    print(f"⚠️ Sample policy not found: {filename}")
+            
+            print(f"🎯 Loaded {loaded_count} sample policies for user {user_id}")
+            return loaded_count > 0
+            
+        except Exception as e:
+            print(f"❌ Error loading sample policies: {e}")
+            return False
+
+    def compare_with_baseline_policies(self, user_id: int, analysis_id: str) -> Dict:
+        """
+        Compare user analysis with baseline university policies.
+        
+        Args:
+            user_id (int): User ID
+            analysis_id (str): Analysis ID to compare
+            
+        Returns:
+            Dict: Comparison results with rankings and insights
+        """
+        try:
+            # Get user analysis
+            user_analysis = self.get_user_analysis_by_id(user_id, analysis_id)
+            if not user_analysis:
+                return {"error": "Analysis not found"}
+            
+            # Get baseline policies for this user
+            all_analyses = self.get_user_analyses(user_id, limit=100)
+            baseline_analyses = [a for a in all_analyses if a.get("filename", "").startswith("[BASELINE]")]
+            
+            if not baseline_analyses:
+                return {"error": "No baseline policies found"}
+            
+            user_classification = user_analysis.get("classification", {})
+            user_score = user_classification.get("confidence", 0)
+            user_type = user_classification.get("classification", "Unknown")
+            
+            # Compare with each baseline
+            comparisons = []
+            for baseline in baseline_analyses:
+                baseline_class = baseline.get("classification", {})
+                baseline_score = baseline_class.get("confidence", 0)
+                baseline_type = baseline_class.get("classification", "Unknown")
+                
+                # Extract university name from filename
+                filename = baseline.get("filename", "")
+                university_name = filename.replace("[BASELINE] ", "").split(" - ")[0] if " - " in filename else "Unknown"
+                
+                comparison = {
+                    "university": university_name,
+                    "classification": baseline_type,
+                    "confidence": baseline_score,
+                    "score_difference": user_score - baseline_score,
+                    "classification_match": user_type == baseline_type,
+                    "relative_performance": "better" if user_score > baseline_score else "worse" if user_score < baseline_score else "similar"
+                }
+                comparisons.append(comparison)
+            
+            # Sort by score difference
+            comparisons.sort(key=lambda x: abs(x["score_difference"]))
+            
+            # Generate insights
+            better_than = [c for c in comparisons if c["relative_performance"] == "better"]
+            worse_than = [c for c in comparisons if c["relative_performance"] == "worse"]
+            
+            summary = {
+                "total_comparisons": len(comparisons),
+                "better_than_count": len(better_than),
+                "worse_than_count": len(worse_than),
+                "average_baseline_score": round(sum(c["confidence"] for c in comparisons) / len(comparisons), 1),
+                "user_score": user_score,
+                "user_classification": user_type,
+                "ranking_percentile": round((len(better_than) / len(comparisons)) * 100, 1)
+            }
+            
+            return {
+                "summary": summary,
+                "comparisons": comparisons[:10],  # Top 10 closest matches
+                "better_than": better_than[:3],   # Top 3 universities outperformed
+                "worse_than": worse_than[:3],     # Top 3 that outperform user
+                "analysis_id": analysis_id
+            }
+            
+        except Exception as e:
+            return {"error": f"Comparison failed: {str(e)}"}
+
+
+# Test functionality
 if __name__ == "__main__":
-    print("Starting JSON database operations test...")
+    print("Testing DatabaseOperations...")
     
     db_ops = DatabaseOperations()
     
-    # Test data
+    # Test user ID
     test_user_id = 1
-    test_filename = "test_policy.pdf"
-    test_text = "This is a test AI policy document for testing purposes."
+    
+    # Test data
+    test_filename = "test-policy.pdf"
+    test_text = "Sample AI policy text for testing purposes."
     test_themes = [
-        {'name': 'AI Ethics', 'score': 5.5, 'confidence': 55},
-        {'name': 'Academic Integrity', 'score': 3.5, 'confidence': 35}
+        {'name': 'AI Ethics', 'score': 0.85, 'confidence': 92},
+        {'name': 'Academic Integrity', 'score': 0.78, 'confidence': 89}
     ]
     test_classification = {
         'classification': 'Moderate',
         'confidence': 75,
         'method': 'hybrid'
     }
-    
-    print("\n=== JSON Database Operations Test ===")
     
     # Test storing analysis
     analysis_id = db_ops.store_user_analysis_results(

@@ -189,6 +189,79 @@ SAMPLE_UNIVERSITIES = {
         'classification': 'Moderate',
         'themes': ['Research Ethics', 'AI Governance', 'Accountability']
     }
+    ,
+    'columbia': {
+        'name': 'Columbia University',
+        'country': 'USA',
+        'file': 'columbia-ai-policy.pdf',
+        'description': 'Comprehensive policy with strong disclosure requirements.',
+        'classification': 'Moderate',
+        'themes': ['Disclosure', 'Academic Integrity', 'Governance']
+    },
+    'chicago': {
+        'name': 'University of Chicago',
+        'country': 'USA',
+        'file': 'chicago-ai-policy.docx',
+        'description': 'Research-focused policy emphasizing academic rigor.',
+        'classification': 'Restrictive',
+        'themes': ['Research Ethics', 'Academic Rigor', 'Compliance']
+    },
+    'cornell': {
+        'name': 'Cornell University',
+        'country': 'USA',
+        'file': 'cornell-ai-policy.docx',
+        'description': 'Balanced approach with emphasis on student support.',
+        'classification': 'Moderate',
+        'themes': ['Student Support', 'Academic Excellence', 'Innovation']
+    },
+    'imperial': {
+        'name': 'Imperial College London',
+        'country': 'UK',
+        'file': 'imperial-ai-policy.docx',
+        'description': 'STEM-focused policy promoting responsible innovation.',
+        'classification': 'Permissive',
+        'themes': ['STEM Innovation', 'Research Excellence', 'Technology Ethics']
+    },
+    'belfast': {
+        'name': 'Queens University Belfast',
+        'country': 'UK',
+        'file': 'belfast university-ai-policy.pdf',
+        'description': 'Regional university approach with practical guidelines.',
+        'classification': 'Moderate',
+        'themes': ['Practical Guidelines', 'Regional Standards', 'Academic Integrity']
+    },
+    'jagiellonian': {
+        'name': 'Jagiellonian University',
+        'country': 'Poland',
+        'file': 'jagiellonian university-ai-policy.pdf',
+        'description': 'European perspective on AI ethics and governance.',
+        'classification': 'Moderate',
+        'themes': ['European Standards', 'AI Ethics', 'International Compliance']
+    },
+    'leeds_trinity': {
+        'name': 'Leeds Trinity University',
+        'country': 'UK',
+        'file': 'leeds trinity university-ai-policy.pdf',
+        'description': 'Teaching-focused institution policy with student-centered approach.',
+        'classification': 'Moderate',
+        'themes': ['Student-Centered', 'Teaching Excellence', 'Practical Application']
+    },
+    'tokyo': {
+        'name': 'University of Tokyo',
+        'country': 'Japan',
+        'file': 'tokyo-ai-policy.docx',
+        'description': 'Asian perspective on AI integration in higher education.',
+        'classification': 'Moderate',
+        'themes': ['Asian Standards', 'Technology Integration', 'Cultural Considerations']
+    },
+    'unknown_2': {
+        'name': 'Research University Sample 2',
+        'country': 'International',
+        'file': '2-ai-policy.pdf',
+        'description': 'Additional sample policy for comparative analysis.',
+        'classification': 'Moderate',
+        'themes': ['Comparative Analysis', 'Research Standards', 'Policy Framework']
+    }
 }
 
 

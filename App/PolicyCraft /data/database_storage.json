@@ -10530,6 +10530,1446 @@
         "classification_type": "Moderate",
         "confidence": 72
       }
+    },
+    {
+      "_id": "analysis_58",
+      "user_id": 6,
+      "document_id": "sample_oxford",
+      "filename": "[BASELINE] University of Oxford - oxford-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:05:29.653045+00:00",
+      "text_data": {
+        "original_text": "Sample policy from University of Oxford",
+        "cleaned_text": "Sample policy from University of Oxford (UK)",
+        "text_length": 44
+      },
+      "themes": [
+        {
+          "name": "Academic Integrity",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "AI Ethics",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Research Guidelines",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Academic Integrity",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_59",
+      "user_id": 6,
+      "document_id": "sample_cambridge",
+      "filename": "[BASELINE] University of Cambridge - cambridge-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:05:29.673248+00:00",
+      "text_data": {
+        "original_text": "Sample policy from University of Cambridge",
+        "cleaned_text": "Sample policy from University of Cambridge (UK)",
+        "text_length": 47
+      },
+      "themes": [
+        {
+          "name": "Transparency",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Academic Standards",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Innovation",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Transparency",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_60",
+      "user_id": 6,
+      "document_id": "sample_mit",
+      "filename": "[BASELINE] Massachusetts Institute of Technology - mit-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:05:29.687696+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Massachusetts Institute of Technology",
+        "cleaned_text": "Sample policy from Massachusetts Institute of Technology (USA)",
+        "text_length": 62
+      },
+      "themes": [
+        {
+          "name": "Innovation",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Research Excellence",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Ethical AI",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Permissive",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Innovation",
+        "classification_type": "Permissive",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_61",
+      "user_id": 6,
+      "document_id": "sample_stanford",
+      "filename": "[BASELINE] Stanford University - stanford-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:05:29.698842+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Stanford University",
+        "cleaned_text": "Sample policy from Stanford University (USA)",
+        "text_length": 44
+      },
+      "themes": [
+        {
+          "name": "AI Literacy",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Student Empowerment",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Innovation",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Permissive",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "AI Literacy",
+        "classification_type": "Permissive",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_62",
+      "user_id": 6,
+      "document_id": "sample_harvard",
+      "filename": "[BASELINE] Harvard University - harvard-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:05:29.708335+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Harvard University",
+        "cleaned_text": "Sample policy from Harvard University (USA)",
+        "text_length": 43
+      },
+      "themes": [
+        {
+          "name": "Academic Rigor",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Integrity",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Governance",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Academic Rigor",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_63",
+      "user_id": 6,
+      "document_id": "sample_edinburgh",
+      "filename": "[BASELINE] University of Edinburgh - edinburgh university-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:05:29.716800+00:00",
+      "text_data": {
+        "original_text": "Sample policy from University of Edinburgh",
+        "cleaned_text": "Sample policy from University of Edinburgh (UK)",
+        "text_length": 47
+      },
+      "themes": [
+        {
+          "name": "Research Ethics",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "AI Governance",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Accountability",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Research Ethics",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_64",
+      "user_id": 7,
+      "document_id": "sample_oxford",
+      "filename": "[BASELINE] University of Oxford - oxford-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:28:58.051648+00:00",
+      "text_data": {
+        "original_text": "Sample policy from University of Oxford",
+        "cleaned_text": "Sample policy from University of Oxford (UK)",
+        "text_length": 44
+      },
+      "themes": [
+        {
+          "name": "Academic Integrity",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "AI Ethics",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Research Guidelines",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Academic Integrity",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_65",
+      "user_id": 7,
+      "document_id": "sample_cambridge",
+      "filename": "[BASELINE] University of Cambridge - cambridge-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:28:58.059973+00:00",
+      "text_data": {
+        "original_text": "Sample policy from University of Cambridge",
+        "cleaned_text": "Sample policy from University of Cambridge (UK)",
+        "text_length": 47
+      },
+      "themes": [
+        {
+          "name": "Transparency",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Academic Standards",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Innovation",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Transparency",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_66",
+      "user_id": 7,
+      "document_id": "sample_mit",
+      "filename": "[BASELINE] Massachusetts Institute of Technology - mit-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:28:58.066820+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Massachusetts Institute of Technology",
+        "cleaned_text": "Sample policy from Massachusetts Institute of Technology (USA)",
+        "text_length": 62
+      },
+      "themes": [
+        {
+          "name": "Innovation",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Research Excellence",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Ethical AI",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Permissive",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Innovation",
+        "classification_type": "Permissive",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_67",
+      "user_id": 7,
+      "document_id": "sample_stanford",
+      "filename": "[BASELINE] Stanford University - stanford-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:28:58.073316+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Stanford University",
+        "cleaned_text": "Sample policy from Stanford University (USA)",
+        "text_length": 44
+      },
+      "themes": [
+        {
+          "name": "AI Literacy",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Student Empowerment",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Innovation",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Permissive",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "AI Literacy",
+        "classification_type": "Permissive",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_68",
+      "user_id": 7,
+      "document_id": "sample_harvard",
+      "filename": "[BASELINE] Harvard University - harvard-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:28:58.080212+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Harvard University",
+        "cleaned_text": "Sample policy from Harvard University (USA)",
+        "text_length": 43
+      },
+      "themes": [
+        {
+          "name": "Academic Rigor",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Integrity",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Governance",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Academic Rigor",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_69",
+      "user_id": 7,
+      "document_id": "sample_edinburgh",
+      "filename": "[BASELINE] University of Edinburgh - edinburgh university-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:28:58.086909+00:00",
+      "text_data": {
+        "original_text": "Sample policy from University of Edinburgh",
+        "cleaned_text": "Sample policy from University of Edinburgh (UK)",
+        "text_length": 47
+      },
+      "themes": [
+        {
+          "name": "Research Ethics",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "AI Governance",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Accountability",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Research Ethics",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_70",
+      "user_id": 7,
+      "document_id": "sample_columbia",
+      "filename": "[BASELINE] Columbia University - columbia-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:28:58.093603+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Columbia University",
+        "cleaned_text": "Sample policy from Columbia University (USA)",
+        "text_length": 44
+      },
+      "themes": [
+        {
+          "name": "Disclosure",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Academic Integrity",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Governance",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Disclosure",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_71",
+      "user_id": 7,
+      "document_id": "sample_chicago",
+      "filename": "[BASELINE] University of Chicago - chicago-ai-policy.docx",
+      "analysis_date": "2025-07-01T16:28:58.100753+00:00",
+      "text_data": {
+        "original_text": "Sample policy from University of Chicago",
+        "cleaned_text": "Sample policy from University of Chicago (USA)",
+        "text_length": 46
+      },
+      "themes": [
+        {
+          "name": "Research Ethics",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Academic Rigor",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Compliance",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Restrictive",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Research Ethics",
+        "classification_type": "Restrictive",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_72",
+      "user_id": 7,
+      "document_id": "sample_cornell",
+      "filename": "[BASELINE] Cornell University - cornell-ai-policy.docx",
+      "analysis_date": "2025-07-01T16:28:58.107380+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Cornell University",
+        "cleaned_text": "Sample policy from Cornell University (USA)",
+        "text_length": 43
+      },
+      "themes": [
+        {
+          "name": "Student Support",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Academic Excellence",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Innovation",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Student Support",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_73",
+      "user_id": 7,
+      "document_id": "sample_imperial",
+      "filename": "[BASELINE] Imperial College London - imperial-ai-policy.docx",
+      "analysis_date": "2025-07-01T16:28:58.114223+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Imperial College London",
+        "cleaned_text": "Sample policy from Imperial College London (UK)",
+        "text_length": 47
+      },
+      "themes": [
+        {
+          "name": "STEM Innovation",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Research Excellence",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Technology Ethics",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Permissive",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "STEM Innovation",
+        "classification_type": "Permissive",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_74",
+      "user_id": 7,
+      "document_id": "sample_belfast",
+      "filename": "[BASELINE] Queens University Belfast - belfast university-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:28:58.121125+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Queens University Belfast",
+        "cleaned_text": "Sample policy from Queens University Belfast (UK)",
+        "text_length": 49
+      },
+      "themes": [
+        {
+          "name": "Practical Guidelines",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Regional Standards",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Academic Integrity",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Practical Guidelines",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_75",
+      "user_id": 7,
+      "document_id": "sample_jagiellonian",
+      "filename": "[BASELINE] Jagiellonian University - jagiellonian university-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:28:58.127943+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Jagiellonian University",
+        "cleaned_text": "Sample policy from Jagiellonian University (Poland)",
+        "text_length": 51
+      },
+      "themes": [
+        {
+          "name": "European Standards",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "AI Ethics",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "International Compliance",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "European Standards",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_76",
+      "user_id": 7,
+      "document_id": "sample_leeds_trinity",
+      "filename": "[BASELINE] Leeds Trinity University - leeds trinity university-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:28:58.135145+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Leeds Trinity University",
+        "cleaned_text": "Sample policy from Leeds Trinity University (UK)",
+        "text_length": 48
+      },
+      "themes": [
+        {
+          "name": "Student-Centered",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Teaching Excellence",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Practical Application",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Student-Centered",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_77",
+      "user_id": 7,
+      "document_id": "sample_tokyo",
+      "filename": "[BASELINE] University of Tokyo - tokyo-ai-policy.docx",
+      "analysis_date": "2025-07-01T16:28:58.141916+00:00",
+      "text_data": {
+        "original_text": "Sample policy from University of Tokyo",
+        "cleaned_text": "Sample policy from University of Tokyo (Japan)",
+        "text_length": 46
+      },
+      "themes": [
+        {
+          "name": "Asian Standards",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Technology Integration",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Cultural Considerations",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Asian Standards",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_78",
+      "user_id": 7,
+      "document_id": "sample_unknown_2",
+      "filename": "[BASELINE] Research University Sample 2 - 2-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:28:58.148765+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Research University Sample 2",
+        "cleaned_text": "Sample policy from Research University Sample 2 (International)",
+        "text_length": 63
+      },
+      "themes": [
+        {
+          "name": "Comparative Analysis",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Research Standards",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Policy Framework",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Comparative Analysis",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_79",
+      "user_id": 3,
+      "document_id": "sample_oxford",
+      "filename": "[BASELINE] University of Oxford - oxford-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:32:50.369917+00:00",
+      "text_data": {
+        "original_text": "Sample policy from University of Oxford",
+        "cleaned_text": "Sample policy from University of Oxford (UK)",
+        "text_length": 44
+      },
+      "themes": [
+        {
+          "name": "Academic Integrity",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "AI Ethics",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Research Guidelines",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Academic Integrity",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_80",
+      "user_id": 3,
+      "document_id": "sample_cambridge",
+      "filename": "[BASELINE] University of Cambridge - cambridge-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:32:50.378958+00:00",
+      "text_data": {
+        "original_text": "Sample policy from University of Cambridge",
+        "cleaned_text": "Sample policy from University of Cambridge (UK)",
+        "text_length": 47
+      },
+      "themes": [
+        {
+          "name": "Transparency",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Academic Standards",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Innovation",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Transparency",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_81",
+      "user_id": 3,
+      "document_id": "sample_mit",
+      "filename": "[BASELINE] Massachusetts Institute of Technology - mit-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:32:50.386856+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Massachusetts Institute of Technology",
+        "cleaned_text": "Sample policy from Massachusetts Institute of Technology (USA)",
+        "text_length": 62
+      },
+      "themes": [
+        {
+          "name": "Innovation",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Research Excellence",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Ethical AI",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Permissive",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Innovation",
+        "classification_type": "Permissive",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_82",
+      "user_id": 3,
+      "document_id": "sample_stanford",
+      "filename": "[BASELINE] Stanford University - stanford-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:32:50.394463+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Stanford University",
+        "cleaned_text": "Sample policy from Stanford University (USA)",
+        "text_length": 44
+      },
+      "themes": [
+        {
+          "name": "AI Literacy",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Student Empowerment",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Innovation",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Permissive",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "AI Literacy",
+        "classification_type": "Permissive",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_83",
+      "user_id": 3,
+      "document_id": "sample_harvard",
+      "filename": "[BASELINE] Harvard University - harvard-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:32:50.401692+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Harvard University",
+        "cleaned_text": "Sample policy from Harvard University (USA)",
+        "text_length": 43
+      },
+      "themes": [
+        {
+          "name": "Academic Rigor",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Integrity",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Governance",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Academic Rigor",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_84",
+      "user_id": 3,
+      "document_id": "sample_edinburgh",
+      "filename": "[BASELINE] University of Edinburgh - edinburgh university-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:32:50.409016+00:00",
+      "text_data": {
+        "original_text": "Sample policy from University of Edinburgh",
+        "cleaned_text": "Sample policy from University of Edinburgh (UK)",
+        "text_length": 47
+      },
+      "themes": [
+        {
+          "name": "Research Ethics",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "AI Governance",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Accountability",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Research Ethics",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_85",
+      "user_id": 3,
+      "document_id": "sample_columbia",
+      "filename": "[BASELINE] Columbia University - columbia-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:32:50.416487+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Columbia University",
+        "cleaned_text": "Sample policy from Columbia University (USA)",
+        "text_length": 44
+      },
+      "themes": [
+        {
+          "name": "Disclosure",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Academic Integrity",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Governance",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Disclosure",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_86",
+      "user_id": 3,
+      "document_id": "sample_chicago",
+      "filename": "[BASELINE] University of Chicago - chicago-ai-policy.docx",
+      "analysis_date": "2025-07-01T16:32:50.423591+00:00",
+      "text_data": {
+        "original_text": "Sample policy from University of Chicago",
+        "cleaned_text": "Sample policy from University of Chicago (USA)",
+        "text_length": 46
+      },
+      "themes": [
+        {
+          "name": "Research Ethics",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Academic Rigor",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Compliance",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Restrictive",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Research Ethics",
+        "classification_type": "Restrictive",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_87",
+      "user_id": 3,
+      "document_id": "sample_cornell",
+      "filename": "[BASELINE] Cornell University - cornell-ai-policy.docx",
+      "analysis_date": "2025-07-01T16:32:50.430582+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Cornell University",
+        "cleaned_text": "Sample policy from Cornell University (USA)",
+        "text_length": 43
+      },
+      "themes": [
+        {
+          "name": "Student Support",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Academic Excellence",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Innovation",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Student Support",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_88",
+      "user_id": 3,
+      "document_id": "sample_imperial",
+      "filename": "[BASELINE] Imperial College London - imperial-ai-policy.docx",
+      "analysis_date": "2025-07-01T16:32:50.437679+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Imperial College London",
+        "cleaned_text": "Sample policy from Imperial College London (UK)",
+        "text_length": 47
+      },
+      "themes": [
+        {
+          "name": "STEM Innovation",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Research Excellence",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Technology Ethics",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Permissive",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "STEM Innovation",
+        "classification_type": "Permissive",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_89",
+      "user_id": 3,
+      "document_id": "sample_belfast",
+      "filename": "[BASELINE] Queens University Belfast - belfast university-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:32:50.444821+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Queens University Belfast",
+        "cleaned_text": "Sample policy from Queens University Belfast (UK)",
+        "text_length": 49
+      },
+      "themes": [
+        {
+          "name": "Practical Guidelines",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Regional Standards",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Academic Integrity",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Practical Guidelines",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_90",
+      "user_id": 3,
+      "document_id": "sample_jagiellonian",
+      "filename": "[BASELINE] Jagiellonian University - jagiellonian university-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:32:50.451953+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Jagiellonian University",
+        "cleaned_text": "Sample policy from Jagiellonian University (Poland)",
+        "text_length": 51
+      },
+      "themes": [
+        {
+          "name": "European Standards",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "AI Ethics",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "International Compliance",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "European Standards",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_91",
+      "user_id": 3,
+      "document_id": "sample_leeds_trinity",
+      "filename": "[BASELINE] Leeds Trinity University - leeds trinity university-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:32:50.458929+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Leeds Trinity University",
+        "cleaned_text": "Sample policy from Leeds Trinity University (UK)",
+        "text_length": 48
+      },
+      "themes": [
+        {
+          "name": "Student-Centered",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Teaching Excellence",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Practical Application",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Student-Centered",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_92",
+      "user_id": 3,
+      "document_id": "sample_tokyo",
+      "filename": "[BASELINE] University of Tokyo - tokyo-ai-policy.docx",
+      "analysis_date": "2025-07-01T16:32:50.466089+00:00",
+      "text_data": {
+        "original_text": "Sample policy from University of Tokyo",
+        "cleaned_text": "Sample policy from University of Tokyo (Japan)",
+        "text_length": 46
+      },
+      "themes": [
+        {
+          "name": "Asian Standards",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Technology Integration",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Cultural Considerations",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Asian Standards",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
+    },
+    {
+      "_id": "analysis_93",
+      "user_id": 3,
+      "document_id": "sample_unknown_2",
+      "filename": "[BASELINE] Research University Sample 2 - 2-ai-policy.pdf",
+      "analysis_date": "2025-07-01T16:32:50.473167+00:00",
+      "text_data": {
+        "original_text": "Sample policy from Research University Sample 2",
+        "cleaned_text": "Sample policy from Research University Sample 2 (International)",
+        "text_length": 63
+      },
+      "themes": [
+        {
+          "name": "Comparative Analysis",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Research Standards",
+          "score": 0.8,
+          "confidence": 85
+        },
+        {
+          "name": "Policy Framework",
+          "score": 0.8,
+          "confidence": 85
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 85,
+        "source": "Sample Dataset"
+      },
+      "summary": {
+        "total_themes": 3,
+        "top_theme": "Comparative Analysis",
+        "classification_type": "Moderate",
+        "confidence": 85
+      }
     }
   ],
   "recommendations": [

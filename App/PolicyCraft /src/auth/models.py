@@ -8,7 +8,7 @@ Author: Jacek Robert Kszczot
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 
 db = SQLAlchemy()
@@ -69,7 +69,7 @@ class User(UserMixin, db.Model):
     
     def update_last_login(self):
         """Update user's last login timestamp."""
-        self.last_login = datetime.utcnow()
+        self.last_login = datetime.now(timezone.utc)
     
     def is_first_login(self):
         """Check if this is user's first login (needs onboarding)."""
@@ -90,7 +90,7 @@ class User(UserMixin, db.Model):
         onboarding = UserOnboarding.query.filter_by(user_id=self.id).first()
         if onboarding:
             onboarding.is_completed = True
-            onboarding.onboarding_completed_date = datetime.utcnow()
+            onboarding.onboarding_completed_date = datetime.now(timezone.utc)
             if selected_universities:
                 onboarding.set_selected_universities(selected_universities)
                 onboarding.sample_policies_accepted = True

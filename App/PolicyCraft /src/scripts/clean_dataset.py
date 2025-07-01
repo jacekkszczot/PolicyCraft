@@ -94,6 +94,13 @@ class SimpleAutoProcessor:
             # Copy file to clean dataset
             shutil.copy2(uploaded_file_path, target_path)
             
+            # Remove original file after successful copy
+            try:
+                os.remove(uploaded_file_path)
+                print(f"✅ Removed original file: {uploaded_file_path}")
+            except OSError as e:
+                print(f"⚠️ Warning: Could not remove original file {uploaded_file_path}: {e}")
+            
             # Update dataset info
             self.update_dataset_info()
             

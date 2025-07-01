@@ -316,3 +316,29 @@ def assert_valid_recommendation(recommendation):
 pytest.assert_valid_theme = assert_valid_theme
 pytest.assert_valid_classification = assert_valid_classification
 pytest.assert_valid_recommendation = assert_valid_recommendation
+@pytest.fixture
+def app():
+    """Create test Flask application with all routes."""
+    # Import the real create_app function
+    import sys
+    import os
+    
+    # Add the project root to Python path if needed
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+    
+    from app import create_app
+    
+    app = create_app()
+    app.config['TESTING'] = True
+    app.config['WTF_CSRF_ENABLED'] = False
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+    with app.app_context():
+        yield app
+
+@pytest.fixture
+def client(app):
+    """Create test client."""
+    return app.test_client()

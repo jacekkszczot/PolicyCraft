@@ -7,7 +7,7 @@ Author: Jacek Robert Kszczot
 
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Any
 import os
 
@@ -80,7 +80,7 @@ class DatabaseOperations:
             'file_path': file_path,
             'extracted_text': extracted_text,
             'text_length': len(extracted_text),
-            'upload_date': datetime.utcnow().isoformat(),
+            'upload_date': datetime.now(timezone.utc).isoformat(),
             'metadata': metadata or {}
         }
         
@@ -114,7 +114,7 @@ class DatabaseOperations:
             'user_id': user_id,
             'document_id': document_id,
             'filename': filename,
-            'analysis_date': datetime.utcnow().isoformat(),
+            'analysis_date': datetime.now(timezone.utc).isoformat(),
             'text_data': {
                 'original_text': original_text[:5000],  # Limit storage size
                 'cleaned_text': cleaned_text[:5000],
@@ -236,7 +236,7 @@ class DatabaseOperations:
             'user_id': user_id,
             'analysis_id': analysis_id,
             'recommendations': recommendations,
-            'created_date': datetime.utcnow().isoformat(),
+            'created_date': datetime.now(timezone.utc).isoformat(),
             'total_recommendations': len(recommendations)
         }
         
@@ -253,7 +253,7 @@ class DatabaseOperations:
         Args:
             days_old (int): Delete data older than this many days
         """
-        cutoff_date = datetime.utcnow() - timedelta(days=days_old)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_old)
         cutoff_iso = cutoff_date.isoformat()
         
         # Clean old analyses

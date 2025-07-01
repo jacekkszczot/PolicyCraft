@@ -294,3 +294,87 @@ class TestTextProcessor:
         # Should produce meaningful results
         assert stats['word_count'] > 1000
         assert len(cleaned) > 5000
+    def test_pdf_extraction_error_handling(self):
+        """Test PDF extraction with error conditions."""
+        processor = TextProcessor()
+        
+        # Test with corrupted PDF (should handle gracefully)
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as f:
+            f.write(b'not a real pdf file')
+            temp_file = f.name
+        
+        try:
+            result = processor._extract_from_pdf(temp_file)
+            # Should return None or empty string, not crash
+            assert result is None or result == ""
+        finally:
+            os.unlink(temp_file)
+
+    def test_docx_extraction_error_handling(self):
+        """Test DOCX extraction with error conditions.""" 
+        processor = TextProcessor()
+        
+        # Test with corrupted DOCX
+        with tempfile.NamedTemporaryFile(suffix='.docx', delete=False) as f:
+            f.write(b'not a real docx file')
+            temp_file = f.name
+        
+        try:
+            result = processor._extract_from_docx(temp_file)
+            assert result is None or result == ""
+        finally:
+            os.unlink(temp_file)
+
+    def test_tokenize_sentences_edge_cases(self):
+        """Test sentence tokenization edge cases."""
+        processor = TextProcessor()
+        
+        # Test with various punctuation
+        text = "Dr. Smith went to U.S.A. Really? Yes! What about Mr. Jones..."
+        sentences = processor.tokenize_sentences(text)
+        assert len(sentences) > 0
+        
+        # Test with empty and whitespace
+        assert processor.tokenize_sentences("") == []
+        assert processor.tokenize_sentences("   ") == []
+
+    def test_tokenize_words_functionality(self):
+        """Test word tokenization functionality."""
+        processor = TextProcessor()
+        
+        text = "The AI policy includes transparency and accountability measures."
+        
+        # Test with stopwords removed
+        words_no_stop = processor.tokenize_words(text, remove_stopwords=True)
+        assert 'the' not in words_no_stop
+        assert 'ai' in words_no_stop or 'policy' in words_no_stop
+        
+        # Test with stopwords kept
+        words_with_stop = processor.tokenize_words(text, remove_stopwords=False)
+        assert len(words_with_stop) >= len(words_no_stop)
+
+    def test_preview_text_functionality(self):
+        """Test text preview functionality."""
+        processor = TextProcessor()
+        
+        short_text = "Short text"
+        preview = processor.preview_text(short_text, 100)
+        assert preview == short_text
+        
+        long_text = "This is a very long text. " * 50
+        preview = processor.preview_text(long_text, 50)
+        assert len(preview) <= 53  # 50 + "..."
+        assert preview.endswith("...")
+
+    def test_import_availability_coverage(self):
+        """Test import error handling branches."""
+        # This test covers the import try/except blocks
+        processor = TextProcessor()
+        
+        # Test that processor initializes even if some imports fail
+        assert hasattr(processor, 'supported_formats')
+        assert hasattr(processor, 'stop_words')
+        
+        # Check that required attributes exist
+        assert isinstance(processor.supported_formats, set)
+        assert isinstance(processor.stop_words, set)

@@ -685,6 +685,48 @@ def get_recommendations(analysis_id):
             flash('Error generating recommendations. Please try again.', 'error')
             return redirect(url_for('dashboard'))
 
+
+@app.route('/delete_analysis/<analysis_id>', methods=['POST'])
+@login_required
+def delete_analysis(analysis_id):
+    """Delete user analysis (not baseline policies)."""
+    try:
+        # Get analysis to check ownership and type
+        analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
+        if not analysis:
+            flash('Analysis not found or access denied.', 'error')
+            return redirect(url_for('dashboard'))
+        
+        # Check if it's a baseline policy (protect from deletion)
+        filename = analysis.get('filename', '')
+        if filename.startswith('[BASELINE]') or 'clean_dataset' in filename:
+            flash('Baseline policies cannot be deleted.', 'warning')
+            return redirect(url_for('dashboard'))
+        
+        # Delete the analysis
+        success = db_operations.delete_user_analysis(current_user.id, analysis_id)
+        if success:
+            # Also try to delete the physical file if it exists
+            try:
+                if filename.startswith(f"{current_user.id}_"):
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                        logger.info(f"Deleted file: {file_path}")
+            except Exception as e:
+                logger.warning(f"Could not delete file: {e}")
+            
+            flash('Analysis deleted successfully.', 'success')
+        else:
+            flash('Error deleting analysis.', 'error')
+        
+        return redirect(url_for('dashboard'))
+        
+    except Exception as e:
+        logger.error(f"Error deleting analysis: {str(e)}")
+        flash('Error deleting analysis.', 'error')
+        return redirect(url_for('dashboard'))
+
 # === API ROUTES ===
 
 @app.route('/api/analysis/<analysis_id>')

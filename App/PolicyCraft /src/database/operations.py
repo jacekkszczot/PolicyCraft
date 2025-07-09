@@ -324,7 +324,7 @@ class DatabaseOperations:
                     # Create baseline analysis entry
                     analysis_id = self.store_user_analysis_results(
                         user_id=user_id,
-                        filename=f"[BASELINE] {uni_data['name']} - {filename}",
+                        filename=filename,
                         original_text=f"Sample policy from {uni_data['name']}",
                         cleaned_text=f"Sample policy from {uni_data['name']} ({uni_data['country']})",
                         themes=[{"name": theme, "score": 0.8, "confidence": 85} for theme in uni_data.get("themes", [])],
@@ -345,6 +345,41 @@ class DatabaseOperations:
             
         except Exception as e:
             print(f"❌ Error loading sample policies: {e}")
+            return False
+
+
+    def delete_user_analysis(self, user_id: int, analysis_id: str) -> bool:
+        """
+        Delete a user analysis by ID.
+        
+        Args:
+            user_id (int): User ID
+            analysis_id (str): Analysis ID to delete
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            # Find and remove the analysis
+            original_count = len(self.storage['analyses'])
+            self.storage['analyses'] = [
+                analysis for analysis in self.storage['analyses']
+                if not (analysis['user_id'] == user_id and analysis['analysis_id'] == analysis_id)
+            ]
+            
+            # Check if something was deleted
+            deleted = len(self.storage['analyses']) < original_count
+            
+            if deleted:
+                self._save_storage()
+                print(f"✅ Deleted analysis {analysis_id} for user {user_id}")
+                return True
+            else:
+                print(f"⚠️ Analysis {analysis_id} not found for user {user_id}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error deleting analysis: {e}")
             return False
 
     def compare_with_baseline_policies(self, user_id: int, analysis_id: str) -> Dict:

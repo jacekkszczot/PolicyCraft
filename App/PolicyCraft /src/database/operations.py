@@ -364,7 +364,7 @@ class DatabaseOperations:
             original_count = len(self.storage['analyses'])
             self.storage['analyses'] = [
                 analysis for analysis in self.storage['analyses']
-                if not (analysis['user_id'] == user_id and analysis['analysis_id'] == analysis_id)
+                if not (analysis['user_id'] == user_id and analysis['_id'] == analysis_id)
             ]
             
             # Check if something was deleted

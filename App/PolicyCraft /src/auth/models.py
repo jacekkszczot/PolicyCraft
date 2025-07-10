@@ -73,17 +73,15 @@ class User(UserMixin, db.Model):
     
     def is_first_login(self):
         """Check if this is user's first login (needs onboarding)."""
-        if not hasattr(self, '_onboarding_checked'):
-            onboarding = UserOnboarding.query.filter_by(user_id=self.id).first()
-            if not onboarding:
-                # Create onboarding record for new user
-                onboarding = UserOnboarding(user_id=self.id)
-                db.session.add(onboarding)
-                db.session.commit()
-                self._onboarding_checked = True
-                return True
-            self._onboarding_checked = onboarding.is_completed
-        return not self._onboarding_checked
+        onboarding = UserOnboarding.query.filter_by(user_id=self.id).first()
+        if not onboarding:
+            # Create onboarding record for new user
+            onboarding = UserOnboarding(user_id=self.id)
+            db.session.add(onboarding)
+            db.session.commit()
+            return True
+        # Return True only if onboarding is NOT completed
+        return not onboarding.is_completed
     
     def complete_onboarding(self, selected_universities=None):
         """Mark onboarding as completed."""

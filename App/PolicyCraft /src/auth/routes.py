@@ -44,6 +44,12 @@ def login():
                 db.session.commit()
                 
                 logger.info(f"User {user.username} logged in successfully")
+                
+                # Check if this is user's first login and handle onboarding
+                if user.is_first_login():
+                    from app import handle_first_login_onboarding
+                    handle_first_login_onboarding(user.id)
+                
                 flash(f'Welcome back, {user.get_full_name()}!', 'success')
                 
                 # Redirect to intended page or dashboard

@@ -201,9 +201,6 @@ def dashboard():
     try:
         logger.info(f"Dashboard accessed by user: {current_user.username}")
         
-        # Handle first login onboarding
-        handle_first_login_onboarding(current_user.id)
-        
         # Get user's analyses
         user_analyses = db_operations.get_user_analyses(current_user.id)
         
@@ -511,12 +508,20 @@ def batch_analyse(files):
 def analyse_document(filename):
     """Document analysis pipeline."""
     try:
-        # Security check
-        if not filename.startswith(f"{current_user.id}_"):
-            flash('Access denied. You can only analyse your own documents.', 'error')
+        is_baseline = filename.startswith('[BASELINE]')
+        
+        # Security check - allow baseline files or user's own files
+        if not (is_baseline or filename.startswith(f"{current_user.id}_")):
+            flash('Access denied. You can only analyse your own documents or baseline policies.', 'error')
             return redirect(url_for('upload_file'))
         
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        # Determine the correct file path
+        if is_baseline:
+            # Extract original filename from the formatted baseline name
+            original_filename = filename.split(' - ')[-1] if ' - ' in filename else filename.replace('[BASELINE] ', '')
+            file_path = os.path.join('data', 'policies', 'clean_dataset', original_filename)
+        else:
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         
         if not os.path.exists(file_path):
             flash('File not found', 'error')

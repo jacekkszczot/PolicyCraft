@@ -321,10 +321,11 @@ class DatabaseOperations:
                 file_path = dataset_path / filename
                 
                 if file_path.exists():
-                    # Create baseline analysis entry
+                    # Create baseline analysis entry with [BASELINE] prefix
+                    baseline_filename = f"[BASELINE] {uni_data['name']} - {filename}"
                     analysis_id = self.store_user_analysis_results(
                         user_id=user_id,
-                        filename=filename,
+                        filename=baseline_filename,
                         original_text=f"Sample policy from {uni_data['name']}",
                         cleaned_text=f"Sample policy from {uni_data['name']} ({uni_data['country']})",
                         themes=[{"name": theme, "score": 0.8, "confidence": 85} for theme in uni_data.get("themes", [])],

@@ -1,0 +1,35 @@
+/* Responsive and lint-friendly overrides */
+
+/* Use CSS variable --w set inline to control dynamic widths */
+.bar {
+    width: var(--w, 0%);
+}
+
+.confidence-fill {
+    width: var(--w, 0%);
+}
+
+/* Ensure tables scroll horizontally on small screens */
+.analyses-table-container,
+.table-responsive {
+    overflow-x: auto;
+}
+
+/* Flexible stat cards */
+.stats-overview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.stat-card {
+    flex: 1 1 200px;
+}
+
+/* Simple responsive navbar */
+@media (max-width: 768px) {
+    .nav-links {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}

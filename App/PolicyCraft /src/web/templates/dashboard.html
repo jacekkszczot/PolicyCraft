@@ -65,7 +65,7 @@
                 </div>
                 <div class="bar-container">
                     <div class="bar bar-{{ classification.lower() }}" 
-                         style="width: {{ (count / data.total_policies * 100) }}%;"></div>
+                         style="--w: {{ (count / data.total_policies * 100) }}%;"></div>
                 </div>
                 <span class="percentage">{{ "%.1f"|format(count / data.total_policies * 100) }}%</span>
             </div>
@@ -115,7 +115,7 @@
                                     {{ analysis.classification.classification if analysis.classification else 'Unknown' }}
                                 </span>
                                 <div class="confidence-bar">
-                                    <div class="confidence-fill" style="width: {{ analysis.classification.confidence if analysis.classification else 0 }}%;"></div>
+                                    <div class="confidence-fill" style="--w: {{ analysis.classification.confidence if analysis.classification else 0 }}%;"></div>
                                     <span class="confidence-text">{{ analysis.classification.confidence if analysis.classification else 0 }}%</span>
                                 </div>
                             </div>

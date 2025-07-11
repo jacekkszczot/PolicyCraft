@@ -6,7 +6,6 @@ Tests full PolicyCraft pipeline on real university policies.
 Author: Jacek Robert Kszczot
 """
 
-import os
 import sys
 import json
 import time
@@ -36,7 +35,7 @@ def run_batch_analysis():
     text_processor = TextProcessor()
     theme_extractor = ThemeExtractor()
     policy_classifier = PolicyClassifier()
-    db_operations = DatabaseOperations()
+    _ = DatabaseOperations()
     chart_generator = ChartGenerator()
     recommendation_engine = RecommendationEngine()
     print("✅ All components loaded")
@@ -327,7 +326,7 @@ def run_batch_analysis():
     
     # Create CSV summary for easy analysis
     if all_results:
-        df = pd.DataFrame(all_results)
+        _ = pd.DataFrame(all_results)
         csv_file = results_dir / f"batch_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         
         # Flatten nested data for CSV

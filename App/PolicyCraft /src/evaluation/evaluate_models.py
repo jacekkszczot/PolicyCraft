@@ -19,7 +19,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
 from sklearn.model_selection import train_test_split
-from typing import Optional
+
 
 from src.nlp.policy_classifier import PolicyClassifier
 

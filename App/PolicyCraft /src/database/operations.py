@@ -8,7 +8,7 @@ Author: Jacek Robert Kszczot
 import json
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
 import os
 
 logger = logging.getLogger(__name__)
@@ -305,7 +305,6 @@ class DatabaseOperations:
         try:
             from src.auth.models import SAMPLE_UNIVERSITIES
             from pathlib import Path
-            import os
             
             # Path to clean dataset
             dataset_path = Path("data/policies/clean_dataset")
@@ -323,7 +322,7 @@ class DatabaseOperations:
                 if file_path.exists():
                     # Create baseline analysis entry with [BASELINE] prefix
                     baseline_filename = f"[BASELINE] {uni_data['name']} - {filename}"
-                    analysis_id = self.store_user_analysis_results(
+                    _ = self.store_user_analysis_results(
                         user_id=user_id,
                         filename=baseline_filename,
                         original_text=f"Sample policy from {uni_data['name']}",

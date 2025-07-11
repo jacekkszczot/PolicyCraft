@@ -7,7 +7,7 @@ Author: Jacek Robert Kszczot
 
 import re
 import logging
-from collections import Counter
+
 from typing import Dict, List, Tuple, Optional
 
 # ML libraries
@@ -15,8 +15,8 @@ try:
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.naive_bayes import MultinomialNB
     from sklearn.pipeline import Pipeline
-    from sklearn.model_selection import train_test_split
-    import numpy as np
+
+
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False

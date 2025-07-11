@@ -3,7 +3,7 @@ Authentication forms for PolicyCraft using WTForms.
 """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, EmailField, SelectField, BooleanField, SubmitField
+from wtforms import StringField, PasswordField, EmailField, BooleanField, SubmitField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
 from src.auth.models import User
 

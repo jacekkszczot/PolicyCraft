@@ -7,8 +7,8 @@ Author: Jacek Robert Kszczot
 
 import re
 import logging
-from collections import Counter, defaultdict
-from typing import List, Dict, Set, Tuple, Optional
+from collections import defaultdict
+from typing import List, Dict, Optional
 
 # NLP libraries
 try:

@@ -6,11 +6,9 @@ Author: Jacek Robert Kszczot
 MSc AI & Data Science - COM7016
 """
 
-import os
 import shutil
 from pathlib import Path
 from datetime import datetime
-import json
 
 class SimpleAutoProcessor:
     """Lightweight auto-processor for new policy uploads."""

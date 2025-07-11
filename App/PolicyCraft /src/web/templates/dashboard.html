@@ -65,7 +65,7 @@
                 </div>
                 <div class="bar-container">
                     <div class="bar bar-{{ classification.lower() }}" 
-                         style="width: {{ (count / data.total_policies * 100) }}%"></div>
+                         style="width: {{ (count / data.total_policies * 100) }}%;"></div>
                 </div>
                 <span class="percentage">{{ "%.1f"|format(count / data.total_policies * 100) }}%</span>
             </div>
@@ -97,10 +97,10 @@
         <div class="section-header">
             <h2>Recent Analyses</h2>
             <div class="table-controls">
-                <button id="showMoreBtn" class="btn btn-outline" onclick="toggleShowMore()" style="display: none;">
+                <button id="showMoreBtn" class="btn btn-outline-dark text-dark" onclick="toggleShowMore()" style="display: none;">
                     Show More
                 </button>
-                <button class="btn btn-outline" onclick="exportAnalysesTable()">
+                <button class="btn btn-outline-dark text-dark" onclick="exportAnalysesTable()">
                     📊 Export
                 </button>
             </div>
@@ -136,7 +136,7 @@
                                     {{ analysis.classification.classification if analysis.classification else 'Unknown' }}
                                 </span>
                                 <div class="confidence-bar">
-                                    <div class="confidence-fill" style="width: {{ analysis.classification.confidence if analysis.classification else 0 }}%"></div>
+                                    <div class="confidence-fill" style="width: {{ analysis.classification.confidence if analysis.classification else 0 }}%;"></div>
                                     <span class="confidence-text">{{ analysis.classification.confidence if analysis.classification else 0 }}%</span>
                                 </div>
                             </div>

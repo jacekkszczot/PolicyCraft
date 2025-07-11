@@ -19,13 +19,10 @@ Author: Jacek Robert Kszczot
 Research: MSc AI & Data Science - COM7016
 """
 
-import json
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 from datetime import datetime
-import os
 import re
-from collections import Counter
 
 logger = logging.getLogger(__name__)
 

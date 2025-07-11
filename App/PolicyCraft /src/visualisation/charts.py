@@ -7,14 +7,12 @@ Author: Jacek Robert Kszczot
 
 import json
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Dict, List
 from collections import Counter
 
 # Visualization libraries
 try:
     import plotly.graph_objects as go
-    import plotly.express as px
-    from plotly.subplots import make_subplots
     import plotly.utils
     PLOTLY_AVAILABLE = True
 except ImportError:

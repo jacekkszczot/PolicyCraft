@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+
+# Logs
+logs/*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# macOS files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Test cache
+.pytest_cache/
+.coverage
+
+# R files
+.Rhistory
+.RData

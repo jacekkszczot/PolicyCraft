@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found - PolicyCraft{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-content">
+        <h1 class="error-code">404</h1>
+        <h2 class="error-title">Page Not Found</h2>
+        <p class="error-message">The page you're looking for doesn't exist or has been moved.</p>
+        
+        <div class="error-actions">
+            <a href="{{ url_for('index') }}" class="btn btn-primary">Go Home</a>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Dashboard</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

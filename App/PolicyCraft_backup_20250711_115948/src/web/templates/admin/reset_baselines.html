@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Reset Baseline Policies - PolicyCraft{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Reset Baseline Policies
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Confirm Reset</h5>
+                    
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Warning:</strong> This action cannot be undone!
+                    </div>
+                    
+                    <p>You are about to reset all baseline policies. This will:</p>
+                    <ul>
+                        <li>Create a backup of the current {{ baseline_count }} baseline policies</li>
+                        <li>Remove all existing baseline policies</li>
+                        <li>Reload the baseline policies with fixed dates (28/06/2025)</li>
+                    </ul>
+                    
+                    <p class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        This operation may take a few moments to complete.
+                    </p>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                        </a>
+                        
+                        <form method="POST" action="{{ url_for('reset_baselines') }}" class="d-inline">
+                            <button type="submit" class="btn btn-warning" onclick="return confirm('Are you sure you want to reset all baseline policies? This action cannot be undone.');">
+                                <i class="fas fa-sync-alt me-1"></i> Confirm Reset
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

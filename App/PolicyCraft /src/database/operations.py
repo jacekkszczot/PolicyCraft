@@ -1,6 +1,9 @@
 """
-Database operations for PolicyCraft.
-Handles SQLite (users) and JSON (documents/analyses) operations.
+PolicyCraft – Database operations module.
+
+Provides a cohesive abstraction over two storage modalities: relational
+(SQLite) for persistent learner records and schemaless JSON files for
+uploaded policy documents together with their analytical derivatives.
 
 Author: Jacek Robert Kszczot
 """
@@ -95,11 +98,13 @@ class DatabaseOperations:
                                    themes: List[Dict], classification: Dict,
                                    document_id: str = None) -> str:
         """
-        Store complete analysis results for a user. If analiza o tym samym
-        `filename` już istnieje dla danego użytkownika – zwracamy istniejące
-        `_id` i opcjonalnie aktualizujemy dane zamiast tworzyć duplikat.
+        Persist a comprehensive analytical result set for the specified
+        learner. Should an analysis bearing an identical ``filename`` already
+        exist for this learner, the extant record identifier will be returned
+        and, where appropriate, its attributes updated in lieu of creating a
+        duplicate artefact.
         """
-        # --- Sprawdzenie duplikatu ---
+        # --- Duplicate check ---
         existing = next((a for a in self.storage['analyses']
                          if a['user_id'] == user_id and a['filename'] == filename), None)
         if existing:
@@ -112,7 +117,7 @@ class DatabaseOperations:
             self._save_storage()
             return existing['_id']
 
-        # --- Nowa analiza ---
+        # --- New analysis ---
         analysis_data = {
             '_id': f"analysis_{len(self.storage['analyses']) + 1}",
             'user_id': user_id,

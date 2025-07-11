@@ -15,8 +15,8 @@ db = SQLAlchemy()
 
 class User(UserMixin, db.Model):
     """
-    User model for authentication and session management.
-    Implements Flask-Login UserMixin for session handling.
+    Comprehensive user model employed for authentication and session management.
+    Incorporates *Flask-Login*'s ``UserMixin`` to facilitate secure session handling.
     """
     
     __tablename__ = 'users'
@@ -45,7 +45,7 @@ class User(UserMixin, db.Model):
     last_login = db.Column(db.DateTime, nullable=True)
     
     def __init__(self, username, email, password, **kwargs):
-        """Initialise new user with hashed password."""
+        """Initialise a new user and persist the password hash securely."""
         self.username = username
         self.email = email
         self.set_password(password)
@@ -74,7 +74,8 @@ class User(UserMixin, db.Model):
         self.last_login = datetime.now(timezone.utc)
     
     def is_first_login(self):
-        """Check if this is user's first login (needs onboarding)."""
+        """Determine whether the present login constitutes the learner’s inaugural
+        session (thus requiring the onboarding sequence)."""
         onboarding = UserOnboarding.query.filter_by(user_id=self.id).first()
         if not onboarding:
             # Create onboarding record for new user
@@ -102,7 +103,8 @@ class User(UserMixin, db.Model):
 
 class UserOnboarding(db.Model):
     """
-    Track user onboarding progress and sample policy preferences.
+    Model utilised to record a learner’s onboarding trajectory together with
+    their interaction with exemplar policy documents.
     """
     __tablename__ = 'user_onboarding'
     

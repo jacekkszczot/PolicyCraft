@@ -1,6 +1,9 @@
 """
-Authentication routes for PolicyCraft.
-Clean version without duplicates.
+PolicyCraft – Authentication Blueprint.
+
+This module provides all HTTP endpoints associated with learner identification, 
+including login, registration, profile management and session termination. 
+The module adheres to a single responsibility paradigm and is devoid of redundant logic.
 
 Author: Jacek Robert Kszczot
 """
@@ -17,7 +20,8 @@ logger = logging.getLogger(__name__)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """Handle user login."""
+    """Process the learner’s authentication request, validate their credentials
+    and establish a session where appropriate."""
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     
@@ -64,7 +68,8 @@ def login():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    """Handle user registration."""
+    """Facilitate creation of a novel learner account, ensuring all submitted
+    attributes satisfy validation criteria prior to persistence."""
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     
@@ -102,7 +107,8 @@ def register():
 @auth_bp.route('/logout')
 @login_required
 def logout():
-    """Handle user logout."""
+    """Terminate the active session in a secure manner, expunge residual cookies
+    and enforce cache invalidation."""
     # Store username for logging
     username = current_user.username if current_user.is_authenticated else 'Unknown'
     
@@ -129,13 +135,15 @@ def logout():
 @auth_bp.route('/profile')
 @login_required
 def profile():
-    """Display user profile page."""
+    """Render the authenticated learner’s profile, exposing their stored
+    biographical details for review."""
     return render_template('auth/profile.html', user=current_user)
 
 @auth_bp.route('/profile/update', methods=['POST'])
 @login_required
 def update_profile():
-    """Update user details (name, institution, email)."""
+    """Persist modifications to the learner’s biographical metadata, following
+    completion of client-side form submission."""
     gender = request.form.get('gender', '').strip()
     first_name = request.form.get('first_name', '').strip()
     last_name = request.form.get('last_name', '').strip()

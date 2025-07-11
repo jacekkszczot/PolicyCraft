@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 """
 Test execution script for PolicyCraft
 Runs comprehensive test suite with coverage reporting and detailed output.

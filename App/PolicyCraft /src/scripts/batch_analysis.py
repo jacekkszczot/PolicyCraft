@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 """
 Batch analysis of clean university AI policy dataset.
 Tests full PolicyCraft pipeline on real university policies.

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 """Export analysed policy documents to CSV for model evaluation.
 
 The script reads JSON storage via DatabaseOperations and writes a CSV file

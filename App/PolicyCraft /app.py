@@ -201,7 +201,9 @@ def dashboard():
     try:
         logger.info(f"Dashboard accessed by user: {current_user.username}")
         
-        # Get user's analyses
+        # Usuń ewentualne duplikaty baseline przed pobraniem danych
+        db_operations.deduplicate_baseline_analyses(current_user.id)
+        # Pobierz analizy użytkownika (już bez duplikatów)
         user_analyses = db_operations.get_user_analyses(current_user.id)
         
         # Generate dashboard charts

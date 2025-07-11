@@ -90,25 +90,29 @@ class DatabaseOperations:
         print(f"Document stored: {document_data['_id']}")
         return document_data['_id']
 
-    def store_user_analysis_results(self, user_id: int, filename: str, 
+    def store_user_analysis_results(self, user_id: int, filename: str,
                                    original_text: str, cleaned_text: str,
                                    themes: List[Dict], classification: Dict,
                                    document_id: str = None) -> str:
         """
-        Store complete analysis results for a user.
-        
-        Args:
-            user_id (int): User ID
-            filename (str): Document filename  
-            original_text (str): Original extracted text
-            cleaned_text (str): Processed text
-            themes (List[Dict]): Extracted themes
-            classification (Dict): Classification results
-            document_id (str): Associated document ID
-            
-        Returns:
-            str: Analysis ID
+        Store complete analysis results for a user. If analiza o tym samym
+        `filename` już istnieje dla danego użytkownika – zwracamy istniejące
+        `_id` i opcjonalnie aktualizujemy dane zamiast tworzyć duplikat.
         """
+        # --- Sprawdzenie duplikatu ---
+        existing = next((a for a in self.storage['analyses']
+                         if a['user_id'] == user_id and a['filename'] == filename), None)
+        if existing:
+            # Zaktualizuj klucz `analysis_date` i ewentualnie overwrite themes / classification
+            existing['analysis_date'] = datetime.now(timezone.utc).isoformat()
+            existing['themes'] = themes
+            existing['classification'] = classification
+            existing['text_data']['cleaned_text'] = cleaned_text[:5000]
+            existing['text_data']['text_length'] = len(cleaned_text)
+            self._save_storage()
+            return existing['_id']
+
+        # --- Nowa analiza ---
         analysis_data = {
             '_id': f"analysis_{len(self.storage['analyses']) + 1}",
             'user_id': user_id,
@@ -158,6 +162,53 @@ class DatabaseOperations:
         
         print(f"Retrieved {len(analyses)} analyses for user {user_id}")
         return analyses[:limit]
+
+    def _deduplicate(self, analyses: List[Dict]) -> int:
+        """Helper: deduplicate list by filename, keep the oldest entry."""
+        removed = 0
+        seen = set()
+        # sort by analysis_date, keep first occurrence per filename
+        for analysis in sorted(analyses, key=lambda x: x['analysis_date']):
+            fname = analysis['filename']
+            if fname in seen:
+                self.storage['analyses'] = [a for a in self.storage['analyses'] if a['_id'] != analysis['_id']]
+                removed += 1
+            else:
+                seen.add(fname)
+        return removed
+
+    def deduplicate_user_analyses(self, user_id: int) -> int:
+        """Usuń duplikaty analiz (wszystkich) danego użytkownika bazując na nazwie pliku.
+        Zostawia najstarszy wpis, usuwa kolejne.
+        Zwraca liczbę usuniętych.
+        """
+        user_analyses = [a for a in self.storage['analyses'] if a['user_id'] == user_id]
+        removed = self._deduplicate(user_analyses)
+        if removed:
+            self._save_storage()
+        return removed
+
+    def deduplicate_baseline_analyses(self, user_id: int) -> int:
+        """Usuń duplikaty analiz rozpoczynających się od "[BASELINE]".
+        Zostawia najstarszą (pierwszą) analizę dla danego pliku.
+
+        Zwraca: liczba usuniętych duplikatów.
+        """
+        baseline_analyses = [a for a in self.storage['analyses']
+                              if a['user_id'] == user_id and a['filename'].startswith('[BASELINE]')]
+        removed = 0
+        seen = {}
+        for analysis in sorted(baseline_analyses, key=lambda x: x['analysis_date']):
+            fname = analysis['filename']
+            if fname not in seen:
+                seen[fname] = analysis['_id']
+            else:
+                # duplikat – usuń
+                self.storage['analyses'] = [a for a in self.storage['analyses'] if a['_id'] != analysis['_id']]
+                removed += 1
+        if removed:
+            self._save_storage()
+        return removed
 
     def get_user_analysis_by_id(self, user_id: int, analysis_id: str) -> Optional[Dict]:
         """

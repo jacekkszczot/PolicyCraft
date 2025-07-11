@@ -7,7 +7,7 @@ Author: Jacek Robert Kszczot
 
 import re
 import logging
-from collections import defaultdict
+from collections import defaultdict, Counter
 from typing import List, Dict, Optional
 
 # NLP libraries
@@ -347,7 +347,8 @@ class ThemeExtractor:
             'theme_categories': [theme['name'] for theme in themes],
             'avg_confidence': round(avg_confidence, 1),
             'coverage_score': round(coverage_score, 1),
-            'total_score': round(total_score, 2)
+            'total_score': round(total_score, 2),
+            'dominant_category': (lambda c: c[0][0] if c else None)(Counter([cat for theme in themes for cat in self.theme_categories.keys() if cat.lower() in theme['name'].lower()]).most_common(1))
         }
         
         return summary

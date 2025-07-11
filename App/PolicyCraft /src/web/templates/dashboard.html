@@ -73,24 +73,6 @@
         </div>
     </div>
 
-    <!-- Top Themes -->
-    {% if data.theme_frequencies %}
-    <div class="dashboard-section">
-        <h2>Most Common Themes</h2>
-        <div class="themes-cloud">
-            {% for theme, frequency in data.theme_frequencies.items() %}
-            {% if loop.index <= 15 %}
-            <button class="theme-badge" 
-                    style="font-size: {{ 0.8 + (frequency / (data.theme_frequencies.values()|list|max) * 0.8) }}rem;"
-                    onclick="exploreTheme('{{ theme }}', {{ frequency }})"
-                    title="Click to explore {{ theme }} theme ({{ frequency }} occurrences)">
-                {{ theme }} ({{ frequency }})
-            </button>
-            {% endif %}
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
 
     <!-- Recent Analyses Table -->
     <div class="dashboard-section">
@@ -111,9 +93,9 @@
                 <thead>
                     <tr>
                         <th>🏛️ University</th>
-                        <th>📊 Classification</th>
-                        <th>📅 Date</th>
-                        <th>🎯 Top Themes</th>
+                        <th style="width:24%">📊 Classification</th>
+                        <th style="width:14%">📅 Date</th>
+                        <th style="width:20%">🎯 Top Themes</th>
                         <th>⚙️ Actions</th>
                     </tr>
                 </thead>
@@ -216,10 +198,6 @@
             <span class="action-icon">📤</span>
             <span class="action-text">Upload New Policy</span>
         </a>
-        <a href="#" onclick="exportDashboard()" class="action-button secondary">
-            <span class="action-icon">📊</span>
-            <span class="action-text">Export Data</span>
-        </a>
         <a href="{{ url_for('about') }}" class="action-button secondary">
             <span class="action-icon">ℹ️</span>
             <span class="action-text">About</span>
@@ -270,13 +248,7 @@ function exportAnalysesTable() {
     document.body.removeChild(link);
 }
 
-function exploreTheme(themeName, frequency) {
-    alert(`Theme: ${themeName}\nFrequency: ${frequency} occurrences\n\nFull theme exploration coming soon!`);
-}
 
-function exportDashboard() {
-    alert('Dashboard export feature coming soon!');
-}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {

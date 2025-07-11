@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2cm;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2cm;
+        }
+        .section {
+            margin-bottom: 1.5cm;
+        }
+        .chart {
+            margin: 1cm 0;
+        }
+        .recommendations {
+            margin-top: 2cm;
+        }
+        .recommendation-item {
+            margin-bottom: 1cm;
+            padding: 0.5cm;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Policy Analysis Report</h1>
+        <p>Generated on: {{ data.generated_date }}</p>
+    </div>
+
+    <div class="section">
+        <h2>Analysis Overview</h2>
+        <p><strong>File:</strong> {{ data.analysis.filename }}</p>
+        <p><strong>Classification:</strong> {{ data.analysis.classification }}</p>
+        <p><strong>Confidence:</strong> {{ "%.2f"|format(data.analysis.confidence) }}%</p>
+    </div>
+
+    <div class="section">
+        <h2>Analysis Summary</h2>
+        <div class="chart">
+            <!-- Charts will be embedded here -->
+        </div>
+    </div>
+
+    <div class="section recommendations">
+        <h2>Recommendations</h2>
+        {% for rec in data.recommendations %}
+        <div class="recommendation-item">
+            <h3>{{ loop.index }}. {{ rec.title }}</h3>
+            <p><strong>Priority:</strong> {{ rec.priority }}</p>
+            <p><strong>Implementation Steps:</strong></p>
+            <ul>
+                {% for step in rec.implementation_steps %}
+                <li>{{ step }}</li>
+                {% endfor %}
+            </ul>
+            <p><strong>Success Metrics:</strong></p>
+            <ul>
+                {% for metric in rec.success_metrics %}
+                <li>{{ metric }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

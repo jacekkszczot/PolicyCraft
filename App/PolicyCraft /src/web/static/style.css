@@ -51,7 +51,7 @@
     font-size: 1.8rem;
     margin-bottom: 1.5rem;
     font-weight: 300;
-    color: #d97706;
+    color: #f6ad55 /* pastel orange */;
 }
 
 .hero-description {
@@ -135,7 +135,7 @@
 .feature-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(30, 41, 59, 0.15);
-    border-color: #d97706;
+    border-color: #f6ad55 /* pastel orange */;
     text-decoration: none;
     color: inherit;
     background: rgba(255, 255, 255, 0.98);
@@ -148,7 +148,7 @@
 .feature-icon {
     font-size: 3rem;
     margin-bottom: 1rem;
-    color: #d97706;
+    color: #f6ad55 /* pastel orange */;
     transition: all 0.3s ease;
 }
 
@@ -175,7 +175,7 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.75rem 1rem;
-    background: #d97706;
+    background: #f6ad55 /* pastel orange */;
     color: #ffffff;
     border-radius: 6px;
     font-weight: 500;
@@ -214,7 +214,7 @@
 .academic-icon {
     font-size: 3rem;
     margin-bottom: 1rem;
-    color: #d97706;
+    color: #f6ad55 /* pastel orange */;
 }
 
 .academic-card h3 {
@@ -293,7 +293,7 @@
 
 .form-input:focus {
     outline: none;
-    border-color: #d97706;
+    border-color: #f6ad55 /* pastel orange */;
     box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
 }
 
@@ -367,7 +367,7 @@
 }
 
 .auth-footer a, .auth-link {
-    color: #d97706;
+    color: #f6ad55 /* pastel orange */;
     text-decoration: none;
     font-weight: 500;
 }
@@ -447,7 +447,7 @@
 
 .stat-icon {
     font-size: 2rem;
-    color: #d97706;
+    color: #f6ad55 /* pastel orange */;
 }
 
 .stat-content h3 {
@@ -541,7 +541,7 @@
 }
 
 .bar-restrictive {
-    background: #dc2626;
+    background: #f8b4b4; /* pastel red */
 }
 
 .bar-moderate {
@@ -549,7 +549,7 @@
 }
 
 .bar-permissive {
-    background: #0fe09e;
+    background: #a7f3d0; /* pastel green */
 }
 
 .percentage {
@@ -568,7 +568,7 @@
 }
 
 .theme-badge {
-    background: #d97706;
+    background: #f6ad55 /* pastel orange */;
     color: #ffffff;
     padding: 0.25rem 0.6rem;
     border-radius: 12px;
@@ -580,7 +580,7 @@
 
 .theme-badge:hover {
     transform: scale(1.05);
-    background: #b45309;
+    background: #e29535 /* pastel orange darker */;
 }
 
 /* === TABLES === */
@@ -645,14 +645,14 @@
     padding: 0.4rem 0.8rem;
     border-radius: 12px;
     font-weight: 600;
-    color: white;
+    color: var(--text);
     font-size: 0.8rem;
     text-align: center;
 }
 
-.classification-restrictive { background: #dc2626; }
-.classification-moderate { background:  #f0cd1e; }
-.classification-permissive { background: #0fe09e; }
+.classification-restrictive { background: #f8b4b4; /* pastel red */ }
+.classification-moderate { background: #fde68a; /* pastel yellow */ }
+.classification-permissive { background: #a7f3d0; /* pastel green */ }
 .classification-unknown { background: #64748b; }
 
 .confidence-bar {
@@ -669,7 +669,7 @@
 
 .confidence-fill {
     height: 100%;
-    background: #d97706;
+    background: #f6ad55 /* pastel orange */;
     transition: width 0.8s ease;
     border-radius: 3px;
 }
@@ -739,7 +739,7 @@
 }
 
 .btn-view {
-    background: #d97706;
+    background: #f6ad55 /* pastel orange */;
     color: #ffffff;
     padding: 0.4rem 0.8rem;
     border-radius: 12px;
@@ -750,7 +750,7 @@
 }
 
 .btn-view:hover {
-    background: #b45309;
+    background: #e29535 /* pastel orange darker */;
     transform: translateY(-1px);
 }
 
@@ -819,7 +819,7 @@
 }
 
 .action-button.primary {
-    background: #d97706;
+    background: #f6ad55 /* pastel orange */;
     color: #ffffff;
 }
 
@@ -860,7 +860,7 @@
 }
 
 .drag-drop-zone {
-    border: 3px dashed #d97706;
+    border: 3px dashed #f6ad55 /* pastel orange */;
     border-radius: 8px;
     padding: 3rem;
     text-align: center;
@@ -872,7 +872,7 @@
 
 .drag-drop-zone:hover,
 .drag-drop-zone.drag-over {
-    border-color: #b45309;
+    border-color: #e29535 /* pastel orange darker */;
     background: #f1f5f9;
     transform: translateY(-2px);
 }
@@ -885,7 +885,7 @@
     font-size: 4rem;
     margin-bottom: 1rem;
     opacity: 0.7;
-    color: #d97706;
+    color: #f6ad55 /* pastel orange */;
 }
 
 .drag-drop-zone h3 {
@@ -937,7 +937,7 @@
 
 .file-icon {
     font-size: 1.5rem;
-    color: #d97706;
+    color: #f6ad55 /* pastel orange */;
 }
 
 .file-details h5 {
@@ -950,12 +950,12 @@
 }
 
 .file-size {
-    color: #d97706;
+    color: #f6ad55 /* pastel orange */;
     font-weight: 500;
 }
 
 .remove-file {
-    background: #dc2626;
+    background: #f8b4b4; /* pastel red */
     color: white;
     border: none;
     border-radius: 50%;
@@ -994,7 +994,7 @@
 
 .progress-fill {
     height: 100%;
-    background: #d97706;
+    background: #f6ad55 /* pastel orange */;
     width: 0%;
     transition: width 0.3s ease;
     border-radius: 10px;
@@ -1036,13 +1036,13 @@
 }
 
 .file-type:hover {
-    border-color: #d97706;
+    border-color: #f6ad55 /* pastel orange */;
     background: rgba(217, 119, 6, 0.05);
 }
 
 .file-type .file-icon {
     font-size: 2rem;
-    color: #d97706;
+    color: #f6ad55 /* pastel orange */;
 }
 
 .upload-spinner {
@@ -1116,7 +1116,7 @@
     padding: 1rem;
     background: #f8fafc;
     border-radius: 6px;
-    border-left: 4px solid #d97706;
+    border-left: 4px solid #f6ad55 /* pastel orange */;
 }
 
 .info-item strong, .summary-item .label {
@@ -1170,7 +1170,7 @@
     background: #f8fafc;
     padding: 1rem;
     border-radius: 6px;
-    border-left: 4px solid #d97706;
+    border-left: 4px solid #f6ad55 /* pastel orange */;
 }
 
 .themes-grid {
@@ -1184,7 +1184,7 @@
     background: #f8fafc;
     padding: 1rem;
     border-radius: 6px;
-    border-left: 4px solid #d97706;
+    border-left: 4px solid #f6ad55 /* pastel orange */;
 }
 
 .theme-header {
@@ -1200,7 +1200,7 @@
 }
 
 .theme-score {
-    background: #d97706;
+    background: #f6ad55 /* pastel orange */;
     color: #ffffff;
     padding: 0.3rem 0.8rem;
     border-radius: 12px;
@@ -1217,7 +1217,7 @@
     background: #f8fafc;
     padding: 1.5rem;
     border-radius: 6px;
-    border-left: 4px solid #d97706;
+    border-left: 4px solid #f6ad55 /* pastel orange */;
 }
 
 .top-themes {
@@ -1256,7 +1256,7 @@
 .stat-item {
     text-align: center;
     padding: 1.5rem;
-    background: #d97706;
+    background: #f6ad55 /* pastel orange */;
     color: #ffffff;
     border-radius: 8px;
 }
@@ -1284,7 +1284,7 @@
     background: #f8fafc;
     border-radius: 8px;
     padding: 1.5rem;
-    border-left: 4px solid #d97706;
+    border-left: 4px solid #f6ad55 /* pastel orange */;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -1314,8 +1314,8 @@
     color: white;
 }
 
-.priority-high { background: #dc2626; }
-.priority-medium { background: #d97706; }
+.priority-high { background: #f8b4b4; /* pastel red */ }
+.priority-medium { background: #f6ad55 /* pastel orange */; }
 .priority-low { background: #059669; }
 
 .recommendation-content {
@@ -1359,7 +1359,7 @@
 }
 
 .timeframe-value {
-    background: #d97706;
+    background: #f6ad55 /* pastel orange */;
     color: #ffffff;
     padding: 0.3rem 0.8rem;
     border-radius: 12px;
@@ -1375,7 +1375,7 @@
     font-size: 4rem;
     margin-bottom: 1rem;
     opacity: 0.6;
-    color: #d97706;
+    color: #f6ad55 /* pastel orange */;
 }
 
 .no-recommendations h3 {
@@ -1394,7 +1394,7 @@
     background: white;
     padding: 1.5rem;
     border-radius: 6px;
-    border-left: 4px solid #d97706;
+    border-left: 4px solid #f6ad55 /* pastel orange */;
     text-align: left;
 }
 
@@ -1438,7 +1438,7 @@
 }
 
 .summary-card.info {
-    border-left: 4px solid #d97706;
+    border-left: 4px solid #f6ad55 /* pastel orange */;
 }
 
 .summary-card.total {
@@ -1541,7 +1541,7 @@
 }
 
 .status-success { background: #059669; }
-.status-failed { background: #dc2626; }
+.status-failed { background: #f8b4b4; /* pastel red */ }
 
 /* === PROFILE SPECIFIC === */
 .profile-container {
@@ -1577,7 +1577,7 @@
 }
 
 .user-role {
-    background: #d97706;
+    background: #f6ad55 /* pastel orange */;
     color: #ffffff;
     padding: 0.3rem 1rem;
     border-radius: 12px;
@@ -1623,7 +1623,7 @@
 .error-code {
     font-size: 6rem;
     font-weight: bold;
-    color: #d97706;
+    color: #f6ad55 /* pastel orange */;
     margin-bottom: 1rem;
 }
 
@@ -1746,7 +1746,7 @@
 }
 
 .step-number {
-    background: #d97706;
+    background: #f6ad55 /* pastel orange */;
     color: #ffffff;
     width: 50px;
     height: 50px;
@@ -1789,7 +1789,7 @@
 .result-stat {
     font-size: 3rem;
     font-weight: bold;
-    color: #d97706;
+    color: #f6ad55 /* pastel orange */;
     margin-bottom: 1rem;
 }
 
@@ -1852,7 +1852,7 @@
 }
 
 .university-badge {
-    background: #d97706;
+    background: #f6ad55 /* pastel orange */;
     color: #ffffff;
     padding: 0.25rem 0.6rem;
     border-radius: 12px;
@@ -1918,13 +1918,13 @@
 
 .alert-info {
     background: #fefbf0;
-    border-color: #d97706;
+    border-color: #f6ad55 /* pastel orange */;
     color: #92400e;
 }
 
 .alert-warning {
     background: #fefbf0;
-    border-color: #d97706;
+    border-color: #f6ad55 /* pastel orange */;
     color: #92400e;
 }
 
@@ -1944,7 +1944,7 @@
 /* === FOOTER === */
 .footer {
     background: #1e293b;
-    color: #ffffff;  /* Changed from #d97706 to white */
+    color: #ffffff; /* footer text colour */
     padding: 2rem;
     text-align: center;
 }
@@ -2080,12 +2080,12 @@
 
 /* Apply consistent colors */
 .btn-primary, .badge.bg-primary { background-color: #1e293b !important; }
-.btn-warning, .badge.bg-warning { background-color: #d97706 !important; }
+.btn-warning, .badge.bg-warning { background-color: #f6ad55 /* pastel orange */ !important; }
 .btn-success, .badge.bg-success { background-color: #059669 !important; }
 .btn-danger, .badge.bg-danger { background-color: #dc2626 !important; }
 
-.text-orange { color: #d97706 !important; }
-.bg-orange { background-color: #d97706 !important; }
+.text-orange { color: #f6ad55 /* pastel orange */ !important; }
+.bg-orange { background-color: #f6ad55 /* pastel orange */ !important; }
 
 /* === VISUAL UPGRADES === */
 .features-section {
@@ -2116,11 +2116,11 @@
 
 .footer {
     background: linear-gradient(135deg, #1e293b, #0f172a);
-    border-top: 3px solid #d97706;
+    border-top: 3px solid #f6ad55 /* pastel orange */;
 }
 
 /* Fix orange buttons contrast */
-.btn[style*="background:#d97706"], .btn[style*="background: #d97706"] {
+.btn[style*="background:#f6ad55"], .btn[style*="background: #f6ad55"] {
     color: #ffffff !important;
     font-weight: 700 !important;
 }

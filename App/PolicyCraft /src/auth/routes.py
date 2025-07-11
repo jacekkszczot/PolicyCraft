@@ -5,7 +5,7 @@ Clean version without duplicates.
 Author: Jacek Robert Kszczot
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, make_response
 from flask_login import login_user, logout_user, login_required, current_user
 from src.auth.models import User, db
 from src.auth.forms import LoginForm, RegistrationForm
@@ -111,18 +111,20 @@ def logout():
     
     # Clear session
     session.clear()
+
+    # Manually clear remember-me cookie (extra safety)
+    resp = make_response(redirect(url_for('auth.login')))
+    resp.set_cookie('remember_token', '', expires=0, httponly=True)
     
     # Log the logout
     logger.info(f"User {username} logged out successfully")
     flash('You have been logged out successfully.', 'info')
     
     # Create response with cache headers
-    response = redirect(url_for('index'))
-    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
-    
-    return response
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    return resp
 
 @auth_bp.route('/profile')
 @login_required

@@ -80,11 +80,49 @@ class PolicyClassifier:
         }
         
         # ML pipeline
+        
+        # === Explainability parameters ===
+        self.top_explain_terms = 10  # default number of terms returned by explain_classification
+        
         self.ml_pipeline = None
         if SKLEARN_AVAILABLE:
             self._initialize_ml_model()
         
         print("PolicyClassifier initialized successfully")
+
+    # ------------------------------------------------------------------
+    # Explainability helper
+    # ------------------------------------------------------------------
+    def explain_classification(self, text: str, top_n: int = None) -> List[Tuple[str, str, float]]:
+        """Return top contributing keywords and their weighted scores.
+
+        Args:
+            text (str): input policy text (already cleaned if possible).
+            top_n (int): number of terms to return (defaults to self.top_explain_terms).
+
+        Returns:
+            List[Tuple[str, str, float]]: list of (keyword, category, score) sorted by score desc.
+        """
+        if top_n is None:
+            top_n = self.top_explain_terms
+
+        text_lower = text.lower()
+        scores: List[Tuple[str, str, float]] = []
+        # Calculate rule-based keyword contributions
+        for category, groups in self.classification_keywords.items():
+            for group_name, keywords in groups.items():
+                weight = self.category_weights[category].get(group_name, 1.0)
+                for kw in keywords:
+                    if kw in text_lower:
+                        # simple frequency * weight
+                        freq = text_lower.count(kw)
+                        score = freq * weight
+                        if score > 0:
+                            scores.append((kw, category, score))
+
+        # Sort and truncate
+        scores.sort(key=lambda x: x[2], reverse=True)
+        return scores[:top_n]
 
     def _initialize_ml_model(self):
         """Initialize and train the ML model with sample data."""

@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+"""Export analysed policy documents to CSV for model evaluation.
+
+The script reads JSON storage via DatabaseOperations and writes a CSV file
+containing cleaned text, predicted label, and (optionally) institution type.
+
+Usage:
+    python scripts/export_analysis_to_csv.py --output data/policy_dataset.csv
+"""
+import argparse
+import os
+import pandas as pd
+from src.database.operations import DatabaseOperations
+
+
+def export_to_csv(output_path: str):
+    db = DatabaseOperations()
+    rows = []
+    for analysis in db.storage.get("analyses", []):
+        cleaned = analysis.get("text_data", {}).get("cleaned_text", "")
+        label = analysis.get("classification", {}).get("prediction", "")
+        metadata = analysis.get("metadata", {}) or {}
+        institution = metadata.get("institution_type", "unknown")
+        if cleaned and label:
+            rows.append({
+                "text": cleaned,
+                "label": label,
+                "institution_type": institution
+            })
+
+    if not rows:
+        print("[WARN] No analyses found in storage. Nothing exported.")
+        return
+
+    df = pd.DataFrame(rows)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    df.to_csv(output_path, index=False)
+    print(f"Exported {len(df)} rows to {output_path}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Export analysed policies to CSV")
+    parser.add_argument("--include_clean", action="store_true", help="Also analyse files in data/policies/clean_dataset")
+    parser.add_argument("--output", default="data/policy_dataset.csv", help="Output CSV path")
+    args = parser.parse_args()
+
+    export_to_csv(args.output)
+
+    if args.include_clean:
+        from src.nlp.text_processor import TextProcessor
+        from src.nlp.policy_classifier import PolicyClassifier
+        import glob
+
+        clean_dir = "data/policies/clean_dataset"
+        files = glob.glob(f"{clean_dir}/*.*")
+        if not files:
+            print(f"[WARN] No files found in {clean_dir}")
+            exit()
+
+        tp = TextProcessor()
+        clf = PolicyClassifier()
+        extra_rows = []
+        for fp in files:
+            text = tp.extract_text_from_file(fp)
+            if not text:
+                continue
+            prediction = clf.classify_policy(text)["classification"]
+            uni_name = os.path.basename(fp).split("-ai-policy")[0].replace("_", " ").strip()
+            extra_rows.append({
+                "text": text[:10000],  # limit size
+                "label": prediction,
+                "institution_type": uni_name
+            })
+        if extra_rows:
+            df_extra = pd.DataFrame(extra_rows)
+            df_extra.to_csv(args.output, mode="a", header=False, index=False)
+            print(f"Appended {len(df_extra)} rows from clean_dataset to {args.output}")

@@ -734,6 +734,25 @@ def delete_analysis(analysis_id):
 
 # === API ROUTES ===
 
+@app.route('/api/explain/<analysis_id>')
+@login_required
+def api_explain_analysis(analysis_id):
+    """Zwróć listę kluczowych słów, które wpłynęły na klasyfikację polityki AI.
+    Format JSON: {"analysis_id": ..., "keywords": [{"term": str, "category": str, "score": float}]}"""
+    db_ops = DatabaseOperations()
+    analysis = db_ops.get_analysis_by_id(analysis_id)
+    if not analysis or analysis.get('user_id') != current_user.id:
+        return jsonify({'error': 'Analysis not found'}), 404
+
+    cleaned_text = analysis.get('text_data', {}).get('cleaned_text', '')
+    if not cleaned_text:
+        return jsonify({'error': 'No cleaned text available'}), 400
+
+    classifier = PolicyClassifier()
+    keywords = classifier.explain_classification(cleaned_text, top_n=15)
+    result = [{"term": kw, "category": cat, "score": score} for kw, cat, score in keywords]
+    return jsonify({'analysis_id': analysis_id, 'keywords': result})
+
 @app.route('/api/analysis/<analysis_id>')
 @login_required
 def api_get_analysis(analysis_id):

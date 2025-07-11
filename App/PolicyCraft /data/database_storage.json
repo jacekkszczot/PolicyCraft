@@ -14833,6 +14833,1872 @@
         "classification_type": "Moderate",
         "confidence": 64
       }
+    },
+    {
+      "_id": "analysis_102",
+      "user_id": 7,
+      "document_id": null,
+      "filename": "[BASELINE] Research University Sample 2 - 2-ai-policy.pdf",
+      "analysis_date": "2025-07-11T11:42:03.784170+00:00",
+      "text_data": {
+        "original_text": " \n1 \n \nGuidance on the use of AI in Assessments 2022-23 \n \nIntroduction \nThe goal of this document is to provide guidance on how we can effectively integrate \nor manage the use of generative AI in our assessments.  Generative AI is a type of \nArtificial Intelligence that generates new outputs such as images, audio, or text \nbased on learned patterns and inputs. \nThe Quality Assurance Agency has recently produced a briefing paper on the threat \nto academic integrity posed by AI, which is available on the QAA website.  The \nbriefing paper provides background on AI software tools, as well as the potential \nimplications for academic standards and actions that providers can take.  It is \nimportant to stress that a blanket ban on generative AI is not viable. Instead, we \nneed to focus on responsible usage by staff and students and associated ethical \nconsiderations to ensure the safe and productive deployment of this technology.  \nThis requires a consideration of how to use AI in an ethical, responsible, and \nappropriate manner that considers fairness and transparency. This is particularly \nimportant as the text created through generative AI tools may not be text-matched \nthrough tools such as Turnitin. This is because the text created by AI tools is original.  \nThe challenge of preserving academic integrity is not a new problem and the \nintroduction of generative AIs will not change the fundamental challenges that face \neducators.  To effectively prevent cheating, it is essential to address its root causes.  \nResearch shows this can be achieved by promoting a strong culture of academic \nintegrity that emphasises the importance of honesty and integrity.  Our ultimate \nobjective is to prepare students for the dynamic and evolving job market of the \nfuture. \n \nContext \nMuch of the work undertaken across the HE sector in recent weeks has shown that \nAI tools and their outputs vary.  Essentially the quality of the response from a \ngenerative AI tool will depend on the quality and extent of the training material.  \nWhere this is limited, then the responses will tend to be bland/generic, lack critical \nanalysis, and so on.  However, the inverse is also true and where the training data is \ngood, then the ability to answer diverse/complex questions on those topics is likely to \nbe broadly good as well. \n \nAdvice for Staff \nAs such our advice to staff is to be clear with students as to what you regard as a \npermissible use of AI in any given assignment and outline how its inclusion or use \nshould be acknowledged. To do this consider: \n\u2022 Having open and transparent discussions with students regarding the \nacceptable and unacceptable use of AI in assessments.  This should include \n \n2 \n \nexplicit instructions on what constitutes appropriate use, such as the production of \noriginal work.  Students should be required to acknowledge requirements through a \ndeclaration of integrity form and be informed that any unacceptable use of AI will be \nconsidered academic misconduct. \n\u2022 Review how generative AI might enhance student learning through the assessment. \nFor example, the AI could be used to analyse and summarise relevant materials, \nprovide a draft structure or starting point, or otherwise free up time for students to \nfocus on other critical aspects of their learning such as evaluation, synthesis, critical \nthinking, or reflection.  \n\u2022 Have a conversation with students around data privacy.  One of the key ways in \nwhich many AI tools learn is through processing larger data sets.  When you register \nwith an AI tool you may be required to provide permission that any submitted data \nand any interactions with the AI can be used to improve future versions. \n \nWhen is it appropriate for students to use AI? \nThere are a number of assessment situations where AI can be used, for example: \n\u2022 When it is approved for use and is part of the assessment process. \n\u2022 For revision of a course or other materials. \n\u2022 When the use of AI in an assignment has been referenced appropriately and \nis allowed as part of the resources drawn upon to create an assessment. \n\u2022 As a tool for refining writing. \n \nHow might you adapt assessments for students? \nThere are a number of steps that you can take to make assessments more robust: \n\u2022 Shifting the assessment from recall of knowledge to real world application, for \nexample the requirement to include current events, research and activities.  \n\u2022 Asking students to provide an annotated bibliography to demonstrate sources \nof evidence used. \n\u2022 Citation presents a problem because AI is neither an author nor a source of \ninformation, but a writing aid. It would be more useful for staff to know how the \ntool was used in the writing process. Staff could provide direction or guidance \non acceptable references or sources of referencing for the assessment and \nprovide more explicit guidance on acceptable source material. \n\u2022 Include the use of reflective responses that build in personal insight.  AI tools \nare far le",
+        "cleaned_text": "1 Guidance on the use of AI in Assessments 2022-23 Introduction The goal of this document is to provide guidance on how we can effectively integrate or manage the use of generative AI in our assessments. Generative AI is a type of Artificial Intelligence that generates new outputs such as images, audio, or text based on learned patterns and inputs. The Quality Assurance Agency has recently produced a briefing paper on the threat to academic integrity posed by AI, which is available on the QAA website. The briefing paper provides background on AI software tools, as well as the potential implications for academic standards and actions that providers can take. It is important to stress that a blanket ban on generative AI is not viable. Instead, we need to focus on responsible usage by staff and students and associated ethical considerations to ensure the safe and productive deployment of this technology. This requires a consideration of how to use AI in an ethical, responsible, and appropriate manner that considers fairness and transparency. This is particularly important as the text created through generative AI tools may not be text-matched through tools such as Turnitin. This is because the text created by AI tools is original. The challenge of preserving academic integrity is not a new problem and the introduction of generative AIs will not change the fundamental challenges that face educators. To effectively prevent cheating, it is essential to address its root causes. Research shows this can be achieved by promoting a strong culture of academic integrity that emphasises the importance of honesty and integrity. Our ultimate objective is to prepare students for the dynamic and evolving job market of the future. Context Much of the work undertaken across the HE sector in recent weeks has shown that AI tools and their outputs vary. Essentially the quality of the response from a generative AI tool will depend on the quality and extent of the training material. Where this is limited, then the responses will tend to be bland generic, lack critical analysis, and so on. However, the inverse is also true and where the training data is good, then the ability to answer diverse complex questions on those topics is likely to be broadly good as well. Advice for Staff As such our advice to staff is to be clear with students as to what you regard as a permissible use of AI in any given assignment and outline how its inclusion or use should be acknowledged. To do this consider: Having open and transparent discussions with students regarding the acceptable and unacceptable use of AI in assessments. This should include 2 explicit instructions on what constitutes appropriate use, such as the production of original work. Students should be required to acknowledge requirements through a declaration of integrity form and be informed that any unacceptable use of AI will be considered academic misconduct. Review how generative AI might enhance student learning through the assessment. For example, the AI could be used to analyse and summarise relevant materials, provide a draft structure or starting point, or otherwise free up time for students to focus on other critical aspects of their learning such as evaluation, synthesis, critical thinking, or reflection. Have a conversation with students around data privacy. One of the key ways in which many AI tools learn is through processing larger data sets. When you register with an AI tool you may be required to provide permission that any submitted data and any interactions with the AI can be used to improve future versions. When is it appropriate for students to use AI? There are a number of assessment situations where AI can be used, for example: When it is approved for use and is part of the assessment process. For revision of a course or other materials. When the use of AI in an assignment has been referenced appropriately and is allowed as part of the resources drawn upon to create an assessment. As a tool for refining writing. How might you adapt assessments for students? There are a number of steps that you can take to make assessments more robust: Shifting the assessment from recall of knowledge to real world application, for example the requirement to include current events, research and activities. Asking students to provide an annotated bibliography to demonstrate sources of evidence used. Citation presents a problem because AI is neither an author nor a source of information, but a writing aid. It would be more useful for staff to know how the tool was used in the writing process. Staff could provide direction or guidance on acceptable references or sources of referencing for the assessment and provide more explicit guidance on acceptable source material. Include the use of reflective responses that build in personal insight. AI tools are far less useful in this context. Request a critique of already written responses (including AI). In addition the following types of asse",
+        "text_length": 9061
+      },
+      "themes": [
+        {
+          "name": "Academic Integrity",
+          "score": 35.5,
+          "frequency": 35,
+          "keywords": [
+            "cheating",
+            "academic",
+            "integrity",
+            "misconduct",
+            "citation"
+          ],
+          "matches": [
+            "academic integrity",
+            "academic integrity",
+            "academic integrity"
+          ],
+          "confidence": 100
+        },
+        {
+          "name": "Student Guidelines",
+          "score": 16.0,
+          "frequency": 16,
+          "keywords": [
+            "student",
+            "students",
+            "assignment",
+            "submission"
+          ],
+          "matches": [],
+          "confidence": 100
+        },
+        {
+          "name": "Assessment and Evaluation",
+          "score": 9.0,
+          "frequency": 9,
+          "keywords": [
+            "assessment",
+            "evaluation",
+            "review"
+          ],
+          "matches": [],
+          "confidence": 90
+        },
+        {
+          "name": "Privacy and Data",
+          "score": 5.5,
+          "frequency": 5,
+          "keywords": [
+            "privacy",
+            "data",
+            "personal",
+            "information"
+          ],
+          "matches": [
+            "data privacy"
+          ],
+          "confidence": 55
+        },
+        {
+          "name": "AI Ethics",
+          "score": 5.0,
+          "frequency": 5,
+          "keywords": [
+            "ethical",
+            "moral",
+            "responsible"
+          ],
+          "matches": [
+            "ethical considerations"
+          ],
+          "confidence": 50
+        },
+        {
+          "name": "Research and Innovation",
+          "score": 4.0,
+          "frequency": 4,
+          "keywords": [
+            "research",
+            "advancement",
+            "investigation",
+            "analysis"
+          ],
+          "matches": [],
+          "confidence": 40
+        },
+        {
+          "name": "Faculty Guidelines",
+          "score": 3.0,
+          "frequency": 3,
+          "keywords": [
+            "staff",
+            "course"
+          ],
+          "matches": [],
+          "confidence": 30
+        },
+        {
+          "name": "Transparency",
+          "score": 1.5,
+          "frequency": 1,
+          "keywords": [
+            "transparency",
+            "transparent",
+            "open"
+          ],
+          "matches": [],
+          "confidence": 15
+        },
+        {
+          "name": "Bias and Fairness",
+          "score": 1.0,
+          "frequency": 1,
+          "keywords": [
+            "fairness",
+            "diverse"
+          ],
+          "matches": [],
+          "confidence": 10
+        },
+        {
+          "name": "Accountability",
+          "score": 1.0,
+          "frequency": 1,
+          "keywords": [
+            "responsible"
+          ],
+          "matches": [],
+          "confidence": 10
+        },
+        {
+          "name": "AI Technology",
+          "score": 1.0,
+          "frequency": 1,
+          "keywords": [],
+          "matches": [],
+          "confidence": 10,
+          "entities": [
+            "Artificial Intelligence",
+            "AI"
+          ]
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 64,
+        "method": "hybrid",
+        "scores": {
+          "Restrictive": 11.384753756099911,
+          "Moderate": 24.824055291062773,
+          "Permissive": 12.731190952837306
+        },
+        "reasoning": "Classified as Moderate based on: - 'integrity' appears 8 time(s) - 'appropriate' appears 3 time(s) - 'ethical' appears 3 time(s) - Emphasis on responsible use",
+        "details": {
+          "rule_based": {
+            "classification": "Moderate",
+            "confidence": 50,
+            "scores": {
+              "Restrictive": 16.7,
+              "Moderate": 37.5,
+              "Permissive": 20.699999999999996
+            },
+            "keyword_matches": {
+              "Restrictive": [
+                [
+                  "limited",
+                  1,
+                  1.5
+                ],
+                [
+                  "penalties",
+                  1,
+                  2.0
+                ],
+                [
+                  "consequences",
+                  1,
+                  2.0
+                ],
+                [
+                  "academic misconduct",
+                  3,
+                  6.0
+                ],
+                [
+                  "required",
+                  2,
+                  2.6
+                ],
+                [
+                  "essential",
+                  1,
+                  1.3
+                ],
+                [
+                  "necessary",
+                  1,
+                  1.3
+                ]
+              ],
+              "Moderate": [
+                [
+                  "appropriate",
+                  3,
+                  4.5
+                ],
+                [
+                  "considered",
+                  1,
+                  1.5
+                ],
+                [
+                  "standards",
+                  1,
+                  1.2
+                ],
+                [
+                  "requirements",
+                  1,
+                  1.2
+                ],
+                [
+                  "considerations",
+                  1,
+                  1.2
+                ],
+                [
+                  "responsible",
+                  2,
+                  2.6
+                ],
+                [
+                  "ethical",
+                  3,
+                  3.9000000000000004
+                ],
+                [
+                  "integrity",
+                  8,
+                  10.4
+                ],
+                [
+                  "transparency",
+                  1,
+                  1.3
+                ],
+                [
+                  "fairness",
+                  1,
+                  1.3
+                ],
+                [
+                  "context",
+                  2,
+                  2.8
+                ],
+                [
+                  "individual",
+                  2,
+                  2.8
+                ],
+                [
+                  "specific",
+                  1,
+                  1.4
+                ],
+                [
+                  "particular",
+                  1,
+                  1.4
+                ]
+              ],
+              "Permissive": [
+                [
+                  "support",
+                  2,
+                  3.6
+                ],
+                [
+                  "facilitate",
+                  1,
+                  1.8
+                ],
+                [
+                  "creative",
+                  1,
+                  1.5
+                ],
+                [
+                  "enhance",
+                  1,
+                  1.2
+                ],
+                [
+                  "improve",
+                  1,
+                  1.2
+                ],
+                [
+                  "advancement",
+                  1,
+                  1.2
+                ],
+                [
+                  "progress",
+                  1,
+                  1.2
+                ],
+                [
+                  "guidance",
+                  4,
+                  4.0
+                ],
+                [
+                  "advice",
+                  2,
+                  2.0
+                ],
+                [
+                  "support",
+                  2,
+                  2.0
+                ],
+                [
+                  "resources",
+                  1,
+                  1.0
+                ]
+              ]
+            },
+            "method": "rule_based"
+          },
+          "ml_based": {
+            "classification": "Moderate",
+            "confidence": 58,
+            "scores": {
+              "Moderate": 0.5810138227656932,
+              "Permissive": 0.07779773820932716,
+              "Restrictive": 0.34118843902497803
+            },
+            "method": "ml_based"
+          },
+          "agreement": true
+        }
+      },
+      "summary": {
+        "total_themes": 11,
+        "top_theme": "Academic Integrity",
+        "classification_type": "Moderate",
+        "confidence": 64
+      }
+    },
+    {
+      "_id": "analysis_103",
+      "user_id": 7,
+      "document_id": null,
+      "filename": "[BASELINE] Research University Sample 2 - 2-ai-policy.pdf",
+      "analysis_date": "2025-07-11T11:59:08.043561+00:00",
+      "text_data": {
+        "original_text": " \n1 \n \nGuidance on the use of AI in Assessments 2022-23 \n \nIntroduction \nThe goal of this document is to provide guidance on how we can effectively integrate \nor manage the use of generative AI in our assessments.  Generative AI is a type of \nArtificial Intelligence that generates new outputs such as images, audio, or text \nbased on learned patterns and inputs. \nThe Quality Assurance Agency has recently produced a briefing paper on the threat \nto academic integrity posed by AI, which is available on the QAA website.  The \nbriefing paper provides background on AI software tools, as well as the potential \nimplications for academic standards and actions that providers can take.  It is \nimportant to stress that a blanket ban on generative AI is not viable. Instead, we \nneed to focus on responsible usage by staff and students and associated ethical \nconsiderations to ensure the safe and productive deployment of this technology.  \nThis requires a consideration of how to use AI in an ethical, responsible, and \nappropriate manner that considers fairness and transparency. This is particularly \nimportant as the text created through generative AI tools may not be text-matched \nthrough tools such as Turnitin. This is because the text created by AI tools is original.  \nThe challenge of preserving academic integrity is not a new problem and the \nintroduction of generative AIs will not change the fundamental challenges that face \neducators.  To effectively prevent cheating, it is essential to address its root causes.  \nResearch shows this can be achieved by promoting a strong culture of academic \nintegrity that emphasises the importance of honesty and integrity.  Our ultimate \nobjective is to prepare students for the dynamic and evolving job market of the \nfuture. \n \nContext \nMuch of the work undertaken across the HE sector in recent weeks has shown that \nAI tools and their outputs vary.  Essentially the quality of the response from a \ngenerative AI tool will depend on the quality and extent of the training material.  \nWhere this is limited, then the responses will tend to be bland/generic, lack critical \nanalysis, and so on.  However, the inverse is also true and where the training data is \ngood, then the ability to answer diverse/complex questions on those topics is likely to \nbe broadly good as well. \n \nAdvice for Staff \nAs such our advice to staff is to be clear with students as to what you regard as a \npermissible use of AI in any given assignment and outline how its inclusion or use \nshould be acknowledged. To do this consider: \n\u2022 Having open and transparent discussions with students regarding the \nacceptable and unacceptable use of AI in assessments.  This should include \n \n2 \n \nexplicit instructions on what constitutes appropriate use, such as the production of \noriginal work.  Students should be required to acknowledge requirements through a \ndeclaration of integrity form and be informed that any unacceptable use of AI will be \nconsidered academic misconduct. \n\u2022 Review how generative AI might enhance student learning through the assessment. \nFor example, the AI could be used to analyse and summarise relevant materials, \nprovide a draft structure or starting point, or otherwise free up time for students to \nfocus on other critical aspects of their learning such as evaluation, synthesis, critical \nthinking, or reflection.  \n\u2022 Have a conversation with students around data privacy.  One of the key ways in \nwhich many AI tools learn is through processing larger data sets.  When you register \nwith an AI tool you may be required to provide permission that any submitted data \nand any interactions with the AI can be used to improve future versions. \n \nWhen is it appropriate for students to use AI? \nThere are a number of assessment situations where AI can be used, for example: \n\u2022 When it is approved for use and is part of the assessment process. \n\u2022 For revision of a course or other materials. \n\u2022 When the use of AI in an assignment has been referenced appropriately and \nis allowed as part of the resources drawn upon to create an assessment. \n\u2022 As a tool for refining writing. \n \nHow might you adapt assessments for students? \nThere are a number of steps that you can take to make assessments more robust: \n\u2022 Shifting the assessment from recall of knowledge to real world application, for \nexample the requirement to include current events, research and activities.  \n\u2022 Asking students to provide an annotated bibliography to demonstrate sources \nof evidence used. \n\u2022 Citation presents a problem because AI is neither an author nor a source of \ninformation, but a writing aid. It would be more useful for staff to know how the \ntool was used in the writing process. Staff could provide direction or guidance \non acceptable references or sources of referencing for the assessment and \nprovide more explicit guidance on acceptable source material. \n\u2022 Include the use of reflective responses that build in personal insight.  AI tools \nare far le",
+        "cleaned_text": "1 Guidance on the use of AI in Assessments 2022-23 Introduction The goal of this document is to provide guidance on how we can effectively integrate or manage the use of generative AI in our assessments. Generative AI is a type of Artificial Intelligence that generates new outputs such as images, audio, or text based on learned patterns and inputs. The Quality Assurance Agency has recently produced a briefing paper on the threat to academic integrity posed by AI, which is available on the QAA website. The briefing paper provides background on AI software tools, as well as the potential implications for academic standards and actions that providers can take. It is important to stress that a blanket ban on generative AI is not viable. Instead, we need to focus on responsible usage by staff and students and associated ethical considerations to ensure the safe and productive deployment of this technology. This requires a consideration of how to use AI in an ethical, responsible, and appropriate manner that considers fairness and transparency. This is particularly important as the text created through generative AI tools may not be text-matched through tools such as Turnitin. This is because the text created by AI tools is original. The challenge of preserving academic integrity is not a new problem and the introduction of generative AIs will not change the fundamental challenges that face educators. To effectively prevent cheating, it is essential to address its root causes. Research shows this can be achieved by promoting a strong culture of academic integrity that emphasises the importance of honesty and integrity. Our ultimate objective is to prepare students for the dynamic and evolving job market of the future. Context Much of the work undertaken across the HE sector in recent weeks has shown that AI tools and their outputs vary. Essentially the quality of the response from a generative AI tool will depend on the quality and extent of the training material. Where this is limited, then the responses will tend to be bland generic, lack critical analysis, and so on. However, the inverse is also true and where the training data is good, then the ability to answer diverse complex questions on those topics is likely to be broadly good as well. Advice for Staff As such our advice to staff is to be clear with students as to what you regard as a permissible use of AI in any given assignment and outline how its inclusion or use should be acknowledged. To do this consider: Having open and transparent discussions with students regarding the acceptable and unacceptable use of AI in assessments. This should include 2 explicit instructions on what constitutes appropriate use, such as the production of original work. Students should be required to acknowledge requirements through a declaration of integrity form and be informed that any unacceptable use of AI will be considered academic misconduct. Review how generative AI might enhance student learning through the assessment. For example, the AI could be used to analyse and summarise relevant materials, provide a draft structure or starting point, or otherwise free up time for students to focus on other critical aspects of their learning such as evaluation, synthesis, critical thinking, or reflection. Have a conversation with students around data privacy. One of the key ways in which many AI tools learn is through processing larger data sets. When you register with an AI tool you may be required to provide permission that any submitted data and any interactions with the AI can be used to improve future versions. When is it appropriate for students to use AI? There are a number of assessment situations where AI can be used, for example: When it is approved for use and is part of the assessment process. For revision of a course or other materials. When the use of AI in an assignment has been referenced appropriately and is allowed as part of the resources drawn upon to create an assessment. As a tool for refining writing. How might you adapt assessments for students? There are a number of steps that you can take to make assessments more robust: Shifting the assessment from recall of knowledge to real world application, for example the requirement to include current events, research and activities. Asking students to provide an annotated bibliography to demonstrate sources of evidence used. Citation presents a problem because AI is neither an author nor a source of information, but a writing aid. It would be more useful for staff to know how the tool was used in the writing process. Staff could provide direction or guidance on acceptable references or sources of referencing for the assessment and provide more explicit guidance on acceptable source material. Include the use of reflective responses that build in personal insight. AI tools are far less useful in this context. Request a critique of already written responses (including AI). In addition the following types of asse",
+        "text_length": 9061
+      },
+      "themes": [
+        {
+          "name": "Academic Integrity",
+          "score": 35.5,
+          "frequency": 35,
+          "keywords": [
+            "cheating",
+            "academic",
+            "integrity",
+            "misconduct",
+            "citation"
+          ],
+          "matches": [
+            "academic integrity",
+            "academic integrity",
+            "academic integrity"
+          ],
+          "confidence": 100
+        },
+        {
+          "name": "Student Guidelines",
+          "score": 16.0,
+          "frequency": 16,
+          "keywords": [
+            "student",
+            "students",
+            "assignment",
+            "submission"
+          ],
+          "matches": [],
+          "confidence": 100
+        },
+        {
+          "name": "Assessment and Evaluation",
+          "score": 9.0,
+          "frequency": 9,
+          "keywords": [
+            "assessment",
+            "evaluation",
+            "review"
+          ],
+          "matches": [],
+          "confidence": 90
+        },
+        {
+          "name": "Privacy and Data",
+          "score": 5.5,
+          "frequency": 5,
+          "keywords": [
+            "privacy",
+            "data",
+            "personal",
+            "information"
+          ],
+          "matches": [
+            "data privacy"
+          ],
+          "confidence": 55
+        },
+        {
+          "name": "AI Ethics",
+          "score": 5.0,
+          "frequency": 5,
+          "keywords": [
+            "ethical",
+            "moral",
+            "responsible"
+          ],
+          "matches": [
+            "ethical considerations"
+          ],
+          "confidence": 50
+        },
+        {
+          "name": "Research and Innovation",
+          "score": 4.0,
+          "frequency": 4,
+          "keywords": [
+            "research",
+            "advancement",
+            "investigation",
+            "analysis"
+          ],
+          "matches": [],
+          "confidence": 40
+        },
+        {
+          "name": "Faculty Guidelines",
+          "score": 3.0,
+          "frequency": 3,
+          "keywords": [
+            "staff",
+            "course"
+          ],
+          "matches": [],
+          "confidence": 30
+        },
+        {
+          "name": "Transparency",
+          "score": 1.5,
+          "frequency": 1,
+          "keywords": [
+            "transparency",
+            "transparent",
+            "open"
+          ],
+          "matches": [],
+          "confidence": 15
+        },
+        {
+          "name": "Bias and Fairness",
+          "score": 1.0,
+          "frequency": 1,
+          "keywords": [
+            "fairness",
+            "diverse"
+          ],
+          "matches": [],
+          "confidence": 10
+        },
+        {
+          "name": "Accountability",
+          "score": 1.0,
+          "frequency": 1,
+          "keywords": [
+            "responsible"
+          ],
+          "matches": [],
+          "confidence": 10
+        },
+        {
+          "name": "AI Technology",
+          "score": 1.0,
+          "frequency": 1,
+          "keywords": [],
+          "matches": [],
+          "confidence": 10,
+          "entities": [
+            "Artificial Intelligence",
+            "AI"
+          ]
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 64,
+        "method": "hybrid",
+        "scores": {
+          "Restrictive": 11.384753756099911,
+          "Moderate": 24.824055291062773,
+          "Permissive": 12.731190952837306
+        },
+        "reasoning": "Classified as Moderate based on: - 'integrity' appears 8 time(s) - 'appropriate' appears 3 time(s) - 'ethical' appears 3 time(s) - Emphasis on responsible use",
+        "details": {
+          "rule_based": {
+            "classification": "Moderate",
+            "confidence": 50,
+            "scores": {
+              "Restrictive": 16.7,
+              "Moderate": 37.5,
+              "Permissive": 20.699999999999996
+            },
+            "keyword_matches": {
+              "Restrictive": [
+                [
+                  "limited",
+                  1,
+                  1.5
+                ],
+                [
+                  "penalties",
+                  1,
+                  2.0
+                ],
+                [
+                  "consequences",
+                  1,
+                  2.0
+                ],
+                [
+                  "academic misconduct",
+                  3,
+                  6.0
+                ],
+                [
+                  "required",
+                  2,
+                  2.6
+                ],
+                [
+                  "essential",
+                  1,
+                  1.3
+                ],
+                [
+                  "necessary",
+                  1,
+                  1.3
+                ]
+              ],
+              "Moderate": [
+                [
+                  "appropriate",
+                  3,
+                  4.5
+                ],
+                [
+                  "considered",
+                  1,
+                  1.5
+                ],
+                [
+                  "standards",
+                  1,
+                  1.2
+                ],
+                [
+                  "requirements",
+                  1,
+                  1.2
+                ],
+                [
+                  "considerations",
+                  1,
+                  1.2
+                ],
+                [
+                  "responsible",
+                  2,
+                  2.6
+                ],
+                [
+                  "ethical",
+                  3,
+                  3.9000000000000004
+                ],
+                [
+                  "integrity",
+                  8,
+                  10.4
+                ],
+                [
+                  "transparency",
+                  1,
+                  1.3
+                ],
+                [
+                  "fairness",
+                  1,
+                  1.3
+                ],
+                [
+                  "context",
+                  2,
+                  2.8
+                ],
+                [
+                  "individual",
+                  2,
+                  2.8
+                ],
+                [
+                  "specific",
+                  1,
+                  1.4
+                ],
+                [
+                  "particular",
+                  1,
+                  1.4
+                ]
+              ],
+              "Permissive": [
+                [
+                  "support",
+                  2,
+                  3.6
+                ],
+                [
+                  "facilitate",
+                  1,
+                  1.8
+                ],
+                [
+                  "creative",
+                  1,
+                  1.5
+                ],
+                [
+                  "enhance",
+                  1,
+                  1.2
+                ],
+                [
+                  "improve",
+                  1,
+                  1.2
+                ],
+                [
+                  "advancement",
+                  1,
+                  1.2
+                ],
+                [
+                  "progress",
+                  1,
+                  1.2
+                ],
+                [
+                  "guidance",
+                  4,
+                  4.0
+                ],
+                [
+                  "advice",
+                  2,
+                  2.0
+                ],
+                [
+                  "support",
+                  2,
+                  2.0
+                ],
+                [
+                  "resources",
+                  1,
+                  1.0
+                ]
+              ]
+            },
+            "method": "rule_based"
+          },
+          "ml_based": {
+            "classification": "Moderate",
+            "confidence": 58,
+            "scores": {
+              "Moderate": 0.5810138227656932,
+              "Permissive": 0.07779773820932716,
+              "Restrictive": 0.34118843902497803
+            },
+            "method": "ml_based"
+          },
+          "agreement": true
+        }
+      },
+      "summary": {
+        "total_themes": 11,
+        "top_theme": "Academic Integrity",
+        "classification_type": "Moderate",
+        "confidence": 64
+      }
+    },
+    {
+      "_id": "analysis_104",
+      "user_id": 7,
+      "document_id": null,
+      "filename": "7_20250711_130317_guidance-on-the-use-of-generative-ai.pdf",
+      "analysis_date": "2025-07-11T12:03:18.578785+00:00",
+      "text_data": {
+        "original_text": "Support | Engage | Innovate\n University Guidance on  the use of\nGenerative Artificial \nIntelligence by \nstudents and staff, in \nlearning, teaching, and\nassessment \nA cademic Year  2024/2025\nAuthors:\nDr Ceri Coulby, Dr Sam Saunders & Dr Claire Ellison | Date: February 2024\nRevised 2024, by Prof David Webster, Gordon Sandison, \nRob Lindsay, Dr Sam Saunders, Dr Claire Ellison &\nRichard McKenna\nContents\n2\nIntroduction 3\nData Protection Policy and Your Responsibility  4\nGenerative AI and Copyright  5\nAcceptable Uses of GenAI Tools  5\nUnacceptable Uses of GenAI Tools  7\nPoor Academic Practice  8\nAcademic Misuse of GenAI Tools  9\nReferencing GenAI Tools 9\nFurther Information/Contact 10\nIntroduction\n3\nGenerative Artificial Intelligence (GenAI) tools are software applications that create content \nin any form (including but not limited to text, graphs, data, code, images, audio, and video) \nautomatically based on the prompt entered by the user. Examples include, but are not \nlimited to, OpenAI\u2019s ChatGPT, Google Bard/Gemini, Microsoft\u2019s Bing Chat/Copilot, DALL-E (and \nDALL-E2/3), and Perplexity.ai. \nArtificial intelligence tools are rapidly developing and increasingly becoming embedded into \neveryday activities across personal and professional contexts. To ensure our graduates have \nthe skills and experience they will need in their future careers, the University of Liverpool seeks \nto incorporate the technology in their pedagogical approach. However, it is also vital that \nsuch technology is used ethically and does not undermine academic integrity principles.  \nTo help students and staff to use such technologies appropriately, the University has \ndeveloped this guidance on acceptable and unacceptable uses of GenAI and AI (Artificial \nIntelligence) technology and its appropriate citation. This guidance is designed to be applied \nalongside Appendix L of the Code of Practice on Assessment (CoPA), which supersedes this \nguidance in regulatory terms. This guidance also serves as the University\u2019s default position \non usage. If module or programme/course component leaders wish students to use GenAI \nas part of an assessment, students will be informed of this specifically in module materials \nand assignment briefs. In these cases, specific guidance will be provided in the assignment \nbrief on what constitutes appropriate use of the GenAI tools and how the work from such tools \nshould be cited. \nThe underlying philosophy and/or ethos surrounding the use of Generative AI at the University \nof Liverpool is one of promoting literacy around the technology in both students and staff, \nand using the technology as openly, honestly, and transparently as possible. This ensures that \nany engagement with the technology is in line with both the Liverpool Curriculum Framework \n(LCF) - which promotes \u2018Digital Fluency\u2019 as a Graduate Attribute \u2013 and Strategy 2031, which \nstates that the university will work to integrate AI into its practice(s). An outright ban on \nthe use of the technology, therefore, contravenes both requirements, in addition to being \nimpossible to enforce.\n4\nIn general, therefore, the guiding principle(s) of the use of Generative AI that should inform all \npractice is that \n1. Both students and staff should openly discuss, experiment with, and engage with the \ntechnology in discursive ways where possible, to help improve general understanding of \nits capabilities, functionalities, limitations, and problems/biases.\n2. Any use of the technology in either an assessment or any other context should always \nbe declared and evaluated/reflected on, and if necessary, cited and referenced. \nCitations and references to AI should follow the same process as if referencing or citing \nan academic source. This goes for both staff and students \u2013 for example, students can \nbe asked to declare their use of GenAI on an assessment cover sheet, while staff should \nmake it clear on their teaching materials where and how GenAI has been used to help \ncreate them.  \n3. The technology is not used as a substitute for original thought, independent research, and \nthe production of original work. Rather, it is used to support these processes.  \nThat said, the university recognises that there are some situations where the use of \nGenerative AI is simply unacceptable and will attract sanctions under Appendix L of the Code \nof Practice on Assessment (CoPA). This guidance provides some steerage on what that \nunacceptable use of Generative AI looks like and should be consulted in line with the relevant \nsections of CoPA that deal with academic integrity.   \nData Protection Policy and Your Responsibility \nStudents and Staff interacting with GAI systems bear responsibilities for ensuring the \nUniversities Data Protection Policy is followed.  \nThe UK General Data Protection Regulation (GDPR) and Data Protection Act (DPA) 2018 \nemphasise the importance of not submitting sensitive or personal data unless necessary and \nappropriate measures are in place. Users sho",
+        "cleaned_text": "Support Engage Innovate University Guidance on the use of Generative Artificial Intelligence by students and staff, in learning, teaching, and assessment A cademic Year 2024 2025 Authors: Dr Ceri Coulby, Dr Sam Saunders Dr Claire Ellison Date: February 2024 Revised 2024, by Prof David Webster, Gordon Sandison, Rob Lindsay, Dr Sam Saunders, Dr Claire Ellison Richard McKenna Contents 2 Introduction 3 Data Protection Policy and Your Responsibility 4 Generative AI and Copyright 5 Acceptable Uses of GenAI Tools 5 Unacceptable Uses of GenAI Tools 7 Poor Academic Practice 8 Academic Misuse of GenAI Tools 9 Referencing GenAI Tools 9 Further Information Contact 10 Introduction 3 Generative Artificial Intelligence (GenAI) tools are software applications that create content in any form (including but not limited to text, graphs, data, code, images, audio, and video) automatically based on the prompt entered by the user. Examples include, but are not limited to, OpenAI s ChatGPT, Google Bard Gemini, Microsoft s Bing Chat Copilot, DALL-E (and DALL-E2 3), and Perplexity. ai. Artificial intelligence tools are rapidly developing and increasingly becoming embedded into everyday activities across personal and professional contexts. To ensure our graduates have the skills and experience they will need in their future careers, the University of Liverpool seeks to incorporate the technology in their pedagogical approach. However, it is also vital that such technology is used ethically and does not undermine academic integrity principles. To help students and staff to use such technologies appropriately, the University has developed this guidance on acceptable and unacceptable uses of GenAI and AI (Artificial Intelligence) technology and its appropriate citation. This guidance is designed to be applied alongside Appendix L of the Code of Practice on Assessment (CoPA), which supersedes this guidance in regulatory terms. This guidance also serves as the University s default position on usage. If module or programme course component leaders wish students to use GenAI as part of an assessment, students will be informed of this specifically in module materials and assignment briefs. In these cases, specific guidance will be provided in the assignment brief on what constitutes appropriate use of the GenAI tools and how the work from such tools should be cited. The underlying philosophy and or ethos surrounding the use of Generative AI at the University of Liverpool is one of promoting literacy around the technology in both students and staff, and using the technology as openly, honestly, and transparently as possible. This ensures that any engagement with the technology is in line with both the Liverpool Curriculum Framework (LCF) - which promotes Digital Fluency as a Graduate Attribute and Strategy 2031, which states that the university will work to integrate AI into its practice(s). An outright ban on the use of the technology, therefore, contravenes both requirements, in addition to being impossible to enforce. 4 In general, therefore, the guiding principle(s) of the use of Generative AI that should inform all practice is that 1. Both students and staff should openly discuss, experiment with, and engage with the technology in discursive ways where possible, to help improve general understanding of its capabilities, functionalities, limitations, and problems biases. 2. Any use of the technology in either an assessment or any other context should always be declared and evaluated reflected on, and if necessary, cited and referenced. Citations and references to AI should follow the same process as if referencing or citing an academic source. This goes for both staff and students for example, students can be asked to declare their use of GenAI on an assessment cover sheet, while staff should make it clear on their teaching materials where and how GenAI has been used to help create them. 3. The technology is not used as a substitute for original thought, independent research, and the production of original work. Rather, it is used to support these processes. That said, the university recognises that there are some situations where the use of Generative AI is simply unacceptable and will attract sanctions under Appendix L of the Code of Practice on Assessment (CoPA). This guidance provides some steerage on what that unacceptable use of Generative AI looks like and should be consulted in line with the relevant sections of CoPA that deal with academic integrity. Data Protection Policy and Your Responsibility Students and Staff interacting with GAI systems bear responsibilities for ensuring the Universities Data Protection Policy is followed. The UK General Data Protection Regulation (GDPR) and Data Protection Act (DPA) 2018 emphasise the importance of not submitting sensitive or personal data unless necessary and appropriate measures are in place. Users should be aware of the information they provide to AI systems and avoid sharing personal",
+        "text_length": 16477
+      },
+      "themes": [
+        {
+          "name": "Academic Integrity",
+          "score": 48.5,
+          "frequency": 48,
+          "keywords": [
+            "plagiarism",
+            "academic",
+            "integrity",
+            "misconduct",
+            "citation"
+          ],
+          "matches": [
+            "academic integrity",
+            "original work",
+            "academic integrity"
+          ],
+          "confidence": 100
+        },
+        {
+          "name": "Privacy and Data",
+          "score": 31.5,
+          "frequency": 31,
+          "keywords": [
+            "privacy",
+            "data",
+            "personal",
+            "gdpr",
+            "protection"
+          ],
+          "matches": [
+            "Data Protection",
+            "Data Protection",
+            "Data Protection"
+          ],
+          "confidence": 100
+        },
+        {
+          "name": "Student Guidelines",
+          "score": 30.0,
+          "frequency": 30,
+          "keywords": [
+            "student",
+            "students",
+            "assignment",
+            "submission",
+            "essay"
+          ],
+          "matches": [
+            "Student Conduct"
+          ],
+          "confidence": 100
+        },
+        {
+          "name": "AI Technology",
+          "score": 20.5,
+          "frequency": 20,
+          "keywords": [],
+          "matches": [],
+          "confidence": 100,
+          "entities": [
+            "Generative Artificial Intelligence",
+            "Claire Ellison Date",
+            "Claire Ellison Richard"
+          ]
+        },
+        {
+          "name": "Faculty Guidelines",
+          "score": 8.5,
+          "frequency": 8,
+          "keywords": [
+            "staff",
+            "teaching",
+            "curriculum",
+            "course"
+          ],
+          "matches": [],
+          "confidence": 85
+        },
+        {
+          "name": "Assessment and Evaluation",
+          "score": 8.0,
+          "frequency": 8,
+          "keywords": [
+            "assessment"
+          ],
+          "matches": [],
+          "confidence": 80
+        },
+        {
+          "name": "Research and Innovation",
+          "score": 5.0,
+          "frequency": 5,
+          "keywords": [
+            "research",
+            "innovation",
+            "study",
+            "experiment"
+          ],
+          "matches": [],
+          "confidence": 50
+        },
+        {
+          "name": "AI Ethics",
+          "score": 2.0,
+          "frequency": 2,
+          "keywords": [
+            "ethical",
+            "rights",
+            "respect"
+          ],
+          "matches": [],
+          "confidence": 20
+        },
+        {
+          "name": "Accountability",
+          "score": 1.0,
+          "frequency": 1,
+          "keywords": [
+            "responsibility"
+          ],
+          "matches": [],
+          "confidence": 10
+        },
+        {
+          "name": "Bias and Fairness",
+          "score": 0.5,
+          "frequency": 0,
+          "keywords": [
+            "fairness"
+          ],
+          "matches": [],
+          "confidence": 5
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 42,
+        "method": "hybrid",
+        "scores": {
+          "Restrictive": 28.916883621860574,
+          "Moderate": 37.75839544230978,
+          "Permissive": 18.384720935829645
+        },
+        "reasoning": "Classified as Moderate based on: - 'appropriate' appears 8 time(s) - 'specific' appears 8 time(s) - 'integrity' appears 8 time(s) - Emphasis on responsible use - Structured approach with guidelines",
+        "details": {
+          "rule_based": {
+            "classification": "Moderate",
+            "confidence": 45,
+            "scores": {
+              "Restrictive": 44.099999999999994,
+              "Moderate": 60.89999999999999,
+              "Permissive": 30.099999999999998
+            },
+            "keyword_matches": {
+              "Restrictive": [
+                [
+                  "cannot",
+                  1,
+                  2.0
+                ],
+                [
+                  "limited",
+                  3,
+                  4.5
+                ],
+                [
+                  "penalty",
+                  1,
+                  2.0
+                ],
+                [
+                  "penalties",
+                  3,
+                  6.0
+                ],
+                [
+                  "disciplinary",
+                  2,
+                  4.0
+                ],
+                [
+                  "sanctions",
+                  1,
+                  2.0
+                ],
+                [
+                  "academic misconduct",
+                  4,
+                  8.0
+                ],
+                [
+                  "required",
+                  3,
+                  3.9000000000000004
+                ],
+                [
+                  "must",
+                  4,
+                  5.2
+                ],
+                [
+                  "necessary",
+                  3,
+                  3.9000000000000004
+                ],
+                [
+                  "enforce",
+                  1,
+                  1.3
+                ],
+                [
+                  "compliance",
+                  1,
+                  1.3
+                ]
+              ],
+              "Moderate": [
+                [
+                  "appropriate",
+                  8,
+                  12.0
+                ],
+                [
+                  "considered",
+                  1,
+                  1.5
+                ],
+                [
+                  "conditions",
+                  1,
+                  1.2
+                ],
+                [
+                  "guidelines",
+                  2,
+                  2.4
+                ],
+                [
+                  "framework",
+                  1,
+                  1.2
+                ],
+                [
+                  "principles",
+                  1,
+                  1.2
+                ],
+                [
+                  "standards",
+                  2,
+                  2.4
+                ],
+                [
+                  "requirements",
+                  2,
+                  2.4
+                ],
+                [
+                  "ethical",
+                  2,
+                  2.6
+                ],
+                [
+                  "integrity",
+                  8,
+                  10.4
+                ],
+                [
+                  "fairness",
+                  1,
+                  1.3
+                ],
+                [
+                  "respect",
+                  1,
+                  1.3
+                ],
+                [
+                  "context",
+                  4,
+                  5.6
+                ],
+                [
+                  "circumstances",
+                  1,
+                  1.4
+                ],
+                [
+                  "specific",
+                  8,
+                  11.2
+                ],
+                [
+                  "particular",
+                  2,
+                  2.8
+                ]
+              ],
+              "Permissive": [
+                [
+                  "encouraged",
+                  1,
+                  1.8
+                ],
+                [
+                  "support",
+                  3,
+                  5.4
+                ],
+                [
+                  "creative",
+                  1,
+                  1.5
+                ],
+                [
+                  "improve",
+                  1,
+                  1.2
+                ],
+                [
+                  "innovation",
+                  1,
+                  1.2
+                ],
+                [
+                  "guidance",
+                  13,
+                  13.0
+                ],
+                [
+                  "advice",
+                  2,
+                  2.0
+                ],
+                [
+                  "support",
+                  3,
+                  3.0
+                ],
+                [
+                  "resources",
+                  1,
+                  1.0
+                ]
+              ]
+            },
+            "method": "rule_based"
+          },
+          "ml_based": {
+            "classification": "Restrictive",
+            "confidence": 61,
+            "scores": {
+              "Moderate": 0.30459886057744584,
+              "Permissive": 0.08118023395741143,
+              "Restrictive": 0.6142209054651444
+            },
+            "method": "ml_based"
+          },
+          "agreement": false
+        }
+      },
+      "summary": {
+        "total_themes": 10,
+        "top_theme": "Academic Integrity",
+        "classification_type": "Moderate",
+        "confidence": 42
+      }
+    },
+    {
+      "_id": "analysis_105",
+      "user_id": 7,
+      "document_id": null,
+      "filename": "7_20250711_130317_guidance-on-the-use-of-generative-ai.pdf",
+      "analysis_date": "2025-07-11T12:05:47.981658+00:00",
+      "text_data": {
+        "original_text": "Support | Engage | Innovate\n University Guidance on  the use of\nGenerative Artificial \nIntelligence by \nstudents and staff, in \nlearning, teaching, and\nassessment \nA cademic Year  2024/2025\nAuthors:\nDr Ceri Coulby, Dr Sam Saunders & Dr Claire Ellison | Date: February 2024\nRevised 2024, by Prof David Webster, Gordon Sandison, \nRob Lindsay, Dr Sam Saunders, Dr Claire Ellison &\nRichard McKenna\nContents\n2\nIntroduction 3\nData Protection Policy and Your Responsibility  4\nGenerative AI and Copyright  5\nAcceptable Uses of GenAI Tools  5\nUnacceptable Uses of GenAI Tools  7\nPoor Academic Practice  8\nAcademic Misuse of GenAI Tools  9\nReferencing GenAI Tools 9\nFurther Information/Contact 10\nIntroduction\n3\nGenerative Artificial Intelligence (GenAI) tools are software applications that create content \nin any form (including but not limited to text, graphs, data, code, images, audio, and video) \nautomatically based on the prompt entered by the user. Examples include, but are not \nlimited to, OpenAI\u2019s ChatGPT, Google Bard/Gemini, Microsoft\u2019s Bing Chat/Copilot, DALL-E (and \nDALL-E2/3), and Perplexity.ai. \nArtificial intelligence tools are rapidly developing and increasingly becoming embedded into \neveryday activities across personal and professional contexts. To ensure our graduates have \nthe skills and experience they will need in their future careers, the University of Liverpool seeks \nto incorporate the technology in their pedagogical approach. However, it is also vital that \nsuch technology is used ethically and does not undermine academic integrity principles.  \nTo help students and staff to use such technologies appropriately, the University has \ndeveloped this guidance on acceptable and unacceptable uses of GenAI and AI (Artificial \nIntelligence) technology and its appropriate citation. This guidance is designed to be applied \nalongside Appendix L of the Code of Practice on Assessment (CoPA), which supersedes this \nguidance in regulatory terms. This guidance also serves as the University\u2019s default position \non usage. If module or programme/course component leaders wish students to use GenAI \nas part of an assessment, students will be informed of this specifically in module materials \nand assignment briefs. In these cases, specific guidance will be provided in the assignment \nbrief on what constitutes appropriate use of the GenAI tools and how the work from such tools \nshould be cited. \nThe underlying philosophy and/or ethos surrounding the use of Generative AI at the University \nof Liverpool is one of promoting literacy around the technology in both students and staff, \nand using the technology as openly, honestly, and transparently as possible. This ensures that \nany engagement with the technology is in line with both the Liverpool Curriculum Framework \n(LCF) - which promotes \u2018Digital Fluency\u2019 as a Graduate Attribute \u2013 and Strategy 2031, which \nstates that the university will work to integrate AI into its practice(s). An outright ban on \nthe use of the technology, therefore, contravenes both requirements, in addition to being \nimpossible to enforce.\n4\nIn general, therefore, the guiding principle(s) of the use of Generative AI that should inform all \npractice is that \n1. Both students and staff should openly discuss, experiment with, and engage with the \ntechnology in discursive ways where possible, to help improve general understanding of \nits capabilities, functionalities, limitations, and problems/biases.\n2. Any use of the technology in either an assessment or any other context should always \nbe declared and evaluated/reflected on, and if necessary, cited and referenced. \nCitations and references to AI should follow the same process as if referencing or citing \nan academic source. This goes for both staff and students \u2013 for example, students can \nbe asked to declare their use of GenAI on an assessment cover sheet, while staff should \nmake it clear on their teaching materials where and how GenAI has been used to help \ncreate them.  \n3. The technology is not used as a substitute for original thought, independent research, and \nthe production of original work. Rather, it is used to support these processes.  \nThat said, the university recognises that there are some situations where the use of \nGenerative AI is simply unacceptable and will attract sanctions under Appendix L of the Code \nof Practice on Assessment (CoPA). This guidance provides some steerage on what that \nunacceptable use of Generative AI looks like and should be consulted in line with the relevant \nsections of CoPA that deal with academic integrity.   \nData Protection Policy and Your Responsibility \nStudents and Staff interacting with GAI systems bear responsibilities for ensuring the \nUniversities Data Protection Policy is followed.  \nThe UK General Data Protection Regulation (GDPR) and Data Protection Act (DPA) 2018 \nemphasise the importance of not submitting sensitive or personal data unless necessary and \nappropriate measures are in place. Users sho",
+        "cleaned_text": "Support Engage Innovate University Guidance on the use of Generative Artificial Intelligence by students and staff, in learning, teaching, and assessment A cademic Year 2024 2025 Authors: Dr Ceri Coulby, Dr Sam Saunders Dr Claire Ellison Date: February 2024 Revised 2024, by Prof David Webster, Gordon Sandison, Rob Lindsay, Dr Sam Saunders, Dr Claire Ellison Richard McKenna Contents 2 Introduction 3 Data Protection Policy and Your Responsibility 4 Generative AI and Copyright 5 Acceptable Uses of GenAI Tools 5 Unacceptable Uses of GenAI Tools 7 Poor Academic Practice 8 Academic Misuse of GenAI Tools 9 Referencing GenAI Tools 9 Further Information Contact 10 Introduction 3 Generative Artificial Intelligence (GenAI) tools are software applications that create content in any form (including but not limited to text, graphs, data, code, images, audio, and video) automatically based on the prompt entered by the user. Examples include, but are not limited to, OpenAI s ChatGPT, Google Bard Gemini, Microsoft s Bing Chat Copilot, DALL-E (and DALL-E2 3), and Perplexity. ai. Artificial intelligence tools are rapidly developing and increasingly becoming embedded into everyday activities across personal and professional contexts. To ensure our graduates have the skills and experience they will need in their future careers, the University of Liverpool seeks to incorporate the technology in their pedagogical approach. However, it is also vital that such technology is used ethically and does not undermine academic integrity principles. To help students and staff to use such technologies appropriately, the University has developed this guidance on acceptable and unacceptable uses of GenAI and AI (Artificial Intelligence) technology and its appropriate citation. This guidance is designed to be applied alongside Appendix L of the Code of Practice on Assessment (CoPA), which supersedes this guidance in regulatory terms. This guidance also serves as the University s default position on usage. If module or programme course component leaders wish students to use GenAI as part of an assessment, students will be informed of this specifically in module materials and assignment briefs. In these cases, specific guidance will be provided in the assignment brief on what constitutes appropriate use of the GenAI tools and how the work from such tools should be cited. The underlying philosophy and or ethos surrounding the use of Generative AI at the University of Liverpool is one of promoting literacy around the technology in both students and staff, and using the technology as openly, honestly, and transparently as possible. This ensures that any engagement with the technology is in line with both the Liverpool Curriculum Framework (LCF) - which promotes Digital Fluency as a Graduate Attribute and Strategy 2031, which states that the university will work to integrate AI into its practice(s). An outright ban on the use of the technology, therefore, contravenes both requirements, in addition to being impossible to enforce. 4 In general, therefore, the guiding principle(s) of the use of Generative AI that should inform all practice is that 1. Both students and staff should openly discuss, experiment with, and engage with the technology in discursive ways where possible, to help improve general understanding of its capabilities, functionalities, limitations, and problems biases. 2. Any use of the technology in either an assessment or any other context should always be declared and evaluated reflected on, and if necessary, cited and referenced. Citations and references to AI should follow the same process as if referencing or citing an academic source. This goes for both staff and students for example, students can be asked to declare their use of GenAI on an assessment cover sheet, while staff should make it clear on their teaching materials where and how GenAI has been used to help create them. 3. The technology is not used as a substitute for original thought, independent research, and the production of original work. Rather, it is used to support these processes. That said, the university recognises that there are some situations where the use of Generative AI is simply unacceptable and will attract sanctions under Appendix L of the Code of Practice on Assessment (CoPA). This guidance provides some steerage on what that unacceptable use of Generative AI looks like and should be consulted in line with the relevant sections of CoPA that deal with academic integrity. Data Protection Policy and Your Responsibility Students and Staff interacting with GAI systems bear responsibilities for ensuring the Universities Data Protection Policy is followed. The UK General Data Protection Regulation (GDPR) and Data Protection Act (DPA) 2018 emphasise the importance of not submitting sensitive or personal data unless necessary and appropriate measures are in place. Users should be aware of the information they provide to AI systems and avoid sharing personal",
+        "text_length": 16477
+      },
+      "themes": [
+        {
+          "name": "Academic Integrity",
+          "score": 48.5,
+          "frequency": 48,
+          "keywords": [
+            "plagiarism",
+            "academic",
+            "integrity",
+            "misconduct",
+            "citation"
+          ],
+          "matches": [
+            "academic integrity",
+            "original work",
+            "academic integrity"
+          ],
+          "confidence": 100
+        },
+        {
+          "name": "Privacy and Data",
+          "score": 31.5,
+          "frequency": 31,
+          "keywords": [
+            "privacy",
+            "data",
+            "personal",
+            "gdpr",
+            "protection"
+          ],
+          "matches": [
+            "Data Protection",
+            "Data Protection",
+            "Data Protection"
+          ],
+          "confidence": 100
+        },
+        {
+          "name": "Student Guidelines",
+          "score": 30.0,
+          "frequency": 30,
+          "keywords": [
+            "student",
+            "students",
+            "assignment",
+            "submission",
+            "essay"
+          ],
+          "matches": [
+            "Student Conduct"
+          ],
+          "confidence": 100
+        },
+        {
+          "name": "AI Technology",
+          "score": 20.5,
+          "frequency": 20,
+          "keywords": [],
+          "matches": [],
+          "confidence": 100,
+          "entities": [
+            "Generative Artificial Intelligence",
+            "Claire Ellison Date",
+            "Claire Ellison Richard"
+          ]
+        },
+        {
+          "name": "Faculty Guidelines",
+          "score": 8.5,
+          "frequency": 8,
+          "keywords": [
+            "staff",
+            "teaching",
+            "curriculum",
+            "course"
+          ],
+          "matches": [],
+          "confidence": 85
+        },
+        {
+          "name": "Assessment and Evaluation",
+          "score": 8.0,
+          "frequency": 8,
+          "keywords": [
+            "assessment"
+          ],
+          "matches": [],
+          "confidence": 80
+        },
+        {
+          "name": "Research and Innovation",
+          "score": 5.0,
+          "frequency": 5,
+          "keywords": [
+            "research",
+            "innovation",
+            "study",
+            "experiment"
+          ],
+          "matches": [],
+          "confidence": 50
+        },
+        {
+          "name": "AI Ethics",
+          "score": 2.0,
+          "frequency": 2,
+          "keywords": [
+            "ethical",
+            "rights",
+            "respect"
+          ],
+          "matches": [],
+          "confidence": 20
+        },
+        {
+          "name": "Accountability",
+          "score": 1.0,
+          "frequency": 1,
+          "keywords": [
+            "responsibility"
+          ],
+          "matches": [],
+          "confidence": 10
+        },
+        {
+          "name": "Bias and Fairness",
+          "score": 0.5,
+          "frequency": 0,
+          "keywords": [
+            "fairness"
+          ],
+          "matches": [],
+          "confidence": 5
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 42,
+        "method": "hybrid",
+        "scores": {
+          "Restrictive": 28.916883621860574,
+          "Moderate": 37.75839544230978,
+          "Permissive": 18.384720935829645
+        },
+        "reasoning": "Classified as Moderate based on: - 'appropriate' appears 8 time(s) - 'specific' appears 8 time(s) - 'integrity' appears 8 time(s) - Emphasis on responsible use - Structured approach with guidelines",
+        "details": {
+          "rule_based": {
+            "classification": "Moderate",
+            "confidence": 45,
+            "scores": {
+              "Restrictive": 44.099999999999994,
+              "Moderate": 60.89999999999999,
+              "Permissive": 30.099999999999998
+            },
+            "keyword_matches": {
+              "Restrictive": [
+                [
+                  "cannot",
+                  1,
+                  2.0
+                ],
+                [
+                  "limited",
+                  3,
+                  4.5
+                ],
+                [
+                  "penalty",
+                  1,
+                  2.0
+                ],
+                [
+                  "penalties",
+                  3,
+                  6.0
+                ],
+                [
+                  "disciplinary",
+                  2,
+                  4.0
+                ],
+                [
+                  "sanctions",
+                  1,
+                  2.0
+                ],
+                [
+                  "academic misconduct",
+                  4,
+                  8.0
+                ],
+                [
+                  "required",
+                  3,
+                  3.9000000000000004
+                ],
+                [
+                  "must",
+                  4,
+                  5.2
+                ],
+                [
+                  "necessary",
+                  3,
+                  3.9000000000000004
+                ],
+                [
+                  "enforce",
+                  1,
+                  1.3
+                ],
+                [
+                  "compliance",
+                  1,
+                  1.3
+                ]
+              ],
+              "Moderate": [
+                [
+                  "appropriate",
+                  8,
+                  12.0
+                ],
+                [
+                  "considered",
+                  1,
+                  1.5
+                ],
+                [
+                  "conditions",
+                  1,
+                  1.2
+                ],
+                [
+                  "guidelines",
+                  2,
+                  2.4
+                ],
+                [
+                  "framework",
+                  1,
+                  1.2
+                ],
+                [
+                  "principles",
+                  1,
+                  1.2
+                ],
+                [
+                  "standards",
+                  2,
+                  2.4
+                ],
+                [
+                  "requirements",
+                  2,
+                  2.4
+                ],
+                [
+                  "ethical",
+                  2,
+                  2.6
+                ],
+                [
+                  "integrity",
+                  8,
+                  10.4
+                ],
+                [
+                  "fairness",
+                  1,
+                  1.3
+                ],
+                [
+                  "respect",
+                  1,
+                  1.3
+                ],
+                [
+                  "context",
+                  4,
+                  5.6
+                ],
+                [
+                  "circumstances",
+                  1,
+                  1.4
+                ],
+                [
+                  "specific",
+                  8,
+                  11.2
+                ],
+                [
+                  "particular",
+                  2,
+                  2.8
+                ]
+              ],
+              "Permissive": [
+                [
+                  "encouraged",
+                  1,
+                  1.8
+                ],
+                [
+                  "support",
+                  3,
+                  5.4
+                ],
+                [
+                  "creative",
+                  1,
+                  1.5
+                ],
+                [
+                  "improve",
+                  1,
+                  1.2
+                ],
+                [
+                  "innovation",
+                  1,
+                  1.2
+                ],
+                [
+                  "guidance",
+                  13,
+                  13.0
+                ],
+                [
+                  "advice",
+                  2,
+                  2.0
+                ],
+                [
+                  "support",
+                  3,
+                  3.0
+                ],
+                [
+                  "resources",
+                  1,
+                  1.0
+                ]
+              ]
+            },
+            "method": "rule_based"
+          },
+          "ml_based": {
+            "classification": "Restrictive",
+            "confidence": 61,
+            "scores": {
+              "Moderate": 0.30459886057744584,
+              "Permissive": 0.08118023395741143,
+              "Restrictive": 0.6142209054651444
+            },
+            "method": "ml_based"
+          },
+          "agreement": false
+        }
+      },
+      "summary": {
+        "total_themes": 10,
+        "top_theme": "Academic Integrity",
+        "classification_type": "Moderate",
+        "confidence": 42
+      }
+    },
+    {
+      "_id": "analysis_106",
+      "user_id": 7,
+      "document_id": null,
+      "filename": "7_20250711_130317_guidance-on-the-use-of-generative-ai.pdf",
+      "analysis_date": "2025-07-11T12:21:42.379829+00:00",
+      "text_data": {
+        "original_text": "Support | Engage | Innovate\n University Guidance on  the use of\nGenerative Artificial \nIntelligence by \nstudents and staff, in \nlearning, teaching, and\nassessment \nA cademic Year  2024/2025\nAuthors:\nDr Ceri Coulby, Dr Sam Saunders & Dr Claire Ellison | Date: February 2024\nRevised 2024, by Prof David Webster, Gordon Sandison, \nRob Lindsay, Dr Sam Saunders, Dr Claire Ellison &\nRichard McKenna\nContents\n2\nIntroduction 3\nData Protection Policy and Your Responsibility  4\nGenerative AI and Copyright  5\nAcceptable Uses of GenAI Tools  5\nUnacceptable Uses of GenAI Tools  7\nPoor Academic Practice  8\nAcademic Misuse of GenAI Tools  9\nReferencing GenAI Tools 9\nFurther Information/Contact 10\nIntroduction\n3\nGenerative Artificial Intelligence (GenAI) tools are software applications that create content \nin any form (including but not limited to text, graphs, data, code, images, audio, and video) \nautomatically based on the prompt entered by the user. Examples include, but are not \nlimited to, OpenAI\u2019s ChatGPT, Google Bard/Gemini, Microsoft\u2019s Bing Chat/Copilot, DALL-E (and \nDALL-E2/3), and Perplexity.ai. \nArtificial intelligence tools are rapidly developing and increasingly becoming embedded into \neveryday activities across personal and professional contexts. To ensure our graduates have \nthe skills and experience they will need in their future careers, the University of Liverpool seeks \nto incorporate the technology in their pedagogical approach. However, it is also vital that \nsuch technology is used ethically and does not undermine academic integrity principles.  \nTo help students and staff to use such technologies appropriately, the University has \ndeveloped this guidance on acceptable and unacceptable uses of GenAI and AI (Artificial \nIntelligence) technology and its appropriate citation. This guidance is designed to be applied \nalongside Appendix L of the Code of Practice on Assessment (CoPA), which supersedes this \nguidance in regulatory terms. This guidance also serves as the University\u2019s default position \non usage. If module or programme/course component leaders wish students to use GenAI \nas part of an assessment, students will be informed of this specifically in module materials \nand assignment briefs. In these cases, specific guidance will be provided in the assignment \nbrief on what constitutes appropriate use of the GenAI tools and how the work from such tools \nshould be cited. \nThe underlying philosophy and/or ethos surrounding the use of Generative AI at the University \nof Liverpool is one of promoting literacy around the technology in both students and staff, \nand using the technology as openly, honestly, and transparently as possible. This ensures that \nany engagement with the technology is in line with both the Liverpool Curriculum Framework \n(LCF) - which promotes \u2018Digital Fluency\u2019 as a Graduate Attribute \u2013 and Strategy 2031, which \nstates that the university will work to integrate AI into its practice(s). An outright ban on \nthe use of the technology, therefore, contravenes both requirements, in addition to being \nimpossible to enforce.\n4\nIn general, therefore, the guiding principle(s) of the use of Generative AI that should inform all \npractice is that \n1. Both students and staff should openly discuss, experiment with, and engage with the \ntechnology in discursive ways where possible, to help improve general understanding of \nits capabilities, functionalities, limitations, and problems/biases.\n2. Any use of the technology in either an assessment or any other context should always \nbe declared and evaluated/reflected on, and if necessary, cited and referenced. \nCitations and references to AI should follow the same process as if referencing or citing \nan academic source. This goes for both staff and students \u2013 for example, students can \nbe asked to declare their use of GenAI on an assessment cover sheet, while staff should \nmake it clear on their teaching materials where and how GenAI has been used to help \ncreate them.  \n3. The technology is not used as a substitute for original thought, independent research, and \nthe production of original work. Rather, it is used to support these processes.  \nThat said, the university recognises that there are some situations where the use of \nGenerative AI is simply unacceptable and will attract sanctions under Appendix L of the Code \nof Practice on Assessment (CoPA). This guidance provides some steerage on what that \nunacceptable use of Generative AI looks like and should be consulted in line with the relevant \nsections of CoPA that deal with academic integrity.   \nData Protection Policy and Your Responsibility \nStudents and Staff interacting with GAI systems bear responsibilities for ensuring the \nUniversities Data Protection Policy is followed.  \nThe UK General Data Protection Regulation (GDPR) and Data Protection Act (DPA) 2018 \nemphasise the importance of not submitting sensitive or personal data unless necessary and \nappropriate measures are in place. Users sho",
+        "cleaned_text": "Support Engage Innovate University Guidance on the use of Generative Artificial Intelligence by students and staff, in learning, teaching, and assessment A cademic Year 2024 2025 Authors: Dr Ceri Coulby, Dr Sam Saunders Dr Claire Ellison Date: February 2024 Revised 2024, by Prof David Webster, Gordon Sandison, Rob Lindsay, Dr Sam Saunders, Dr Claire Ellison Richard McKenna Contents 2 Introduction 3 Data Protection Policy and Your Responsibility 4 Generative AI and Copyright 5 Acceptable Uses of GenAI Tools 5 Unacceptable Uses of GenAI Tools 7 Poor Academic Practice 8 Academic Misuse of GenAI Tools 9 Referencing GenAI Tools 9 Further Information Contact 10 Introduction 3 Generative Artificial Intelligence (GenAI) tools are software applications that create content in any form (including but not limited to text, graphs, data, code, images, audio, and video) automatically based on the prompt entered by the user. Examples include, but are not limited to, OpenAI s ChatGPT, Google Bard Gemini, Microsoft s Bing Chat Copilot, DALL-E (and DALL-E2 3), and Perplexity. ai. Artificial intelligence tools are rapidly developing and increasingly becoming embedded into everyday activities across personal and professional contexts. To ensure our graduates have the skills and experience they will need in their future careers, the University of Liverpool seeks to incorporate the technology in their pedagogical approach. However, it is also vital that such technology is used ethically and does not undermine academic integrity principles. To help students and staff to use such technologies appropriately, the University has developed this guidance on acceptable and unacceptable uses of GenAI and AI (Artificial Intelligence) technology and its appropriate citation. This guidance is designed to be applied alongside Appendix L of the Code of Practice on Assessment (CoPA), which supersedes this guidance in regulatory terms. This guidance also serves as the University s default position on usage. If module or programme course component leaders wish students to use GenAI as part of an assessment, students will be informed of this specifically in module materials and assignment briefs. In these cases, specific guidance will be provided in the assignment brief on what constitutes appropriate use of the GenAI tools and how the work from such tools should be cited. The underlying philosophy and or ethos surrounding the use of Generative AI at the University of Liverpool is one of promoting literacy around the technology in both students and staff, and using the technology as openly, honestly, and transparently as possible. This ensures that any engagement with the technology is in line with both the Liverpool Curriculum Framework (LCF) - which promotes Digital Fluency as a Graduate Attribute and Strategy 2031, which states that the university will work to integrate AI into its practice(s). An outright ban on the use of the technology, therefore, contravenes both requirements, in addition to being impossible to enforce. 4 In general, therefore, the guiding principle(s) of the use of Generative AI that should inform all practice is that 1. Both students and staff should openly discuss, experiment with, and engage with the technology in discursive ways where possible, to help improve general understanding of its capabilities, functionalities, limitations, and problems biases. 2. Any use of the technology in either an assessment or any other context should always be declared and evaluated reflected on, and if necessary, cited and referenced. Citations and references to AI should follow the same process as if referencing or citing an academic source. This goes for both staff and students for example, students can be asked to declare their use of GenAI on an assessment cover sheet, while staff should make it clear on their teaching materials where and how GenAI has been used to help create them. 3. The technology is not used as a substitute for original thought, independent research, and the production of original work. Rather, it is used to support these processes. That said, the university recognises that there are some situations where the use of Generative AI is simply unacceptable and will attract sanctions under Appendix L of the Code of Practice on Assessment (CoPA). This guidance provides some steerage on what that unacceptable use of Generative AI looks like and should be consulted in line with the relevant sections of CoPA that deal with academic integrity. Data Protection Policy and Your Responsibility Students and Staff interacting with GAI systems bear responsibilities for ensuring the Universities Data Protection Policy is followed. The UK General Data Protection Regulation (GDPR) and Data Protection Act (DPA) 2018 emphasise the importance of not submitting sensitive or personal data unless necessary and appropriate measures are in place. Users should be aware of the information they provide to AI systems and avoid sharing personal",
+        "text_length": 16477
+      },
+      "themes": [
+        {
+          "name": "Academic Integrity",
+          "score": 48.5,
+          "frequency": 48,
+          "keywords": [
+            "plagiarism",
+            "academic",
+            "integrity",
+            "misconduct",
+            "citation"
+          ],
+          "matches": [
+            "academic integrity",
+            "original work",
+            "academic integrity"
+          ],
+          "confidence": 100
+        },
+        {
+          "name": "Privacy and Data",
+          "score": 31.5,
+          "frequency": 31,
+          "keywords": [
+            "privacy",
+            "data",
+            "personal",
+            "gdpr",
+            "protection"
+          ],
+          "matches": [
+            "Data Protection",
+            "Data Protection",
+            "Data Protection"
+          ],
+          "confidence": 100
+        },
+        {
+          "name": "Student Guidelines",
+          "score": 30.0,
+          "frequency": 30,
+          "keywords": [
+            "student",
+            "students",
+            "assignment",
+            "submission",
+            "essay"
+          ],
+          "matches": [
+            "Student Conduct"
+          ],
+          "confidence": 100
+        },
+        {
+          "name": "AI Technology",
+          "score": 20.5,
+          "frequency": 20,
+          "keywords": [],
+          "matches": [],
+          "confidence": 100,
+          "entities": [
+            "Generative Artificial Intelligence",
+            "Claire Ellison Date",
+            "Claire Ellison Richard"
+          ]
+        },
+        {
+          "name": "Faculty Guidelines",
+          "score": 8.5,
+          "frequency": 8,
+          "keywords": [
+            "staff",
+            "teaching",
+            "curriculum",
+            "course"
+          ],
+          "matches": [],
+          "confidence": 85
+        },
+        {
+          "name": "Assessment and Evaluation",
+          "score": 8.0,
+          "frequency": 8,
+          "keywords": [
+            "assessment"
+          ],
+          "matches": [],
+          "confidence": 80
+        },
+        {
+          "name": "Research and Innovation",
+          "score": 5.0,
+          "frequency": 5,
+          "keywords": [
+            "research",
+            "innovation",
+            "study",
+            "experiment"
+          ],
+          "matches": [],
+          "confidence": 50
+        },
+        {
+          "name": "AI Ethics",
+          "score": 2.0,
+          "frequency": 2,
+          "keywords": [
+            "ethical",
+            "rights",
+            "respect"
+          ],
+          "matches": [],
+          "confidence": 20
+        },
+        {
+          "name": "Accountability",
+          "score": 1.0,
+          "frequency": 1,
+          "keywords": [
+            "responsibility"
+          ],
+          "matches": [],
+          "confidence": 10
+        },
+        {
+          "name": "Bias and Fairness",
+          "score": 0.5,
+          "frequency": 0,
+          "keywords": [
+            "fairness"
+          ],
+          "matches": [],
+          "confidence": 5
+        }
+      ],
+      "classification": {
+        "classification": "Moderate",
+        "confidence": 42,
+        "method": "hybrid",
+        "scores": {
+          "Restrictive": 28.916883621860574,
+          "Moderate": 37.75839544230978,
+          "Permissive": 18.384720935829645
+        },
+        "reasoning": "Classified as Moderate based on: - 'appropriate' appears 8 time(s) - 'specific' appears 8 time(s) - 'integrity' appears 8 time(s) - Emphasis on responsible use - Structured approach with guidelines",
+        "details": {
+          "rule_based": {
+            "classification": "Moderate",
+            "confidence": 45,
+            "scores": {
+              "Restrictive": 44.099999999999994,
+              "Moderate": 60.89999999999999,
+              "Permissive": 30.099999999999998
+            },
+            "keyword_matches": {
+              "Restrictive": [
+                [
+                  "cannot",
+                  1,
+                  2.0
+                ],
+                [
+                  "limited",
+                  3,
+                  4.5
+                ],
+                [
+                  "penalty",
+                  1,
+                  2.0
+                ],
+                [
+                  "penalties",
+                  3,
+                  6.0
+                ],
+                [
+                  "disciplinary",
+                  2,
+                  4.0
+                ],
+                [
+                  "sanctions",
+                  1,
+                  2.0
+                ],
+                [
+                  "academic misconduct",
+                  4,
+                  8.0
+                ],
+                [
+                  "required",
+                  3,
+                  3.9000000000000004
+                ],
+                [
+                  "must",
+                  4,
+                  5.2
+                ],
+                [
+                  "necessary",
+                  3,
+                  3.9000000000000004
+                ],
+                [
+                  "enforce",
+                  1,
+                  1.3
+                ],
+                [
+                  "compliance",
+                  1,
+                  1.3
+                ]
+              ],
+              "Moderate": [
+                [
+                  "appropriate",
+                  8,
+                  12.0
+                ],
+                [
+                  "considered",
+                  1,
+                  1.5
+                ],
+                [
+                  "conditions",
+                  1,
+                  1.2
+                ],
+                [
+                  "guidelines",
+                  2,
+                  2.4
+                ],
+                [
+                  "framework",
+                  1,
+                  1.2
+                ],
+                [
+                  "principles",
+                  1,
+                  1.2
+                ],
+                [
+                  "standards",
+                  2,
+                  2.4
+                ],
+                [
+                  "requirements",
+                  2,
+                  2.4
+                ],
+                [
+                  "ethical",
+                  2,
+                  2.6
+                ],
+                [
+                  "integrity",
+                  8,
+                  10.4
+                ],
+                [
+                  "fairness",
+                  1,
+                  1.3
+                ],
+                [
+                  "respect",
+                  1,
+                  1.3
+                ],
+                [
+                  "context",
+                  4,
+                  5.6
+                ],
+                [
+                  "circumstances",
+                  1,
+                  1.4
+                ],
+                [
+                  "specific",
+                  8,
+                  11.2
+                ],
+                [
+                  "particular",
+                  2,
+                  2.8
+                ]
+              ],
+              "Permissive": [
+                [
+                  "encouraged",
+                  1,
+                  1.8
+                ],
+                [
+                  "support",
+                  3,
+                  5.4
+                ],
+                [
+                  "creative",
+                  1,
+                  1.5
+                ],
+                [
+                  "improve",
+                  1,
+                  1.2
+                ],
+                [
+                  "innovation",
+                  1,
+                  1.2
+                ],
+                [
+                  "guidance",
+                  13,
+                  13.0
+                ],
+                [
+                  "advice",
+                  2,
+                  2.0
+                ],
+                [
+                  "support",
+                  3,
+                  3.0
+                ],
+                [
+                  "resources",
+                  1,
+                  1.0
+                ]
+              ]
+            },
+            "method": "rule_based"
+          },
+          "ml_based": {
+            "classification": "Restrictive",
+            "confidence": 61,
+            "scores": {
+              "Moderate": 0.30459886057744584,
+              "Permissive": 0.08118023395741143,
+              "Restrictive": 0.6142209054651444
+            },
+            "method": "ml_based"
+          },
+          "agreement": false
+        }
+      },
+      "summary": {
+        "total_themes": 10,
+        "top_theme": "Academic Integrity",
+        "classification_type": "Moderate",
+        "confidence": 42
+      }
     }
   ],
   "recommendations": [

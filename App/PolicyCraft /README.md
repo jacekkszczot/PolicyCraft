@@ -388,6 +388,13 @@ Kszczot, J.R. (2025). PolicyCraft: AI Policy Analysis Framework for Higher Educa
 MSc Project, Leeds Trinity University. COM7016.
 ```
 
+## Further Documentation
+
+- [Architecture diagram](docs/architecture.md)
+- [Ethical considerations](docs/ethics.md)
+- [WCAG compliance checklist](docs/wcag_checklist.md)
+- [Security policy](SECURITY.md)
+
 ## Contact
 
 **Jacek Robert Kszczot**  

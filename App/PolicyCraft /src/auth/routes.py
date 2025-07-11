@@ -74,12 +74,13 @@ def register():
         try:
             # Create new user
             user = User(
-                username=form.username.data.strip(),
+                username=form.email.data.strip().lower(),
                 email=form.email.data.strip().lower(),
                 password=form.password.data,
                 first_name=form.first_name.data.strip() if form.first_name.data else None,
                 last_name=form.last_name.data.strip() if form.last_name.data else None,
-                institution=form.institution.data.strip() if hasattr(form, 'institution') and form.institution.data else None
+                gender=form.gender.data,
+                institution=form.institution.data.strip()
             )
             
             # Save to database
@@ -128,3 +129,76 @@ def logout():
 def profile():
     """Display user profile page."""
     return render_template('auth/profile.html', user=current_user)
+
+@auth_bp.route('/profile/update', methods=['POST'])
+@login_required
+def update_profile():
+    """Update user details (name, institution, email)."""
+    gender = request.form.get('gender', '').strip()
+    first_name = request.form.get('first_name', '').strip()
+    last_name = request.form.get('last_name', '').strip()
+    institution = request.form.get('institution', '').strip()
+    email = request.form.get('email', '').strip().lower()
+
+    # If email changed, ensure uniqueness
+    if email and email != current_user.email:
+        existing = User.query.filter_by(email=email).first()
+        if existing:
+            flash('Email address already in use.', 'error')
+            return redirect(url_for('auth.profile'))
+        current_user.email = email
+    
+    current_user.first_name = first_name or None
+    current_user.last_name = last_name or None
+    current_user.gender = gender or None
+    current_user.institution = institution or None
+    try:
+        db.session.commit()
+        flash('Profile updated successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Profile update error for {current_user.username}: {str(e)}")
+        flash('Failed to update profile.', 'error')
+    return redirect(url_for('auth.profile'))
+
+@auth_bp.route('/profile/change_password', methods=['POST'])
+@login_required
+def change_password():
+    """Change user password."""
+    current_pwd = request.form.get('current_password')
+    new_pwd = request.form.get('new_password')
+    confirm_pwd = request.form.get('confirm_password')
+
+    if not current_user.check_password(current_pwd):
+        flash('Current password is incorrect.', 'error')
+        return redirect(url_for('auth.profile'))
+    if new_pwd != confirm_pwd or len(new_pwd) < 6:
+        flash('New passwords do not match or are too short.', 'error')
+        return redirect(url_for('auth.profile'))
+    
+    current_user.set_password(new_pwd)
+    try:
+        db.session.commit()
+        flash('Password changed successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Password change error for {current_user.username}: {str(e)}")
+        flash('Failed to change password.', 'error')
+    return redirect(url_for('auth.profile'))
+
+@auth_bp.route('/profile/delete', methods=['POST'])
+@login_required
+def delete_account():
+    """Delete user account and associated data."""
+    try:
+        username = current_user.username
+        logout_user()
+        User.query.filter_by(id=current_user.id).delete()
+        db.session.commit()
+        flash('Your account has been deleted.', 'info')
+        logger.info(f"Account deleted for user {username}")
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Account deletion error for {current_user.username}: {str(e)}")
+        flash('Failed to delete account.', 'error')
+    return redirect(url_for('index'))

@@ -205,6 +205,17 @@ def dashboard():
         db_operations.deduplicate_baseline_analyses(current_user.id)
         # Pobierz analizy użytkownika (już bez duplikatów)
         user_analyses = db_operations.get_user_analyses(current_user.id)
+
+        # Jeśli użytkownik nie ma załadowanych analiz bazowych – załaduj je teraz jednorazowo
+        if not any(a.get('filename','').startswith('[BASELINE]') for a in user_analyses):
+            try:
+                loaded = db_operations.load_sample_policies_for_user(current_user.id)
+                if loaded:
+                    # odśwież listę analiz po załadowaniu
+                    user_analyses = db_operations.get_user_analyses(current_user.id)
+                    flash('Sample baseline policies have been loaded to your dashboard.', 'success')
+            except Exception as e:
+                logger.error(f"Failed to auto-load baseline policies: {e}")
         
         # Generate dashboard charts
         try:

@@ -3,6 +3,75 @@
  * Reset, Typography, and Basic Layout
  */
 
+/* === Profile Page === */
+.profile-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.profile-card {
+    background: #fff;
+    padding: 1.75rem 2rem;
+    margin: 1.75rem 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.welcome-text {
+    font-size: 1.1rem;
+    margin-bottom: 0.4rem;
+    color: #555;
+}
+
+.profile-header h2 {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-weight: 400;
+    font-style: italic;
+    margin-bottom: 0.5rem;
+}
+
+.profile-card h3 {
+    margin-bottom: 1rem;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.profile-form .form-row {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-form label {
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+.profile-form input {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #fff;
+    background: #0077cc;
+    text-align: center;
+}
+
+.btn-primary {background: #0077cc;}
+.btn-secondary {background: #555;}
+.btn-danger {background: #d33;}
+
+
 * {
     margin: 0;
     padding: 0;

@@ -16,8 +16,8 @@
             {{ form.hidden_tag() }}
             
             <div class="form-group">
-                {{ form.username_or_email.label(class="form-label") }}
-                {{ form.username_or_email(class="form-input") }}
+                {{ form.username_or_email.label(text='Email', class='form-label') }}
+                {{ form.username_or_email(class="form-input", placeholder='Enter email address') }}
                 {% if form.username_or_email.errors %}
                     <div class="form-errors">
                         {% for error in form.username_or_email.errors %}

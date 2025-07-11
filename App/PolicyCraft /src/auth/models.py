@@ -33,6 +33,7 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String(50), nullable=True)
     last_name = db.Column(db.String(50), nullable=True)
     institution = db.Column(db.String(200), nullable=True)
+    gender = db.Column(db.String(10), nullable=True)
     role = db.Column(db.String(50), default='user')
     
     # Account status
@@ -51,6 +52,7 @@ class User(UserMixin, db.Model):
         self.first_name = kwargs.get('first_name')
         self.last_name = kwargs.get('last_name')
         self.institution = kwargs.get('institution')
+        self.gender = kwargs.get('gender')
         self.role = kwargs.get('role', 'user')
     
     def set_password(self, password):

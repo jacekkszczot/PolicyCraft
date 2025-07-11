@@ -14,17 +14,33 @@
             {{ form.hidden_tag() }}
             
             <div class="form-group">
-                {{ form.username.label(class="form-label") }}
-                {{ form.username(class="form-input", placeholder="Choose a username") }}
-                {% if form.username.errors %}
-                    <div class="field-errors">
-                        {% for error in form.username.errors %}
-                            <span class="error-message">{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+                {{ form.gender.label(class="form-label") }}
+                {{ form.gender(class="form-input") }}
             </div>
             
+            
+            {% if form.first_name %}
+            <div class="form-group">
+                {{ form.first_name.label(class="form-label") }}
+                {{ form.first_name(class="form-input", placeholder="First name", required=True) }}
+            </div>
+            {% endif %}
+            
+            {% if form.last_name %}
+            <div class="form-group">
+                {{ form.last_name.label(class="form-label") }}
+                {{ form.last_name(class="form-input", placeholder="Last name", required=True) }}
+            </div>
+            {% endif %}
+            
+            {% if form.institution %}
+            <div class="form-group">
+                {{ form.institution.label(class="form-label") }}
+                {{ form.institution(class="form-input", placeholder="University / Institution", required=True) }}
+            </div>
+            {% endif %}
+            
+            {% if form.email %}
             <div class="form-group">
                 {{ form.email.label(class="form-label") }}
                 {{ form.email(class="form-input", placeholder="Enter your email address") }}
@@ -35,26 +51,6 @@
                         {% endfor %}
                     </div>
                 {% endif %}
-            </div>
-            
-            {% if form.first_name %}
-            <div class="form-group">
-                {{ form.first_name.label(class="form-label") }}
-                {{ form.first_name(class="form-input", placeholder="First name (optional)") }}
-            </div>
-            {% endif %}
-            
-            {% if form.last_name %}
-            <div class="form-group">
-                {{ form.last_name.label(class="form-label") }}
-                {{ form.last_name(class="form-input", placeholder="Last name (optional)") }}
-            </div>
-            {% endif %}
-            
-            {% if form.institution %}
-            <div class="form-group">
-                {{ form.institution.label(class="form-label") }}
-                {{ form.institution(class="form-input", placeholder="University/Institution (optional)") }}
             </div>
             {% endif %}
             

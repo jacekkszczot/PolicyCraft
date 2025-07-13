@@ -35,32 +35,32 @@ function exportAnalysesTable(analysesData) {
         URL.revokeObjectURL(url);
 
     } catch (error) {
-        console.error('Błąd podczas eksportu danych:', error);
-        alert('Wystąpił błąd podczas eksportu danych. Sprawdź konsolę przeglądarki, aby uzyskać więcej informacji.');
+        console.error('Error while exporting data:', error);
+        alert('An error occurred during data export. Check the browser console for more information.');
     }
 }
 
-// Funkcja pomocnicza do formatowania daty
+// Helper function to format date
 function formatDateForExport(dateString) {
     if (!dateString) return '';
     try {
         const date = new Date(dateString);
-        return date.toISOString(); // Zwraca datę w formacie ISO 8601
+        return date.toISOString(); // Returns date in ISO 8601 format
     } catch (e) {
-        console.error('Błąd formatowania daty:', e);
-        return dateString; // Zwraca oryginalny ciąg w przypadku błędu
+        console.error('Date formatting error:', e);
+        return dateString; // Returns original string if parsing fails
     }
 }
 
-// Funkcja do przygotowania danych przed eksportem
+// Prepare data before export
 function prepareExportData() {
     const exportData = [];
     
-    // Pobieramy wszystkie wiersze z tabeli
+    // Fetch all rows from table
     const rows = document.querySelectorAll('#analysesTableBody tr');
     
     rows.forEach(row => {
-        // Pobieramy dane z wiersza
+        // Extract data from row
         const university = row.querySelector('.university-cell').textContent.trim();
         const classification = row.querySelector('.classification-cell').textContent.trim();
         const confidence = parseFloat(row.querySelector('.confidence-cell').textContent.trim()) || 0;

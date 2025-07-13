@@ -1,0 +1,229 @@
+"""MongoDB-backed data operations for PolicyCraft.
+
+This module provides the same public API (method names and signatures)
+as the former JSON-based `DatabaseOperations` so that the rest of the
+application can switch storage by changing the import only.
+
+For simplicity we implement only the methods actually referenced by the
+Flask app (grep `db_operations.`).  Additional helpers can be added
+later.
+
+Mongo collections:
+    analyses          – user analyses and baseline documents
+    recommendations   – recommendations generated for an analysis
+
+The module expects a running MongoDB instance (>=4.0) and the `pymongo`
+package.  Install locally via:
+    pip install pymongo
+
+Environment variables (or kwargs) may override default connection URI
+and database name.
+"""
+
+from __future__ import annotations
+
+import os
+from datetime import datetime, timezone
+from typing import List, Dict, Optional, Tuple
+
+from pymongo import MongoClient, ASCENDING, DESCENDING, ReturnDocument
+from pymongo.collection import Collection
+from pymongo.errors import DuplicateKeyError
+
+# ---------------------------------------------------------------------------
+# Helper types
+# ---------------------------------------------------------------------------
+Analysis = Dict  # alias for better readability
+Recommendation = Dict
+
+
+class MongoOperations:
+    """Mongo-backed persistence layer."""
+
+    def __init__(self, uri: str | None = None, db_name: str | None = None):
+        uri = uri or os.getenv("MONGO_URI", "mongodb://localhost:27017")
+        db_name = db_name or os.getenv("MONGO_DB", "policycraft")
+        self.client = MongoClient(uri)
+        self.db = self.client[db_name]
+
+        self.analyses: Collection = self.db["analyses"]
+        self.recommendations: Collection = self.db["recommendations"]
+
+        # Ensure indexes – runs quickly if already present
+        # Non-unique index to accelerate lookup; duplicates handled at application level
+        try:
+            self.analyses.create_index([("user_id", ASCENDING), ("filename", ASCENDING)])
+        except Exception as e:
+            print(f"[MongoOperations] Index creation warning: {e}")
+
+        self.recommendations.create_index([("analysis_id", ASCENDING), ("user_id", ASCENDING)])
+
+    # ------------------------------------------------------------------
+    # Analysis CRUD
+    # ------------------------------------------------------------------
+    def store_user_analysis_results(
+        self,
+        user_id: int,
+        filename: str,
+        original_text: str,
+        cleaned_text: str,
+        themes: List[Dict],
+        classification: Dict,
+        document_id: str | None = None,
+        username: str | None = None,
+    ) -> str:
+        """Insert or update a user's analysis result.
+
+        Ensures uniqueness on (user_id, filename).  Duplicate baseline
+        entries therefore do not collide with user uploads because their
+        user_id differs (baseline is typically user_id=-1 or similar).
+        """
+        # Check if this user already analysed this file – avoid duplicates
+        existing = self.analyses.find_one({"user_id": user_id, "filename": filename})
+        if existing:
+            # Update existing document with latest results and refresh date
+            self.analyses.update_one(
+                {"_id": existing["_id"]},
+                {"$set": {
+                    "analysis_date": datetime.now(timezone.utc),
+                    "themes": themes,
+                    "classification": classification,
+                    "text_data.cleaned_text": cleaned_text[:5000],
+                    "text_data.text_length": len(cleaned_text),
+                    "username": username or existing.get("username"),
+                }}
+            )
+            return str(existing["_id"])
+
+        # Build analysis document (new)
+        analysis_doc: Analysis = {
+            "user_id": user_id,
+            "document_id": document_id,
+            "filename": filename,
+            "analysis_date": datetime.now(timezone.utc),
+            "username": username,
+            "text_data": {
+                "original_text": original_text[:5000],
+                "cleaned_text": cleaned_text[:5000],
+                "text_length": len(cleaned_text),
+            },
+            "themes": themes,
+            "classification": classification,
+            "summary": {
+                "total_themes": len(themes),
+                "top_theme": themes[0]["name"] if themes else None,
+                "classification_type": classification.get("classification", "Unknown"),
+                "confidence": classification.get("confidence", 0),
+            },
+        }
+
+        result = self.analyses.insert_one(analysis_doc)
+        return str(result.inserted_id)
+
+    def get_analysis_by_filename(self, user_id: int, filename: str) -> Optional[Analysis]:
+        """Return single analysis for user & filename or None."""
+        return self.analyses.find_one({"user_id": user_id, "filename": filename})
+
+    def get_user_analyses(self, user_id: int) -> List[Analysis]:
+        return list(self.analyses.find({"user_id": user_id}).sort("analysis_date", DESCENDING))
+
+    def remove_duplicate_analyses(self, user_id: int) -> int:
+        """Delete duplicate analyses for a user keeping the most recent per filename.
+        Returns number of documents removed."""
+        pipeline = [
+            {"$match": {"user_id": user_id}},
+            {"$sort": {"analysis_date": -1}},  # newest first
+            {"$group": {
+                "_id": "$filename",
+                "docs": {"$push": "$_id"},
+                "count": {"$sum": 1}
+            }},
+            {"$match": {"count": {"$gt": 1}}}
+        ]
+        groups = list(self.analyses.aggregate(pipeline))
+        to_delete = []
+        for g in groups:
+            # skip first (newest) id
+            to_delete.extend(g["docs"][1:])
+        if to_delete:
+            result = self.analyses.delete_many({"_id": {"$in": to_delete}})
+            return result.deleted_count
+        return 0
+
+    def _to_object_id(self, id_str: str):
+        """Helper: convert 24-char hex string to ObjectId, else return original."""
+        try:
+            from bson import ObjectId  # lazy import
+            return ObjectId(id_str) if len(id_str) == 24 else id_str
+        except Exception:
+            return id_str
+
+    def get_user_analysis_by_id(self, user_id: int, analysis_id: str) -> Optional[Analysis]:
+        oid = self._to_object_id(analysis_id)
+        return self.analyses.find_one({"_id": oid, "user_id": user_id})
+
+    def delete_user_analysis(self, user_id: int, analysis_id: str) -> bool:
+        oid = self._to_object_id(analysis_id)
+        result = self.analyses.delete_one({"_id": oid, "user_id": user_id, "filename": {"$not": {"$regex": r"^\\[BASELINE\\]"}}})
+        return result.deleted_count == 1
+
+    # Generic fetch without user filter (used by API endpoint)
+    def get_analysis_by_id(self, analysis_id: str) -> Optional[Analysis]:
+        oid = self._to_object_id(analysis_id)
+        return self.analyses.find_one({"_id": oid})
+
+    # ------------------------------------------------------------------
+    # Statistics & helpers
+    # ------------------------------------------------------------------
+    def get_analysis_statistics(self, user_id: int | None = None) -> Dict:
+        match = {"user_id": user_id} if user_id is not None else {}
+        pipeline = [
+            {"$match": match},
+            {"$group": {
+                "_id": None,
+                "total": {"$sum": 1},
+                "avg_confidence": {"$avg": "$classification.confidence"},
+                "avg_themes_per_analysis": {"$avg": {"$size": "$themes"}},
+            }},
+        ]
+        agg = list(self.analyses.aggregate(pipeline))
+        if not agg:
+            return {"total": 0, "avg_confidence": 0, "avg_themes_per_analysis": 0}
+        doc = agg[0]
+        return {
+            "total": doc["total"],
+            "avg_confidence": round(doc.get("avg_confidence", 0), 1),
+            "avg_themes_per_analysis": round(doc.get("avg_themes_per_analysis", 0), 1),
+        }
+
+    # ------------------------------------------------------------------
+    # Recommendations (minimal)
+    # ------------------------------------------------------------------
+    def get_recommendations_by_analysis(self, user_id: int, analysis_id: str):
+        """Return stored recommendations list or None."""
+        doc = self.recommendations.find_one({"user_id": user_id, "analysis_id": analysis_id})
+        if doc:
+            return doc.get("recommendations", [])
+        return None
+
+    def store_recommendations(self, user_id: int, analysis_id: str, recs: List[Recommendation]) -> str:
+        payload = {
+            "user_id": user_id,
+            "analysis_id": analysis_id,
+            "recommendations": recs,
+            "created_at": datetime.now(timezone.utc),
+        }
+        result = self.recommendations.insert_one(payload)
+        return str(result.inserted_id)
+
+    # ------------------------------------------------------------------
+    # Baseline helpers
+    # ------------------------------------------------------------------
+    def deduplicate_baseline_analyses(self, user_id: int):
+        """No-op for Mongo – duplicates prevented by unique index."""
+        return
+
+    def load_sample_policies_for_user(self, user_id: int):
+        """Stub. Existing logic can be migrated later if needed."""
+        # Return False so caller knows nothing was loaded.
+        return False

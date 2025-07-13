@@ -39,11 +39,7 @@ flake8 src/
 - Maintain >75% test coverage
 - Include both unit and integration tests
 - Test error handling and edge cases
-- Follow existing test patterns in `tests/conftest.py`# PolicyCraft
-
-**AI Policy Analysis Framework for Higher Education**
-
-A comprehensive web-based application for analyzing university AI policies using Natural Language Processing, ethical framework assessment, and evidence-based recommendation generation. Built for the MSc AI & Data Science program at Leeds Trinity University.
+- Follow existing test patterns in `tests/conftest.py`
 
 ## Project Information
 
@@ -81,7 +77,7 @@ PolicyCraft System Architecture
 │   ├── Multi-dimensional Template Matching
 │   └── Context-aware Generation
 ├── Database Layer
-│   ├── SQLite + JSON Fallback
+│   ├── MongoDB
 │   └── User Authentication (Flask-Login)
 └── Visualization System (Plotly, Matplotlib)
 ```
@@ -91,6 +87,7 @@ PolicyCraft System Architecture
 ### Prerequisites
 
 - Python 3.8+
+- MongoDB 6+ server (local or Atlas)
 - pip package manager
 - 4GB+ RAM recommended
 - Modern web browser
@@ -116,22 +113,27 @@ PolicyCraft System Architecture
    pip install -r requirements.txt
    ```
 
-4. **Download NLP Model**
+4. **Configure MongoDB connection**
+   ```bash
+   export MONGODB_URI="mongodb://localhost:27017/policycraft"
+   ```
+
+5. **Download NLP Model**
    ```bash
    python -m spacy download en_core_web_sm
    ```
 
-5. **Initialize Application**
+6. **Initialize Application**
    ```bash
    python config.py  # Creates secure directories
    ```
 
-6. **Launch Application**
+7. **Launch Application**
    ```bash
    python app.py
    ```
 
-7. **Access System**
+8. **Access System**
    - Open browser to `http://localhost:5001`
    - Create account or login
    - Upload AI policy documents for analysis

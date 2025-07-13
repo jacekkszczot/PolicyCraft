@@ -1,27 +1,27 @@
-# Aspekty etyczne PolicyCraft
+# PolicyCraft Ethics Considerations
 
-PolicyCraft służy do analizy polityk uniwersyteckich dotyczących generatywnej AI. Poniżej podsumowujemy kluczowe zagadnienia etyczne projektu.
+PolicyCraft analyses university policies on generative AI. Below is a summary of the project’s key ethical considerations.
 
-## 1. Unikanie stronniczości (Bias)
-* Model hybrydowy wykorzystuje proste słowa kluczowe oraz wytrenowany klasyfikator LR na niewielkim korpusie.
-* Ryzyko: nadreprezentacja terminologii uczelni anglojęzycznych.
-* Mitigacja: testy na różnych typach instytucji (USA, UK, PL, JP) oraz wskaźnik **fairness** w skrypcie `evaluate_models.py`.
+## 1. Avoiding Bias
+* The hybrid model uses simple keywords alongside a trained LR classifier on a small corpus.
+* Risk: over-representation of terminology from English-speaking institutions.
+* Mitigation: tests across diverse institution types (USA, UK, PL, JP) and a **fairness** metric in `evaluate_models.py`.
 
-## 2. Prywatność i ochrona danych
-* System nie gromadzi danych osobowych studentów / pracowników.
-* Analizowane pliki polityk są publicznie dostępne.
-* Dane użytkowników (loginy) przechowywane lokalnie w SQLite, hasła haszowane Bcrypt.
+## 2. Privacy and Data Protection
+* The system does not collect personal data of students or staff.
+* Analysed policy documents are publicly available.
+* User credentials are stored locally in SQLite; passwords are hashed with Bcrypt.
 
-## 3. Bezpieczeństwo modeli
-* Brak zewnętrznych API – cały inference lokalnie.
-* Modele i reguły są przejrzyste (interpretowalność poprzez endpoint `/api/explain/<id>`).
+## 3. Model Security
+* No external APIs – all inference runs locally.
+* Models and rules are transparent (interpretability via the `/api/explain/<id>` endpoint).
 
-## 4. Transparentność
-* Kod open-source (MIT).  
-* Diagram architektury w `docs/architecture.md`.
+## 4. Transparency
+* Open-source code (MIT).  
+* Architecture diagram in `docs/architecture.md`.
 
-## 5. Odpowiedzialne wykorzystanie
-System nie zastępuje ocen eksperta; wyniki należy interpretować w kontekście polityki i kultury danej uczelni.
+## 5. Responsible Use
+The system does not replace expert judgement; results should be interpreted within the institution’s policy and cultural context.
 
 ---
-_Data: 2025-07-11, Autor: Jacek Robert Kszczot_
+_Date: 2025-07-11, Author: Jacek Robert Kszczot_

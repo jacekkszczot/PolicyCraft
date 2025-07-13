@@ -13,6 +13,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 import os
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +120,7 @@ class DatabaseOperations:
 
         # --- New analysis ---
         analysis_data = {
-            '_id': f"analysis_{len(self.storage['analyses']) + 1}",
+            '_id': f"analysis_{uuid.uuid4().hex}",
             'user_id': user_id,
             'document_id': document_id,
             'filename': filename,
@@ -166,7 +167,29 @@ class DatabaseOperations:
         analyses.sort(key=lambda x: x['analysis_date'], reverse=True)
         
         print(f"Retrieved {len(analyses)} analyses for user {user_id}")
-        return analyses[:limit]
+        return analyses
+
+    # --------------------
+    # Reporting utilities
+    # --------------------
+    def get_analysis_statistics(self) -> Dict[str, float]:
+        """Return simple statistics across *all* stored analyses.
+
+        Returns a dictionary of at least:
+        - ``total_analyses`` (int): total number of analysis records.
+        - ``avg_confidence`` (float): mean classification confidence across analyses (0 if none).
+        """
+        total = len(self.storage.get('analyses', []))
+        if total == 0:
+            return {"total_analyses": 0, "avg_confidence": 0}
+
+        confidences = [a.get('classification', {}).get('confidence', 0)
+                       for a in self.storage['analyses']]
+        avg_conf = sum(confidences) / total if confidences else 0
+        return {
+            "total_analyses": total,
+            "avg_confidence": avg_conf
+        }
 
     def _deduplicate(self, analyses: List[Dict]) -> int:
         """Helper: deduplicate list by filename, keep the oldest entry."""
@@ -216,39 +239,14 @@ class DatabaseOperations:
         return removed
 
     def get_user_analysis_by_id(self, user_id: int, analysis_id: str) -> Optional[Dict]:
+        """Retrieve a single analysis document by its identifier and owner.
+
+        Returns the analysis dictionary or ``None`` if not found.
         """
-        Get specific analysis by ID for a user.
-        
-        Args:
-            user_id (int): User ID
-            analysis_id (str): Analysis ID
-            
-        Returns:
-            Optional[Dict]: Analysis data or None
-        """
-        for analysis in self.storage['analyses']:
+        for analysis in self.storage.get('analyses', []):
             if analysis['_id'] == analysis_id and analysis['user_id'] == user_id:
                 return analysis
-        
         return None
-
-    def get_analysis_statistics(self, user_id: int = None) -> Dict:
-        """
-        Get analysis statistics for a user or globally.
-        
-        Args:
-            user_id (int): Optional user ID for user-specific stats
-            
-        Returns:
-            Dict: Statistics summary
-        """
-        # Filter analyses
-        analyses = self.storage['analyses']
-        if user_id:
-            analyses = [a for a in analyses if a['user_id'] == user_id]
-        
-        if not analyses:
-            return {'total_analyses': 0, 'avg_confidence': 0, 'avg_themes_per_analysis': 0}
         
         # Calculate statistics
         classification_counts = {}

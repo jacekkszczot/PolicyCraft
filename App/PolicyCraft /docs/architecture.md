@@ -1,4 +1,4 @@
-# Architektura PolicyCraft
+# PolicyCraft Architecture
 
 ```mermaid
 graph TD
@@ -13,14 +13,14 @@ graph TD
     B --> J[Visualisation]
 ```
 
-Opis modułów:
-1. **Web UI** – szablony HTML + CSS.
-2. **API endpoints** – logika Flask (`app.py`).
-3. **NLP pipeline** – czyszczenie tekstu, ekstrakcja cech.
-4. **PolicyClassifier** – hybrydowy model reguły + ML.
-5. **Recommendation Engine** – generuje sugestie poprawy polityki.
-6. **DatabaseOperations** – przechowuje użytkowników (SQLite) i analizy (JSON).
-7. **PDF Generator** – tworzy raporty PDF.
-8. **Visualisation** – wykresy Plotly.
+Module descriptions:
+1. **Web UI** – HTML + CSS templates.
+2. **API endpoints** – Flask logic (`app.py`).
+3. **NLP pipeline** – text cleaning and feature extraction.
+4. **PolicyClassifier** – hybrid rule-based + ML model.
+5. **Recommendation Engine** – generates policy improvement suggestions.
+6. **DatabaseOperations** – stores users (SQLite) and analyses (JSON).
+7. **PDF Generator** – creates PDF reports.
+8. **Visualisation** – Plotly charts.
 
-Diagram pokazuje główne przepływy danych i zależności między komponentami.
+The diagram shows the main data flows and dependencies between components.

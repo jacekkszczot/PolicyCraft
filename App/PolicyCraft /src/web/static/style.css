@@ -10,32 +10,32 @@
 @import 'css/layout.css';
 
 /* Additional sections will be imported as needed */
-@import 'css/sections.css';
-@import 'css/forms.css';
-@import 'css/cards.css';
+
+
+
 @import 'css/responsive.css';
 
 /* Utility classes */
-@import 'css/utilities.css';
+
 
 /* Theme-specific styles */
-@import 'css/theme.css';
+
 
 /* Custom components */
-@import 'css/components.css';
+
 @import 'css/analysis.css';
 
 /* Animations and transitions */
-@import 'css/animations.css';
+
 
 /* Print styles */
-@import 'css/print.css';
+
 
 /* Dark mode styles */
-@import 'css/dark-mode.css';
+
 
 /* Custom overrides */
-@import 'css/overrides.css';
+
 
 /* Debug styles (commented out by default) */
 /* @import 'css/debug.css'; */

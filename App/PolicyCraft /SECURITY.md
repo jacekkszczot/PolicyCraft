@@ -1,22 +1,22 @@
-# Polityka Bezpieczeństwa
+# Security Policy
 
-## Zakres danych
-* Użytkownicy: e-mail, zahaszowane hasło (Bcrypt).
-* Analizy: tekst polityki, metadane (nazwa uczelni, data).
-* Brak danych wrażliwych (PII studentów/pracowników).
+## Data Scope
+* Users: email address, hashed password (Bcrypt).
+* Analyses: policy text and metadata (institution name, date).
+* No sensitive personal data (PII of students/staff).
 
-## Zgłaszanie luk
-Jeśli znajdziesz lukę bezpieczeństwa, zgłoś ją poprzez Issues lub mail **security@policycraft.example.com**. Nie publikuj publicznie szczegółów przed naprawą.
+## Vulnerability Disclosure
+If you discover a security vulnerability, please report it via GitHub Issues or email **security@policycraft.example.com**. Do not publicly disclose details before a fix is deployed.
 
-## Zasady aktualizacji
-* Zewnętrzne biblioteki aktualizujemy co najmniej raz na semestr.
-* Wersjonowanie SemVer.
+## Update Policy
+* External libraries are updated at least once per semester.
+* Semantic Versioning (SemVer) is observed.
 
-## Uprawnienia
-* Dostęp do serwera produkcyjnego mają wyłącznie maintainerzy.
-* Klucze API (jeśli zostaną dodane) przechowywane w zmiennych środowiskowych.
+## Permissions
+* Only maintainers have access to the production server.
+* API keys (if introduced) are stored in environment variables.
 
-## Licencja
-MIT – patrz `LICENSE`.
+## Licence
+MIT – see `LICENSE`.
 
-_Data: 2025-07-11_
+_Date: 2025-07-11_

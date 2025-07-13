@@ -25,7 +25,7 @@ from src.auth.routes import auth_bp
 from src.nlp.text_processor import TextProcessor
 from src.nlp.theme_extractor import ThemeExtractor
 from src.nlp.policy_classifier import PolicyClassifier
-from src.database.operations import DatabaseOperations
+from src.database.mongo_operations import MongoOperations as DatabaseOperations
 from src.visualisation.charts import ChartGenerator
 from src.recommendation.engine import RecommendationEngine
 from src.scripts.clean_dataset import process_new_upload
@@ -168,7 +168,7 @@ app = create_app()
 text_processor = TextProcessor()
 theme_extractor = ThemeExtractor()
 policy_classifier = PolicyClassifier()
-db_operations = DatabaseOperations()
+db_operations = DatabaseOperations(uri="mongodb://localhost:27017", db_name="policycraft")
 chart_generator = ChartGenerator()
 recommendation_engine = RecommendationEngine()
 
@@ -201,17 +201,38 @@ def dashboard():
     try:
         logger.info(f"Dashboard accessed by user: {current_user.username}")
         
-        # Usuń ewentualne duplikaty baseline przed pobraniem danych
+        # Remove potential baseline duplicates before fetching data
         db_operations.deduplicate_baseline_analyses(current_user.id)
-        # Pobierz analizy użytkownika (już bez duplikatów)
+        # Retrieve user analyses (already deduplicated)
         user_analyses = db_operations.get_user_analyses(current_user.id)
+        # Pobierz analizy baseline (globalne)
+        baseline_analyses = db_operations.get_user_analyses(-1)
+        # Merge – user's version has priority, avoid duplicate filenames
+        analyses_by_filename = {a['filename']: a for a in baseline_analyses}
+        analyses_by_filename.update({a['filename']: a for a in user_analyses})
+        combined_analyses = list(analyses_by_filename.values())
 
-        # Jeśli użytkownik nie ma załadowanych analiz bazowych – załaduj je teraz jednorazowo
+        # Ensure newest analyses appear first
+        def _to_epoch(val):
+            """Convert supported date formats to POSIX timestamp for consistent sorting."""
+            try:
+                if isinstance(val, datetime):
+                    return val.replace(tzinfo=None).timestamp()
+                if isinstance(val, str):
+                    dt = datetime.fromisoformat(val.replace('Z', '+00:00'))
+                    return dt.replace(tzinfo=None).timestamp()
+            except Exception:
+                pass
+            # Fallback – very old date
+            return 0
+        combined_analyses.sort(key=lambda a: _to_epoch(a.get('analysis_date')), reverse=True)
+
+        # If the user has no baseline analyses loaded – load them once now
         if not any(a.get('filename','').startswith('[BASELINE]') for a in user_analyses):
             try:
                 loaded = db_operations.load_sample_policies_for_user(current_user.id)
                 if loaded:
-                    # odśwież listę analiz po załadowaniu
+                    # refresh analyses list after loading
                     user_analyses = db_operations.get_user_analyses(current_user.id)
                     flash('Sample baseline policies have been loaded to your dashboard.', 'success')
             except Exception as e:
@@ -225,11 +246,11 @@ def dashboard():
             dashboard_charts = {}
         
         # Calculate statistics
-        total_policies = len(user_analyses)
+        total_policies = len(combined_analyses)
         classification_counts = {}
         theme_frequencies = {}
         
-        for analysis in user_analyses:
+        for analysis in combined_analyses:
             # Count classifications
             classification = analysis.get('classification', {})
             cls = classification.get('classification', 'Unknown') if isinstance(classification, dict) else 'Unknown'
@@ -260,7 +281,7 @@ def dashboard():
         
         # Convert dates to strings for JSON serialization
         processed_analyses = []
-        for analysis in user_analyses:
+        for analysis in combined_analyses:
             processed_analysis = analysis.copy()
             
             if 'analysis_date' in processed_analysis:
@@ -542,24 +563,46 @@ def analyse_document(filename):
         
         logger.info(f"Starting analysis of file: {filename}")
         
-        # Extract and process text
-        extracted_text = text_processor.extract_text_from_file(file_path)
-        if not extracted_text:
-            flash('Could not extract text from file', 'error')
-            return redirect(url_for('upload_file'))
-        
-        cleaned_text = text_processor.clean_text(extracted_text)
-        themes = theme_extractor.extract_themes(cleaned_text)
-        classification = policy_classifier.classify_policy(cleaned_text)
-        
-        # Store results in database
+        # Check if analysis already exists to avoid duplication
+        existing_analysis = db_operations.get_analysis_by_filename(current_user.id, filename)
+        if not existing_analysis and is_baseline:
+            # For baseline, check global baseline record (user_id = -1)
+            existing_analysis = db_operations.get_analysis_by_filename(-1, filename)
+        if existing_analysis:
+            themes = existing_analysis.get('themes', [])
+            classification = existing_analysis.get('classification', {})
+            cleaned_text = existing_analysis.get('text_data', {}).get('cleaned_text', '')
+            extracted_text = existing_analysis.get('text_data', {}).get('original_text', '')
+            analysis_id = str(existing_analysis['_id'])
+        else:
+            # Extract and process text
+            extracted_text = text_processor.extract_text_from_file(file_path)
+            if not extracted_text:
+                flash('Could not extract text from file', 'error')
+                return redirect(url_for('upload_file'))
+            
+            cleaned_text = text_processor.clean_text(extracted_text)
+            themes = theme_extractor.extract_themes(cleaned_text)
+            classification = policy_classifier.classify_policy(cleaned_text)
+            
+            # Store results in database (handles update if exists)
+            analysis_id = db_operations.store_user_analysis_results(
+                user_id=current_user.id,
+                filename=filename,
+                original_text=extracted_text,
+                cleaned_text=cleaned_text,
+                themes=themes,
+                classification=classification,
+                username=getattr(current_user, 'username', None)
+            )
         analysis_id = db_operations.store_user_analysis_results(
             user_id=current_user.id,
             filename=filename,
             original_text=extracted_text,
             cleaned_text=cleaned_text,
             themes=themes,
-            classification=classification
+            classification=classification,
+            username=getattr(current_user, 'username', None)
         )
         
         # Generate visualizations
@@ -587,8 +630,8 @@ def analyse_document(filename):
                 'original_length': len(extracted_text),
                 'cleaned_length': len(cleaned_text),
                 'themes_found': len(themes),
-                'classification_confidence': classification['confidence'],
-                'processing_method': classification['method']
+                'classification_confidence': classification.get('confidence', 0),
+                'processing_method': classification.get('method', 'N/A')
             }
         }
         
@@ -604,11 +647,17 @@ def analyse_document(filename):
 def get_recommendations(analysis_id):
     """Generate evidence-based recommendations."""
     try:
-        # Get the analysis data
+        # Get the analysis data (try by user id, fallback to global and verify ownership)
         analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
         if not analysis:
-            flash('Analysis not found or access denied.', 'error')
-            return redirect(url_for('dashboard'))
+            analysis = db_operations.get_analysis_by_id(analysis_id)
+            # verify ownership via username or user_id
+            if not analysis or (
+                analysis.get('user_id') not in [current_user.id, None] and
+                analysis.get('username') != getattr(current_user, 'username', None)
+            ):
+                flash('Analysis not found or access denied.', 'error')
+                return redirect(url_for('dashboard'))
         
         logger.info(f"Generating recommendations for analysis {analysis_id}")
         
@@ -622,13 +671,24 @@ def get_recommendations(analysis_id):
             flash('Analysis text not found. Cannot generate recommendations.', 'warning')
             return redirect(url_for('dashboard'))
         
-        # Generate recommendations
-        recommendation_package = recommendation_engine.generate_recommendations(
-            themes=themes,
-            classification=classification,
-            text=cleaned_text,
-            analysis_id=analysis_id
-        )
+        # Try to load stored recommendations first
+        stored_recs = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
+        if stored_recs:
+            recommendation_package = {
+                'recommendations': stored_recs,
+                'analysis_metadata': {
+                    'generated_date': analysis.get('analysis_date', datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                    'methodology': 'Previously generated'
+                }
+            }
+        else:
+            # Generate new recommendations
+            recommendation_package = recommendation_engine.generate_recommendations(
+                themes=themes,
+                classification=classification,
+                text=cleaned_text,
+                analysis_id=analysis_id
+            )
         
         # Prepare data for template
         recommendation_data = {
@@ -707,6 +767,7 @@ def get_recommendations(analysis_id):
 @app.route('/delete_analysis/<analysis_id>', methods=['POST'])
 @login_required
 def delete_analysis(analysis_id):
+    logger.info(f"Attempting deletion of analysis {analysis_id} by user {current_user.id}")
     """Delete user analysis (not baseline policies)."""
     try:
         # Get analysis to check ownership and type
@@ -717,7 +778,7 @@ def delete_analysis(analysis_id):
         
         # Check if it's a baseline policy (protect from deletion)
         filename = analysis.get('filename', '')
-        if filename.startswith('[BASELINE]') or 'clean_dataset' in filename:
+        if filename.startswith('[BASELINE]'):
             flash('Baseline policies cannot be deleted.', 'warning')
             return redirect(url_for('dashboard'))
         
@@ -752,7 +813,7 @@ def delete_analysis(analysis_id):
 def api_explain_analysis(analysis_id):
     """Zwróć listę kluczowych słów, które wpłynęły na klasyfikację polityki AI.
     Format JSON: {"analysis_id": ..., "keywords": [{"term": str, "category": str, "score": float}]}"""
-    db_ops = DatabaseOperations()
+    db_ops = DatabaseOperations(uri="mongodb://localhost:27017", db_name="policycraft")
     analysis = db_ops.get_analysis_by_id(analysis_id)
     if not analysis or analysis.get('user_id') != current_user.id:
         return jsonify({'error': 'Analysis not found'}), 404

@@ -217,6 +217,15 @@ class MongoOperations:
         return str(result.inserted_id)
 
     # ------------------------------------------------------------------
+    # User cleanup helpers
+    # ------------------------------------------------------------------
+    def purge_user_data(self, user_id: int):
+        """Delete all analyses & recommendations associated with a user."""
+        res1 = self.analyses.delete_many({"user_id": user_id})
+        res2 = self.recommendations.delete_many({"user_id": user_id})
+        print(f"🗑️ Purged {res1.deleted_count} analyses and {res2.deleted_count} recs for user {user_id}")
+
+    # ------------------------------------------------------------------
     # Baseline helpers
     # ------------------------------------------------------------------
     def deduplicate_baseline_analyses(self, user_id: int):
@@ -249,12 +258,58 @@ class MongoOperations:
             "filename": {"$regex": r"^\\[BASELINE\\]"}
         }))
         if not global_baselines:
-            print("⚠️ No global baseline analyses found (user_id=-1).")
-            return False
+            # --- Fallback: create baselines from dataset files ---
+            try:
+                from src.auth.models import SAMPLE_UNIVERSITIES
+                from pathlib import Path
+
+                dataset_path = Path("data/policies/clean_dataset")
+                if not dataset_path.exists():
+                    print("❌ Dataset path not found for baseline import.")
+                    return False
+
+                inserted = 0
+                for key, uni in SAMPLE_UNIVERSITIES.items():
+                    file_path = dataset_path / uni["file"]
+                    baseline_filename = f"[BASELINE] {uni['name']} - {uni['file']}"
+
+                    # Avoid duplicates just in case
+                    if self.analyses.find_one({"user_id": user_id, "filename": baseline_filename}):
+                        continue
+
+                    payload: Analysis = {
+                        "user_id": user_id,
+                        "document_id": f"sample_{key}",
+                        "filename": baseline_filename,
+                        "analysis_date": datetime.now(timezone.utc),
+                        "text_data": {
+                            "original_text": f"Sample policy from {uni['name']}",
+                            "cleaned_text": f"Sample policy from {uni['name']} ({uni['country']})",
+                            "text_length": 0,
+                        },
+                        "themes": [{"name": t, "score": 0.8, "confidence": 85} for t in uni.get("themes", [])],
+                        "classification": {
+                            "classification": uni.get("classification", "Unknown"),
+                            "confidence": 85,
+                            "source": "Sample Dataset",
+                        },
+                        "summary": {},
+                    }
+                    self.analyses.insert_one(payload)
+                    inserted += 1
+                print(f"✅ Inserted {inserted} baseline analyses for user {user_id} from dataset files.")
+                return inserted > 0
+            except Exception as e:
+                print(f"❌ Error loading baseline dataset: {e}")
+                return False
 
         # 3) Clone for user
         inserted = 0
+        seen_filenames: set[str] = set()
         for base_doc in global_baselines:
+            if base_doc.get("filename") in seen_filenames:
+                continue
+            seen_filenames.add(base_doc.get("filename"))
             clone = base_doc.copy()
             clone.pop("_id", None)  # Let Mongo assign a new ID
             clone["user_id"] = user_id

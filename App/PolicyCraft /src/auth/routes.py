@@ -201,14 +201,29 @@ def change_password():
 def delete_account():
     """Delete user account and associated data."""
     try:
+        # Capture identifiers BEFORE logging out, because current_user becomes Anonymous afterwards
+        user_id = current_user.id
         username = current_user.username
+
+        # Log the user out first to invalidate session
         logout_user()
-        User.query.filter_by(id=current_user.id).delete()
+
+        # Delete associated analyses & recommendations in Mongo
+        try:
+            from app import db_operations  # late import to avoid circular deps
+            if hasattr(db_operations, "purge_user_data"):
+                db_operations.purge_user_data(user_id)
+        except Exception as purge_err:
+            logger.warning(f"Could not purge Mongo data for user {user_id}: {purge_err}")
+
+        # Delete user record (and potentially cascade related data)
+        User.query.filter_by(id=user_id).delete()
         db.session.commit()
+
         flash('Your account has been deleted.', 'info')
-        logger.info(f"Account deleted for user {username}")
+        logger.info(f"Account deleted for user {username} (id={user_id})")
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Account deletion error for {current_user.username}: {str(e)}")
+        logger.error(f"Account deletion error for user {locals().get('username','unknown')}: {str(e)}")
         flash('Failed to delete account.', 'error')
     return redirect(url_for('index'))

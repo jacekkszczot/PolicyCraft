@@ -18,6 +18,16 @@ import uuid
 logger = logging.getLogger(__name__)
 
 class DatabaseOperations:
+    def purge_user_data(self, user_id: int):
+        """Remove all JSON-stored documents, analyses & recommendations for a user."""
+        before_docs = len(self.storage.get('documents', []))
+        before_analyses = len(self.storage.get('analyses', []))
+        before_recs = len(self.storage.get('recommendations', []))
+        self.storage['documents'] = [d for d in self.storage.get('documents', []) if d.get('user_id') != user_id]
+        self.storage['analyses'] = [a for a in self.storage.get('analyses', []) if a.get('user_id') != user_id]
+        self.storage['recommendations'] = [r for r in self.storage.get('recommendations', []) if r.get('user_id') != user_id]
+        self._save_storage()
+
     """
     Database operations handling SQLite and JSON storage.
     SQLite for users, JSON for documents and analysis results.

@@ -20,6 +20,7 @@ from config import get_config, create_secure_directories
 # Import authentication components
 from src.auth.models import User, db, init_db
 from src.auth.routes import auth_bp
+from src.admin.routes import admin_bp
 
 # Import analysis modules
 from src.nlp.text_processor import TextProcessor
@@ -149,6 +150,7 @@ def create_app():
     
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(admin_bp)
     
     # Make current_user available in all templates
     @app.context_processor

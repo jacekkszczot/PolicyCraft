@@ -256,14 +256,15 @@ SAMPLE_UNIVERSITIES = {
         'classification': 'Moderate',
         'themes': ['Asian Standards', 'Technology Integration', 'Cultural Considerations']
     },
-    'unknown_2': {
+    # 'unknown_2' sample removed – research duplicate
+    # 'unknown_2': {
         'name': 'Research University Sample 2',
         'country': 'International',
         'file': '2-ai-policy.pdf',
         'description': 'Additional sample policy for comparative analysis.',
         'classification': 'Moderate',
         'themes': ['Comparative Analysis', 'Research Standards', 'Policy Framework']
-    }
+    # }
 }
 
 

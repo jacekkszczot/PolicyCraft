@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Admin Dashboard</h2>
+<ul>
+  <li>Total users: {{ user_count }}</li>
+  <li>Total analyses: {{ analysis_count }}</li>
+  <li>Global baselines: {{ baseline_global }}</li>
+</ul>
+<a href="{{ url_for('admin.users') }}" class="btn btn-secondary">Manage Users</a>
+<a href="{{ url_for('admin.reset_baselines') }}" class="btn btn-warning">Reset Baselines</a>
+<a href="{{ url_for('admin.change_password') }}" class="btn btn-secondary">Change Password</a>
+{% endblock %}

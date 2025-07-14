@@ -223,7 +223,48 @@ class MongoOperations:
         """No-op for Mongo – duplicates prevented by unique index."""
         return
 
-    def load_sample_policies_for_user(self, user_id: int):
-        """Stub. Existing logic can be migrated later if needed."""
-        # Return False so caller knows nothing was loaded.
-        return False
+    def load_sample_policies_for_user(self, user_id: int) -> bool:
+        """Load or ensure baseline analyses for a **particular** user.
+
+        Behaviour:
+        1. If the user already possesses analyses whose filename starts with
+           "[BASELINE]", nothing is done and the method returns ``True``.
+        2. Otherwise, it looks for the *global* baseline set (``user_id == -1``)
+           and duplicates those documents for the specified user.
+        3. When no global baseline is found, the method returns ``False`` so the
+           caller can decide how to proceed.
+        """
+        # 1) Already loaded for this user?
+        has_user_baseline = self.analyses.find_one({
+            "user_id": user_id,
+            "filename": {"$regex": r"^\\[BASELINE\\]"}
+        })
+        if has_user_baseline:
+            print(f"ℹ️ Baseline analyses already exist for user {user_id} – skipping copy.")
+            return True
+
+        # 2) Fetch global baseline docs
+        global_baselines = list(self.analyses.find({
+            "user_id": -1,
+            "filename": {"$regex": r"^\\[BASELINE\\]"}
+        }))
+        if not global_baselines:
+            print("⚠️ No global baseline analyses found (user_id=-1).")
+            return False
+
+        # 3) Clone for user
+        inserted = 0
+        for base_doc in global_baselines:
+            clone = base_doc.copy()
+            clone.pop("_id", None)  # Let Mongo assign a new ID
+            clone["user_id"] = user_id
+            # Ensure username removed – will be owner specific
+            clone.pop("username", None)
+            try:
+                self.analyses.insert_one(clone)
+                inserted += 1
+            except Exception as e:
+                # Ignore duplicates or other insertion errors per doc
+                print(f"⚠️ Could not clone baseline {base_doc.get('filename')}: {e}")
+        print(f"✅ Added {inserted} baseline analyses for user {user_id}.")
+        return inserted > 0

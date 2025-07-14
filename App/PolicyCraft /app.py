@@ -892,6 +892,18 @@ def handle_first_login_onboarding(user_id: int) -> bool:
                 flash("Welcome! We have loaded 15 sample university policies to get you started.", "success")
                 return True
             else:
+                # If sample load failed, but user already has baseline analyses, treat as success
+                # Robust baseline detection – check if ANY analysis filename starts with [BASELINE]
+                try:
+                    user_analyses = db_operations.get_user_analyses(user_id)
+                    baseline_exists = any(a.get('filename', '').startswith('[BASELINE]') for a in user_analyses)
+                except Exception as _:
+                    baseline_exists = False
+                if baseline_exists:
+                    user.complete_onboarding()
+                    logger.info(f"ℹ️ Baseline analyses detected despite load failure – onboarding marked complete for {user.username}")
+                    flash("Welcome! Sample policies are already available in your dashboard.", "info")
+                    return True
                 logger.warning(f"⚠️ Onboarding failed for user: {user.username}")
                 flash("Welcome! There was an issue loading sample policies.", "warning")
                 

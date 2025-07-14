@@ -358,6 +358,14 @@ class DatabaseOperations:
         """
         try:
             from src.auth.models import SAMPLE_UNIVERSITIES
+            # If baseline analyses already exist for this user, treat as success
+            existing_baselines = [
+                a for a in self.storage['analyses']
+                if a['user_id'] == user_id and a.get('filename', '').startswith('[BASELINE]')
+            ]
+            if existing_baselines:
+                print(f"ℹ️ Baseline analyses already present for user {user_id} (" + str(len(existing_baselines)) + ")")
+                return True
             from pathlib import Path
             
             # Path to clean dataset

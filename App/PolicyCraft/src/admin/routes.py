@@ -18,7 +18,6 @@ from flask import (Blueprint, current_app, flash, redirect, render_template,
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from src.auth.models import User, db as sqlalchemy_db
-from src.database.operations import DatabaseOperations
 from src.database.mongo_operations import MongoOperations
 
 admin_bp = Blueprint("admin", __name__, template_folder="../web/templates/admin", url_prefix="/admin")
@@ -30,7 +29,6 @@ CONFIG_DIR = os.path.join(os.getcwd(), "data")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "admin_config.json")
 DEFAULT_PASSWORD = "admin123"
 
-db_json = DatabaseOperations()
 mongo_db = MongoOperations()
 
 
@@ -114,7 +112,6 @@ def delete_user(user_id):
     sqlalchemy_db.session.delete(user)
     sqlalchemy_db.session.commit()
     # Purge associated data
-    db_json.purge_user_data(user_id)
     mongo_db.purge_user_data(user_id)
     flash(f"Deleted user {username}", "success")
     return redirect(url_for("admin.users"))

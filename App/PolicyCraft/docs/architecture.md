@@ -1,16 +1,16 @@
 # PolicyCraft Architecture
 
 ```mermaid
-graph TD
-    A[Web UI (Flask templates)] --> B(API endpoints)
-    B --> C[NLP pipeline]
-    C --> D[PolicyClassifier]
-    C --> E[Recommendation Engine]
-    B --> F[DatabaseOperations]
-    F -->|JSON| G[Analyses storage]
-    F -->|SQLite| H[User auth]
-    B --> I[PDF Generator]
-    B --> J[Visualisation]
+graph TD;
+            A[Web UI] -->|HTTP| B[API endpoints]
+            B --> C[NLP pipeline]
+            C --> D[PolicyClassifier]
+            C --> E[Recommendation Engine]
+            B --> F[Database Ops]
+            F -->|MongoDB| G[Analyses storage]
+            F -->|SQLite| H[User auth]
+            B --> I[PDF Generator]
+            B --> J[Visualisation]
 ```
 
 Module descriptions:

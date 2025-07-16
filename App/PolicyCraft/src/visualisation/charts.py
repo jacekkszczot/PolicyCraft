@@ -9,6 +9,7 @@ import json
 import logging
 from typing import Dict, List
 from collections import Counter
+import re
 
 # Visualization libraries
 try:
@@ -51,9 +52,19 @@ class ChartGenerator:
             'margin': {'l': 40, 'r': 40, 't': 60, 'b': 40}
         }
         
+        # Simple keyword mapping for ethical dimensions (can be refined)
+        self.ethics_keywords = {
+            'Transparency': [r"\btransparen(ce|cy|t)\b", r"\bdisclos(e|ure)\b"],
+            'Accountability': [r"\baccountab(le|ility)\b", r"\bresponsib(le|ility)\b"],
+            'Privacy & Data': [r"\bprivacy\b", r"\bdata protection\b", r"\bpii\b"],
+            'Human-Centredness': [r"\bhuman\b", r"\bwellbeing\b", r"\buser\b"],
+            'Fairness & Inclusion': [r"\bfair(ness)?\b", r"\bequity\b", r"\binclus(ive|ion)\b"],
+            'Societal Impact': [r"\bimpact\b", r"\bsociet(al)?\b", r"\bsustainab(le|ility)\b"]
+        }
+        
         print(f"ChartGenerator initialized - Plotly: {PLOTLY_AVAILABLE}")
 
-    def generate_analysis_charts(self, themes: List[Dict], classification: Dict) -> Dict:
+    def generate_analysis_charts(self, themes: List[Dict], classification: Dict, text: str | None = None) -> Dict:
         """Generate charts for a single analysis result."""
         if not PLOTLY_AVAILABLE:
             return self._generate_fallback_charts(themes, classification)
@@ -64,6 +75,8 @@ class ChartGenerator:
             charts['themes_bar'] = self._create_themes_bar_chart(themes)
             charts['classification_gauge'] = self._create_classification_gauge(classification)
             charts['themes_pie'] = self._create_themes_pie_chart(themes)
+            if text:
+                charts['ethics_radar'] = self._create_ethics_radar_chart(text)
             
             print(f"Generated {len(charts)} charts for analysis")
             
@@ -112,7 +125,7 @@ class ChartGenerator:
                 color=self.color_schemes['themes'][:len(top_themes)],
                 line=dict(color='rgba(50, 50, 50, 0.2)', width=1)
             ),
-            text=[f"{theme['confidence']}%" for theme in reversed(top_themes)],
+            text=[f"{theme.get('confidence', '')}%" if theme.get('confidence') is not None else '' for theme in reversed(top_themes)],
             textposition='inside',
             textfont=dict(color='white', size=10)
         ))
@@ -234,6 +247,34 @@ class ChartGenerator:
             **self.default_layout
         )
         
+        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+    def _create_ethics_radar_chart(self, text: str) -> str:
+        """Create radar chart showing ethical dimension coverage."""
+        if not text:
+            return ""
+        
+        dimension_scores = {}
+        total_matches = 0
+        text_lower = text.lower()
+        for dimension, patterns in self.ethics_keywords.items():
+            score = 0
+            for pattern in patterns:
+                score += len(re.findall(pattern, text_lower))
+            dimension_scores[dimension] = score
+            total_matches += score
+        # Normalize to percentage
+        if total_matches == 0:
+            dimension_scores = {dim: 0 for dim in dimension_scores}
+        else:
+            dimension_scores = {dim: round((count / total_matches) * 100, 1) for dim, count in dimension_scores.items()}
+        categories = list(dimension_scores.keys())
+        values = list(dimension_scores.values())
+        values.append(values[0])  # close loop
+        categories.append(categories[0])
+        fig = go.Figure()
+        fig.add_trace(go.Scatterpolar(r=values, theta=categories, fill='toself', name='Ethical Coverage', marker_color='#2ecc71'))
+        fig.update_layout(title='Ethical Dimension Coverage', polar=dict(radialaxis=dict(visible=True, range=[0,100])), height=400, **self.default_layout)
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     def _generate_fallback_charts(self, themes: List[Dict], classification: Dict) -> Dict:

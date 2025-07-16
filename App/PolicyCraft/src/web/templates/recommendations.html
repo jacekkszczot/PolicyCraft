@@ -76,6 +76,17 @@
                 </div>
                 {% endif %}
                 
+                {% if recommendation.sources or recommendation.source %}
+                <div class="sources">
+                    <h4>Sources:</h4>
+                    <ul>
+                        {% for src in recommendation.sources %}
+                        <li>{{ src }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
                 {% if recommendation.timeframe %}
                 <div class="timeframe">
                     <span class="timeframe-label">⏱️ Timeframe:</span>
@@ -134,9 +145,13 @@
                 Analyse Another Document
             </a>
             <button onclick="exportRecommendations()" class="btn btn-outline">
-                <span class="btn-icon">💾</span>
-                Export Recommendations
-            </button>
+                 <span class="btn-icon">💾</span>
+                 Export Recommendations
+             </button>
+             <button onclick="validateCitations('{{ data.analysis.analysis_id }}')" class="btn btn-secondary">
+                 <span class="btn-icon">🔍</span>
+                 Validate Citations
+             </button>
         </div>
     </div>
     
@@ -475,7 +490,7 @@
 </style>
 
 <script>
-// Export recommendations function
+// Export recommendations function (safe JSON approach)
 function exportRecommendations() {
     const analysisInfo = {
         filename: "{{ data.analysis.filename if data and data.analysis else 'Unknown' }}",
@@ -490,16 +505,14 @@ function exportRecommendations() {
     csvContent += `"${analysisInfo.filename}","${analysisInfo.classification}","${analysisInfo.generated_date}"\n\n`;
     csvContent += "Recommendations\n";
     csvContent += "Title,Description,Priority,Timeframe\n";
-    
-    {% if data and data.recommendations %}
-    {% for recommendation in data.recommendations %}
-    const title_{{ loop.index0 }} = "{{ recommendation.title if recommendation.title else 'Recommendation ' + loop.index|string }}";
-    const description_{{ loop.index0 }} = "{{ recommendation.description if recommendation.description else recommendation }}";
-    const priority_{{ loop.index0 }} = "{{ recommendation.priority if recommendation.priority else 'Medium' }}";
-    const timeframe_{{ loop.index0 }} = "{{ recommendation.timeframe if recommendation.timeframe else 'Not specified' }}";
-    csvContent += `"${title_{{ loop.index0 }}}","${description_{{ loop.index0 }}}","${priority_{{ loop.index0 }}}","${timeframe_{{ loop.index0 }}}"\n`;
-    {% endfor %}
-    {% endif %}
+    const recs = {{ data.recommendations|tojson|safe }};
+    recs.forEach(rec=>{
+        const title = rec.title || '';
+        const desc = rec.description || '';
+        const priority = rec.priority || 'Medium';
+        const timeframe = rec.timeframe || 'Not specified';
+        csvContent += `"${title.replace(/"/g,'""')}","${desc.replace(/"/g,'""')}","${priority}","${timeframe}"\n`;
+    });
     
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -509,6 +522,41 @@ function exportRecommendations() {
     link.click();
     document.body.removeChild(link);
 }
+</script>
+
+<!-- Citation Validation Modal -->
+<div id="validationModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+  <div class="modal-content" style="background:#fff;padding:1.5rem;border-radius:8px;max-width:600px;width:90%;max-height:80%;overflow:auto;position:relative;">
+      <span style="position:absolute;top:10px;right:15px;font-size:1.5rem;cursor:pointer;" onclick="closeModal()">&times;</span>
+      <h3>Citation Validation Report</h3>
+      <div id="validationResults"></div>
+  </div>
+</div>
+
+<script>
+async function validateCitations(analysisId){
+    try{
+        const res = await fetch(`/validate/${analysisId}`);
+        if(!res.ok){alert('Server error running validation');return;}
+        const data = await res.json();
+        const container=document.getElementById('validationResults');
+        container.innerHTML='';
+        if(data.issues.length===0){
+            container.innerHTML='<p>No recommendations found for validation.</p>';
+        }
+        data.issues.forEach(item=>{
+            const div=document.createElement('div');
+            if(item.issues.length===0){
+                div.innerHTML=`✅ <strong>${item.title}</strong> – pass`;
+            }else{
+                div.innerHTML=`⚠️ <strong>${item.title}</strong> – ${item.issues.join(', ')}`;
+            }
+            container.appendChild(div);
+        });
+        document.getElementById('validationModal').style.display='flex';
+    }catch(e){console.error(e);alert('Validation failed');}
+}
+function closeModal(){document.getElementById('validationModal').style.display='none';}
 </script>
 
 {% endblock %}

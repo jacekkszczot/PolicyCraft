@@ -1058,6 +1058,8 @@ class RecommendationGenerator:
             'source': self._determine_source(template),
             'academic_rationale': self._generate_academic_rationale(dimension, template, institution_context),
             'related_literature': self._get_related_literature(dimension),
+            # Frontend expects a list of sources; fall back to related_literature if not provided
+            'sources': template.get('sources', self._get_related_literature(dimension)),
             
             # Contextual adaptations
             'institution_specific_notes': self._generate_context_notes(institution_context, implementation_type),
@@ -1414,6 +1416,10 @@ class RecommendationGenerator:
                     'Define roles and responsibilities for AI policy oversight',
                     'Implement regular monitoring and compliance assessment procedures',
                     'Create escalation procedures for policy violations or concerns'
+                ],
+                'sources': [
+                    'BERA 2018 – Ethical Guidelines, Principle 2',
+                    'UNESCO 2023 – Guidance for Generative AI, pp. 10–12'
                 ]
             },
             'transparency': {
@@ -1424,6 +1430,10 @@ class RecommendationGenerator:
                     'Create accessible policy communication materials',
                     'Establish regular stakeholder consultation processes',
                     'Implement feedback collection and response mechanisms'
+                ],
+                'sources': [
+                    'Jisc 2023 – Generative AI Guide, Section 4.1',
+                    'UNESCO 2023 – Guidance for Generative AI, pp. 8–9'
                 ]
             },
             'human_agency': {
@@ -1434,6 +1444,10 @@ class RecommendationGenerator:
                     'Establish clear protocols for human authority in AI-assisted decisions',
                     'Train staff on appropriate human-AI collaboration approaches',
                     'Implement regular review of human oversight effectiveness'
+                ],
+                'sources': [
+                    'UNESCO 2023 – Guidance for Generative AI, p. 22',
+                    'Selwyn et al. 2020 – Machine Learning & Emotional Tenor'
                 ]
             },
             'inclusiveness': {
@@ -1444,6 +1458,10 @@ class RecommendationGenerator:
                     'Develop alternative pathways for diverse learning needs',
                     'Implement bias monitoring and mitigation procedures',
                     'Create support mechanisms for underrepresented groups'
+                ],
+                'sources': [
+                    'UNESCO 2023 – Guidance for Generative AI, pp. 16–18',
+                    'Corrigan et al. 2023 – ChatGPT Pedagogical Affordances'
                 ]
             }
         }
@@ -1459,6 +1477,7 @@ class RecommendationGenerator:
             'timeframe': self.implementation_timeframes.get(priority, '3-6 months'),
             'implementation_steps': template['steps'],
             'source': 'PolicyCraft Fallback Framework',
+            'sources': template.get('sources', []),
             'recommendation_confidence': 'Medium',
             'implementation_complexity': 'Medium'
         }
@@ -2322,6 +2341,8 @@ class EnhancedRecommendationGenerator:
             'source': self._determine_source(template),
             'academic_rationale': self._generate_academic_rationale(dimension, template, institution_context),
             'related_literature': self._get_related_literature(dimension),
+            # Frontend expects a list of sources; fall back to related_literature if not provided
+            'sources': template.get('sources', self._get_related_literature(dimension)),
             
             # Contextual adaptations
             'institution_specific_notes': self._generate_context_notes(institution_context, implementation_type),
@@ -2678,6 +2699,10 @@ class EnhancedRecommendationGenerator:
                     'Define roles and responsibilities for AI policy oversight',
                     'Implement regular monitoring and compliance assessment procedures',
                     'Create escalation procedures for policy violations or concerns'
+                ],
+                'sources': [
+                    'BERA 2018 – Ethical Guidelines, Principle 2',
+                    'UNESCO 2023 – Guidance for Generative AI, pp. 10–12'
                 ]
             },
             'transparency': {
@@ -2688,6 +2713,10 @@ class EnhancedRecommendationGenerator:
                     'Create accessible policy communication materials',
                     'Establish regular stakeholder consultation processes',
                     'Implement feedback collection and response mechanisms'
+                ],
+                'sources': [
+                    'Jisc 2023 – Generative AI Guide, Section 4.1',
+                    'UNESCO 2023 – Guidance for Generative AI, pp. 8–9'
                 ]
             },
             'human_agency': {
@@ -2698,6 +2727,10 @@ class EnhancedRecommendationGenerator:
                     'Establish clear protocols for human authority in AI-assisted decisions',
                     'Train staff on appropriate human-AI collaboration approaches',
                     'Implement regular review of human oversight effectiveness'
+                ],
+                'sources': [
+                    'UNESCO 2023 – Guidance for Generative AI, p. 22',
+                    'Selwyn et al. 2020 – Machine Learning & Emotional Tenor'
                 ]
             },
             'inclusiveness': {
@@ -2708,6 +2741,10 @@ class EnhancedRecommendationGenerator:
                     'Develop alternative pathways for diverse learning needs',
                     'Implement bias monitoring and mitigation procedures',
                     'Create support mechanisms for underrepresented groups'
+                ],
+                'sources': [
+                    'UNESCO 2023 – Guidance for Generative AI, pp. 16–18',
+                    'Corrigan et al. 2023 – ChatGPT Pedagogical Affordances'
                 ]
             }
         }
@@ -2723,6 +2760,7 @@ class EnhancedRecommendationGenerator:
             'timeframe': self.implementation_timeframes.get(priority, '3-6 months'),
             'implementation_steps': template['steps'],
             'source': 'PolicyCraft Fallback Framework',
+            'sources': template.get('sources', []),
             'recommendation_confidence': 'Medium',
             'implementation_complexity': 'Medium'
         }

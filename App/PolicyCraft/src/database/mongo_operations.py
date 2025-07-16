@@ -229,8 +229,49 @@ class MongoOperations:
     # Baseline helpers
     # ------------------------------------------------------------------
     def deduplicate_baseline_analyses(self, user_id: int):
-        """No-op for Mongo – duplicates prevented by unique index."""
-        return
+        """Remove duplicate baseline analyses for a given user, keeping the newest document.
+
+        Duplicate = same user_id and filename. Keep the most recent (analysis_date max).
+        """
+        pipeline = [
+            {"$match": {"user_id": user_id, "filename": {"$regex": r"^\\[BASELINE\\]", "$options": "i"}}},
+            {"$sort": {"analysis_date": -1}},
+            {"$group": {
+                "_id": "$filename",
+                "ids": {"$push": "$_id"},
+                "count": {"$sum": 1}
+            }},
+            {"$match": {"count": {"$gt": 1}}}
+        ]
+        duplicates = list(self.analyses.aggregate(pipeline))
+        removed = 0
+        for doc in duplicates:
+            ids_to_remove = doc["ids"][1:]  # keep newest (first)
+            result = self.analyses.delete_many({"_id": {"$in": ids_to_remove}})
+            removed += result.deleted_count
+        if removed:
+            print(f"🧹 Removed {removed} duplicate baseline analyses for user {user_id}.")
+        else:
+            print("✅ No duplicate baseline analyses found.")
+
+    def remove_duplicate_baselines_global(self):
+        """Remove duplicate baseline docs irrespective of user_id (keep newest per filename)."""
+        pipeline = [
+            {"$match": {"filename": {"$regex": r"^\\[BASELINE\\]", "$options": "i"}}},
+            {"$sort": {"analysis_date": -1}},
+            {"$group": {"_id": "$filename", "ids": {"$push": "$_id"}, "count": {"$sum": 1}}},
+            {"$match": {"count": {"$gt": 1}}}
+        ]
+        duplicates = list(self.analyses.aggregate(pipeline))
+        removed = 0
+        for doc in duplicates:
+            ids_to_remove = doc["ids"][1:]
+            res = self.analyses.delete_many({"_id": {"$in": ids_to_remove}})
+            removed += res.deleted_count
+        if removed:
+            print(f"🧹 Globally removed {removed} duplicate baseline docs.")
+        else:
+            print("✅ No global duplicate baseline docs found.")
 
     def load_sample_policies_for_user(self, user_id: int) -> bool:
         """Load or ensure baseline analyses for a **particular** user.

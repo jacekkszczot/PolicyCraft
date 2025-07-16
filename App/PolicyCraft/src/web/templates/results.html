@@ -56,7 +56,6 @@
                 </div>
                 <div class="classification-details">
                     <p><strong>Method:</strong> {{ results.classification_details.method or 'Hybrid Analysis' }}</p>
-                    <p><strong>Key Indicators:</strong> {{ results.classification_details.key_indicators|length if results.classification_details.key_indicators else 0 }} found</p>
                 </div>
             </div>
         </div>
@@ -100,7 +99,7 @@
         <!-- Charts Section -->
         {% if results.charts %}
         <div class="charts-card">
-            <h2>📈 Visualizations</h2>
+            <h2>📈 Visualisations</h2>
             <div class="charts-grid">
                 {% if results.charts.themes_bar %}
                 <div class="chart-container">
@@ -120,6 +119,13 @@
                 <div class="chart-container">
                     <h4>Theme Distribution</h4>
                     <div id="themePieChart"></div>
+                </div>
+                {% endif %}
+                
+                {% if results.charts.ethics_radar %}
+                <div class="chart-container">
+                    <h4>Ethical Dimension Coverage</h4>
+                    <div id="ethicsRadarChart"></div>
                 </div>
                 {% endif %}
             </div>
@@ -498,6 +504,10 @@
 }
 </style>
 
+{% if results.charts %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endif %}
+
 <script>
 // Export results function
 function exportResults() {
@@ -567,6 +577,15 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Pie chart error:', e);
     }
     {% endif %}
+    
+    {% if results.charts.ethics_radar %}
+    try {
+        const radarData = {{ results.charts.ethics_radar|safe }};
+        Plotly.newPlot('ethicsRadarChart', radarData.data, radarData.layout);
+    } catch(e) {
+        console.log('Radar chart error:', e);
+    }
+    {% endif %}
     {% endif %}
     
     // Animate confidence bars
@@ -579,9 +598,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Load Plotly if charts are available -->
-{% if results.charts %}
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-{% endif %}
+
 
 {% endblock %}

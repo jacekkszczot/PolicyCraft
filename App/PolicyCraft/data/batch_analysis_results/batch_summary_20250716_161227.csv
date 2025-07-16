@@ -1,0 +1,16 @@
+University,Country,Type,Filename,File_Size_KB,Processing_Time_Sec,Text_Original_Length,Text_Cleaned_Length,Theme_Count,Avg_Theme_Confidence,Classification_Type,Classification_Confidence,Recommendations_Count,Overall_Coverage_Score,High_Priority_Recs,Medium_Priority_Recs,Enhancement_Recs,New_Implementation_Recs,Accountability_Score,Transparency_Score,Human_Agency_Score,Inclusiveness_Score,Existing_Policies_Count,Has_Disclosure_Requirements,Has_Governance_Structure,Has_Approval_Processes,Strong_Ethical_Areas_Count,Weak_Ethical_Areas_Count,Engine_Version
+edinburgh university-ai-policy,Unknown,Unknown,edinburgh university-ai-policy.pdf,78.76,0.85,11790,11710,10,50.5,Restrictive,54,4,6.1,2,0,4,0,0.0,16.9,0.0,7.7,5,True,False,False,0,3,2.0-enhanced
+jagiellonian university-ai-policy,Unknown,Unknown,jagiellonian university-ai-policy.pdf,25.19,0.24,3240,3208,10,22.5,Restrictive,42,4,2.5,1,0,3,0,3.7,6.2,0.0,0.0,3,True,False,False,0,4,2.0-enhanced
+guidance-ai-policy,Unknown,Unknown,guidance-ai-policy.pdf,222.15,0.77,16743,16477,10,65.0,Moderate,42,4,9.1,4,0,4,0,5.6,16.9,8.2,5.8,7,True,True,True,0,3,2.0-enhanced
+Stanford University,USA,Research,stanford-ai-policy.pdf,36.39,0.14,2278,2268,5,21.0,Permissive,45,4,3.2,1,0,1,0,0.0,9.2,0.0,3.8,2,True,False,False,0,4,2.0-enhanced
+leeds trinity university-ai-policy,Unknown,Unknown,leeds trinity university-ai-policy.pdf,333.57,3.14,66123,64501,11,81.4,Restrictive,78,4,15.2,3,0,4,0,14.8,24.6,4.1,17.3,8,True,True,True,0,2,2.0-enhanced
+Columbia University,USA,Research,columbia-ai-policy.pdf,89.8,0.82,18849,18715,11,71.4,Moderate,57,4,16.1,2,1,4,0,18.5,33.8,8.2,3.8,8,True,True,True,0,2,2.0-enhanced
+University of Oxford,UK,Research,oxford-ai-policy.pdf,113.85,0.8,14008,13898,10,48.0,Moderate,65,4,10.7,4,0,4,0,9.3,13.8,10.2,9.6,6,True,True,False,0,4,2.0-enhanced
+MIT,USA,Technical,mit-ai-policy.pdf,71.78,0.2,4705,4700,11,25.9,Moderate,66,4,7.6,2,0,4,0,14.8,15.4,0.0,0.0,7,True,True,True,0,3,2.0-enhanced
+belfast university-ai-policy,Unknown,Unknown,belfast university-ai-policy.pdf,135.43,0.48,9305,9061,11,46.4,Moderate,64,4,9.0,2,0,4,0,0.0,26.2,4.1,5.8,3,True,False,False,0,3,2.0-enhanced
+University of Cambridge,UK,Research,cambridge-ai-policy.pdf,66.59,0.37,9360,9283,9,19.4,Permissive,34,4,5.7,2,0,2,0,0.0,16.9,0.0,5.8,5,True,False,False,0,3,2.0-enhanced
+Harvard University,USA,Research,harvard-ai-policy.pdf,40.77,0.22,3084,3064,9,27.8,Moderate,72,4,3.3,1,0,0,0,3.7,7.7,0.0,1.9,1,False,False,False,0,4,2.0-enhanced
+University of Chicago,USA,Research,chicago-ai-policy.docx,18.88,0.07,2734,2722,8,30.0,Moderate,45,4,2.1,0,0,0,0,3.7,4.6,0.0,0.0,2,False,False,True,0,4,2.0-enhanced
+Imperial College London,UK,Technical,imperial-ai-policy.docx,32.54,0.37,16527,16477,11,61.8,Moderate,63,4,11.3,3,0,4,0,3.7,12.3,6.1,23.1,7,True,True,True,0,3,2.0-enhanced
+tokyo-ai-policy,Unknown,Unknown,tokyo-ai-policy.docx,21.59,0.3,10770,10747,7,41.4,Moderate,49,4,2.8,1,0,0,0,0.0,9.2,0.0,1.9,4,False,False,False,0,4,2.0-enhanced
+Cornell University,USA,Research,cornell-ai-policy.docx,23.03,0.22,9722,9709,10,48.5,Permissive,51,4,8.1,2,1,3,0,9.3,15.4,0.0,7.7,6,True,True,False,0,3,2.0-enhanced

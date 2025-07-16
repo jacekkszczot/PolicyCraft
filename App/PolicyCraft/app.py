@@ -468,7 +468,7 @@ def batch_analyse(files):
                 )
                 
                 # Generate charts
-                charts = chart_generator.generate_analysis_charts(themes, classification)
+                charts = chart_generator.generate_analysis_charts(themes, classification, cleaned_text)
                 
                 batch_results.append({
                     'filename': filename,
@@ -608,7 +608,7 @@ def analyse_document(filename):
         )
         
         # Generate visualizations
-        charts = chart_generator.generate_analysis_charts(themes, classification)
+        charts = chart_generator.generate_analysis_charts(themes, classification, cleaned_text)
         
         # Prepare comprehensive results
         text_stats = text_processor.get_text_statistics(cleaned_text)
@@ -644,6 +644,36 @@ def analyse_document(filename):
         flash('Error analysing document. Please try again.', 'error')
         return redirect(url_for('upload_file'))
 
+@app.route('/validate/<analysis_id>')
+@login_required
+def validate_analysis(analysis_id):
+    """Return JSON with citation validation issues for given analysis."""
+    from flask import jsonify
+    analysis = db_operations.get_analysis_by_id(analysis_id)
+    if not analysis:
+        return jsonify({"error": "Analysis not found"}), 404
+    recs = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
+    if not recs:
+        # fallback: any user_id
+        any_doc = db_operations.recommendations.find_one({"analysis_id": analysis_id})
+        if any_doc:
+            recs = any_doc.get("recommendations", [])
+        else:
+            # As a last resort, generate recommendations on the fly for validation
+            themes = analysis.get('themes', [])
+            classification = analysis.get('classification', {})
+            text_data = analysis.get('text_data', {})
+            cleaned_text = text_data.get('cleaned_text', text_data.get('original_text', ''))
+            rec_package = recommendation_engine.generate_recommendations(
+                themes=themes,
+                classification=classification,
+                text=cleaned_text,
+                analysis_id=analysis_id
+            )
+            recs = rec_package.get('recommendations', [])
+    from src.utils.validation import validate_recommendation_sources
+    issues = validate_recommendation_sources(recs)
+    return jsonify({"issues": issues})
 @app.route('/recommendations/<analysis_id>')
 @login_required
 def get_recommendations(analysis_id):

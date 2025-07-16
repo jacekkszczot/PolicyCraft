@@ -36,6 +36,10 @@ def run_batch_analysis():
     theme_extractor = ThemeExtractor()
     policy_classifier = PolicyClassifier()
     mongo_db = MongoOperations()
+    # Clean up any previous duplicate baselines (user_id=-1)
+    mongo_db.deduplicate_baseline_analyses(user_id=-1)
+    # Remove any previous baseline recommendations to avoid duplicates
+    mongo_db.recommendations.delete_many({"user_id": -1})
     chart_generator = ChartGenerator()
     recommendation_engine = RecommendationEngine()
     print("✅ All components loaded")
@@ -107,9 +111,13 @@ def run_batch_analysis():
             classification = policy_classifier.classify_policy(cleaned_text)
             print(f"✅ Classification: {classification['classification']} ({classification['confidence']}%)")
             # Store analysis in MongoDB
+            # Prefix baseline filenames so UI treats them as non-deletable
+            baseline_filename = f"[BASELINE] {file_path.stem}"
+            if file_path.suffix:
+                baseline_filename += file_path.suffix
             analysis_id = mongo_db.store_user_analysis_results(
                 user_id=-1,
-                filename=file_path.name,
+                filename=baseline_filename,
                 original_text=extracted_text,
                 cleaned_text=cleaned_text,
                 themes=themes,
@@ -186,8 +194,14 @@ def run_batch_analysis():
             
             # STEP 6: Generate Charts
             print(f"📈 STEP 6: Chart generation...")
-            charts = chart_generator.generate_analysis_charts(themes, classification)
+            charts = chart_generator.generate_analysis_charts(themes, classification, cleaned_text)
             print(f"✅ Generated {len(charts)} charts")
+            # Persist charts in the analysis doc so they are available in the UI
+            try:
+                from bson import ObjectId
+                mongo_db.analyses.update_one({"_id": ObjectId(analysis_id)}, {"$set": {"charts": charts}})
+            except Exception as e:
+                print(f"⚠️  Failed to persist charts for {baseline_filename}: {e}")
             
             # Calculate processing time
             processing_time = round(time.time() - start_time, 2)
@@ -361,9 +375,9 @@ def run_batch_analysis():
                 'Avg_Theme_Confidence': result['themes']['avg_confidence'],
                 'Classification_Type': result['classification']['type'],
                 'Classification_Confidence': result['classification']['confidence'],
-                'Recommendations_Count': result['recommendations']['count'],
-                'Coverage_Score': result['recommendations']['coverage_score'],
-                'High_Priority_Recs': result['recommendations']['high_priority_count']
+                'Recommendations_Count': result.get('recommendations', {}).get('count', 0),
+                'Coverage_Score': result.get('recommendations', {}).get('coverage_score', 0),
+                'High_Priority_Recs': result.get('recommendations', {}).get('high_priority_count', 0)
             }
             csv_data.append(row)
         

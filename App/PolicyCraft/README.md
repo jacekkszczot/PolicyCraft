@@ -65,21 +65,18 @@ PolicyCraft provides institutions with sophisticated tools to analyze, understan
 
 ## Technical Architecture
 
-```
-PolicyCraft System Architecture
-├── Flask Web Application (app.py)
-├── NLP Pipeline
-│   ├── Text Processing (spaCy, NLTK)
-│   ├── Theme Extraction (TF-IDF, TextBlob)
-│   └── Policy Classification (scikit-learn)
-├── Recommendation Engine
-│   ├── Ethical Framework Analyzer
-│   ├── Multi-dimensional Template Matching
-│   └── Context-aware Generation
-├── Database Layer
-│   ├── MongoDB
-│   └── User Authentication (Flask-Login)
-└── Visualization System (Plotly, Matplotlib)
+```mermaid
+%% PolicyCraft System Architecture
+graph TD
+    A[Web UI (Flask templates)] -->|HTTP| B(API endpoints)
+    B --> C[NLP pipeline]
+    C --> D[PolicyClassifier]
+    C --> E[Recommendation Engine]
+    B --> F[Database Operations]
+    F -->|MongoDB| G[Analyses storage]
+    F -->|SQLite| H[User auth]
+    B --> I[PDF Generator]
+    B --> J[Visualisation]
 ```
 
 ## Installation

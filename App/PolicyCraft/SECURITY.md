@@ -6,7 +6,7 @@
 * No sensitive personal data (PII of students/staff).
 
 ## Vulnerability Disclosure
-If you discover a security vulnerability, please report it via GitHub Issues or email **security@policycraft.example.com**. Do not publicly disclose details before a fix is deployed.
+If you discover a security vulnerability, please report it via GitHub Issues or email **info@jaai.co.uk**. Do not publicly disclose details before a fix is deployed.
 
 ## Update Policy
 * External libraries are updated at least once per semester.

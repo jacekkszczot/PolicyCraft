@@ -10,13 +10,13 @@ Usage:
 import argparse
 import os
 import pandas as pd
-from src.database.operations import DatabaseOperations
+from src.database.mongo_operations import MongoOperations
 
 
 def export_to_csv(output_path: str):
-    db = DatabaseOperations()
+    db = MongoOperations()
     rows = []
-    for analysis in db.storage.get("analyses", []):
+    for analysis in db.get_user_analyses(-1):
         cleaned = analysis.get("text_data", {}).get("cleaned_text", "")
         label = analysis.get("classification", {}).get("prediction", "")
         metadata = analysis.get("metadata", {}) or {}

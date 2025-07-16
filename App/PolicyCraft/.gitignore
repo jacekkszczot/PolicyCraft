@@ -1,12 +1,16 @@
 # Python
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 *.pyc
 *.pyo
 
 # Logs
-logs/*.log
+logs/
+# Deprecated JSON storage
+src/database/operations.py
+data/database_storage.json
 
 # IDE
 .vscode/

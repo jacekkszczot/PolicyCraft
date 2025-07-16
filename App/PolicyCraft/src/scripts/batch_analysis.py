@@ -20,7 +20,7 @@ sys.path.append('src')
 from src.nlp.text_processor import TextProcessor
 from src.nlp.theme_extractor import ThemeExtractor
 from src.nlp.policy_classifier import PolicyClassifier
-from src.database.operations import DatabaseOperations
+from src.database.mongo_operations import MongoOperations
 from src.visualisation.charts import ChartGenerator
 from src.recommendation.engine import RecommendationEngine
 
@@ -35,7 +35,7 @@ def run_batch_analysis():
     text_processor = TextProcessor()
     theme_extractor = ThemeExtractor()
     policy_classifier = PolicyClassifier()
-    _ = DatabaseOperations()
+    mongo_db = MongoOperations()
     chart_generator = ChartGenerator()
     recommendation_engine = RecommendationEngine()
     print("✅ All components loaded")
@@ -106,6 +106,17 @@ def run_batch_analysis():
             print(f"📊 STEP 4: Policy classification...")
             classification = policy_classifier.classify_policy(cleaned_text)
             print(f"✅ Classification: {classification['classification']} ({classification['confidence']}%)")
+            # Store analysis in MongoDB
+            analysis_id = mongo_db.store_user_analysis_results(
+                user_id=-1,
+                filename=file_path.name,
+                original_text=extracted_text,
+                cleaned_text=cleaned_text,
+                themes=themes,
+                classification=classification,
+                document_id=None,
+                username="batch"
+            )
             
             # STEP 5: Enhanced Recommendation Generation with Full Results Capture
             print(f"💡 STEP 5: Enhanced recommendation generation...")
@@ -121,6 +132,11 @@ def run_batch_analysis():
             coverage_analysis = recommendations.get('coverage_analysis', {})
             existing_policies = recommendations.get('existing_policies', {})
             recommendation_list = recommendations.get('recommendations', [])
+            # Persist recommendations linked to analysis
+            try:
+                mongo_db.store_recommendations(-1, analysis_id, recommendation_list)
+            except Exception as e:
+                print(f"⚠️ Could not save recommendations: {e}")
             
             # Calculate enhanced metrics
             rec_count = len(recommendation_list)

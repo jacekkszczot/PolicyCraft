@@ -11,15 +11,15 @@ project_root = str(Path(__file__).parent.parent)
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from src.database.operations import DatabaseOperations
+from src.database.mongo_operations import MongoOperations
 
 def fix_baseline_filenames():
     """Update baseline filenames in the database to follow the correct format."""
-    db = DatabaseOperations()
+    db = MongoOperations()
     updated_count = 0
     
     # Get all analyses that should be marked as baseline
-    for analysis in db.storage['analyses']:
+    for analysis in db.get_user_analyses(-1):
         filename = analysis.get('filename', '')
         document_id = analysis.get('document_id', '')
         
@@ -46,7 +46,7 @@ def fix_baseline_filenames():
             updated_count += 1
     
     if updated_count > 0:
-        db._save_storage()
+        # nothing to save – Mongo updates were done in-place
         print(f"✅ Updated {updated_count} baseline filenames")
     else:
         print("ℹ️ No baseline filenames needed updating")

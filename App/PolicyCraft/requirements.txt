@@ -1,5 +1,4 @@
 # PolicyCraft - Essential Dependencies Only
-# Clean version without unnecessary packages
 
 # Flask Web Framework & Core
 Flask==3.0.0

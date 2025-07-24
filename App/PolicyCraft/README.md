@@ -86,22 +86,21 @@ PolicyCraft provides institutions with sophisticated tools to analyze, understan
 - **Ethical Framework Analysis**: 4-dimensional assessment based on academic research
 - **Advanced Recommendations**: Evidence-based suggestions using UNESCO 2023, JISC 2023, BERA 2018 guidelines
 - **Batch Processing**: Analyze multiple policies simultaneously for comparative studies
-- **Interactive Visualizations**: Comprehensive charts and dashboards using Plotly
+- **Interactive Visualisations**: Comprehensive charts and dashboards using Plotly
 
 ## Technical Architecture
 
 ```mermaid
-%% PolicyCraft System Architecture
-graph TD
-    A[Web UI (Flask templates)] -->|HTTP| B(API endpoints)
-    B --> C[NLP pipeline]
-    C --> D[PolicyClassifier]
+graph LR
+    A[Web UI] --> B[API Endpoints]
+    B --> C[NLP Pipeline]
+    C --> D[Policy Classifier]
     C --> E[Recommendation Engine]
-    B --> F[Database Operations]
-    F -->|MongoDB| G[Analyses storage]
-    F -->|SQLite| H[User auth]
-    B --> I[PDF Generator]
-    B --> J[Visualisation]
+    B --> F[Database]
+    B --> G[PDF Generator]
+    B --> H[Visualisation]
+    
+    style F fill:#d0e0ff,stroke:#333,stroke-width:2px
 ```
 
 ## Installation
@@ -118,7 +117,7 @@ graph TD
 
 1. **Clone/Download Project**
    ```bash
-   git clone <repository-url>
+   git clone <https://github.com/jacekkszczot/PolicyCraft.git>
    cd PolicyCraft
    ```
 
@@ -424,8 +423,8 @@ MSc Project, Leeds Trinity University. COM7016.
 **Jacek Robert Kszczot**  
 MSc AI & Data Science Student  
 Leeds Trinity University  
-Email: [contact information]  
-Project Repository: [GitHub URL]
+Email: jacek.kszczot@icloud.com  
+Project Repository: [[GitHub URL](https://github.com/jacekkszczot/PolicyCraft.git)]
 
 ---
 

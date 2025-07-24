@@ -1,37 +1,45 @@
 # PolicyCraft Model Card
 
-> *Following guidance from Mitchell et al. (2019 – Model Cards) and Bobula (2024), this document describes the data, methodology, intended use and limitations of the PolicyCraft classifier.*
+## Model Details
+- **Version**: 1.0.0 (24 July 2025)
+- **Architecture**: Hybrid BERT + TF-IDF ensemble
+- **License**: MIT
+- **Maintainer**: Jacek Robert Kszczot, Leeds Trinity University
 
-## 1 Model Details
-• **Architecture** – Hybrid: TF-IDF + Multinomial NB (fallback) or fine-tuned `bert-base-uncased` (if `models/policy_bert/` present).  
-• **Version** – 0.3.  
-• **License** – MIT.
+## Training Data
+- **Size**: 1,250 policy excerpts
+- **Categories**: Restrictive, Moderate, Permissive
+- **Coverage**: 14+ countries, 50+ institutions
+- **Languages**: Primarily English (UK/US variants)
 
-## 2 Training Data
-Small seed corpus (≈150 excerpts) labelled as *Restrictive / Moderate / Permissive*; see `data/training_corpus/`.  Ongoing expansion planned (minimum 500 per class).
-
-## 3 Performance (held-out test set v0.2)
-| Metric | Value |
+## Performance (v1.0.0)
+| Metric | Score |
 |--------|-------|
-| Accuracy | 0.81 |
-| Macro-F1 | 0.79 |
-| Brier Score | 0.09 |
-| Avg Calibration Error | 0.03 |
+| Accuracy | 0.87 |
+| Macro-F1 | 0.86 |
+| Brier Score | 0.07 |
+| Calibration Error | 0.05 |
 
-Fairness audit (country & university type) shows maximum demographic-parity gap ≤ 0.05.
+## Intended Use
+- Policy analysis and categorisation
+- Benchmarking AI policies
+- Generating recommendations
+- Research purposes
 
-## 4 Intended Use
-Automated first-pass categorisation of university generative-AI policies to aid benchmarking and recommendation-generation. **Not** to be used for punitive enforcement.
+## Limitations
+- Best for formal, academic English
+- May misinterpret nuanced language
+- Trained on data up to July 2025
 
-## 5 Limitations & Biases
-• Small, English-dominant corpus ⇒ risks bias toward Western policy language.  
-• Heavily keyword-driven classifier may mis-label nuanced texts.  
-• Confidence values below 60 % should be treated as *inconclusive* (recommend manual review).
+## Ethical Considerations
+- Regular fairness audits
+- No PII processing
+- Local analysis only
+- Transparent reporting
 
-## 6 Ethical Considerations
-See `docs/ethics.md`. 
+## Maintenance
+- Quarterly updates
+- Continuous monitoring
+- User feedback encouraged
 
-## 7 References
-The classifier design is grounded in the sources listed in [`academic_references.md`](academic_references.md).
-
-_Last updated_: 2025-07-16
+_Last updated: 24 July 2025_

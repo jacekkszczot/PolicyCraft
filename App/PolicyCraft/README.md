@@ -41,6 +41,31 @@ flake8 src/
 - Test error handling and edge cases
 - Follow existing test patterns in `tests/conftest.py`
 
+## System Requirements
+
+### Hardware
+- **Processor**: 2+ GHz (4 cores recommended)
+- **RAM**: 8GB minimum, 16GB recommended
+- **Storage**: 1GB free space (plus space for documents)
+- **Display**: 1280x720 minimum resolution
+
+### Software
+- **OS**: Windows 10/11, macOS 10.15+, or Linux (Ubuntu 20.04+ recommended)
+- **Python**: 3.9 or higher
+- **Database**: MongoDB 5.0+ (for production use)
+- **Browser**: Latest version of Chrome, Firefox, Safari, or Edge
+
+### Dependencies
+All required Python packages are listed in `requirements.txt`. Install them using:
+```bash
+pip install -r requirements.txt
+```
+
+For development, additional tools are available in `requirements-dev.txt`:
+```bash
+pip install -r requirements-dev.txt
+```
+
 ## Project Information
 
 - **Author**: Jacek Robert Kszczot

@@ -1203,22 +1203,20 @@ class RecommendationGenerator:
         literature_map = {
             'accountability': [
                 "Dabis & Csáki (2024) - AI Ethics in Higher Education Policy",
-                "UNESCO (2023) - ChatGPT and AI in Higher Education",
-                "Bond et al. (2024) - Meta-systematic Review of AI in Education"
             ],
             'transparency': [
                 "UNESCO (2023) - AI Transparency Guidelines",
                 "JISC (2023) - Generative AI in Teaching and Learning",
-            ],
+                "Chen et al. (2024) - Global AI Policy Perspectives"            ],
             'human_agency': [
                 "BERA (2018) - Ethical Guidelines for Educational Research",
                 "Chan & Hu (2023) - Student Perspectives on Generative AI",
-                "UNESCO (2023) - Human-Centric AI in Education"
-            ],
+                "UNESCO (2023) - Human-Centric AI in Education",
+                "Li et al. (2024) - NLP in Policy Research"            ],
             'inclusiveness': [
                 "JISC (2023) - Inclusive AI Implementation",
-                "Bond et al. (2024) - Equity Considerations in AI Education"
-            ]
+                "Bond et al. (2024) - Equity Considerations in AI Education",
+                "An et al. (2025) - Stakeholder Engagement in AI Policies"            ]
         }
         
         return literature_map.get(dimension, ["PolicyCraft Framework Documentation"])
@@ -2486,22 +2484,20 @@ class EnhancedRecommendationGenerator:
         literature_map = {
             'accountability': [
                 "Dabis & Csáki (2024) - AI Ethics in Higher Education Policy",
-                "UNESCO (2023) - ChatGPT and AI in Higher Education",
-                "Bond et al. (2024) - Meta-systematic Review of AI in Education"
             ],
             'transparency': [
                 "UNESCO (2023) - AI Transparency Guidelines",
                 "JISC (2023) - Generative AI in Teaching and Learning",
-            ],
+                "Chen et al. (2024) - Global AI Policy Perspectives"            ],
             'human_agency': [
                 "BERA (2018) - Ethical Guidelines for Educational Research",
                 "Chan & Hu (2023) - Student Perspectives on Generative AI",
-                "UNESCO (2023) - Human-Centric AI in Education"
-            ],
+                "UNESCO (2023) - Human-Centric AI in Education",
+                "Li et al. (2024) - NLP in Policy Research"            ],
             'inclusiveness': [
                 "JISC (2023) - Inclusive AI Implementation",
-                "Bond et al. (2024) - Equity Considerations in AI Education"
-            ]
+                "Bond et al. (2024) - Equity Considerations in AI Education",
+                "An et al. (2025) - Stakeholder Engagement in AI Policies"            ]
         }
         
         return literature_map.get(dimension, ["PolicyCraft Framework Documentation"])

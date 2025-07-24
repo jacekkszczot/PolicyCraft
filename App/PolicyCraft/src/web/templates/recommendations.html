@@ -534,27 +534,98 @@ function exportRecommendations() {
 </div>
 
 <script>
-async function validateCitations(analysisId){
-    try{
+async function validateCitations(analysisId) {
+    try {
         const res = await fetch(`/validate/${analysisId}`);
-        if(!res.ok){alert('Server error running validation');return;}
-        const data = await res.json();
-        const container=document.getElementById('validationResults');
-        container.innerHTML='';
-        if(data.issues.length===0){
-            container.innerHTML='<p>No recommendations found for validation.</p>';
+        if (!res.ok) {
+            alert('Server error running validation');
+            return;
         }
-        data.issues.forEach(item=>{
-            const div=document.createElement('div');
-            if(item.issues.length===0){
-                div.innerHTML=`✅ <strong>${item.title}</strong> – pass`;
-            }else{
-                div.innerHTML=`⚠️ <strong>${item.title}</strong> – ${item.issues.join(', ')}`;
+        
+        const data = await res.json();
+        const container = document.getElementById('validationResults');
+        container.innerHTML = '';
+        
+        if (data.issues.length === 0) {
+            container.innerHTML = '<p>No recommendations found for validation.</p>';
+            document.getElementById('validationModal').style.display = 'flex';
+            return;
+        }
+        
+        // Create a summary section
+        const summaryDiv = document.createElement('div');
+        const totalItems = data.issues.length;
+        const passedItems = data.issues.filter(item => item.issues.length === 0).length;
+        const failedItems = totalItems - passedItems;
+        
+        summaryDiv.innerHTML = 
+            '<div class="validation-summary" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">' +
+            '<h3 style="margin-top: 0;">Validation Summary</h3>' +
+            '<p>Total recommendations: <strong>' + totalItems + '</strong></p>' +
+            '<p>Passed: <strong>' + passedItems + '</strong></p>' +
+            '<p>Issues found: <strong>' + failedItems + '</strong></p>' +
+            '</div>';
+        container.appendChild(summaryDiv);
+        
+        // Create a list of recommendations
+        const list = document.createElement('div');
+        list.className = 'validation-list';
+        
+        data.issues.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.style.marginBottom = '15px';
+            itemDiv.style.padding = '10px';
+            itemDiv.style.borderLeft = '4px solid ' + (item.issues.length === 0 ? '#28a745' : '#ffc107');
+            itemDiv.style.backgroundColor = item.issues.length === 0 ? '#f8fff8' : '#fffcf5';
+            
+            // Title and status
+            let html = '' +
+                '<div style="font-weight: bold; margin-bottom: 5px;">' +
+                (item.issues.length === 0 ? '✅' : '⚠️') + ' ' +
+                item.title + 
+                '</div>';
+            
+            // Show issues if any
+            if (item.issues.length > 0) {
+                html += '<div style="margin-left: 20px; margin-bottom: 10px; color: #dc3545;">';
+                html += item.issues.join('<br>');
+                html += '</div>';
+            } else {
+                html += '<div style="color: #28a745; margin-left: 20px;">✓ All citations are valid</div>';
             }
-            container.appendChild(div);
+            
+            // Show sources with validation status
+            if (item.sources && item.sources.length > 0) {
+                html += '<div style="margin-top: 10px; margin-left: 20px;">';
+                html += '<div style="font-size: 0.9em; color: #6c757d; margin-bottom: 5px;">References:</div>';
+                html += '<ul style="margin: 0; padding-left: 20px;">';
+                
+                item.sources.forEach(source => {
+                    const isValid = source.valid;
+                    const original = source.original || 'Unknown source';
+                    const validated = source.validated || original;
+                    const year = source.year ? ' (' + source.year + ')' : '';
+                    
+                    if (isValid) {
+                        html += '<li>' + validated + year + ' <span style="color: #28a745;">✓</span></li>';
+                    } else {
+                        html += '<li>' + original + ' <span style="color: #dc3545;">✗ Not found in references</span></li>';
+                    }
+                });
+                
+                html += '</ul></div>';
+            }
+            
+            itemDiv.innerHTML = html;
+            list.appendChild(itemDiv);
         });
-        document.getElementById('validationModal').style.display='flex';
-    }catch(e){console.error(e);alert('Validation failed');}
+        
+        container.appendChild(list);
+        document.getElementById('validationModal').style.display = 'flex';
+    } catch (e) {
+        console.error('Validation error:', e);
+        alert('Validation failed: ' + (e.message || 'Unknown error'));
+    }
 }
 function closeModal(){document.getElementById('validationModal').style.display='none';}
 </script>

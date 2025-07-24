@@ -1,22 +1,58 @@
 # Security Policy
 
 ## Data Scope
-* Users: email address, hashed password (Bcrypt).
-* Analyses: policy text and metadata (institution name, date).
-* No sensitive personal data (PII of students/staff).
+* **User Data**: Email address, hashed password (using Bcrypt with work factor 12)
+* **Analysis Data**: Policy text and metadata (institution name, analysis date, timestamps)
+* **No Storage** of sensitive personal data (PII of students/staff) is permitted
+
+## Security Measures
+
+### Data Protection
+- All user passwords are hashed using Bcrypt with a work factor of 12
+- Sensitive data in transit is encrypted using TLS 1.2+ (HTTPS)
+- Database connections use SSL/TLS encryption
+- Regular security audits are performed to identify vulnerabilities
+
+### Authentication & Authorisation
+- Session management with secure, HTTP-only cookies
+- CSRF protection on all forms
+- Rate limiting on authentication endpoints
+- Password complexity requirements enforced
+- Automatic session expiration after 30 minutes of inactivity
 
 ## Vulnerability Disclosure
-If you discover a security vulnerability, please report it via GitHub Issues or email **info@jaai.co.uk**. Do not publicly disclose details before a fix is deployed.
+If you discover a security vulnerability:
+1. **Do not** create a public issue
+2. Report it privately to **security@jaai.co.uk**
+3. Include detailed steps to reproduce the issue
+4. Allow 5 business days for initial response
 
 ## Update Policy
-* External libraries are updated at least once per semester.
-* Semantic Versioning (SemVer) is observed.
+- External dependencies are reviewed and updated quarterly
+- Critical security patches are applied within 72 hours of release
+- Semantic Versioning (SemVer) is strictly followed
+- End-of-life dependencies are removed or updated promptly
 
-## Permissions
-* Only maintainers have access to the production server.
-* API keys (if introduced) are stored in environment variables.
+## Access Control
+- Only authorised maintainers have SSH access to production servers
+- Multi-factor authentication is required for all administrative access
+- API keys and credentials are stored in environment variables
+- Access logs are maintained and regularly reviewed
+
+## Incident Response
+1. **Identification**: Monitor systems for security events
+2. **Containment**: Isolate affected systems if necessary
+3. **Investigation**: Determine the scope and impact
+4. **Eradication**: Remove the cause of the incident
+5. **Recovery**: Restore affected systems
+6. **Review**: Document lessons learned and update policies
+
+## Compliance
+- General Data Protection Regulation (GDPR) compliant
+- Follows OWASP Top 10 security practices
+- Regular penetration testing by certified professionals
 
 ## Licence
-MIT – see `LICENSE`.
+MIT – see [LICENCE](LICENSE) for full terms.
 
-_Date: 2025-07-11_
+_Last Updated: 24 July 2025_

@@ -23,10 +23,8 @@
                 <a href="{{ url_for('dashboard') }}">Dashboard</a>
                 <a href="{{ url_for('upload_file') }}">Upload</a>
                 <a href="{{ url_for('about') }}">About</a>
-                <div class="user-menu">
-                    <a href="{{ url_for('auth.profile') }}" class="user-greeting" style="position:absolute; left:50%; transform:translateX(-50%); font-family:'Georgia','Times New Roman',serif; font-style:italic; text-decoration:none;">Your Profile</a>
-                    <a href="{{ url_for('auth.logout') }}" onclick="return confirm('Log out?')">Logout</a>
-                </div>
+                <a href="{{ url_for('auth.profile') }}">Profile</a>
+                <a href="{{ url_for('auth.logout') }}" onclick="return confirm('Log out?')" class="logout-link">Logout</a>
             {% else %}
                 <a href="{{ url_for('about') }}">About</a>
                 <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Login</a>

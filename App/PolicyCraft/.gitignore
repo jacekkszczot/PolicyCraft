@@ -40,3 +40,8 @@ ENV/
 # R files
 .Rhistory
 .RData
+*.db
+/App/PolicyCraft-Databases/development/*.db
+PolicyCraft-Databases/development/*.db
+*.db
+PolicyCraft-Databases/

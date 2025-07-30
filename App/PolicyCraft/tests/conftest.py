@@ -3,7 +3,7 @@ Test configuration and fixtures for PolicyCraft
 Provides reusable test data and mock objects for comprehensive testing.
 
 Author: Jacek Robert Kszczot
-Project: MSc AI & Data Science - COM7016
+Project: MSc Data Science & AI - COM7016
 """
 
 import pytest

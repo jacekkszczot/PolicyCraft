@@ -3,7 +3,7 @@ Main Flask application for PolicyCraft - AI Policy Analysis Framework.
 Clean version without onboarding features.
 
 Author: Jacek Robert Kszczot
-Project: MSc AI & Data Science - COM7016
+Project: MSc Data Science & AI - COM7016
 University: Leeds Trinity University
 """
 

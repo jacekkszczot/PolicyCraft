@@ -3,7 +3,7 @@ Integration tests for PolicyCraft Analysis Pipeline
 Tests the complete workflow from file upload to recommendations.
 
 Author: Jacek Robert Kszczot
-Project: MSc AI & Data Science - COM7016
+Project: MSc Data Science & AI - COM7016
 
 Priority: HIGH - Validates complete system integration
 """

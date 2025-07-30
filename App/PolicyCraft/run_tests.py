@@ -10,7 +10,7 @@ Usage:
     python run_tests.py --verbose    # Detailed output
 
 Author: Jacek Robert Kszczot
-Project: MSc AI & Data Science - COM7016
+Project: MSc Data Science & AI - COM7016
 """
 
 import subprocess

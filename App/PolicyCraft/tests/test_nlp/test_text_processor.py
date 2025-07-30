@@ -3,7 +3,7 @@ Test suite for PolicyCraft Text Processing functionality
 Tests PDF/DOCX extraction, text cleaning, and statistics generation.
 
 Author: Jacek Robert Kszczot  
-Project: MSc AI & Data Science - COM7016
+Project: MSc Data Science & AI - COM7016
 
 Priority: HIGH - Foundation for all NLP processing
 """

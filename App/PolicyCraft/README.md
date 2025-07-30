@@ -69,7 +69,7 @@ pip install -r requirements-dev.txt
 ## Project Information
 
 - **Author**: Jacek Robert Kszczot
-- **Programme**: MSc Artificial Intelligence and Data Science
+- **Programme**: MSc Data Science & AI
 - **Module**: COM7016 - Project
 - **University**: Leeds Trinity University
 - **Academic Year**: 2024/25
@@ -421,7 +421,7 @@ MSc Project, Leeds Trinity University. COM7016.
 ## Contact
 
 **Jacek Robert Kszczot**  
-MSc AI & Data Science Student  
+MSc Data Science & AI Student  
 Leeds Trinity University  
 Email: jacek.kszczot@icloud.com  
 Project Repository: [[GitHub URL](https://github.com/jacekkszczot/PolicyCraft.git)]

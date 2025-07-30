@@ -3,7 +3,7 @@ Test suite for PolicyCraft Policy Classification functionality
 Tests the classification of policies as Restrictive/Moderate/Permissive.
 
 Author: Jacek Robert Kszczot
-Project: MSc AI & Data Science - COM7016
+Project: MSc Data Science & AI - COM7016
 
 Priority: HIGH - Core classification functionality
 """

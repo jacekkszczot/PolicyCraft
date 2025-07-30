@@ -16,7 +16,7 @@ Implements ethical AI framework with 4 key dimensions:
 - Inclusiveness and Diversity
 
 Author: Jacek Robert Kszczot
-Research: MSc AI & Data Science - COM7016
+Research: MSc Data Science & AI - COM7016
 """
 
 import logging

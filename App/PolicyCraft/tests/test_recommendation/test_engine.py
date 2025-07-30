@@ -3,7 +3,7 @@ Test suite for PolicyCraft Recommendation Engine
 Tests the core recommendation generation functionality including ethical framework analysis.
 
 Author: Jacek Robert Kszczot
-Project: MSc AI & Data Science - COM7016
+Project: MSc Data Science & AI - COM7016
 
 Priority: CRITICAL - This is the heart of the application
 """

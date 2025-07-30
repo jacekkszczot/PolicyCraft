@@ -3,7 +3,7 @@ Simple Auto-Preprocessing for PolicyCraft
 Automatically processes new policy files during upload.
 
 Author: Jacek Robert Kszczot
-MSc AI & Data Science - COM7016
+MSc Data Science & AI - COM7016
 """
 
 import shutil

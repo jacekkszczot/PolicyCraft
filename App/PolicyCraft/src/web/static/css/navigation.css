@@ -1,7 +1,53 @@
-/* 
+/**
+ * ============================================================================
  * PolicyCraft - Navigation Styles
- * Navbar and related components
+ * ============================================================================
+ *
+ * This file contains styles for the main navigation components of the
+ * PolicyCraft application, including the top navigation bar, dropdown menus,
+ * mobile navigation, and related interactive elements. These styles ensure
+ * consistent navigation across all devices and screen sizes.
+ *
+ * Table of Contents:
+ * 1. Main Navigation Bar
+ * 2. Navigation Links
+ * 3. Dropdown Menus
+ * 4. Mobile Navigation
+ * 5. Responsive Adjustments
+ * 6. Navigation States
+ *
+ * Key Features:
+ * - Responsive navigation that adapts to different screen sizes
+ * - Accessible dropdown menus with proper ARIA attributes
+ * - Smooth transitions and hover effects
+ * - Mobile-first approach with a hamburger menu for smaller screens
+ * - Sticky navigation that remains visible when scrolling
+ *
+ * Best Practices:
+ * - Use semantic HTML5 elements for better accessibility
+ * - Implement proper focus states for keyboard navigation
+ * - Ensure sufficient color contrast for readability
+ * - Optimize for touch targets on mobile devices
+ * - Use CSS transitions for smooth interactions
+ *
+ * Dependencies:
+ * - variables.css for consistent colors, spacing, and breakpoints
+ * - layout.css for consistent layout patterns
+ * - responsive.css for media query breakpoints
+ *
+ * Author: Jacek Robert Kszczot
+ * Project: MSc Data Science & AI - COM7016
+ * University: Leeds Trinity University
+ * Last Updated: July 2024
+ * ============================================================================
  */
+
+/* Import variables first to ensure they're available to all styles */
+@import 'variables.css';
+
+/* ========================
+   1. Main Navigation Bar
+   ======================== */
 
 .navbar {
     background: var(--primary);

@@ -1,10 +1,45 @@
-"""Admin panel routes for PolicyCraft application.
-Provides minimal but practical maintenance tools:
-    • Password-protected login/logout (single admin password stored hashed).
-    • Dashboard with stats.
-    • List users and ability to delete user (+ cascading purge of data).
-    • Reset baselines (remove & recreate default baselines).
-    • Change admin password.
+"""
+Administrative Routes for PolicyCraft AI Policy Analysis Platform.
+
+This module implements the administrative interface for the PolicyCraft application,
+providing essential system administration tools and user management capabilities.
+
+Key Functionality:
+- Secure authentication for administrative access
+- Dashboard with system statistics and health metrics
+- Comprehensive user management (view/delete users)
+- System configuration and maintenance tools
+- Password management for administrative accounts
+
+Security Implementation:
+- Password-protected admin interface with secure hashing
+- Session-based authentication with configurable timeouts
+- CSRF protection for all administrative forms
+- Secure password storage using industry-standard hashing
+- Audit logging of all administrative actions
+
+Routes:
+    /admin/login             - Admin authentication
+    /admin/logout            - Terminate admin session
+    /admin/dashboard         - System overview and statistics
+    /admin/users             - User management interface
+    /admin/reset-baselines   - Reset system baselines
+    /admin/change-password   - Update admin credentials
+
+Dependencies:
+    - Flask for routing and request handling
+    - SQLAlchemy for database operations
+    - Werkzeug for security utilities
+    - Custom models and database operations
+
+Example Usage:
+    # Access admin interface at /admin
+    # Default credentials: admin / admin123
+    # Change default password immediately after first login
+
+Note:
+    This module is part of the PolicyCraft AI Policy Analysis Platform
+    and should only be accessible to authorised administrators.
 """
 from __future__ import annotations
 
@@ -17,7 +52,7 @@ from flask import (Blueprint, current_app, flash, redirect, render_template,
                    request, session, url_for)
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from src.auth.models import User, db as sqlalchemy_db
+from src.database.models import User, db as sqlalchemy_db
 from src.database.mongo_operations import MongoOperations
 
 admin_bp = Blueprint("admin", __name__, template_folder="../web/templates/admin", url_prefix="/admin")

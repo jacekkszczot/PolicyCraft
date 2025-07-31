@@ -1,9 +1,20 @@
 """
-Simple Auto-Preprocessing for PolicyCraft
-Automatically processes new policy files during upload.
+Dataset Cleaning and Preprocessing for PolicyCraft AI Policy Analysis Platform.
+
+This module provides automated preprocessing and cleaning functionality for policy documents
+uploaded to the PolicyCraft platform. It handles file organization, basic text extraction,
+and metadata enrichment to prepare documents for further analysis.
+
+Key Features:
+- Automatic file organization and naming
+- Basic text extraction from various document formats
+- Metadata extraction and enrichment
+- University name normalization and mapping
+- Duplicate detection and handling
 
 Author: Jacek Robert Kszczot
-MSc Data Science & AI - COM7016
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 
 import shutil

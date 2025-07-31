@@ -1,11 +1,23 @@
 """
-Test suite for PolicyCraft Text Processing functionality
-Tests PDF/DOCX extraction, text cleaning, and statistics generation.
+Test Suite for PolicyCraft Text Processing Functionality
 
-Author: Jacek Robert Kszczot  
+This module contains comprehensive tests for the TextProcessor class, which is responsible
+for handling document processing, text extraction, and cleaning operations in the PolicyCraft
+application. The tests ensure accurate processing of various document formats and proper
+text normalization.
+
+Test Coverage:
+- Document format support (TXT, PDF, DOCX)
+- Text extraction accuracy
+- Text cleaning and normalization
+- Statistical analysis of processed text
+- Error handling for malformed or unsupported files
+
+Author: Jacek Robert Kszczot
 Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 
-Priority: HIGH - Foundation for all NLP processing
+Priority: HIGH - Text processing is the foundation for all NLP operations
 """
 
 import pytest

@@ -1,11 +1,23 @@
 """
-Test suite for PolicyCraft Policy Classification functionality
-Tests the classification of policies as Restrictive/Moderate/Permissive.
+Test Suite for PolicyCraft Policy Classification Functionality
+
+This module contains comprehensive tests for the PolicyClassifier, which is responsible
+for classifying AI usage policies into one of three categories: Restrictive, Moderate,
+or Permissive. The tests verify the accuracy and reliability of the classification
+based on policy language and content.
+
+Test Coverage:
+- Classification accuracy for different policy types
+- Handling of edge cases and ambiguous language
+- Confidence scoring for classifications
+- Performance with various input formats and lengths
+- Integration with the broader NLP pipeline
 
 Author: Jacek Robert Kszczot
 Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 
-Priority: HIGH - Core classification functionality
+Priority: HIGH - Policy classification is a core feature of the application
 """
 
 import pytest

@@ -3,6 +3,55 @@
 {% block title %}Profile - PolicyCraft{% endblock %}
 
 {% block content %}
+<!-- 
+    ===========================================================================
+    PolicyCraft - User Profile Template
+    ===========================================================================
+    
+    This page displays and allows editing of the user's profile information.
+    It shows account details, preferences, and provides options to update them.
+    
+    Table of Contents:
+    1. Profile Header - Welcome message and user avatar
+    2. Account Details - Username, email, institution, etc.
+    3. Profile Actions - Edit profile, change password, etc.
+    4. Account Settings - Notification preferences, privacy settings
+    5. Danger Zone - Account deletion and other destructive actions
+    
+    Key Features:
+    - Responsive profile layout
+    - Form validation for profile updates
+    - Secure password change functionality
+    - Profile picture upload and management
+    - Account activity history
+    
+    Security Considerations:
+    - CSRF protection on all forms
+    - Password confirmation for sensitive actions
+    - Server-side validation of all inputs
+    - Secure file upload handling for profile pictures
+    - Session management for profile updates
+    
+    Dynamic Content:
+    - User information (name, email, institution, etc.)
+    - Account creation date
+    - Last login information
+    - Profile completion status
+    
+    Dependencies:
+    - Bootstrap 5.3.0 (CSS/JS)
+    - Font Awesome 6.4.0 for icons
+    - Custom CSS from static/css/
+    - Flask-Login for authentication
+    - Flask-WTF for form handling
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+    Last Updated: July 2024
+    ===========================================================================
+-->
+
 <div class="profile-container">
     <h1>User Profile</h1>
     

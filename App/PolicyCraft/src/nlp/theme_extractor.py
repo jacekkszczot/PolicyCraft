@@ -3,6 +3,8 @@ Theme extraction module for PolicyCraft.
 Identifies key themes and concepts in AI policy documents using spaCy and custom rules.
 
 Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 
 import re
@@ -23,16 +25,42 @@ logger = logging.getLogger(__name__)
 
 class ThemeExtractor:
     """
-    Advanced theme extraction for AI policy documents.
-    Uses spaCy NLP pipeline with custom policy-specific rules.
+    Advanced theme extraction and analysis for AI policy documents.
+    
+    This class provides comprehensive theme extraction capabilities specifically
+    designed for analysing AI policy documents in higher education contexts. It
+    combines multiple natural language processing techniques to identify and
+    categorise key themes, including:
+    
+    - Pattern matching for policy-specific phrases and terminology
+    - Keyword frequency analysis across predefined theme categories
+    - Named entity recognition for policy-relevant entities
+    
+    The extractor is pre-configured with common AI policy themes such as academic
+    integrity, AI ethics, transparency, bias and fairness, privacy, and more.
+    
+    Note:
+        For optimal performance, the spaCy library should be installed. If not
+        available, the class will fall back to a simpler keyword-based approach.
     """
     
     def __init__(self, model_name: str = 'en_core_web_sm'):
         """
-        Initialize theme extractor with spaCy model and policy-specific patterns.
+        Initialise a new ThemeExtractor instance with the specified spaCy model.
+        
+        This constructor sets up the theme extraction pipeline, including:
+        - Loading the specified spaCy language model
+        - Initialising pattern matchers for policy themes
+        - Configuring theme categories and their associated keywords
         
         Args:
-            model_name (str): spaCy model name
+            model_name: The name of the spaCy language model to use.
+                      Defaults to 'en_core_web_sm' (small English model).
+                      
+        Note:
+            If the specified spaCy model is not available, the extractor will
+            automatically fall back to a keyword-based approach with reduced
+            functionality. A warning will be printed in this case.
         """
         self.model_name = model_name
         self.nlp = None
@@ -138,8 +166,21 @@ class ThemeExtractor:
         else:
             print("spaCy not available - using fallback keyword extraction")
             
-    def _initialize_spacy(self):
-        """Initialize spaCy model and matchers."""
+    def _initialize_spacy(self) -> None:
+        """
+        Initialise the spaCy NLP pipeline and configure pattern matchers.
+        
+        This private method loads the specified spaCy language model and sets up
+        the necessary components for theme extraction, including:
+        - Loading the language model
+        - Initialising phrase and pattern matchers
+        - Configuring theme-specific patterns
+        
+        Note:
+            If the specified model is not available, this method will print an
+            error message and leave the nlp attribute as None. The class will
+            automatically fall back to keyword-based extraction in this case.
+        """
         try:
             self.nlp = spacy.load(self.model_name)
             print(f"spaCy model '{self.model_name}' loaded successfully")
@@ -158,8 +199,18 @@ class ThemeExtractor:
             print(f"Error initializing spaCy: {e}")
             self.nlp = None
             
-    def _setup_patterns(self):
-        """Setup pattern matching rules for theme extraction."""
+    def _setup_patterns(self) -> None:
+        """
+        Configure pattern matching rules for theme extraction.
+        
+        This private method sets up the phrase patterns for each theme category
+        in the PhraseMatcher. It converts the human-readable theme patterns into
+        a format suitable for efficient pattern matching by spaCy.
+        
+        Note:
+            This method requires the spaCy NLP pipeline to be initialised first.
+            If nlp is None, this method will return without making any changes.
+        """
         if not self.nlp:
             return
             
@@ -176,15 +227,30 @@ class ThemeExtractor:
 
     def extract_themes(self, text: str, min_frequency: int = 1, max_themes: int = 15) -> List[Dict]:
         """
-        Extract key themes from policy text.
+        Extract and analyse key themes from policy text.
+        
+        This is the main method for theme extraction. It processes the input text
+        to identify and score themes based on the configured theme categories.
+        The method automatically selects the appropriate extraction strategy
+        (spaCy or keyword-based) based on availability.
         
         Args:
-            text (str): Input policy text
-            min_frequency (int): Minimum frequency for theme inclusion
-            max_themes (int): Maximum number of themes to return
-            
+            text: The policy text to analyse. Should be in plain text format.
+            min_frequency: Minimum number of keyword matches required for a theme
+                         to be included in the results. Defaults to 1.
+            max_themes: Maximum number of themes to return, sorted by relevance.
+                      Defaults to 15.
+                      
         Returns:
-            List[Dict]: List of themes with scores and details
+            A list of dictionaries, where each dictionary contains information
+            about a detected theme, including its name, score, frequency,
+            keywords, and example matches.
+            
+        Example:
+            >>> extractor = ThemeExtractor()
+            >>> themes = extractor.extract_themes("AI ethics is crucial for...")
+            >>> for theme in themes:
+            ...     print(f"{theme['name']}: {theme['score']}")
         """
         if not text:
             return []
@@ -201,7 +267,29 @@ class ThemeExtractor:
         return themes
 
     def _extract_themes_spacy(self, text: str, min_frequency: int, max_themes: int) -> List[Dict]:
-        """Extract themes using spaCy NLP pipeline."""
+        """
+        Extract themes from text using the spaCy NLP pipeline.
+        
+        This private method implements the core theme extraction logic when spaCy
+        is available. It uses multiple techniques to identify themes:
+        
+        1. Pattern matching using pre-configured phrase patterns
+        2. Keyword frequency analysis across theme categories
+        3. Named entity recognition for policy-relevant entities
+        
+        Args:
+            text: The input text to analyse.
+            min_frequency: Minimum number of keyword matches required for a theme.
+            max_themes: Maximum number of themes to return.
+            
+        Returns:
+            A list of theme dictionaries, each containing the theme name, score,
+            frequency, and related information.
+            
+        Note:
+            This is an internal method and should not be called directly.
+            Use the public extract_themes() method instead.
+        """
         doc = self.nlp(text)
         
         # Theme scores
@@ -245,7 +333,26 @@ class ThemeExtractor:
         return self._format_themes(theme_scores, theme_details, max_themes)
 
     def _extract_themes_keywords(self, text: str, min_frequency: int, max_themes: int) -> List[Dict]:
-        """Fallback theme extraction using keyword matching only."""
+        """
+        Fallback theme extraction using basic keyword matching.
+        
+        This method is used when spaCy is not available. It performs a simpler
+        form of theme extraction using regular expressions to count keyword
+        occurrences and pattern matches in the text.
+        
+        Args:
+            text: The input text to analyse (converted to lowercase).
+            min_frequency: Minimum number of keyword matches required for a theme.
+            max_themes: Maximum number of themes to return.
+            
+        Returns:
+            A list of theme dictionaries with basic scoring based on keyword
+            and pattern frequencies.
+            
+        Note:
+            This method provides reduced functionality compared to the spaCy-based
+            approach and is used as a fallback when spaCy is not available.
+        """
         text_lower = text.lower()
         theme_scores = defaultdict(int)
         theme_details = defaultdict(lambda: {'keywords': [], 'matches': []})
@@ -276,7 +383,23 @@ class ThemeExtractor:
         return self._format_themes(theme_scores, theme_details, max_themes)
 
     def _get_theme_from_pattern(self, pattern_name: str) -> Optional[str]:
-        """Convert pattern name back to theme name."""
+        """
+        Convert a pattern name back to its corresponding theme name.
+        
+        This helper method maps the internal pattern names used by the matcher
+        back to the human-readable theme names defined in the theme categories.
+        
+        Args:
+            pattern_name: The internal pattern name used by the matcher.
+            
+        Returns:
+            The human-readable theme name if a match is found, or None if no
+            matching theme is found.
+            
+        Example:
+            >>> self._get_theme_from_pattern('academic_integrity')
+            'Academic Integrity'
+        """
         pattern_to_theme = {
             theme_name.lower().replace(' ', '_'): theme_name 
             for theme_name in self.theme_categories.keys()
@@ -284,7 +407,34 @@ class ThemeExtractor:
         return pattern_to_theme.get(pattern_name)
 
     def _format_themes(self, theme_scores: Dict, theme_details: Dict, max_themes: int) -> List[Dict]:
-        """Format themes into final output structure."""
+        """
+        Format and structure the extracted theme data for output.
+        
+        This internal method processes the raw theme scores and details into
+        a structured format suitable for consumption by other methods. It:
+        
+        1. Sorts themes by their calculated scores
+        2. Limits results to the specified maximum number of themes
+        3. Structures the output with consistent field names and types
+        
+        Args:
+            theme_scores: Dictionary mapping theme names to their raw scores.
+            theme_details: Dictionary containing detailed information about each theme.
+            max_themes: Maximum number of themes to include in the output.
+            
+        Returns:
+            A list of theme dictionaries, each containing:
+            - name: The human-readable theme name
+            - score: Normalised theme score (float)
+            - frequency: Integer count of theme occurrences
+            - keywords: List of top keywords associated with the theme
+            - matches: List of example text matches
+            - confidence: Confidence percentage (0-100)
+            
+        Note:
+            This method normalises scores and ensures consistent output formatting
+            across different extraction methods.
+        """
         # Sort themes by score
         sorted_themes = sorted(theme_scores.items(), key=lambda x: x[1], reverse=True)
         
@@ -312,13 +462,37 @@ class ThemeExtractor:
 
     def get_theme_summary(self, themes: List[Dict]) -> Dict:
         """
-        Generate a summary of extracted themes.
+        Generate a comprehensive summary of extracted themes.
+        
+        This method analyses the list of extracted themes and computes various
+        statistics and metrics, including:
+        - Total number of themes identified
+        - Most prominent theme
+        - Average confidence score across all themes
+        - Coverage score indicating diversity of theme categories
+        - Dominant category based on theme distribution
         
         Args:
-            themes (List[Dict]): List of extracted themes
-            
+            themes: List of theme dictionaries as returned by extract_themes().
+                  Each dictionary should contain at least 'name', 'score', and
+                  'confidence' keys.
+                  
         Returns:
-            Dict: Theme summary statistics
+            A dictionary containing summary statistics with the following keys:
+            - total_themes: Total number of themes identified
+            - top_theme: Name of the highest-scoring theme
+            - theme_categories: List of all theme categories found
+            - avg_confidence: Average confidence score (0-100)
+            - coverage_score: Percentage of theme categories represented (0-100)
+            - total_score: Sum of all theme scores
+            - dominant_category: Most frequently occurring theme category
+            
+        Example:
+            >>> extractor = ThemeExtractor()
+            >>> themes = extractor.extract_themes(some_text)
+            >>> summary = extractor.get_theme_summary(themes)
+            >>> print(f"Found {summary['total_themes']} themes")
+            >>> print(f"Top theme: {summary['top_theme']}")
         """
         if not themes:
             return {
@@ -355,13 +529,35 @@ class ThemeExtractor:
 
     def visualize_themes(self, themes: List[Dict]) -> Dict:
         """
-        Prepare theme data for visualization.
+        Prepare theme data for visualisation in charts and graphs.
+        
+        This method transforms the extracted theme data into a format suitable
+        for visualisation in the frontend. It structures the data with consistent
+        ordering and assigns a colour palette to ensure visual consistency.
         
         Args:
-            themes (List[Dict]): List of extracted themes
-            
+            themes: List of theme dictionaries as returned by extract_themes().
+                  Each dictionary should contain at least 'name', 'score', and
+                  'frequency' keys.
+                  
         Returns:
-            Dict: Data formatted for charts and graphs
+            A dictionary containing visualisation-ready data with the following keys:
+            - labels: List of theme names
+            - scores: List of theme scores (normalised)
+            - frequencies: List of theme frequencies (raw counts)
+            - confidences: List of confidence scores (0-100)
+            - colors: List of hex colour codes for consistent theming
+            
+        Example:
+            >>> extractor = ThemeExtractor()
+            >>> themes = extractor.extract_themes(some_text)
+            >>> viz_data = extractor.visualize_themes(themes)
+            >>> # Use with a charting library like Chart.js or Matplotlib
+            >>> # plt.bar(viz_data['labels'], viz_data['scores'], color=viz_data['colors'])
+            
+        Note:
+            The colour palette is fixed to ensure consistency across visualisations.
+            If you have more than 10 themes, the colours will repeat.
         """
         if not themes:
             return {'labels': [], 'scores': [], 'colors': []}

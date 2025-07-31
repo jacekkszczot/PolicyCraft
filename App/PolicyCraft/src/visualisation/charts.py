@@ -1,8 +1,26 @@
 """
-Chart generation module for PolicyCraft.
-Creates interactive visualizations using Plotly for policy analysis results.
+Interactive Chart Generation for PolicyCraft AI Policy Analysis.
+
+This module provides comprehensive visualisation capabilities for the PolicyCraft platform,
+creating interactive and informative charts using Plotly. The visualisations are designed
+to help users understand and interpret policy analysis results through intuitive graphical
+representations.
+
+Key Features:
+- Generation of interactive radar charts for policy dimension coverage
+- Creation of timeline visualisations for policy development and updates
+- Comparative bar charts for cross-institutional policy analysis
+- Classification heatmaps for policy approach visualisation
+- Responsive design for both web and export formats
+
+Dependencies:
+- plotly: For interactive chart generation
+- pandas: For data manipulation and analysis
+- numpy: For numerical operations
 
 Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 
 import json

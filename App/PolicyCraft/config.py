@@ -3,6 +3,8 @@ Configuration settings for PolicyCraft.
 Secure database configuration with external storage.
 
 Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 
 import os
@@ -34,7 +36,7 @@ class Config:
     MAX_FILES_PER_UPLOAD = 10  # Maximum 10 files at once
     UPLOAD_TIMEOUT = 300  # 5 minutes timeout for large files
     
-    # Session configuration - FIXED for localhost consistency
+    # Session configuration for localhost consistency
     PERMANENT_SESSION_LIFETIME = timedelta(hours=2)
     SESSION_COOKIE_DOMAIN = None  # Allow localhost and 127.0.0.1
     SESSION_COOKIE_SAMESITE = 'Lax'
@@ -79,8 +81,8 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = f'sqlite:///{DATABASE_PATH}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # FIXED: Development server settings - use localhost consistently
-    HOST = 'localhost'  # Changed from 127.0.0.1
+    # Development server settings - use localhost consistently
+    HOST = 'localhost'
     PORT = 5001
     
     # Session configuration for development

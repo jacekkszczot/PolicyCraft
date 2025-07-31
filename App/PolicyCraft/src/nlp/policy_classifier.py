@@ -3,6 +3,8 @@ Policy classification module for PolicyCraft.
 Classifies AI policies as Restrictive, Permissive, or Moderate using ML and rule-based approaches.
 
 Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 
 import re
@@ -26,12 +28,36 @@ logger = logging.getLogger(__name__)
 
 class PolicyClassifier:
     """
-    AI Policy classifier using hybrid ML and rule-based approaches.
-    Classifies policies as Restrictive, Permissive, or Moderate.
+    Advanced AI policy classifier using hybrid machine learning and rule-based approaches.
+    
+    This classifier analyses policy documents related to AI usage in academic settings
+    and classifies them into one of three categories:
+    - Restrictive: Policies that prohibit or strictly limit AI usage
+    - Permissive: Policies that encourage or allow broad AI usage
+    - Moderate: Policies that allow AI usage with specific guidelines or conditions
+    
+    The classifier employs a hybrid approach that combines:
+    - Rule-based keyword matching for interpretability
+    - Machine learning for contextual understanding
+    - Confidence scoring for result reliability
+    
+    Note:
+        For optimal performance, the scikit-learn library should be installed.
+        If not available, the classifier will fall back to rule-based classification.
     """
     
     def __init__(self):
-        """Initialize the policy classifier with predefined rules and training data."""
+        """
+        Initialise the policy classifier with predefined rules and training data.
+        
+        This constructor sets up the classification pipeline, including:
+        - Defining policy classification categories
+        - Configuring keyword patterns and weights for rule-based classification
+        - Initialising the machine learning model (if dependencies are available)
+        
+        The classifier is pre-configured with domain-specific knowledge about
+        AI policy language and common patterns in academic policy documents.
+        """
         
         # Classification categories
         self.categories = ['Restrictive', 'Moderate', 'Permissive']
@@ -94,14 +120,31 @@ class PolicyClassifier:
     # Explainability helper
     # ------------------------------------------------------------------
     def explain_classification(self, text: str, top_n: int = None) -> List[Tuple[str, str, float]]:
-        """Return top contributing keywords and their weighted scores.
-
+        """
+        Analyse and return the most influential keywords contributing to classification.
+        
+        This method provides explainability by identifying which specific keywords and
+        phrases in the input text had the most significant impact on the classification
+        decision, along with their associated categories and weights.
+        
         Args:
-            text (str): input policy text (already cleaned if possible).
-            top_n (int): number of terms to return (defaults to self.top_explain_terms).
-
+            text: The policy text to analyse. Should be pre-cleaned for best results.
+            top_n: Maximum number of terms to return. If None, uses the default value
+                  specified in self.top_explain_terms (default: 10).
+                  
         Returns:
-            List[Tuple[str, str, float]]: list of (keyword, category, score) sorted by score desc.
+            A list of tuples, where each tuple contains:
+            - keyword: The matched term from the text
+            - category: The classification category it contributed to
+            - score: The weighted score indicating its influence
+            
+            The list is sorted by score in descending order.
+            
+        Example:
+            >>> classifier = PolicyClassifier()
+            >>> explanation = classifier.explain_classification("AI tools are strictly prohibited")
+            >>> for keyword, category, score in explanation:
+            ...     print(f"{keyword} ({category}): {score:.2f}")
         """
         if top_n is None:
             top_n = self.top_explain_terms
@@ -124,8 +167,29 @@ class PolicyClassifier:
         scores.sort(key=lambda x: x[2], reverse=True)
         return scores[:top_n]
 
-    def _initialize_ml_model(self):
-        """Initialize and train the ML model with sample data."""
+    def _initialize_ml_model(self) -> None:
+        """
+        Initialise and train the machine learning model with sample policy data.
+        
+        This private method sets up a scikit-learn pipeline for text classification
+        using TF-IDF vectorization and Multinomial Naive Bayes. It trains the model
+        on a curated dataset of example policies representing different classification
+        categories.
+        
+        The training data includes:
+        - Restrictive policies with strong prohibitive language
+        - Permissive policies with encouraging language
+        - Moderate policies with conditional guidelines
+        
+        Note:
+            This method is automatically called during class initialisation if
+            scikit-learn is available. If the training fails, the classifier
+            will fall back to rule-based classification.
+            
+        Raises:
+            ImportError: If required ML dependencies are not installed
+            Exception: For any errors during model training
+        """
         # Sample training data for AI policies
         training_data = [
             # Restrictive examples
@@ -171,13 +235,38 @@ class PolicyClassifier:
 
     def classify_policy(self, text: str) -> Dict:
         """
-        Classify policy text using hybrid approach.
+        Classify policy text using a hybrid rule-based and machine learning approach.
+        
+        This is the primary method for classifying AI policy documents. It combines:
+        - Rule-based keyword matching for interpretability
+        - Machine learning for contextual understanding (if available)
+        - Confidence scoring to indicate result reliability
         
         Args:
-            text (str): Policy text to classify
-            
+            text: The policy text to classify. Should be a complete policy or policy section.
+                For best results, pre-process the text to remove irrelevant content.
+                
         Returns:
-            Dict: Classification results with confidence scores
+            A dictionary containing:
+            - classification: The predicted category ('Restrictive', 'Moderate', or 'Permissive')
+            - confidence: Integer score (0-100) indicating prediction confidence
+            - method: The classification method used ('rule_based', 'ml_based', or 'hybrid')
+            - scores: Dictionary of scores for each category
+            - reasoning: Human-readable explanation of the classification
+            - details: Additional metadata including individual classifier results
+            
+        Example:
+            >>> classifier = PolicyClassifier()
+            >>> result = classifier.classify_policy(
+            ...     "AI tools are strictly prohibited in all academic work."
+            ... )
+            >>> print(f"Classification: {result['classification']}")
+            >>> print(f"Confidence: {result['confidence']}%")
+            >>> print(f"Reasoning: {result['reasoning']}")
+            
+        Note:
+            If the input text is empty or contains no classifiable content,
+            the method will return 'Unknown' classification with 0% confidence.
         """
         if not text:
             return {
@@ -205,7 +294,36 @@ class PolicyClassifier:
         return final_result
 
     def _classify_rule_based(self, text: str) -> Dict:
-        """Classify using rule-based keyword matching."""
+        """
+        Classify policy text using rule-based keyword matching.
+        
+        This internal method implements the rule-based classification strategy,
+        which identifies policy categories by matching keywords and phrases
+        against predefined patterns with associated weights.
+        
+        The classification process involves:
+        1. Tokenizing and normalizing the input text
+        2. Matching against category-specific keyword patterns
+        3. Applying category weights to calculate scores
+        4. Determining the most likely category based on weighted scores
+        
+        Args:
+            text: The policy text to classify. Should be pre-processed and
+                 in lowercase for consistent matching.
+                 
+        Returns:
+            A dictionary containing:
+            - classification: The predicted category
+            - confidence: Confidence score (0-100)
+            - scores: Raw scores for each category
+            - keyword_matches: Detailed information about matched keywords
+            - method: Always 'rule_based'
+            
+        Note:
+            This method is used as a fallback when ML classification is not available
+            and as part of the hybrid classification approach. It provides good
+            interpretability due to its rule-based nature.
+        """
         text_lower = text.lower()
         category_scores = {category: 0.0 for category in self.categories}
         keyword_matches = {category: [] for category in self.categories}
@@ -241,7 +359,32 @@ class PolicyClassifier:
         }
 
     def _classify_ml_based(self, text: str) -> Optional[Dict]:
-        """Classify using ML model."""
+        """
+        Classify policy text using the pre-trained machine learning model.
+        
+        This internal method applies the scikit-learn pipeline to predict
+        the policy category based on learned patterns from the training data.
+        The ML model uses TF-IDF features to capture important n-gram patterns
+        that distinguish between different policy types.
+        
+        Args:
+            text: The policy text to classify. No pre-processing is required
+                 as the model's pipeline handles text cleaning and normalization.
+                 
+        Returns:
+            A dictionary containing classification results with the following keys:
+            - classification: The predicted policy category
+            - confidence: Confidence score (0-100)
+            - scores: Probability distribution over all categories
+            - method: Always 'ml_based'
+            
+            Returns None if the ML model is not available or if an error occurs.
+            
+        Note:
+            This method is part of the hybrid classification approach and provides
+            better generalization to unseen patterns compared to rule-based methods.
+            It requires the scikit-learn package to be installed.
+        """
         if not self.ml_pipeline:
             return None
         
@@ -268,7 +411,37 @@ class PolicyClassifier:
             return None
 
     def _combine_classifications(self, rule_result: Dict, ml_result: Optional[Dict], text: str) -> Dict:
-        """Combine rule-based and ML classifications."""
+        """
+        Combine results from rule-based and ML classifiers into a final prediction.
+        
+        This internal method implements an ensemble approach that leverages the
+        strengths of both classification methods:
+        - Rule-based: High precision with clear interpretability
+        - ML-based: Better handling of complex patterns and unseen cases
+        
+        The combination uses a weighted average where rule-based results have
+        slightly higher influence (60%) than ML results (40%) by default,
+        prioritizing interpretability while benefiting from ML's generalization.
+        
+        Args:
+            rule_result: Results from the rule-based classifier
+            ml_result: Results from the ML classifier, or None if not available
+            text: The original policy text (used for reasoning generation)
+            
+        Returns:
+            A dictionary containing the combined classification results:
+            - classification: Final predicted category
+            - confidence: Combined confidence score (0-100)
+            - method: 'hybrid' if both methods used, otherwise the single method
+            - scores: Combined scores for each category
+            - reasoning: Human-readable explanation of the classification
+            - details: Complete results from both classifiers
+            
+        Note:
+            If the ML classifier is not available or fails, this method falls back
+            to using only the rule-based results. The confidence score is adjusted
+            based on the agreement between the two methods.
+        """
         # If only rule-based available
         if not ml_result:
             return {
@@ -326,7 +499,32 @@ class PolicyClassifier:
         }
 
     def _generate_reasoning(self, rule_result: Dict, text: str) -> str:
-        """Generate human-readable reasoning for the classification."""
+        """
+        Generate a human-readable explanation for the classification decision.
+        
+        This method creates a natural language explanation of why a particular
+        classification was made, based on the rule-based analysis of the text.
+        The reasoning highlights the most influential keywords and patterns
+        that contributed to the classification decision.
+        
+        Args:
+            rule_result: Results from the rule-based classifier, containing
+                       keyword matches and scores.
+            text: The original policy text being classified (used for context).
+                 
+        Returns:
+            A string containing a clear, concise explanation of the classification
+            in natural language, suitable for end-users. The explanation includes:
+            - The predicted classification
+            - Key terms that influenced the decision
+            - Contextual patterns that support the classification
+            
+        Example:
+            "Classified as Restrictive based on:
+             - 'prohibited' appears 3 time(s)
+             - Strong prohibition language detected
+             - Penalty/consequence language present"
+        """
         classification = rule_result['classification']
         keyword_matches = rule_result.get('keyword_matches', {})
         
@@ -360,13 +558,47 @@ class PolicyClassifier:
 
     def get_classification_details(self, text: str) -> Dict:
         """
-        Get detailed classification analysis including word frequency and patterns.
+        Generate a comprehensive analysis of the policy text with detailed metrics.
+        
+        This method provides an in-depth examination of the policy document,
+        including classification results, text statistics, and linguistic patterns.
+        It's designed to give users rich insights into both the classification
+        decision and the characteristics of the policy text.
+        
+        The analysis includes:
+        - Full classification results with confidence scores
+        - Text statistics (word count, sentence count, etc.)
+        - Analysis of policy tone and statement types
+        - Keyword density by category
+        - Confidence factors affecting the classification
         
         Args:
-            text (str): Policy text to analyze
-            
+            text: The policy text to analyze. Should be a complete policy document
+                 or a substantial excerpt for meaningful analysis.
+                 
         Returns:
-            Dict: Detailed analysis results
+            A dictionary containing detailed analysis with the following structure:
+            {
+                'classification_result': Dict,  # Full classification results
+                'text_analysis': {             # Text statistics
+                    'word_count': int,          # Total words
+                    'sentence_count': int,      # Total sentences
+                    'avg_sentence_length': float,# Average words per sentence
+                    'strong_statements': int,    # Count of strong/mandatory statements
+                    'conditional_statements': int, # Count of conditional statements
+                    'policy_tone': str           # Overall tone (Authoritative/Suggestive/Balanced)
+                },
+                'keyword_density': Dict,        # Percentage of keywords by category
+                'classification_confidence_factors': List[str]  # Factors affecting confidence
+            }
+            
+        Example:
+            >>> classifier = PolicyClassifier()
+            >>> details = classifier.get_classification_details(
+            ...     "AI tools are strictly prohibited in all academic work..."
+            ... )
+            >>> print(f"Word count: {details['text_analysis']['word_count']}")
+            >>> print(f"Policy tone: {details['text_analysis']['policy_tone']}")
         """
         result = self.classify_policy(text)
         
@@ -404,7 +636,33 @@ class PolicyClassifier:
         return details
 
     def _calculate_keyword_density(self, text: str) -> Dict:
-        """Calculate density of classification keywords."""
+        """
+        Calculate the relative frequency of classification keywords in the text.
+        
+        This helper method computes the percentage of words in the input text
+        that match the predefined classification keywords for each policy category.
+        The density values are normalised by the total word count and can be used
+        to understand the prominence of different policy-related terms.
+        
+        Args:
+            text: The policy text to analyse. The text will be converted to
+                 lowercase for case-insensitive matching.
+                 
+        Returns:
+            A dictionary mapping each policy category to its keyword density
+            as a percentage of total words. For example:
+            {
+                'Restrictive': 2.5,  # 2.5% of words are restrictive keywords
+                'Moderate': 1.8,     # 1.8% of words are moderate keywords
+                'Permissive': 1.2    # 1.2% of words are permissive keywords
+            }
+            
+        Note:
+            The density calculation is based on simple word matching and does not
+            account for word context or multi-word expressions. It's primarily
+            useful as a relative measure between categories rather than an
+            absolute metric.
+        """
         text_lower = text.lower()
         total_words = len(text.split())
         
@@ -421,7 +679,31 @@ class PolicyClassifier:
         return density
 
     def _analyze_confidence_factors(self, result: Dict) -> List[str]:
-        """Analyze factors affecting classification confidence."""
+        """
+        Analyse and describe the key factors influencing the classification confidence.
+        
+        This method examines the classification results to identify and explain
+        the main factors that contributed to the confidence level of the prediction.
+        It provides human-readable insights into why a particular confidence
+        score was assigned to the classification.
+        
+        Args:
+            result: The classification result dictionary containing at least
+                   'confidence' and 'method' keys, and optionally 'details'
+                   with information about the classification process.
+                   
+        Returns:
+            A list of strings, where each string describes a factor that
+            influenced the confidence score. Example factors include:
+            - "High confidence due to clear keyword indicators"
+            - "Rule-based and ML methods agree"
+            - "Low confidence - mixed or unclear signals"
+            
+        Note:
+            The factors are intended to help users understand the reliability
+            of the classification and should be presented as part of the
+            classification details rather than as standalone metrics.
+        """
         factors = []
         confidence = result['confidence']
         

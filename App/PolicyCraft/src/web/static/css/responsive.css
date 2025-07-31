@@ -1,4 +1,62 @@
-/* Responsive and lint-friendly overrides */
+/**
+ * ============================================================================
+ * PolicyCraft - Responsive Design Styles
+ * ============================================================================
+ *
+ * This file contains responsive design rules and overrides that ensure the
+ * PolicyCraft application delivers an optimal user experience across all
+ * device sizes and orientations. It implements a mobile-first approach,
+ * progressively enhancing the layout and features for larger screens.
+ *
+ * Table of Contents:
+ * 1. Base Responsive Settings
+ * 2. Responsive Typography
+ * 3. Flexible Grids & Layouts
+ * 4. Navigation & Menus
+ * 5. Form Elements & Controls
+ * 6. Component-Specific Adjustments
+ * 7. Print Styles
+ *
+ * Breakpoint Strategy:
+ * - Mobile (default): 0px - 639px
+ * - sm: 640px - 767px
+ * - md: 768px - 1023px
+ * - lg: 1024px - 1279px
+ * - xl: 1280px - 1535px
+ * - 2xl: 1536px and up
+ *
+ * Key Features:
+ * - Mobile-first responsive design
+ * - Fluid typography that scales with viewport width
+ * - Responsive images and media
+ * - Touch-friendly interactive elements
+ * - Print-specific styles for better document output
+ *
+ * Best Practices:
+ * - Use relative units (rem, em, %) for flexible layouts
+ * - Implement responsive images with srcset and sizes
+ * - Test on actual devices when possible
+ * - Consider performance implications of media queries
+ * - Maintain touch targets of at least 44x44px
+ *
+ * Dependencies:
+ * - variables.css for breakpoints and spacing
+ * - layout.css for base layout structures
+ * - navigation.css for responsive navigation components
+ *
+ * Author: Jacek Robert Kszczot
+ * Project: MSc Data Science & AI - COM7016
+ * University: Leeds Trinity University
+ * Last Updated: July 2024
+ * ============================================================================
+ */
+
+/* Import variables first to ensure they're available to all styles */
+@import 'variables.css';
+
+/* ========================
+   1. Base Responsive Settings
+   ======================== */
 
 /* Base responsive settings */
 :root {

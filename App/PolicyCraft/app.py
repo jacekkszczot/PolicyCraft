@@ -18,7 +18,7 @@ from datetime import datetime
 from config import get_config, create_secure_directories
 
 # Import authentication components
-from src.auth.models import User, db, init_db
+from src.database.models import User, db, init_db
 from src.auth.routes import auth_bp
 from src.admin.routes import admin_bp
 
@@ -32,10 +32,13 @@ from src.recommendation.engine import RecommendationEngine
 from src.scripts.clean_dataset import process_new_upload
 
 
-
-
 def clean_university_name(filename):
-    """Clean filename to show just university name."""
+    """
+    Clean filename to display only the university name without technical prefixes.
+    
+    This function removes timestamp prefixes and file extensions to present
+    a clean, user-friendly university name for display purposes.
+    """
     # Remove timestamp prefixes
     if '_' in filename:
         clean_name = filename.split('_', 2)[-1] if len(filename.split('_')) > 2 else filename.split('_')[-1]
@@ -82,7 +85,12 @@ def clean_university_name(filename):
         return clean_name[:30] + '...' if len(clean_name) > 30 else clean_name
 
 def clean_filename(filename):
-    """Clean filename to show just the document name without timestamp and user ID."""
+    """
+    Clean filename to show document name without timestamp and user ID prefixes.
+    
+    Removes technical prefixes added during upload process to present
+    clean filenames for user interface display.
+    """
     if '_' in filename:
         parts = filename.split('_')
         if len(parts) >= 3:
@@ -94,7 +102,12 @@ def clean_filename(filename):
     return clean_name
 
 def format_british_date(date_str):
-    """Format date to British DD/MM/YYYY style."""
+    """
+    Format date string to British DD/MM/YYYY style.
+    
+    Converts various date formats to the standardised British format
+    for consistent presentation throughout the application interface.
+    """
     try:
         from datetime import datetime
         if isinstance(date_str, str):
@@ -120,7 +133,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def create_app():
-    """Application factory function."""
+    """
+    Application factory function for PolicyCraft Flask application.
+    
+    Initialises and configures the Flask application with all necessary
+    extensions, blueprints, and database connections.
+    """
     # Create secure directories first
     create_secure_directories()
     
@@ -175,31 +193,50 @@ chart_generator = ChartGenerator()
 recommendation_engine = RecommendationEngine()
 
 
-
 def allowed_file(filename):
-    """Check if the uploaded file has an allowed extension."""
+    """
+    Check if the uploaded file has an allowed extension.
+    
+    Validates file type against configured allowed extensions
+    to ensure only supported document formats are processed.
+    """
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 def create_upload_folder():
-    """Create upload folder if it doesn't exist."""
+    """
+    Create upload folder if it doesn't exist.
+    
+    Ensures the designated upload directory exists for storing
+    user-uploaded policy documents.
+    """
     upload_folder = app.config['UPLOAD_FOLDER']
     if not os.path.exists(upload_folder):
         os.makedirs(upload_folder)
         logger.info(f"Created upload folder: {upload_folder}")
 
-# === MAIN ROUTES ===
+# Main application routes
 
 @app.route('/')
 def index():
-    """Landing page route."""
+    """
+    Landing page route for PolicyCraft application.
+    
+    Displays the main homepage with application overview
+    and navigation options for users.
+    """
     logger.info("Landing page accessed")
     return render_template("index.html")
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    """Dashboard with comprehensive analysis data."""
+    """
+    Dashboard with comprehensive analysis data for authenticated users.
+    
+    Provides overview of user's policy analyses, statistics, and charts
+    with baseline policy comparisons and performance metrics.
+    """
     try:
         logger.info(f"Dashboard accessed by user: {current_user.username}")
         
@@ -207,9 +244,9 @@ def dashboard():
         db_operations.deduplicate_baseline_analyses(current_user.id)
         # Retrieve user analyses (already deduplicated)
         user_analyses = db_operations.get_user_analyses(current_user.id)
-        # Pobierz analizy baseline (globalne)
+        # Retrieve baseline analyses (global)
         baseline_analyses = db_operations.get_user_analyses(-1)
-        # Merge – user's version has priority, avoid duplicate filenames
+        # Merge user's version has priority, avoid duplicate filenames
         analyses_by_filename = {a['filename']: a for a in baseline_analyses}
         analyses_by_filename.update({a['filename']: a for a in user_analyses})
         combined_analyses = list(analyses_by_filename.values())
@@ -225,11 +262,11 @@ def dashboard():
                     return dt.replace(tzinfo=None).timestamp()
             except Exception:
                 pass
-            # Fallback – very old date
+            # Fallback for invalid dates
             return 0
         combined_analyses.sort(key=lambda a: _to_epoch(a.get('analysis_date')), reverse=True)
 
-        # If the user has no baseline analyses loaded – load them once now
+        # If the user has no baseline analyses loaded, load them automatically
         if not any(a.get('filename','').startswith('[BASELINE]') for a in user_analyses):
             try:
                 loaded = db_operations.load_sample_policies_for_user(current_user.id)
@@ -335,7 +372,12 @@ def dashboard():
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload_file():
-    """File upload with multi-file support."""
+    """
+    File upload with multi-file support for policy documents.
+    
+    Handles both single and multiple file uploads, validates file types,
+    and initiates the document processing pipeline.
+    """
     if request.method == 'GET':
         logger.info(f"Upload page accessed by user: {current_user.username}")
         return render_template('upload.html')
@@ -423,7 +465,12 @@ def upload_file():
 @app.route('/batch-analyse/<path:files>')
 @login_required
 def batch_analyse(files):
-    """Batch analysis for multiple uploaded files."""
+    """
+    Batch analysis for multiple uploaded files.
+    
+    Processes multiple documents simultaneously through the AI analysis
+    pipeline and provides consolidated results and statistics.
+    """
     try:
         file_list = files.split(',')
         
@@ -542,7 +589,12 @@ def batch_analyse(files):
 @app.route('/analyse/<filename>')
 @login_required
 def analyse_document(filename):
-    """Document analysis pipeline."""
+    """
+    Document analysis pipeline for individual policy files.
+    
+    Processes a single document through the complete AI analysis workflow
+    including text extraction, theme analysis, and policy classification.
+    """
     try:
         is_baseline = filename.startswith('[BASELINE]')
         
@@ -597,15 +649,6 @@ def analyse_document(filename):
                 classification=classification,
                 username=getattr(current_user, 'username', None)
             )
-        analysis_id = db_operations.store_user_analysis_results(
-            user_id=current_user.id,
-            filename=filename,
-            original_text=extracted_text,
-            cleaned_text=cleaned_text,
-            themes=themes,
-            classification=classification,
-            username=getattr(current_user, 'username', None)
-        )
         
         # Generate visualizations
         charts = chart_generator.generate_analysis_charts(themes, classification, cleaned_text)
@@ -647,7 +690,12 @@ def analyse_document(filename):
 @app.route('/validate/<analysis_id>')
 @login_required
 def validate_analysis(analysis_id):
-    """Return JSON with citation validation issues for given analysis."""
+    """
+    Return JSON with citation validation issues for given analysis.
+    
+    Validates the academic sources and citations used in recommendations
+    to ensure proper referencing standards.
+    """
     from flask import jsonify
     analysis = db_operations.get_analysis_by_id(analysis_id)
     if not analysis:
@@ -674,10 +722,16 @@ def validate_analysis(analysis_id):
     from src.utils.validation import validate_recommendation_sources
     issues = validate_recommendation_sources(recs)
     return jsonify({"issues": issues})
+
 @app.route('/recommendations/<analysis_id>')
 @login_required
 def get_recommendations(analysis_id):
-    """Generate evidence-based recommendations."""
+    """
+    Generate evidence-based recommendations for policy improvement.
+    
+    Creates detailed, academic-quality recommendations based on ethical
+    AI framework analysis and institutional context assessment.
+    """
     try:
         # Get the analysis data (try by user id, fallback to global and verify ownership)
         analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
@@ -799,8 +853,13 @@ def get_recommendations(analysis_id):
 @app.route('/delete_analysis/<analysis_id>', methods=['POST'])
 @login_required
 def delete_analysis(analysis_id):
+    """
+    Delete user analysis with appropriate security checks.
+    
+    Removes analysis records from database while protecting baseline
+    policies from accidental deletion.
+    """
     logger.info(f"Attempting deletion of analysis {analysis_id} by user {current_user.id}")
-    """Delete user analysis (not baseline policies)."""
     try:
         # Get analysis to check ownership and type
         analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
@@ -838,13 +897,17 @@ def delete_analysis(analysis_id):
         flash('Error deleting analysis.', 'error')
         return redirect(url_for('dashboard'))
 
-# === API ROUTES ===
+# API routes for additional functionality
 
 @app.route('/api/explain/<analysis_id>')
 @login_required
 def api_explain_analysis(analysis_id):
-    """Zwróć listę kluczowych słów, które wpłynęły na klasyfikację polityki AI.
-    Format JSON: {"analysis_id": ..., "keywords": [{"term": str, "category": str, "score": float}]}"""
+    """
+    Return JSON with classification explanation keywords.
+    
+    Provides key terms that influenced the AI policy classification
+    decision for transparency and explainability purposes.
+    """
     db_ops = DatabaseOperations(uri="mongodb://localhost:27017", db_name="policycraft")
     analysis = db_ops.get_analysis_by_id(analysis_id)
     if not analysis or analysis.get('user_id') != current_user.id:
@@ -862,7 +925,12 @@ def api_explain_analysis(analysis_id):
 @app.route('/api/analysis/<analysis_id>')
 @login_required
 def api_get_analysis(analysis_id):
-    """API endpoint to get analysis results."""
+    """
+    API endpoint to retrieve analysis results in JSON format.
+    
+    Provides programmatic access to stored analysis data
+    for integration with external systems or applications.
+    """
     try:
         analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
         if analysis:
@@ -873,38 +941,46 @@ def api_get_analysis(analysis_id):
         logger.error(f"API error for analysis {analysis_id}: {str(e)}")
         return jsonify({'success': False, 'error': 'Internal server error'}), 500
 
-# === PUBLIC ROUTES ===
+# Public routes
 
 @app.route('/about')
 def about():
-    """Public about page."""
+    """
+    Public about page with application information.
+    
+    Displays information about PolicyCraft, its purpose,
+    and academic research context.
+    """
     return render_template('public/about.html')
 
-# === ERROR HANDLERS ===
+# Error handlers
 
 @app.errorhandler(404)
 def not_found_error(error):
-    """Handle 404 errors."""
+    """Handle 404 not found errors."""
     logger.warning(f"404 error: {request.url}")
     return render_template('errors/404.html'), 404
 
 @app.errorhandler(500)
 def internal_error(error):
-    """Handle 500 errors."""
+    """Handle 500 internal server errors."""
     logger.error(f"500 error: {str(error)}")
     return render_template('errors/500.html'), 500
 
 # Register template filters
-# Register template filters
 app.jinja_env.filters["clean_university_name"] = clean_university_name
 app.jinja_env.filters["clean_filename"] = clean_filename
 app.jinja_env.filters["format_british_date"] = format_british_date
+
 def handle_first_login_onboarding(user_id: int) -> bool:
     """
-    Handle automatic onboarding for new users - load sample policies.
+    Handle automatic onboarding for new users by loading sample policies.
+    
+    Provides new users with baseline policy examples to demonstrate
+    the system capabilities and provide comparison benchmarks.
     """
     try:
-        from src.auth.models import User
+        from src.database.models import User
         
         user = User.query.get(user_id)
         if not user:
@@ -912,7 +988,7 @@ def handle_first_login_onboarding(user_id: int) -> bool:
             
         # Check if user needs onboarding
         if user.is_first_login():
-            logger.info(f"🎯 Starting onboarding for new user: {user.username}")
+            logger.info(f"Starting onboarding for new user: {user.username}")
             
             # Load sample policies automatically
             success = db_operations.load_sample_policies_for_user(user_id)
@@ -920,12 +996,12 @@ def handle_first_login_onboarding(user_id: int) -> bool:
             if success:
                 # Mark onboarding as completed
                 user.complete_onboarding()
-                logger.info(f"✅ Onboarding completed for user: {user.username}")
+                logger.info(f"Onboarding completed for user: {user.username}")
                 flash("Welcome! We have loaded 15 sample university policies to get you started.", "success")
                 return True
             else:
                 # If sample load failed, but user already has baseline analyses, treat as success
-                # Robust baseline detection – check if ANY analysis filename starts with [BASELINE]
+                # Robust baseline detection check if ANY analysis filename starts with [BASELINE]
                 try:
                     user_analyses = db_operations.get_user_analyses(user_id)
                     baseline_exists = any(a.get('filename', '').startswith('[BASELINE]') for a in user_analyses)
@@ -933,24 +1009,24 @@ def handle_first_login_onboarding(user_id: int) -> bool:
                     baseline_exists = False
                 if baseline_exists:
                     user.complete_onboarding()
-                    logger.info(f"ℹ️ Baseline analyses detected despite load failure – onboarding marked complete for {user.username}")
+                    logger.info(f"Baseline analyses detected despite load failure onboarding marked complete for {user.username}")
                     flash("Welcome! Sample policies are already available in your dashboard.", "info")
                     return True
-                logger.warning(f"⚠️ Onboarding failed for user: {user.username}")
+                logger.warning(f"Onboarding failed for user: {user.username}")
                 flash("Welcome! There was an issue loading sample policies.", "warning")
                 
         return False
         
     except Exception as e:
-        logger.error(f"❌ Error in onboarding: {e}")
+        logger.error(f"Error in onboarding: {e}")
         return False
 
 if __name__ == '__main__':
-    """Run the PolicyCraft application."""
+    """Run the PolicyCraft application in development mode."""
     os.makedirs('logs', exist_ok=True)
     create_upload_folder()
     
     logger.info("Starting PolicyCraft Application")
-    print("🚀 PolicyCraft starting at: http://localhost:5001")
+    print("PolicyCraft starting at: http://localhost:5001")
     
     app.run(debug=True, host='localhost', port=5001)

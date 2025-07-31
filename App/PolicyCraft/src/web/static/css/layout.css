@@ -1,7 +1,52 @@
-/* 
+/**
+ * ============================================================================
  * PolicyCraft - Layout Styles
- * Main content and section containers
+ * ============================================================================
+ *
+ * This file contains the main layout styles for the PolicyCraft application,
+ * including the overall page structure, grid systems, and responsive design
+ * breakpoints. These styles ensure consistent spacing and alignment across
+ * all pages and components.
+ *
+ * Table of Contents:
+ * 1. Main Content Area
+ * 2. Hero Sections
+ * 3. Grid System
+ * 4. Page Containers
+ * 5. Responsive Breakpoints
+ * 6. Utility Classes
+ *
+ * Key Features:
+ * - Responsive grid system with consistent spacing
+ * - Flexible container system
+ * - Hero section styling
+ * - Utility classes for common layout patterns
+ * - Responsive design with mobile-first approach
+ *
+ * Best Practices:
+ * - Use the grid system for complex layouts
+ * - Utilize container classes for consistent width
+ * - Implement responsive design with mobile-first approach
+ * - Keep layout styles separate from component styles
+ * - Use utility classes for common patterns
+ *
+ * Dependencies:
+ * - variables.css for consistent spacing and breakpoints
+ * - responsive.css for media query breakpoints
+ *
+ * Author: Jacek Robert Kszczot
+ * Project: MSc Data Science & AI - COM7016
+ * University: Leeds Trinity University
+ * Last Updated: July 2024
+ * ============================================================================
  */
+
+/* Import variables first to ensure they're available to all styles */
+@import 'variables.css';
+
+/* ========================
+   1. Main Content Area
+   ======================== */
 
 .main-content {
     min-height: calc(100vh - 80px);

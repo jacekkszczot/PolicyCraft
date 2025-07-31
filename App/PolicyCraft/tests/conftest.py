@@ -1,9 +1,20 @@
 """
-Test configuration and fixtures for PolicyCraft
-Provides reusable test data and mock objects for comprehensive testing.
+Test Configuration and Fixtures for PolicyCraft AI Policy Analysis Platform.
+
+This module provides a comprehensive set of fixtures, test data, and utility functions
+used across the PolicyCraft test suite. It includes mock objects, sample data, and
+custom assertions to support unit and integration testing of all application components.
+
+Key Features:
+- Sample policy documents and analysis results
+- Mock objects for all major components
+- Custom assertions for validation
+- Test application configuration
+- Database utilities for testing
 
 Author: Jacek Robert Kszczot
 Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 
 import pytest

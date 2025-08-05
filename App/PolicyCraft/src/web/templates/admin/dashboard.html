@@ -1,5 +1,23 @@
 {% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - PolicyCraft{% endblock %}
+
 {% block content %}
+<!-- 
+    PolicyCraft - Admin Dashboard
+    
+    This page provides an overview of system statistics and administrative controls.
+    It displays key metrics and provides quick access to administrative functions.
+    
+    Key Features:
+    - User and analysis statistics
+    - Quick access to user management
+    - System baseline controls
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
 <h2>Admin Dashboard</h2>
 <ul>
   <li>Total users: {{ user_count }}</li>

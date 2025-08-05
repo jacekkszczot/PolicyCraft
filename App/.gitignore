@@ -65,6 +65,7 @@ config.py
 # Large files
 data/
 !data/README.md
+!data/policies/ 
 
 # Documentation build
 _build/

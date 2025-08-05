@@ -40,6 +40,10 @@ Example Usage:
 Note:
     This module is part of the PolicyCraft AI Policy Analysis Platform
     and should only be accessible to authorised administrators.
+
+Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 from __future__ import annotations
 

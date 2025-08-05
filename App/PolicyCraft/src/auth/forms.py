@@ -5,16 +5,16 @@ This module defines the web forms used for user authentication and account manag
 in the PolicyCraft application. It utilises WTForms for form handling and validation,
 ensuring data integrity and security throughout the user authentication process.
 
-Author: Jacek Robert Kszczot
-Project: MSc Data Science & AI - COM7016
-University: Leeds Trinity University
-
 Forms include:
 - LoginForm: Handles user authentication with email and password
 - RegistrationForm: Manages new user account creation with comprehensive validation
 
 All forms implement server-side validation and include client-side validation hints
 for an enhanced user experience.
+
+Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 
 from flask_wtf import FlaskForm
@@ -123,19 +123,6 @@ class RegistrationForm(FlaskForm):
                 gender=form.gender.data
             )
     """
-    
-    gender = SelectField(
-        'Gender',
-        choices=[
-            ('', 'Select Gender'),
-            ('male', 'Male'),
-            ('female', 'Female'),
-            ('other', 'Other'),
-            ('prefer_not_to_say', 'Prefer not to say')
-        ],
-        validators=[DataRequired(message='Please select your gender')],
-        render_kw={"class": "form-control"}
-    )
     
     email = EmailField(
         'Email',

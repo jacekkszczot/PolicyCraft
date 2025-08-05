@@ -29,9 +29,7 @@
 
 <div class="auth-container">
     <div class="auth-card">
-        <!-- ======================
-             Registration Header 
-             ====================== -->
+        <!--    Registration Header    -->
         <div class="auth-header">
             <h1>Create Account</h1>
             <p>Join PolicyCraft to analyze AI policies</p>
@@ -39,12 +37,6 @@
         
         <form method="POST">
             {{ form.hidden_tag() }}
-            
-            <div class="form-group">
-                {{ form.gender.label(class="form-label") }}
-                {{ form.gender(class="form-input") }}
-            </div>
-            
             
             {% if form.first_name %}
             <div class="form-group">

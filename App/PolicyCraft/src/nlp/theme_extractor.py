@@ -78,12 +78,54 @@ class ThemeExtractor:
                 ]
             },
             
+            'Research Ethics in AI': {
+                'keywords': ['research ethics', 'ethical guidelines', 'informed consent', 'participant rights',
+                           'data protection', 'privacy', 'confidentiality', 'anonymity', 'transparency',
+                           'integrity', 'accountability', 'responsibility', 'beneficence', 'non-maleficence',
+                           'justice', 'fairness', 'equity', 'respect', 'dignity', 'autonomy', 'trust',
+                           'stakeholder engagement', 'participant involvement', 'ethical oversight',
+                           'institutional review', 'research governance', 'ethical approval', 'ethical review',
+                           'ethical principles', 'ethical framework', 'ethical standards', 'ethical practices',
+                           'cross-institutional research', 'interdisciplinary collaboration', 'methodological rigor',
+                           'empirical validation', 'systematic reviews', 'meta-analysis', 'research gaps',
+                           'collaboration needs', 'methodological issues', 'rigor improvement', 'longitudinal studies',
+                           'mixed-methods approaches', 'transparent reporting', 'reproducible research'],
+                'patterns': [
+                    'ethical research', 'research integrity', 'ethical approval process',
+                    'informed consent process', 'participant information sheet', 'ethical considerations',
+                    'research governance framework', 'ethical review board', 'institutional review board',
+                    'research ethics committee', 'ethical guidelines for research', 'responsible research',
+                    'ethical data collection', 'data protection in research', 'privacy in research',
+                    'confidentiality agreement', 'anonymization of data', 'pseudonymization of data',
+                    'participant confidentiality', 'data security measures', 'ethical data sharing',
+                    'research data management', 'ethical implications', 'risk benefit analysis',
+                    'vulnerable participants', 'informed consent form', 'voluntary participation',
+                    'right to withdraw', 'debriefing participants', 'ethical decision making',
+                    'cross-institutional collaboration', 'interdisciplinary research teams',
+                    'methodological rigor in ai research', 'empirical validation of ai tools',
+                    'systematic review of ai applications', 'meta-analysis of ai in education',
+                    'identifying research gaps in ai', 'collaboration in ai research',
+                    'methodological challenges in ai studies', 'improving rigor in ai research',
+                    'longitudinal ai research studies', 'mixed-methods ai research',
+                    'transparent research reporting', 'reproducible ai research',
+                    'ethical ai research practices'
+                ]
+            },
+            
             'AI Ethics': {
                 'keywords': ['ethics', 'ethical', 'moral', 'responsible', 'harm', 'benefit',
-                           'rights', 'dignity', 'respect', 'justice', 'welfare'],
+                           'rights', 'dignity', 'respect', 'justice', 'welfare',
+                           'manipulation', 'deception', 'exploitation', 'vulnerability', 'autonomy',
+                           'research ethics', 'informed consent', 'participant rights', 'data protection',
+                           'privacy', 'confidentiality', 'anonymity', 'integrity', 'accountability',
+                           'beneficence', 'non-maleficence', 'stakeholder engagement', 'ethical oversight'],
                 'patterns': [
                     'ethical ai', 'responsible ai', 'ai ethics', 'ethical considerations',
-                    'moral implications', 'ethical guidelines', 'human dignity'
+                    'moral implications', 'ethical guidelines', 'human dignity',
+                    'human manipulation', 'behavioral manipulation', 'exploitation prevention',
+                    'vulnerable groups protection', 'human autonomy', 'research ethics in ai',
+                    'ethical ai research', 'ai research governance', 'ethical ai development',
+                    'ai and research integrity', 'responsible ai research'
                 ]
             },
             
@@ -98,19 +140,100 @@ class ThemeExtractor:
             
             'Bias and Fairness': {
                 'keywords': ['bias', 'biased', 'fairness', 'fair', 'discrimination', 'equity',
-                           'equality', 'inclusive', 'diverse', 'representation', 'prejudice'],
+                           'equality', 'inclusive', 'diverse', 'representation', 'prejudice',
+                           'social scoring', 'biometric categorization', 'protected characteristics',
+                           'demographic bias', 'algorithmic fairness', 'bias mitigation', 'equitable outcomes',
+                           'cultural bias', 'gender bias', 'socioeconomic bias', 'fairness gaps', 'bias audits',
+                           'disparate impact', 'equity in education', 'inclusive design', 'bias awareness',
+                           'fairness metrics', 'bias detection', 'unconscious bias', 'systemic bias'],
                 'patterns': [
-                    'algorithmic bias', 'ai bias', 'bias mitigation', 'fair ai',
-                    'bias detection', 'discrimination prevention', 'inclusive ai'
+                    'algorithmic bias', 'ai bias', 'bias mitigation strategies', 'fair ai',
+                    'bias detection', 'discrimination prevention', 'inclusive ai',
+                    'social credit system', 'biometric identification', 'protected groups',
+                    'fairness in ai', 'equity in algorithms', 'bias in ai tools',
+                    'mitigating bias in education', 'ai fairness framework', 'bias audit protocols',
+                    'continuous bias monitoring', 'ai equity assessment', 'bias risk assessment',
+                    'fairness in automated decisions', 'bias in student assessment',
+                    'ai transparency and fairness', 'bias in machine learning',
+                    'fairness in educational technology', 'bias in ai training data',
+                    'algorithmic fairness standards', 'bias in educational ai',
+                    'fairness in automated grading', 'bias in ai recommendations'
+                ]
+            },
+            
+            'AI Ethics and Governance': {
+                'keywords': ['ethics', 'ethical', 'governance', 'accountability', 'transparency',
+                           'responsible ai', 'ethical ai', 'ai policy', 'regulation', 'compliance',
+                           'ethical guidelines', 'ai oversight', 'responsible innovation', 'trustworthy ai',
+                           'ai ethics board', 'ethical framework', 'ai governance framework',
+                           'ethical decision making', 'ai risk management', 'stakeholder engagement',
+                           'institutional strategies', 'policy enforcement', 'monitoring mechanisms',
+                           'sanctioning mechanisms', 'policy adoption', 'draft policies', 'formal policies',
+                           'enforcement mechanisms', 'policy development', 'standardized guidelines',
+                           'policy templates', 'policy compliance', 'institutional variation', 'regional contexts'],
+                'patterns': [
+                    'ethical ai development', 'ai governance model', 'responsible ai practices',
+                    'ai ethics framework', 'transparent ai systems', 'accountable ai',
+                    'ai policy development', 'ethical guidelines for ai', 'ai oversight committee',
+                    'trust in ai systems', 'ai risk assessment', 'stakeholder involvement in ai',
+                    'ethical ai implementation', 'ai governance structure', 'ai policy compliance',
+                    'ethical ai use in education', 'ai decision making process', 'ai impact assessment',
+                    'ai transparency standards', 'ai accountability framework',
+                    'institutional ai strategies', 'ai policy enforcement', 'monitoring ai compliance',
+                    'sanctioning ai misuse', 'ai policy adoption rates', 'draft ai policies',
+                    'formal ai policies', 'enforcing ai policies', 'developing ai policies',
+                    'standardized ai guidelines', 'ai policy templates', 'ensuring policy compliance',
+                    'institutional variations in ai policy', 'regional ai policy contexts',
+                    'faculty involvement in ai policy', 'student input in ai policy',
+                    'ai policy implementation gaps', 'ai policy monitoring tools'
                 ]
             },
             
             'Privacy and Data': {
                 'keywords': ['privacy', 'private', 'data', 'personal', 'confidential', 'gdpr',
-                           'consent', 'anonymization', 'protection', 'security', 'information'],
+                           'consent', 'anonymization', 'protection', 'security', 'information',
+                           'biometric', 'surveillance', 'monitoring', 'tracking', 'identification',
+                           'data retention', 'data minimization', 'purpose limitation'],
                 'patterns': [
                     'data privacy', 'personal data', 'data protection', 'privacy rights',
-                    'data security', 'informed consent', 'data anonymization'
+                    'data security', 'informed consent', 'data anonymization',
+                    'biometric data', 'real-time identification', 'public surveillance',
+                    'data retention policy', 'purpose limitation principle'
+                ]
+            },
+            
+            'GenAI in Learning and Assessment': {
+                'keywords': ['generative ai', 'genai', 'ai-assisted learning', 'ai in assessment', 'automated grading',
+                           'personalized learning', 'adaptive learning', 'learning analytics', 'formative assessment',
+                           'summative assessment', 'feedback generation', 'assignment design', 'assessment criteria',
+                           'visual media', 'interactive', 'multimodal', 'image generation', 'code generation',
+                           'academic integrity', 'authentic assessment', 'process-oriented', 'higher-order thinking',
+                           'alternative formats', 'oral exams', 'collaborative projects', 'in-person assessments',
+                           'prompt engineering', 'visual generation', 'interactive media', 'multimodal learning',
+                           'academic honesty', 'policy enforcement', 'educational standards', 'assignment submission',
+                           'policy compliance', 'academic conduct', 'syllabus statements', 'writing expectations',
+                           'academic violations', 'course-specific policies', 'ai detection tools', 'assignment redesign',
+                           'ferpa compliance', 'disclosure requirements', 'attribution', 'instructor autonomy',
+                           'faculty guidelines', 'student guidelines', 'researcher guidelines', 'staff guidelines',
+                           'admin guidelines'],
+                'patterns': [
+                    'generative ai in education', 'ai-assisted assessment', 'automated feedback systems',
+                    'personalized learning with ai', 'adaptive learning technologies', 'ai in formative assessment',
+                    'ai for summative assessment', 'intelligent tutoring systems', 'ai-generated feedback',
+                    'assignment redesign with ai', 'competency-based assessment', 'ai and learning analytics',
+                    'visual media generation', 'interactive ai tools', 'multimodal learning experiences',
+                    'ai in visual arts', 'ai for code generation', 'ai in programming education',
+                    'ai and academic integrity', 'detecting ai-generated content', 'authentic assessment design',
+                    'process-oriented assessment', 'higher-order thinking skills', 'alternative assessment formats',
+                    'oral examination with ai', 'collaborative ai projects', 'in-person assessment methods',
+                    'ai in assignment design', 'effective prompt engineering', 'visual content creation',
+                    'interactive learning tools', 'multimodal content generation', 'ai and academic honesty',
+                    'enforcing ai policies', 'academic standards with ai', 'ai in assignment submission',
+                    'ai policy compliance', 'ai in academic conduct', 'syllabus statements on ai',
+                    'writing expectations with ai', 'preventing ai violations', 'ai in academic integrity',
+                    'course-specific ai policies', 'ai detection in education', 'ferpa and ai tools',
+                    'ai use disclosure', 'proper attribution of ai', 'faculty autonomy in ai use',
+                    'university ai guidelines', 'ai policy templates', 'ai in higher education'
                 ]
             },
             
@@ -132,30 +255,308 @@ class ThemeExtractor:
                 ]
             },
             
+            'Student Perspectives on AI': {
+                'keywords': ['student perspective', 'student voice', 'learner experience', 'student feedback',
+                           'student perceptions', 'student concerns', 'student benefits', 'student challenges',
+                           'academic integrity', 'ai literacy', 'policy awareness', 'student needs',
+                           'learning enhancement', 'creativity support', 'personalized learning', 'academic support',
+                           'misuse concerns', 'over-reliance', 'skill development', 'student empowerment'],
+                'patterns': [
+                    'student views on ai', 'ai in student learning', 'ai for academic support',
+                    'student ai literacy', 'ethical ai use by students', 'ai and academic integrity',
+                    'student ai policy awareness', 'ai for personalized learning', 'ai in coursework',
+                    'student research with ai', 'ai for student productivity', 'ai and student creativity',
+                    'student concerns about ai', 'ai policy for students', 'student centered ai policies',
+                    'ai in higher education', 'student ai training', 'ai for student success',
+                    'student engagement with ai', 'ai and student assessment'
+                ]
+            },
+            
             'Student Guidelines': {
                 'keywords': ['student', 'students', 'learner', 'pupil', 'coursework', 'assignment',
-                           'homework', 'submission', 'project', 'essay', 'report'],
+                           'homework', 'submission', 'project', 'essay', 'report',
+                           'ai literacy', 'academic integrity', 'responsible use', 'policy awareness',
+                           'skill development', 'learning enhancement', 'creativity support', 'personalization'],
                 'patterns': [
                     'student use', 'student guidelines', 'assignment policy', 'coursework rules',
-                    'student responsibilities', 'ai in assignments', 'student conduct'
+                    'student responsibilities', 'ai in assignments', 'student conduct',
+                    'ai literacy for students', 'responsible ai use', 'academic integrity with ai',
+                    'student ai policy', 'ai for learning enhancement', 'ai in student work',
+                    'student ai training', 'ai for academic success', 'student ai best practices'
+                ]
+            },
+            
+            'Socio-Emotional Impact of AI': {
+                'keywords': ['emotional impact', 'teacher emotions', 'student emotions', 'classroom dynamics',
+                           'human agency', 'autonomy', 'trust', 'anxiety', 'excitement', 'adaptation',
+                           'teacher-student relationship', 'emotional labor', 'wellbeing', 'stress',
+                           'emotional adaptation', 'emotional readiness', 'emotional intelligence',
+                           'socio-emotional learning', 'emotional response', 'psychological impact'],
+                'patterns': [
+                    'socio-emotional impact', 'emotional dynamics of ai', 'ai and teacher emotions',
+                    'human agency in ai', 'teacher autonomy with ai', 'ai and classroom dynamics',
+                    'emotional labor of teaching with ai', 'ai and student wellbeing',
+                    'emotional adaptation to technology', 'ai and teacher stress',
+                    'trust in ai systems', 'ai and emotional intelligence',
+                    'psychological impact of ai', 'ai and socio-emotional learning',
+                    'emotional responses to automation', 'ai and human connection'
                 ]
             },
             
             'Faculty Guidelines': {
                 'keywords': ['faculty', 'teacher', 'instructor', 'professor', 'staff', 'educator',
-                           'teaching', 'pedagogy', 'curriculum', 'course', 'classroom'],
+                           'teaching', 'pedagogy', 'curriculum', 'course', 'classroom',
+                           'emotional impact', 'autonomy', 'trust', 'agency', 'decision-making',
+                           'professional development', 'training', 'support', 'guidance'],
                 'patterns': [
                     'faculty guidelines', 'instructor policy', 'teaching with ai',
-                    'faculty responsibilities', 'classroom ai', 'pedagogical use'
+                    'faculty responsibilities', 'classroom ai', 'pedagogical use',
+                    'ai and teacher autonomy', 'faculty training on ai', 'ai in teaching practice',
+                    'educator support for ai', 'ai decision-making in education',
+                    'faculty ai literacy', 'ai and teaching methods', 'educator ai resources'
+                ]
+            },
+            
+            'NLP and Text Analysis': {
+                'keywords': ['text mining', 'natural language processing', 'nlp', 'topic modeling', 'sentiment analysis',
+                           'text classification', 'keyword extraction', 'document analysis', 'text preprocessing',
+                           'feature extraction', 'machine learning', 'deep learning', 'text analytics', 'corpus analysis',
+                           'semantic analysis', 'syntactic analysis', 'discourse analysis', 'content analysis',
+                           'information retrieval', 'text summarization', 'named entity recognition', 'part-of-speech tagging'],
+                'patterns': [
+                    'natural language processing', 'text mining techniques', 'topic modeling with lda',
+                    'sentiment analysis of text', 'document classification', 'keyword extraction methods',
+                    'text preprocessing pipeline', 'feature extraction from text', 'machine learning for nlp',
+                    'deep learning in text analysis', 'text analytics pipeline', 'corpus linguistics',
+                    'semantic text analysis', 'syntactic parsing', 'discourse analysis methods',
+                    'content analysis framework', 'information retrieval systems', 'automated text summarization',
+                    'named entity recognition', 'part-of-speech tagging', 'text classification algorithms',
+                    'bias detection in text', 'text data visualization', 'text mining applications', 'nlp in policy analysis'
                 ]
             },
             
             'Research and Innovation': {
                 'keywords': ['research', 'innovation', 'development', 'advancement', 'discovery',
-                           'investigation', 'study', 'experiment', 'analysis', 'methodology'],
+                           'investigation', 'study', 'experiment', 'analysis', 'methodology',
+                           'text mining', 'nlp', 'topic modeling', 'sentiment analysis', 'machine learning',
+                           'data science', 'artificial intelligence', 'computational methods', 'quantitative analysis',
+                           'qualitative analysis', 'mixed methods', 'empirical research', 'theoretical framework'],
                 'patterns': [
                     'ai research', 'research ethics', 'innovation policy', 'research integrity',
-                    'ai development', 'research methodology', 'scientific research'
+                    'ai development', 'research methodology', 'scientific research', 'nlp in research',
+                    'text mining for research', 'machine learning applications', 'data science methods',
+                    'computational social science', 'quantitative text analysis', 'qualitative text analysis',
+                    'mixed methods research', 'empirical study', 'theoretical framework', 'research design',
+                    'experimental methods', 'case study research', 'longitudinal study', 'cross-sectional analysis',
+                    'systematic literature review', 'meta-analysis', 'research validation', 'reproducible research'
+                ]
+            },
+            
+            'Regulatory Compliance': {
+                'keywords': ['regulation', 'compliance', 'legislation', 'law', 'act', 'directive',
+                           'standard', 'requirement', 'obligation', 'certification', 'audit',
+                           'enforcement', 'conformity', 'assessment', 'prohibition', 'ban',
+                           'high-risk', 'unacceptable risk', 'limited risk', 'minimal risk'],
+                'patterns': [
+                    'ai regulation', 'regulatory framework', 'compliance requirements',
+                    'legal obligations', 'risk classification', 'prohibited practices',
+                    'high-risk ai', 'ai act', 'eu ai act', 'regulatory compliance',
+                    'conformity assessment', 'certification process'
+                ]
+            },
+            
+            'AI in Higher Education': {
+                'keywords': ['higher education', 'university', 'college', 'campus', 'academic',
+                           'tertiary education', 'post-secondary', 'undergraduate', 'graduate',
+                           'faculty', 'professor', 'lecturer', 'researcher', 'scholar',
+                           'academic integrity', 'plagiarism', 'cheating', 'exam proctoring',
+                           'admissions', 'enrollment', 'student records', 'academic advising',
+                           'research ethics', 'publication ethics', 'research integrity',
+                           'campus safety', 'student life', 'extracurricular', 'student services'],
+                'patterns': [
+                    'ai in higher education', 'university ai policy', 'college ai guidelines',
+                    'ai for academic research', 'ai in academic publishing', 'ai and academic integrity',
+                    'ai in student admissions', 'automated exam proctoring', 'ai for student support',
+                    'ai in academic advising', 'research ethics ai', 'ai in campus security',
+                    'ai for student retention', 'learning analytics in higher education',
+                    'ai for faculty support', 'ai in academic administration', 'ai for research assessment',
+                    'ai in student assessment', 'ai for curriculum development', 'ai in academic libraries'
+                ]
+            },
+            
+
+            'GenAI in Learning and Assessment': {
+                'keywords': ['genai', 'generative ai', 'chatgpt', 'assignment', 'prompt', 'learning',
+                           'assessment', 'class', 'design', 'visual media', 'interactive', 'multimodal',
+                           'image generation', 'code generation', 'academic integrity', 'authentic assessment',
+                           'process-oriented', 'higher-order thinking', 'alternative formats', 'oral exams',
+                           'collaborative projects', 'in-person assessments', 'assignment design', 'prompt engineering',
+                           'visual generation', 'interactive media', 'multimodal learning', 'academic honesty',
+                           'policy enforcement', 'educational standards', 'assignment submission', 'policy compliance',
+                           'academic conduct', 'syllabus statements', 'writing expectations', 'academic violations'],
+                'patterns': [
+                    'genai in assignments', 'ai-assisted learning', 'automated grading', 'personalized learning with ai',
+                    'adaptive learning technologies', 'ai in formative assessment', 'ai for summative assessment',
+                    'intelligent tutoring systems', 'ai-generated feedback', 'assignment redesign with ai',
+                    'competency-based assessment', 'ai and learning analytics', 'visual media generation',
+                    'interactive ai tools', 'multimodal learning experiences', 'ai in visual arts',
+                    'ai for code generation', 'ai in programming education', 'ai and academic integrity',
+                    'detecting ai-generated content', 'authentic assessment design', 'process-oriented assessment',
+                    'higher-order thinking skills', 'alternative assessment formats', 'oral examination with ai',
+                    'collaborative ai projects', 'in-person assessment methods', 'ai in assignment design',
+                    'effective prompt engineering', 'visual content creation', 'interactive learning tools',
+                    'multimodal content generation', 'ai and academic honesty', 'enforcing ai policies',
+                    'academic standards with ai', 'ai in assignment submission', 'ai policy compliance',
+                    'ai in academic conduct', 'syllabus statements on ai', 'writing expectations with ai',
+                    'preventing ai violations', 'ai in academic integrity'
+                ]
+            },
+            
+            'AI in Education': {
+                'keywords': ['education', 'learning', 'teaching', 'pedagogy', 'curriculum',
+                           'classroom', 'student', 'teacher', 'instructor', 'faculty',
+                           'academic', 'university', 'school', 'higher education', 'lifelong learning',
+                           'personalized learning', 'adaptive learning', 'educational technology',
+                           'coursework', 'academic work', 'learning management', 'lms', 'vle',
+                           'intelligent tutoring', 'learning analytics', 'automated feedback',
+                           'collaborative learning', 'educational management', 'student services',
+                           'quality assurance', 'remote learning', 'cultural adaptation', 'sdg 4',
+                           'k-12', 'primary education', 'secondary education', 'vocational training',
+                           'llms', 'ai literacy', 'ai policy', 'ai governance',
+                           'ai ethics', 'ai implementation', 'ai adoption', 'ai challenges', 'ai opportunities'],
+                'patterns': [
+                    'ai in education', 'educational technology', 'digital learning', 'smart classroom',
+                    'personalized learning', 'adaptive learning', 'learning analytics', 'edtech',
+                    'ai for education', 'education technology', 'digital education', 'ai in teaching',
+                    'ai in learning', 'ai in higher education', 'ai in schools', 'ai in universities',
+                    'llm applications', 'generative ai in education', 'ai policy in education',
+                    'ai governance in academia', 'ai literacy programs', 'ai implementation strategies',
+                    'ai adoption challenges', 'ai in curriculum development', 'ai for student success'
+                    'academic integrity', 'learning management system', 'virtual learning environment',
+                    'intelligent tutoring systems', 'personalized learning', 'learning analytics',
+                    'administrative efficiency', 'educational management', 'resource allocation',
+                    'student support services', 'quality assurance in education', 'sustainable development goal 4',
+                    'inclusive education', 'equitable access', 'lifelong learning opportunities',
+                    'ai in k-12 education', 'ai in primary schools', 'ai in secondary education',
+                    'vocational training with ai', 'ai for special education', 'inclusive learning with ai'
+                ]
+            },
+            
+            'Human-Centric AI in Education': {
+                'keywords': ['human rights', 'human-centric', 'ethical ai', 'inclusion', 'equity',
+                           'sustainability', 'transparency', 'non-discrimination', 'auditability',
+                           'human dignity', 'human agency', 'human oversight', 'human control',
+                           'ethical framework', 'human values', 'human wellbeing', 'human development',
+                           'social impact', 'cultural sensitivity', 'context awareness'],
+                'patterns': [
+                    'human rights based approach', 'human centric ai', 'ethical artificial intelligence',
+                    'inclusive education', 'equitable ai', 'sustainable development',
+                    'transparent algorithms', 'non-discriminatory ai', 'auditable ai systems',
+                    'human dignity in ai', 'human agency in education', 'human oversight of ai',
+                    'human control over ai', 'ethical framework for ai', 'human values in technology',
+                    'human wellbeing and ai', 'human development through ai', 'social impact of ai',
+                    'culturally sensitive ai', 'context aware education'
+                ]
+            },
+            
+            'AI Implementation in Institutions': {
+                'keywords': ['implementation', 'adoption', 'integration', 'deployment', 'rollout',
+                           'institutional', 'strategy', 'roadmap', 'stakeholder', 'adoption stages',
+                           'exploratory', 'pilot', 'scaling', 'institutional policy', 'governance',
+                           'compliance', 'oversight', 'committee', 'steering group', 'working group'],
+                'patterns': [
+                    'ai implementation', 'institutional adoption', 'ai strategy', 'adoption roadmap',
+                    'stakeholder engagement', 'implementation phases', 'pilot program', 'scaling ai',
+                    'institutional policy', 'ai governance', 'oversight committee', 'technical integration',
+                    'system compatibility', 'lms integration', 'infrastructure requirements', 'resource allocation'
+                ]
+            },
+            
+            'AI Literacy and Training': {
+                'keywords': ['literacy', 'training', 'skills', 'competencies', 'capacity',
+                           'professional development', 'workshop', 'seminar', 'course', 'program',
+                           'pedagogical', 'didactic', 'instructional', 'faculty development',
+                           'student training', 'digital skills', 'ai competencies', 'workshop',
+                           'tutorial', 'handbook', 'guide', 'resource', 'toolkit', 'workshop series',
+                           'certification', 'microcredentials', 'upskilling', 'reskilling',
+                           'faculty resources', 'staff development', 'continuous learning', 'capacity building'],
+                'patterns': [
+                    'ai literacy', 'digital literacy', 'ai training', 'professional development',
+                    'faculty training', 'student training', 'ai skills', 'digital competencies',
+                    'ai education program', 'teacher training in ai', 'ai curriculum',
+                    'pedagogical training', 'digital upskilling', 'ai workshops', 'training materials',
+                    'faculty resources', 'staff development', 'ai certification', 'microcredentials',
+                    'continuous learning', 'capacity building', 'training resources', 'faculty guide',
+                    'ai toolkit', 'professional learning community', 'faculty learning community'
+                ]
+            },
+            
+            'AI Risk Management': {
+                'keywords': ['risk', 'safety', 'compliance', 'assessment', 'mitigation',
+                           'unacceptable risk', 'high risk', 'limited risk', 'minimal risk',
+                           'manipulation', 'deception', 'exploitation', 'vulnerability',
+                           'social scoring', 'emotion recognition', 'biometric identification',
+                           'biometric categorization', 'critical infrastructure', 'essential services',
+                           'law enforcement', 'justice', 'democracy', 'cybersecurity', 'robustness',
+                           'transparency', 'disclosure', 'labeling', 'deepfake', 'synthetic media'],
+                'patterns': [
+                    'risk assessment', 'risk mitigation', 'safety evaluations', 'compliance requirements',
+                    'unacceptable risk ai', 'banned ai practices', 'harmful manipulation', 'deceptive ai',
+                    'exploitation of vulnerabilities', 'social credit system', 'emotion recognition ban',
+                    'real-time biometric identification', 'biometric categorization ban', 'high risk ai systems',
+                    'critical infrastructure ai', 'essential services ai', 'law enforcement ai',
+                    'ai in justice system', 'ai in democratic processes', 'cybersecurity requirements',
+                    'ai robustness standards', 'transparency obligations', 'ai disclosure requirements',
+                    'ai content labeling', 'deepfake identification', 'synthetic media labeling'
+                ]
+            },
+            
+            'AI Policy and Governance': {
+                'keywords': ['policy', 'governance', 'framework', 'guidelines', 'standards',
+                           'regulation', 'compliance', 'oversight', 'accountability', 'stewardship',
+                           'ethics committee', 'review board', 'policy development', 'implementation',
+                           'interdisciplinary', 'intersectoral', 'multistakeholder', 'global coordination',
+                           'strategic planning', 'master plan', 'roadmap', 'implementation strategy',
+                           'monitoring', 'evaluation', 'impact assessment', 'equity monitoring',
+                           'effectiveness evaluation', 'continuous improvement', 'sdg 4', 'sustainable development',
+                           'eu ai act', 'artificial intelligence act', 'ai regulation', 'legal framework'],
+                'patterns': [
+                    'ai policy framework', 'governance structure', 'policy development',
+                    'compliance monitoring', 'ethics review', 'risk assessment',
+                    'stakeholder consultation', 'decision-making framework', 'transparency in ai',
+                    'policy implementation', 'monitoring and evaluation', 'interdisciplinary planning',
+                    'intersectoral governance', 'multistakeholder collaboration', 'global coordination',
+                    'strategic vision', 'master plan development', 'implementation roadmap',
+                    'monitoring framework', 'evaluation framework', 'impact assessment',
+                    'equity monitoring', 'effectiveness evaluation', 'continuous improvement',
+                    'sustainable development goal 4', 'inclusive policy making', 'evidence-based policy',
+                    'eu artificial intelligence act', 'ai legal framework', 'ai regulatory requirements',
+                    'ai compliance framework', 'ai governance model', 'ai policy development'
+                ]
+            },
+            
+            'Institutional Governance and Policy': {
+                'keywords': ['governance', 'policy', 'framework', 'guidelines', 'standards',
+                           'regulation', 'compliance', 'oversight', 'accountability', 'stewardship',
+                           'ethics committee', 'review board', 'policy development', 'implementation'],
+                'patterns': [
+                    'institutional governance', 'ai policy framework', 'governance structure',
+                    'policy development', 'compliance monitoring', 'ethics review',
+                    'risk assessment', 'stakeholder consultation', 'decision-making framework',
+                    'transparency in ai', 'policy implementation', 'monitoring and evaluation'
+                ]
+            },
+            
+            'Academic Integrity and AI': {
+                'keywords': ['integrity', 'honesty', 'plagiarism', 'cheating', 'misconduct',
+                           'originality', 'authorship', 'attribution', 'citation', 'referencing',
+                           'authenticity', 'academic dishonesty', 'contract cheating', 'ghostwriting',
+                           'ai-generated content', 'ai-assisted writing'],
+                'patterns': [
+                    'academic integrity', 'ai and plagiarism', 'ai in academic writing',
+                    'ai-generated assignments', 'contract cheating', 'ghostwriting services',
+                    'academic honesty', 'original work', 'authorship attribution',
+                    'ai detection', 'plagiarism detection', 'citation ethics'
                 ]
             }
         }

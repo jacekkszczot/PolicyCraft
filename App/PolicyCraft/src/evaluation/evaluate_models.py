@@ -41,6 +41,10 @@ Note:
     The evaluation includes both statistical metrics and practical considerations
     for deployment in the PolicyCraft platform. The fairness analysis helps
     identify potential biases in model performance across different groups.
+
+Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 import argparse
 import pandas as pd

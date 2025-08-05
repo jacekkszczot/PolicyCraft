@@ -186,7 +186,6 @@ def register():
                 password=form.password.data,
                 first_name=form.first_name.data.strip() if form.first_name.data else None,
                 last_name=form.last_name.data.strip() if form.last_name.data else None,
-                gender=form.gender.data,
                 institution=form.institution.data.strip()
             )
             
@@ -364,7 +363,6 @@ def update_profile():
         - Empty fields are converted to None in the database
         - Changes are atomic (all or nothing) within a transaction
     """
-    gender = request.form.get('gender', '').strip()
     first_name = request.form.get('first_name', '').strip()
     last_name = request.form.get('last_name', '').strip()
     institution = request.form.get('institution', '').strip()
@@ -380,7 +378,6 @@ def update_profile():
     
     current_user.first_name = first_name or None
     current_user.last_name = last_name or None
-    current_user.gender = gender or None
     current_user.institution = institution or None
     try:
         db.session.commit()

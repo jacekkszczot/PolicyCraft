@@ -1739,6 +1739,77 @@ class RecommendationEngine:
         print("   • Context-aware recommendations with academic foundation")
         print("   • Comprehensive gap analysis and prioritisation")
 
+    def get_enhanced_recommendations(self, policy_analysis: Dict) -> Dict:
+        """
+        Enhance policy recommendations with additional insights from the knowledge base.
+        
+        This method takes an existing policy analysis and enriches it with additional
+        recommendations and insights derived from the knowledge base. It's particularly
+        useful for adding context-specific suggestions based on the policy's classification
+        and identified gaps.
+        
+        Args:
+            policy_analysis: A dictionary containing the policy analysis results,
+                           including themes, classification, and initial recommendations.
+                           
+        Returns:
+            Dict: The enhanced policy analysis with additional recommendations and
+                 insights from the knowledge base.
+        """
+        try:
+            logger.info(f"Enhancing recommendations for policy analysis")
+            
+            # Extract relevant information from policy analysis
+            classification = policy_analysis.get('classification', {})
+            gaps = policy_analysis.get('gap_analysis', [])
+            current_recommendations = policy_analysis.get('recommendations', [])
+            
+            # Initialize enhanced recommendations with current ones
+            enhanced_recommendations = list(current_recommendations)
+            
+            # Add knowledge base specific enhancements based on policy classification
+            policy_type = classification.get('type', 'moderate').lower()
+            
+            if policy_type == 'restrictive':
+                enhanced_recommendations.append({
+                    'title': 'Consider Balanced Approach to AI Integration',
+                    'description': 'While maintaining safeguards, explore opportunities for responsible AI use in teaching and learning.',
+                    'source': 'BERA (2018) Ethical Guidelines',
+                    'priority': 'medium',
+                    'implementation_effort': 'moderate',
+                    'impact': 'high',
+                    'category': 'policy_approach'
+                })
+            
+            # Add recommendations based on identified gaps
+            for gap in gaps:
+                if 'transparency' in gap.get('dimension', '').lower():
+                    enhanced_recommendations.append({
+                        'title': 'Enhance Transparency Measures',
+                        'description': 'Implement clear documentation and communication about AI system capabilities and limitations.',
+                        'source': 'UNESCO (2023) AI in Education',
+                        'priority': 'high',
+                        'implementation_effort': 'low',
+                        'impact': 'high',
+                        'category': gap['dimension']
+                    })
+            
+            # Update the policy analysis with enhanced recommendations
+            policy_analysis['enhanced_recommendations'] = enhanced_recommendations
+            policy_analysis['knowledge_base_insights'] = {
+                'sources_consulted': ['BERA (2018)', 'UNESCO (2023)'],
+                'enhancement_date': datetime.now().isoformat(),
+                'enhancement_version': '1.0'
+            }
+            
+            return policy_analysis
+            
+        except Exception as e:
+            logger.error(f"Error enhancing recommendations: {str(e)}")
+            # Return original analysis if enhancement fails
+            policy_analysis['enhancement_error'] = str(e)
+            return policy_analysis
+
     def generate_recommendations(self, themes: List[Dict], classification: Dict, 
                                text: str, analysis_id: str = None) -> Dict:
         """

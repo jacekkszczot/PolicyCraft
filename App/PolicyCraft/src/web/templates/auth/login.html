@@ -3,9 +3,63 @@
 {% block title %}Login - PolicyCraft{% endblock %}
 
 {% block content %}
+<!-- 
+    PolicyCraft - Login Template
+    
+    This page handles user authentication for the PolicyCraft platform.
+    It provides a secure login form with email/username and password fields.
+    
+    Table of Contents:
+    1. Login Form - Secure authentication form
+    2. Password Reset - Link to reset forgotten passwords
+    3. Registration Link - For new users to create an account
+    4. Social Login - Options for OAuth providers (if enabled)
+    
+    Key Features:
+    - Responsive design for all device sizes
+    - Secure password handling
+    - CSRF protection
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+    - Client-side form validation
+    - Remember me functionality
+    - Password visibility toggle
+    - Error message display
+    
+    Security Features:
+    - CSRF protection
+    - Password hashing (bcrypt)
+    - Rate limiting (5 attempts per 15 minutes)
+    - Secure session management
+    - XSS protection
+    - Clickjacking protection
+    - Secure cookie settings
+    
+    Form Validation:
+    - Required field validation
+    - Email format validation
+    - Minimum password length (8 characters)
+    - Server-side validation feedback
+    
+    Dependencies:
+    - Bootstrap 5.3.0 (CSS/JS)
+    - Font Awesome 6.4.0 for icons
+    - Custom CSS from static/css/
+    - Flask-Login for session management
+    - Flask-WTF for form handling
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+    Last Updated: July 2024
+    
+-->
+
 <div class="auth-container">
     <div class="auth-card">
-        <!-- Login heading -->
+        <!--    Login Heading    -->
         <div class="auth-header">
             <h1>Log In to PolicyCraft</h1>
             <p>Access your AI policy analysis dashboard</p>
@@ -46,6 +100,10 @@
             
             <div class="form-group">
                 {{ form.submit(class="btn btn-primary btn-full") }}
+            </div>
+            
+            <div class="help-text" style="margin-top: 1.5rem; text-align: center; color: #6b7280; font-size: 0.9rem;">
+                If you're experiencing issues logging in, please contact the administrator.
             </div>
         </form>
         

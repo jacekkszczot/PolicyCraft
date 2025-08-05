@@ -1,4 +1,21 @@
-"""Basic tests for MongoOperations persistence layer."""
+"""
+Test Suite for MongoDB Operations in PolicyCraft AI Policy Analysis Platform.
+
+This module contains comprehensive tests for the MongoOperations class, which handles
+all database interactions with MongoDB for the PolicyCraft application. The tests
+verify the correct storage, retrieval, and management of policy analyses and
+recommendations in the database.
+
+Key Test Areas:
+- Storage and retrieval of policy analysis results
+- Management of recommendation data
+- Database connection and error handling
+- Data integrity and isolation
+
+Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
+"""
 
 import pytest
 from src.database.mongo_operations import MongoOperations

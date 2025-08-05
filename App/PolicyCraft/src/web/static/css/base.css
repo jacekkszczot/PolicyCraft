@@ -1,7 +1,59 @@
-/* 
+/**
+ * ============================================================================
  * PolicyCraft - Base Styles
- * Reset, Typography, and Basic Layout
+ * ============================================================================
+ * 
+ * This file contains the foundational styles for the PolicyCraft application,
+ * including CSS resets, typography rules, and basic layout structures that
+ * provide a consistent look and feel across all pages. These styles serve as
+ * the core styling layer that other component-specific styles build upon.
+ *
+ * Table of Contents:
+ * 1. CSS Custom Properties (Variables)
+ * 2. CSS Resets & Normalization
+ * 3. Typography
+ * 4. Base Elements
+ * 5. Layout Components
+ * 6. Profile Page Styles
+ * 7. Utility Classes
+ *
+ * Key Features:
+ * - Modern CSS reset for consistent cross-browser rendering
+ * - Responsive typography with fluid type scaling
+ * - Consistent spacing system using CSS custom properties
+ * - Accessible focus states and interactive elements
+ * - Print styles for better document output
+ * - Dark mode support via CSS custom properties
+ *
+ * Organization:
+ * - Variables are defined at the top for easy customization
+ * - Styles progress from most generic to most specific
+ * - Related styles are grouped together with clear section headers
+ * - All selectors are prefixed with appropriate namespaces
+ *
+ * Best Practices:
+ * - Use CSS Custom Properties for theming and consistent values
+ * - Follow BEM (Block Element Modifier) naming convention
+ * - Keep selectors specific but not overly specific
+ * - Group related properties together (layout, typography, colors, etc.)
+ * - Use relative units (rem, em) for better accessibility
+ * - Implement prefers-reduced-motion for animations
+ * - Ensure sufficient color contrast for readability
+ *
+ * Dependencies:
+ * - variables.css for color schemes and design tokens
+ * - layout.css for structural components
+ * - responsive.css for media query breakpoints
+ *
+ * Author: Jacek Robert Kszczot
+ * Project: MSc Data Science & AI - COM7016
+ * University: Leeds Trinity University
+ * Last Updated: July 2024
+ * ============================================================================
  */
+
+/* Import variables first to ensure they're available to all styles */
+@import 'variables.css';
 
 /* === Profile Page === */
 .profile-container {

@@ -11,6 +11,7 @@ Usage:
 
 Author: Jacek Robert Kszczot
 Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 
 import subprocess

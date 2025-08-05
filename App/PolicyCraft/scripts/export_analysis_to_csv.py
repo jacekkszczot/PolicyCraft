@@ -1,11 +1,24 @@
-# !/usr/bin/env python3
-"""Export analysed policy documents to CSV for model evaluation.
+#!/usr/bin/env python3
+"""
+Data Export Utility for PolicyCraft AI Policy Analysis Platform.
 
-The script reads JSON storage via DatabaseOperations and writes a CSV file
-containing cleaned text, predicted label, and (optionally) institution type.
+This script exports analysed policy documents to CSV format for model evaluation and
+further analysis. It extracts cleaned text, classification labels, and institutional
+metadata from the database and formats them into a structured CSV file.
+
+Key Features:
+- Exports cleaned policy text and classification results
+- Includes institutional metadata for analysis
+- Supports filtering by document type and source
+- Generates formatted CSV output for use in data analysis tools
 
 Usage:
     python scripts/export_analysis_to_csv.py --output data/policy_dataset.csv
+    python scripts/export_analysis_to_csv.py --include_clean --output full_dataset.csv
+
+Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 import argparse
 import os

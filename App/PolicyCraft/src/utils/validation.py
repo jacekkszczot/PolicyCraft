@@ -1,4 +1,20 @@
-"""Utility functions for validating recommendation citations."""
+"""
+Validation Utilities for PolicyCraft AI Policy Analysis.
+
+This module provides validation functions for ensuring data integrity and consistency
+across the PolicyCraft platform. It includes utilities for validating recommendation
+citations, academic references, and other data structures used throughout the application.
+
+Key Features:
+- Validation of academic references against a centralised reference library
+- Citation normalisation and matching for robust reference checking
+- Detection of potentially outdated or missing references
+- Support for batch validation of multiple recommendations
+
+Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
+"""
 from __future__ import annotations
 
 from pathlib import Path

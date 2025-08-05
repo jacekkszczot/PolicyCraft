@@ -1,11 +1,22 @@
 """
-Integration tests for PolicyCraft Analysis Pipeline
-Tests the complete workflow from file upload to recommendations.
+Integration Test Suite for PolicyCraft Analysis Pipeline
+
+This module contains end-to-end tests that validate the complete PolicyCraft analysis
+workflow, from document upload through policy analysis to recommendation generation.
+These tests ensure all components work together correctly in a production-like environment.
+
+Test Coverage:
+- Complete document processing pipeline
+- Integration between text processing, theme extraction, and classification
+- Recommendation generation based on analysis results
+- Error handling and edge cases in the complete workflow
+- Performance characteristics with realistic document sizes
 
 Author: Jacek Robert Kszczot
 Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 
-Priority: HIGH - Validates complete system integration
+Priority: HIGH - Validates complete system integration and workflow
 """
 
 import pytest

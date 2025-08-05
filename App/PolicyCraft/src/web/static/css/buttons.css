@@ -1,7 +1,60 @@
-/* 
+/**
+ * ============================================================================
  * PolicyCraft - Button Styles
- * All button variants and states
+ * ============================================================================
+ *
+ * This file contains all button-related styles for the PolicyCraft application.
+ * It defines the visual appearance, states, and behaviors of all button components
+ * used throughout the interface, ensuring consistency in user interactions.
+ *
+ * Table of Contents:
+ * 1. Base Button Styles
+ * 2. Button Variants
+ *   2.1 Primary Buttons
+ *   2.2 Secondary Buttons
+ *   2.3 Tertiary Buttons
+ *   2.4 Text Buttons
+ *   2.5 Icon Buttons
+ * 3. Button Sizes
+ * 4. Button States
+ * 5. Button Groups
+ * 6. Responsive Adjustments
+ *
+ * Key Features:
+ * - Consistent button styling across the application
+ * - Multiple button variants for different use cases
+ * - Accessible focus and hover states
+ * - Responsive button sizes
+ * - Support for icons within buttons
+ * - Disabled state styling
+ * - Loading state indicators
+ *
+ * Best Practices:
+ * - Use semantic button elements (<button>) for actions
+ * - Include appropriate ARIA attributes for accessibility
+ * - Ensure sufficient color contrast for readability
+ * - Provide visual feedback on interaction
+ * - Use consistent spacing and padding
+ * - Test with keyboard navigation
+ *
+ * Dependencies:
+ * - variables.css for colors, spacing, and typography
+ * - layout.css for consistent spacing
+ * - responsive.css for breakpoint variables
+ *
+ * Author: Jacek Robert Kszczot
+ * Project: MSc Data Science & AI - COM7016
+ * University: Leeds Trinity University
+ * Last Updated: July 2024
+ * ============================================================================
  */
+
+/* Import variables first to ensure they're available to all styles */
+@import 'variables.css';
+
+/* ========================
+   1. Base Button Styles
+   ======================== */
 
 .btn {
     display: inline-flex;

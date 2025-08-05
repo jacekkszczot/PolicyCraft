@@ -1,11 +1,21 @@
 """
-Test suite for PolicyCraft Recommendation Engine
-Tests the core recommendation generation functionality including ethical framework analysis.
+Test Suite for PolicyCraft Recommendation Engine
+
+This module contains comprehensive tests for the PolicyCraft Recommendation Engine,
+which is responsible for generating AI policy recommendations based on ethical frameworks
+and institutional context. The tests cover the complete recommendation generation
+pipeline, including ethical framework analysis, context detection, and scoring.
+
+Test Coverage:
+- EthicalFrameworkAnalyzer: Tests for coverage analysis and scoring
+- RecommendationGenerator: Tests for context-aware recommendation generation
+- RecommendationEngine: Integration tests for the complete recommendation workflow
 
 Author: Jacek Robert Kszczot
 Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 
-Priority: CRITICAL - This is the heart of the application
+Priority: CRITICAL - This module tests the core recommendation functionality
 """
 
 import pytest

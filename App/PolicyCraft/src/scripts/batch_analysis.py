@@ -1,9 +1,15 @@
-# !/usr/bin/env python3
+#!/usr/bin/env python3
 """
-Batch analysis of clean university AI policy dataset.
-Tests full PolicyCraft pipeline on real university policies.
+Batch Analysis Module for PolicyCraft AI Policy Evaluation.
+
+This module provides functionality for processing multiple policy documents in batch,
+applying the full PolicyCraft analysis pipeline to evaluate AI usage policies across
+multiple higher education institutions. The module generates comprehensive reports
+and visualisations of the analysis results.
 
 Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 
 import sys

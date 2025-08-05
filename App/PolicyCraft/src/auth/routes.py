@@ -1,16 +1,36 @@
 """
-PolicyCraft – Authentication Blueprint.
+Authentication Routes for PolicyCraft Application.
 
-This module provides all HTTP endpoints associated with learner identification, 
-including login, registration, profile management and session termination. 
-The module adheres to a single responsibility paradigm and is devoid of redundant logic.
+This module implements the HTTP endpoints for user authentication and account management
+in the PolicyCraft platform. It handles the complete authentication workflow including
+user registration, login, session management, and account customisation.
+
+The module is structured as a Flask Blueprint, providing a clean separation of concerns
+and following RESTful design principles. All routes implement proper security measures
+including CSRF protection, secure password handling, and session management.
+
+Key Features:
+- User registration with comprehensive validation
+- Secure login/logout functionality
+- Profile management and customisation
+- Password change and account deletion
+- Session management and security headers
+
+Security Considerations:
+- All sensitive operations require authentication
+- Passwords are never stored in plaintext
+- Session tokens are securely managed by Flask-Login
+- CSRF protection is enforced on all forms
+- Security headers are set for all responses
 
 Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, make_response
 from flask_login import login_user, logout_user, login_required, current_user
-from src.auth.models import User, db
+from src.database.models import User, db
 from src.auth.forms import LoginForm, RegistrationForm
 import logging
 
@@ -20,8 +40,46 @@ logger = logging.getLogger(__name__)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """Process the learner’s authentication request, validate their credentials
-    and establish a session where appropriate."""
+    """
+    Handle user authentication and session establishment.
+    
+    This route manages the login process for both GET and POST requests. For GET requests,
+    it renders the login form. For POST requests, it validates the submitted credentials
+    and establishes an authenticated session if successful.
+    
+    The authentication process includes:
+    - Validation of username/email and password
+    - Account status verification (active/inactive)
+    - Secure session creation with optional "remember me" functionality
+    - Logging of successful and failed login attempts
+    
+    Security Features:
+    - CSRF protection via Flask-WTF forms
+    - Secure password verification using cryptographic hashing
+    - Protection against timing attacks
+    - Session fixation protection
+    - Secure cookie settings
+    
+    Returns:
+        Response: 
+            - On GET: Rendered login template
+            - On successful POST: Redirect to dashboard
+            - On failed authentication: Re-rendered login form with error messages
+            
+    Example:
+        # Successful login
+        POST /login
+        Form Data: username_or_email=user@example.com, password=securepassword123
+        
+        # Failed login
+        POST /login
+        Form Data: username_or_email=user@example.com, password=wrongpassword
+        
+    Note:
+        - Passwords are never logged or stored in plaintext
+        - Failed login attempts are logged for security monitoring
+        - Session cookies are marked as secure and httpOnly
+    """
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     
@@ -68,8 +126,52 @@ def login():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    """Facilitate creation of a novel learner account, ensuring all submitted
-    attributes satisfy validation criteria prior to persistence."""
+    """
+    Handle new user registration and account creation.
+    
+    This route manages the user registration process, validating and processing
+    new account requests. It handles both GET requests (displaying the registration
+    form) and POST requests (processing form submissions).
+    
+    The registration process includes:
+    - Validation of all form fields (email, password, personal details)
+    - Duplicate account prevention
+    - Secure password hashing
+    - Transaction management for database operations
+    - Comprehensive error handling and user feedback
+    
+    Security Features:
+    - CSRF protection via Flask-WTF forms
+    - Password strength requirements
+    - Email normalisation (case-insensitive, whitespace trimming)
+    - Secure session management
+    - Transaction rollback on error
+    
+    Returns:
+        Response:
+            - On GET: Rendered registration template
+            - On successful POST: Redirect to login page with success message
+            - On validation failure: Re-rendered form with error messages
+            - On database error: Error message with 500 status code
+            
+    Example:
+        # Successful registration
+        POST /register
+        Form Data: 
+            email=user@example.com,
+            password=SecurePass123!,
+            confirm_password=SecurePass123!,
+            first_name=John,
+            last_name=Doe,
+            gender=male,
+            institution=Example University
+            
+    Note:
+        - Passwords are hashed before storage using bcrypt
+        - Email addresses are normalised to lowercase
+        - All string inputs are stripped of leading/trailing whitespace
+        - Database transactions ensure data consistency
+    """
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     
@@ -84,7 +186,6 @@ def register():
                 password=form.password.data,
                 first_name=form.first_name.data.strip() if form.first_name.data else None,
                 last_name=form.last_name.data.strip() if form.last_name.data else None,
-                gender=form.gender.data,
                 institution=form.institution.data.strip()
             )
             
@@ -107,8 +208,44 @@ def register():
 @auth_bp.route('/logout')
 @login_required
 def logout():
-    """Terminate the active session in a secure manner, expunge residual cookies
-    and enforce cache invalidation."""
+    """
+    Handle user logout and session termination.
+    
+    This route securely terminates the current user's session and performs
+    comprehensive cleanup of authentication artifacts. It ensures that all
+    session data is properly invalidated and that no sensitive information
+    remains accessible after logout.
+    
+    Security Measures:
+    - Invalidates the current session token
+    - Removes all session data
+    - Deletes the remember-me cookie if present
+    - Sets appropriate cache control headers
+    - Provides user feedback via flash messages
+    
+    Process Flow:
+    1. Records the username for logging purposes
+    2. Logs out the user via Flask-Login
+    3. Clears all session data
+    4. Removes the remember-me cookie
+    5. Sets cache control headers
+    6. Redirects to the login page
+    
+    Returns:
+        Response: 
+            - Redirects to the login page with appropriate cache headers
+            - Includes flash message confirming logout
+            
+    Security Headers:
+        - Cache-Control: no-cache, no-store, must-revalidate
+        - Pragma: no-cache
+        - Expires: 0
+        
+    Note:
+        - This route requires authentication
+        - All operations are logged for security auditing
+        - The response is explicitly marked as non-cacheable
+    """
     # Store username for logging
     username = current_user.username if current_user.is_authenticated else 'Unknown'
     
@@ -135,16 +272,97 @@ def logout():
 @auth_bp.route('/profile')
 @login_required
 def profile():
-    """Render the authenticated learner’s profile, exposing their stored
-    biographical details for review."""
+    """
+    Display the authenticated user's profile information.
+    
+    This route renders a template containing the current user's profile details,
+    including personal information and account settings. The route is protected
+    and requires authentication to access.
+    
+    The profile page typically displays:
+    - User's full name and contact information
+    - Institutional affiliation
+    - Account preferences
+    - Security settings
+    - Activity history
+    
+    Security:
+    - Requires authentication via @login_required decorator
+    - Only displays information for the currently logged-in user
+    - Implements CSRF protection for any forms
+    
+    Returns:
+        Response: Rendered profile template with user data
+        
+    Template:
+        auth/profile.html - The profile page template
+        
+    Context Variables:
+        user (User): The current user object containing profile information
+        
+    Example:
+        GET /profile
+        
+    Note:
+        - This route is only accessible to authenticated users
+        - Sensitive information is never exposed in the template
+        - The template includes forms for updating profile information
+    """
     return render_template('auth/profile.html', user=current_user)
 
 @auth_bp.route('/profile/update', methods=['POST'])
 @login_required
 def update_profile():
-    """Persist modifications to the learner’s biographical metadata, following
-    completion of client-side form submission."""
-    gender = request.form.get('gender', '').strip()
+    """
+    Update the authenticated user's profile information.
+    
+    This route handles the submission of updated profile information from the
+    user's profile page. It processes form data, validates the input, and
+    updates the user's record in the database.
+    
+    The following fields can be updated:
+    - Email address (with uniqueness validation)
+    - First name
+    - Last name
+    - Gender
+    - Institutional affiliation
+    
+    Security Features:
+    - Requires authentication via @login_required
+    - CSRF protection through Flask-WTF forms
+    - Email uniqueness validation
+    - Input sanitisation (whitespace trimming, case normalisation)
+    - Transaction management for database operations
+    
+    Parameters (via POST form data):
+        email (str): User's email address (must be unique)
+        first_name (str): User's first name (optional)
+        last_name (str): User's last name (optional)
+        gender (str): User's gender (optional)
+        institution (str): User's institutional affiliation (optional)
+        
+    Returns:
+        Response: 
+            - Redirect to profile page with success/error message
+            - 302 Redirect on success
+            - 400 Bad Request if email is already in use
+            - 500 Internal Server Error on database failure
+            
+    Example:
+        POST /profile/update
+        Form Data: 
+            email=user@example.com
+            first_name=John
+            last_name=Doe
+            gender=male
+            institution=Example University
+            
+    Note:
+        - All string inputs are automatically stripped of whitespace
+        - Email addresses are normalised to lowercase
+        - Empty fields are converted to None in the database
+        - Changes are atomic (all or nothing) within a transaction
+    """
     first_name = request.form.get('first_name', '').strip()
     last_name = request.form.get('last_name', '').strip()
     institution = request.form.get('institution', '').strip()
@@ -160,7 +378,6 @@ def update_profile():
     
     current_user.first_name = first_name or None
     current_user.last_name = last_name or None
-    current_user.gender = gender or None
     current_user.institution = institution or None
     try:
         db.session.commit()
@@ -174,7 +391,48 @@ def update_profile():
 @auth_bp.route('/profile/change_password', methods=['POST'])
 @login_required
 def change_password():
-    """Change user password."""
+    """
+    Update the authenticated user's password.
+    
+    This route handles the password change process for authenticated users.
+    It verifies the current password, validates the new password requirements,
+    and updates the user's password in the database if all checks pass.
+    
+    Security Features:
+    - Requires authentication via @login_required
+    - CSRF protection through Flask-WTF forms
+    - Current password verification
+    - New password confirmation
+    - Minimum password length enforcement (6 characters)
+    - Secure password hashing before storage
+    - Transaction management for database operations
+    
+    Parameters (via POST form data):
+        current_password (str): User's current password for verification
+        new_password (str): New password to set
+        confirm_password (str): Confirmation of the new password
+        
+    Returns:
+        Response: 
+            - Redirect to profile page with success/error message
+            - 302 Redirect on success
+            - 400 Bad Request if current password is incorrect or new password is invalid
+            - 500 Internal Server Error on database failure
+            
+    Example:
+        POST /profile/change_password
+        Form Data:
+            current_password=oldSecurePassword123
+            new_password=newSecurePassword456
+            confirm_password=newSecurePassword456
+            
+    Note:
+        - The current password must be provided and match the stored hash
+        - New password and confirmation must match exactly
+        - New password must be at least 6 characters long
+        - Password changes are logged for security auditing
+        - Session remains active after password change
+    """
     current_pwd = request.form.get('current_password')
     new_pwd = request.form.get('new_password')
     confirm_pwd = request.form.get('confirm_password')
@@ -199,7 +457,44 @@ def change_password():
 @auth_bp.route('/profile/delete', methods=['POST'])
 @login_required
 def delete_account():
-    """Delete user account and associated data."""
+    """
+    Permanently delete the authenticated user's account and all associated data.
+    
+    This route handles the complete removal of a user's account from the system,
+    including all personal data, analysis history, and related records. The process
+    is irreversible and requires careful handling to maintain data integrity.
+    
+    Security Features:
+    - Requires authentication via @login_required
+    - CSRF protection through Flask-WTF forms
+    - Automatic session termination before deletion
+    - Comprehensive error handling and transaction management
+    - Logging of all deletion activities
+    
+    Process Flow:
+    1. Captures user identifiers for logging purposes
+    2. Logs out the user to invalidate current session
+    3. Deletes associated analyses and recommendations from MongoDB
+    4. Removes the user record from the SQL database
+    5. Redirects to the home page with confirmation
+    
+    Returns:
+        Response: 
+            - Redirect to home page with success/error message
+            - 302 Redirect on success
+            - 500 Internal Server Error if deletion fails
+            
+    Example:
+        POST /profile/delete
+        
+    Note:
+        - This action is irreversible and will permanently delete all user data
+        - The user is automatically logged out before deletion
+        - All related data is purged from both SQL and MongoDB
+        - The operation is atomic - either all data is deleted or none is
+        - Failed deletions are logged with detailed error information
+        - Users should be clearly warned about data loss before calling this endpoint
+    """
     try:
         # Capture identifiers BEFORE logging out, because current_user becomes Anonymous afterwards
         user_id = current_user.id

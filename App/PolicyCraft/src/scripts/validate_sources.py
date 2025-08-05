@@ -1,9 +1,21 @@
 #!/usr/bin/env python3
-"""Lightweight validator for recommendation citations.
+"""
+Reference Validation Module for PolicyCraft AI Policy Analysis.
 
-Checks that every recommendation's ``sources`` list contains only
-references present in ``docs/academic_references.md`` and flags entries
-with publication year older than the ``MAX_AGE`` threshold.
+This module provides functionality to validate and verify the academic references
+used in policy recommendations. It ensures that all cited sources are properly
+documented in the project's reference library and checks for outdated references
+based on their publication year.
+
+Key Features:
+- Validates that all recommendation sources exist in the academic references library
+- Identifies potentially outdated references based on configurable age thresholds
+- Generates detailed validation reports in both console and CSV formats
+- Integrates with the project's MongoDB database for reference management
+
+Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 
 Usage:
     python -m src.scripts.validate_sources [--max-age 7] [--output report.csv]

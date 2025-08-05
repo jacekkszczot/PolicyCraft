@@ -1,5 +1,65 @@
 {% extends 'base.html' %}
+
+{% block title %}User Management - PolicyCraft Admin{% endblock %}
+
 {% block content %}
+<!-- 
+    PolicyCraft - User Management Template
+    
+    This page provides an interface for administrators to manage user accounts.
+    It displays a list of all registered users and allows for user management
+    actions such as deletion and role management.
+    
+    Table of Contents:
+    1. Users Table
+       - User ID
+       - Username
+       - Email Address
+       - Join Date
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+       - Management Actions
+    2. User Management Functions
+    
+    Key Features:
+    - Tabular display of all registered users
+    - User account management actions
+    - Responsive table layout
+    - Confirmation dialogs for destructive actions
+    - Sortable columns (via JavaScript)
+    
+    Security Considerations:
+    - Admin-only access control
+    - CSRF protection on all forms
+    - Confirmation dialogs for destructive actions
+    - Server-side validation of all requests
+    - Audit logging of admin actions
+    
+    Data Displayed:
+    - User ID: Unique identifier
+    - Username: User's login name
+    - Email: User's registered email
+    - Join Date: Account creation timestamp
+    - Actions: Available management options
+    
+    Available Actions:
+    - Delete User: Permanently removes a user account
+      (Requires confirmation)
+    
+    Dependencies:
+    - Bootstrap 5.3.0 (CSS/JS)
+    - Font Awesome 6.4.0 for icons
+    - Custom CSS from static/css/
+    - Flask-Admin for user management
+    - Flask-Security for authentication
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+    Last Updated: July 2024
+-->
 <div style="max-width:900px;margin:2rem auto;">
   <div style="background:#ffffffcc; padding:1.5rem 2rem; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.2);">
     <h2 style="text-align:center; margin-bottom:1rem;">Users</h2>

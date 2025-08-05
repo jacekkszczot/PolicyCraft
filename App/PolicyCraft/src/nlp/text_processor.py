@@ -1,8 +1,20 @@
 """
-Simplified text processing module for PolicyCraft.
-No NLTK dependencies - uses simple regex-based tokenization.
+Text Processing Module for PolicyCraft AI Policy Analysis Platform.
+This module provides lightweight text processing capabilities for policy documents,
+including text extraction from various file formats (PDF, DOCX, TXT) and basic
+natural language processing tasks. The implementation uses regex-based tokenization
+to minimize external dependencies while maintaining good performance.
+
+Key Features:
+- Support for multiple document formats (PDF, DOCX, TXT)
+- Regex-based tokenization without NLTK dependency
+- Text cleaning and normalization
+- Basic text statistics and analysis
+- Policy-specific term handling
 
 Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 
 import os

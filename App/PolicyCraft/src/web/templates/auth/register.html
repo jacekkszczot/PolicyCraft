@@ -3,8 +3,33 @@
 {% block title %}Register - PolicyCraft{% endblock %}
 
 {% block content %}
+<!-- 
+    PolicyCraft - Registration Page
+    
+    This page handles new user registration for the PolicyCraft platform.
+    It collects essential user information and creates a new account.
+    
+    Key Components:
+    1. Registration Form - Collects user details and credentials
+    2. Terms & Conditions - Legal agreement for platform usage
+    3. Privacy Policy - Information about data handling
+    4. Email Verification - Account activation process
+    
+    Security Features:
+    - Password strength validation
+    - Email verification
+    - CSRF protection
+    - Input sanitization
+    - Rate limiting
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
+
 <div class="auth-container">
     <div class="auth-card">
+        <!--    Registration Header    -->
         <div class="auth-header">
             <h1>Create Account</h1>
             <p>Join PolicyCraft to analyze AI policies</p>
@@ -12,12 +37,6 @@
         
         <form method="POST">
             {{ form.hidden_tag() }}
-            
-            <div class="form-group">
-                {{ form.gender.label(class="form-label") }}
-                {{ form.gender(class="form-input") }}
-            </div>
-            
             
             {% if form.first_name %}
             <div class="form-group">

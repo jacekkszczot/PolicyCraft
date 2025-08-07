@@ -517,7 +517,7 @@ class EthicalFrameworkAnalyzer:
                         'priority': 'high',
                         'current_score': coverage.get(risk_area, {}).get('score', 0),
                         'description': f"{classification.title()} policies typically need stronger {risk_area} measures",
-                        'evidence': f"Classification pattern analysis indicates vulnerability",
+                        'evidence': "Classification pattern analysis indicates vulnerability",
                         'matched_items': coverage.get(risk_area, {}).get('matched_items', [])
                     })
         
@@ -1395,7 +1395,7 @@ class RecommendationGenerator:
         rationale_map = {
             'accountability': f"Establishes clear governance structures essential for responsible AI integration in {institution_context.get('type', 'academic')} contexts, addressing institutional risk management and stakeholder trust requirements.",
             
-            'transparency': f"Implements disclosure and communication frameworks critical for maintaining academic integrity and enabling informed decision-making by all institutional stakeholders.",
+            'transparency': "Implements disclosure and communication frameworks critical for maintaining academic integrity and enabling informed decision-making by all institutional stakeholders.",
             
             'human_agency': f"Preserves human authority and oversight in educational processes, ensuring AI augments rather than replaces human judgment in critical academic decisions.",
             
@@ -2799,7 +2799,7 @@ class EnhancedRecommendationGenerator:
         rationale_map = {
             'accountability': f"Establishes clear governance structures essential for responsible AI integration in {institution_context.get('type', 'academic')} contexts, addressing institutional risk management and stakeholder trust requirements.",
             
-            'transparency': f"Implements disclosure and communication frameworks critical for maintaining academic integrity and enabling informed decision-making by all institutional stakeholders.",
+            'transparency': "Implements disclosure and communication frameworks critical for maintaining academic integrity and enabling informed decision-making by all institutional stakeholders.",
             
             'human_agency': f"Preserves human authority and oversight in educational processes, ensuring AI augments rather than replaces human judgment in critical academic decisions.",
             

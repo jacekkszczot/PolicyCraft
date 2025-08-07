@@ -1,4 +1,7 @@
 # !/usr/bin/env python3
+
+PYTEST_SHORT_TRACEBACK = PYTEST_SHORT_TRACEBACK
+
 """
 Test execution script for PolicyCraft
 Runs comprehensive test suite with coverage reporting and detailed output.
@@ -79,7 +82,7 @@ def run_critical_tests():
         "tests/test_integration/test_analysis_pipeline.py::TestAnalysisPipeline::test_full_analysis_workflow"
     ]
     
-    cmd = ["python", "-m", "pytest"] + critical_test_files + ["-v", "--tb=short"]
+    cmd = ["python", "-m", "pytest"] + critical_test_files + ["-v", PYTEST_SHORT_TRACEBACK]
     return run_command(cmd, "Critical Tests")
 
 def run_all_tests(verbose=False, coverage=False):
@@ -94,7 +97,7 @@ def run_all_tests(verbose=False, coverage=False):
     if coverage:
         cmd.extend(["--cov=src", "--cov-report=html", "--cov-report=term-missing"])
     
-    cmd.extend(["--tb=short", "--durations=10"])
+    cmd.extend([PYTEST_SHORT_TRACEBACK, "--durations=10"])
     
     return run_command(cmd, "Complete Test Suite")
 
@@ -108,7 +111,7 @@ def run_specific_module(module_name):
         print(f"❌ Test path not found: {test_path}")
         return False
     
-    cmd = ["python", "-m", "pytest", test_path, "-v", "--tb=short"]
+    cmd = ["python", "-m", "pytest", test_path, "-v", PYTEST_SHORT_TRACEBACK]
     return run_command(cmd, f"Module Tests: {module_name}")
 
 def generate_test_report():

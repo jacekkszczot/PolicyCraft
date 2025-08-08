@@ -64,15 +64,31 @@
             <p>Access your AI policy analysis dashboard</p>
         </div>
         
-        <!-- Login form -->
-        <form method="POST" class="auth-form">
+        <!-- Login form with enhanced security and accessibility -->
+        <form method="POST" class="auth-form" id="login-form" aria-label="Login form">
             {{ form.hidden_tag() }}
             
             <div class="form-group">
-                {{ form.username_or_email.label(text='Email', class='form-label') }}
-                {{ form.username_or_email(class="form-input", placeholder='Enter email address') }}
+                <label for="username_or_email" class="form-label">
+                    Email or Username
+                    <span class="required" aria-hidden="true">*</span>
+                    <span class="sr-only">(required)</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="username_or_email" 
+                    name="username_or_email" 
+                    class="form-input" 
+                    placeholder="Enter your email address or username"
+                    autocomplete="username"
+                    aria-required="true"
+                    {% if form.username_or_email.data %}value="{{ form.username_or_email.data }}"{% endif %}
+                    aria-describedby="email-help"
+                >
+                <small id="email-help" class="form-text">Enter the email or username associated with your account</small>
+                
                 {% if form.username_or_email.errors %}
-                    <div class="form-errors">
+                    <div class="form-errors" role="alert" aria-live="polite">
                         {% for error in form.username_or_email.errors %}
                             <span class="error">{{ error }}</span>
                         {% endfor %}
@@ -81,10 +97,34 @@
             </div>
             
             <div class="form-group">
-                {{ form.password.label(class="form-label") }}
-                {{ form.password(class="form-input") }}
+                <label for="password" class="form-label">
+                    Password
+                    <span class="required" aria-hidden="true">*</span>
+                    <span class="sr-only">(required)</span>
+                </label>
+                <div class="password-input-container">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        aria-required="true"
+                        aria-describedby="password-help"
+                    >
+                    <button type="button" class="toggle-password" aria-label="Show password" data-target="password">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <small id="password-help" class="form-text">
+                    <a href="{{ url_for('auth.reset_password_request') }}" class="forgot-password">
+                        Forgot your password?
+                    </a>
+                </small>
+                
                 {% if form.password.errors %}
-                    <div class="form-errors">
+                    <div class="form-errors" role="alert" aria-live="polite">
                         {% for error in form.password.errors %}
                             <span class="error">{{ error }}</span>
                         {% endfor %}
@@ -93,13 +133,29 @@
             </div>
             
             <div class="form-group checkbox-group">
-                {{ form.remember_me(class="form-checkbox") }}
-                {{ form.remember_me.label(class="checkbox-label") }}
+                <input 
+                    type="checkbox" 
+                    id="remember_me" 
+                    name="remember_me" 
+                    class="form-checkbox"
+                    value="y"
+                    {% if form.remember_me.data %}checked{% endif %}
+                >
+                <label for="remember_me" class="checkbox-label">
+                    Keep me signed in for 30 days
+                </label>
             </div>
             
             <div class="form-group">
-                {{ form.submit(class="btn btn-primary btn-full") }}
+                <button type="submit" class="btn btn-primary btn-full" id="login-button" aria-label="Sign in to your account">
+                    <span class="button-text">Sign In</span>
+                    <span class="button-loader" aria-hidden="true" style="display: none;">
+                        <span class="spinner"></span>
+                    </span>
+                </button>
             </div>
+            
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             
             <div class="help-text" style="margin-top: 1.5rem; text-align: center; color: #6b7280; font-size: 0.9rem;">
                 If you're experiencing issues logging in, please contact the administrator.

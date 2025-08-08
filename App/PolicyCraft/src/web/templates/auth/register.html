@@ -35,36 +35,97 @@
             <p>Join PolicyCraft to analyze AI policies</p>
         </div>
         
-        <form method="POST">
+        <form method="POST" id="register-form" aria-label="Registration form">
             {{ form.hidden_tag() }}
             
-            {% if form.first_name %}
-            <div class="form-group">
-                {{ form.first_name.label(class="form-label") }}
-                {{ form.first_name(class="form-input", placeholder="First name", required=True) }}
+            <div class="form-row">
+                {% if form.first_name %}
+                <div class="form-group">
+                    <label for="first_name" class="form-label">
+                        First Name
+                        <span class="required" aria-hidden="true">*</span>
+                        <span class="sr-only">(required)</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="first_name" 
+                        name="first_name" 
+                        class="form-input" 
+                        placeholder="First name" 
+                        autocomplete="given-name"
+                        aria-required="true"
+                        {% if form.first_name.data %}value="{{ form.first_name.data }}"{% endif %}
+                        required
+                    >
+                </div>
+                {% endif %}
+                
+                {% if form.last_name %}
+                <div class="form-group">
+                    <label for="last_name" class="form-label">
+                        Last Name
+                        <span class="required" aria-hidden="true">*</span>
+                        <span class="sr-only">(required)</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="last_name" 
+                        name="last_name" 
+                        class="form-input" 
+                        placeholder="Last name" 
+                        autocomplete="family-name"
+                        aria-required="true"
+                        {% if form.last_name.data %}value="{{ form.last_name.data }}"{% endif %}
+                        required
+                    >
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
-            
-            {% if form.last_name %}
-            <div class="form-group">
-                {{ form.last_name.label(class="form-label") }}
-                {{ form.last_name(class="form-input", placeholder="Last name", required=True) }}
-            </div>
-            {% endif %}
             
             {% if form.institution %}
             <div class="form-group">
-                {{ form.institution.label(class="form-label") }}
-                {{ form.institution(class="form-input", placeholder="University / Institution", required=True) }}
+                <label for="institution" class="form-label">
+                    Institution
+                    <span class="required" aria-hidden="true">*</span>
+                    <span class="sr-only">(required)</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="institution" 
+                    name="institution" 
+                    class="form-input" 
+                    placeholder="University / Institution" 
+                    autocomplete="organization"
+                    aria-required="true"
+                    {% if form.institution.data %}value="{{ form.institution.data }}"{% endif %}
+                    required
+                >
             </div>
             {% endif %}
             
             {% if form.email %}
             <div class="form-group">
-                {{ form.email.label(class="form-label") }}
-                {{ form.email(class="form-input", placeholder="Enter your email address") }}
+                <label for="email" class="form-label">
+                    Email Address
+                    <span class="required" aria-hidden="true">*</span>
+                    <span class="sr-only">(required)</span>
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-input" 
+                    placeholder="Enter your email address" 
+                    autocomplete="email"
+                    aria-required="true"
+                    {% if form.email.data %}value="{{ form.email.data }}"{% endif %}
+                    required
+                    aria-describedby="email-help"
+                >
+                <small id="email-help" class="form-text">We'll send a verification email to this address</small>
+                
                 {% if form.email.errors %}
-                    <div class="field-errors">
+                    <div class="field-errors" role="alert" aria-live="polite">
                         {% for error in form.email.errors %}
                             <span class="error-message">{{ error }}</span>
                         {% endfor %}
@@ -74,22 +135,77 @@
             {% endif %}
             
             <div class="form-group">
-                {{ form.password.label(class="form-label") }}
-                {{ form.password(class="form-input", placeholder="Create a strong password") }}
+                <label for="password" class="form-label">
+                    Create Password
+                    <span class="required" aria-hidden="true">*</span>
+                    <span class="sr-only">(required)</span>
+                </label>
+                <div class="password-input-container">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="Create a strong password" 
+                        autocomplete="new-password"
+                        aria-required="true"
+                        required
+                        aria-describedby="password-requirements"
+                        pattern=".{8,}"
+                        oninput="validatePassword()"
+                    >
+                    <button type="button" class="toggle-password" aria-label="Show password" data-target="password">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div id="password-requirements" class="form-text">
+                    Must be at least 8 characters long and include a mix of letters, numbers, and symbols.
+                </div>
+                
                 {% if form.password.errors %}
-                    <div class="field-errors">
+                    <div class="field-errors" role="alert" aria-live="polite">
                         {% for error in form.password.errors %}
                             <span class="error-message">{{ error }}</span>
                         {% endfor %}
                     </div>
                 {% endif %}
+                
+                <div class="password-strength-meter">
+                    <div id="password-strength" class="strength-0">
+                        <span class="strength-bar"></span>
+                        <span class="strength-bar"></span>
+                        <span class="strength-bar"></span>
+                        <span class="strength-text">Password strength</span>
+                    </div>
+                </div>
             </div>
             
             <div class="form-group">
-                {{ form.password_confirm.label(class="form-label") }}
-                {{ form.password_confirm(class="form-input", placeholder="Confirm your password") }}
+                <label for="password_confirm" class="form-label">
+                    Confirm Password
+                    <span class="required" aria-hidden="true">*</span>
+                    <span class="sr-only">(required)</span>
+                </label>
+                <div class="password-input-container">
+                    <input 
+                        type="password" 
+                        id="password_confirm" 
+                        name="password_confirm" 
+                        class="form-input" 
+                        placeholder="Confirm your password" 
+                        autocomplete="new-password"
+                        aria-required="true"
+                        required
+                        oninput="checkPasswordMatch()"
+                    >
+                    <button type="button" class="toggle-password" aria-label="Show password" data-target="password_confirm">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div id="password-match" class="form-text" aria-live="polite"></div>
+                
                 {% if form.password_confirm.errors %}
-                    <div class="field-errors">
+                    <div class="field-errors" role="alert" aria-live="polite">
                         {% for error in form.password_confirm.errors %}
                             <span class="error-message">{{ error }}</span>
                         {% endfor %}
@@ -97,9 +213,33 @@
                 {% endif %}
             </div>
             
+            <div class="form-group terms-group">
+                <div class="checkbox-group">
+                    <input 
+                        type="checkbox" 
+                        id="terms_agreed" 
+                        name="terms_agreed" 
+                        class="form-checkbox" 
+                        required
+                        aria-required="true"
+                        aria-describedby="terms-help"
+                    >
+                    <label for="terms_agreed" class="checkbox-label">
+                        I agree to the <a href="{{ url_for('main.terms') }}" target="_blank">Terms of Service</a> and 
+                        <a href="{{ url_for('main.privacy') }}" target="_blank">Privacy Policy</a>
+                        <span class="required" aria-hidden="true">*</span>
+                    </label>
+                </div>
+                <small id="terms-help" class="form-text">You must agree to the terms to register</small>
+            </div>
             
             <div class="form-group">
-                <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                <button type="submit" class="btn btn-primary btn-full" id="register-button" aria-label="Create your account">
+                    <span class="button-text">Create Account</span>
+                    <span class="button-loader" aria-hidden="true" style="display: none;">
+                        <span class="spinner"></span>
+                    </span>
+                </button>
             </div>
         </form>
         

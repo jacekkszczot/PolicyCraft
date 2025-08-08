@@ -1,7 +1,5 @@
 # !/usr/bin/env python3
 
-PYTEST_SHORT_TRACEBACK = PYTEST_SHORT_TRACEBACK
-
 """
 Test execution script for PolicyCraft
 Runs comprehensive test suite with coverage reporting and detailed output.

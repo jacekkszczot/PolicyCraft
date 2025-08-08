@@ -9,6 +9,7 @@ University: Leeds Trinity University
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, login_required, current_user
+from flask_wtf.csrf import CSRFProtect
 import os
 from werkzeug.utils import secure_filename
 import logging
@@ -195,6 +196,9 @@ def create_app():
 
 # Create Flask app and initialize modules
 app = create_app()
+
+# Initialize CSRF protection
+csrf = CSRFProtect(app)
 
 text_processor = TextProcessor()
 theme_extractor = ThemeExtractor()

@@ -94,26 +94,26 @@ def run_batch_analysis():
             print(f"🎓 Type: {uni_info['type']}")
             
             # STEP 1: Text Extraction
-            print(f"\n🔍 STEP 1: Text extraction...")
+            print("\n🔍 STEP 1: Text extraction...")
             extracted_text = text_processor.extract_text_from_file(str(file_path))
             if not extracted_text:
                 raise Exception("Text extraction failed")
             print(f"✅ Extracted {len(extracted_text)} characters")
             
             # STEP 2: Text Cleaning
-            print(f"🧹 STEP 2: Text cleaning...")
+            print("🧹 STEP 2: Text cleaning...")
             cleaned_text = text_processor.clean_text(extracted_text)
             print(f"✅ Cleaned to {len(cleaned_text)} characters")
             
             # STEP 3: Theme Extraction
-            print(f"🎯 STEP 3: Theme extraction...")
+            print("🎯 STEP 3: Theme extraction...")
             themes = theme_extractor.extract_themes(cleaned_text)
             print(f"✅ Found {len(themes)} themes")
             for theme in themes[:3]:
                 print(f"   - {theme['name']}: {theme['score']} ({theme['confidence']}%)")
             
             # STEP 4: Policy Classification
-            print(f"📊 STEP 4: Policy classification...")
+            print("📊 STEP 4: Policy classification...")
             classification = policy_classifier.classify_policy(cleaned_text)
             print(f"✅ Classification: {classification['classification']} ({classification['confidence']}%)")
             # Store analysis in MongoDB
@@ -133,7 +133,7 @@ def run_batch_analysis():
             )
             
             # STEP 5: Enhanced Recommendation Generation with Full Results Capture
-            print(f"💡 STEP 5: Enhanced recommendation generation...")
+            print("💡 STEP 5: Enhanced recommendation generation...")
             recommendations = recommendation_engine.generate_recommendations(
                 themes=themes,
                 classification=classification,
@@ -191,7 +191,7 @@ def run_batch_analysis():
             # Enhanced console output with meaningful information
             print(f"✅ Generated {rec_count} contextual recommendations")
             print(f"✅ Overall coverage: {overall_coverage}% (realistic scoring)")
-            print(f"📊 Dimension scores: " + " | ".join([
+            print("📊 Dimension scores: " + " | ".join([
                 f"{dim.replace('_', ' ').title()}: {data['score']:.1f}%" 
                 for dim, data in detailed_coverage.items()
             ]))
@@ -199,7 +199,7 @@ def run_batch_analysis():
             print(f"🔧 Recommendation mix: {enhancement_count} enhancements, {new_implementations} new implementations")
             
             # STEP 6: Generate Charts
-            print(f"📈 STEP 6: Chart generation...")
+            print("📈 STEP 6: Chart generation...")
             charts = chart_generator.generate_analysis_charts(themes, classification, cleaned_text)
             print(f"✅ Generated {len(charts)} charts")
             # Persist charts in the analysis doc so they are available in the UI

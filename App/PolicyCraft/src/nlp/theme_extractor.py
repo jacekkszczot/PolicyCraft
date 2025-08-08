@@ -23,6 +23,19 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# String constants for theme categories and patterns
+ACADEMIC_INTEGRITY = "academic integrity"
+RESEARCH_ETHICS = "research ethics"
+INFORMED_CONSENT = "informed consent"
+ETHICAL_GUIDELINES = "ethical guidelines"
+DATA_PROTECTION = "data protection"
+STAKEHOLDER_ENGAGEMENT = "stakeholder engagement"
+ETHICAL_FRAMEWORK = "ethical framework"
+RESEARCH_INTEGRITY = "research integrity"
+RESPONSIBLE_AI = "responsible ai"
+ETHICAL_AI = "ethical ai"
+
+
 class ThemeExtractor:
     """
     Advanced theme extraction and analysis for AI policy documents.
@@ -73,33 +86,33 @@ class ThemeExtractor:
                 'keywords': ['plagiarism', 'cheating', 'academic', 'integrity', 'dishonesty', 'misconduct', 
                            'citation', 'attribution', 'originality', 'authorship', 'collaboration'],
                 'patterns': [
-                    'academic integrity', 'academic misconduct', 'academic dishonesty',
+                    ACADEMIC_INTEGRITY, 'academic misconduct', 'academic dishonesty',
                     'proper citation', 'original work', 'intellectual honesty'
                 ]
             },
             
             'Research Ethics in AI': {
-                'keywords': ['research ethics', 'ethical guidelines', 'informed consent', 'participant rights',
-                           'data protection', 'privacy', 'confidentiality', 'anonymity', 'transparency',
+                'keywords': [RESEARCH_ETHICS, ETHICAL_GUIDELINES, INFORMED_CONSENT, 'participant rights',
+                           DATA_PROTECTION, 'privacy', 'confidentiality', 'anonymity', 'transparency',
                            'integrity', 'accountability', 'responsibility', 'beneficence', 'non-maleficence',
                            'justice', 'fairness', 'equity', 'respect', 'dignity', 'autonomy', 'trust',
-                           'stakeholder engagement', 'participant involvement', 'ethical oversight',
+                           STAKEHOLDER_ENGAGEMENT, 'participant involvement', 'ethical oversight',
                            'institutional review', 'research governance', 'ethical approval', 'ethical review',
-                           'ethical principles', 'ethical framework', 'ethical standards', 'ethical practices',
+                           'ethical principles', ETHICAL_FRAMEWORK, 'ethical standards', 'ethical practices',
                            'cross-institutional research', 'interdisciplinary collaboration', 'methodological rigor',
                            'empirical validation', 'systematic reviews', 'meta-analysis', 'research gaps',
                            'collaboration needs', 'methodological issues', 'rigor improvement', 'longitudinal studies',
                            'mixed-methods approaches', 'transparent reporting', 'reproducible research'],
                 'patterns': [
-                    'ethical research', 'research integrity', 'ethical approval process',
-                    'informed consent process', 'participant information sheet', 'ethical considerations',
+                    'ethical research', RESEARCH_INTEGRITY, 'ethical approval process',
+                    f'{INFORMED_CONSENT} process', 'participant information sheet', 'ethical considerations',
                     'research governance framework', 'ethical review board', 'institutional review board',
-                    'research ethics committee', 'ethical guidelines for research', 'responsible research',
-                    'ethical data collection', 'data protection in research', 'privacy in research',
+                    'research ethics committee', f'{ETHICAL_GUIDELINES} for research', 'responsible research',
+                    'ethical data collection', f'{DATA_PROTECTION} in research', 'privacy in research',
                     'confidentiality agreement', 'anonymization of data', 'pseudonymization of data',
                     'participant confidentiality', 'data security measures', 'ethical data sharing',
                     'research data management', 'ethical implications', 'risk benefit analysis',
-                    'vulnerable participants', 'informed consent form', 'voluntary participation',
+                    'vulnerable participants', f'{INFORMED_CONSENT} form', 'voluntary participation',
                     'right to withdraw', 'debriefing participants', 'ethical decision making',
                     'cross-institutional collaboration', 'interdisciplinary research teams',
                     'methodological rigor in ai research', 'empirical validation of ai tools',
@@ -108,7 +121,7 @@ class ThemeExtractor:
                     'methodological challenges in ai studies', 'improving rigor in ai research',
                     'longitudinal ai research studies', 'mixed-methods ai research',
                     'transparent research reporting', 'reproducible ai research',
-                    'ethical ai research practices'
+                    f'{ETHICAL_AI} research practices'
                 ]
             },
             
@@ -116,16 +129,16 @@ class ThemeExtractor:
                 'keywords': ['ethics', 'ethical', 'moral', 'responsible', 'harm', 'benefit',
                            'rights', 'dignity', 'respect', 'justice', 'welfare',
                            'manipulation', 'deception', 'exploitation', 'vulnerability', 'autonomy',
-                           'research ethics', 'informed consent', 'participant rights', 'data protection',
+                           RESEARCH_ETHICS, INFORMED_CONSENT, 'participant rights', DATA_PROTECTION,
                            'privacy', 'confidentiality', 'anonymity', 'integrity', 'accountability',
-                           'beneficence', 'non-maleficence', 'stakeholder engagement', 'ethical oversight'],
+                           'beneficence', 'non-maleficence', STAKEHOLDER_ENGAGEMENT, 'ethical oversight'],
                 'patterns': [
-                    'ethical ai', 'responsible ai', 'ai ethics', 'ethical considerations',
-                    'moral implications', 'ethical guidelines', 'human dignity',
+                    ETHICAL_AI, RESPONSIBLE_AI, 'ai ethics', 'ethical considerations',
+                    'moral implications', ETHICAL_GUIDELINES, 'human dignity',
                     'human manipulation', 'behavioral manipulation', 'exploitation prevention',
-                    'vulnerable groups protection', 'human autonomy', 'research ethics in ai',
-                    'ethical ai research', 'ai research governance', 'ethical ai development',
-                    'ai and research integrity', 'responsible ai research'
+                    'vulnerable groups protection', 'human autonomy', f'{RESEARCH_ETHICS} in ai',
+                    f'{ETHICAL_AI} research', 'ai research governance', f'{ETHICAL_AI} development',
+                    f'ai and {RESEARCH_INTEGRITY}', f'{RESPONSIBLE_AI} research'
                 ]
             },
             
@@ -1016,13 +1029,13 @@ if __name__ == "__main__":
     
     # Generate summary
     summary = extractor.get_theme_summary(themes)
-    print(f"\n=== Theme Summary ===")
+    print("\n=== Theme Summary ===")
     for key, value in summary.items():
         print(f"{key}: {value}")
     
-    # Visualization data
+    # Visualisation data
     viz_data = extractor.visualize_themes(themes)
-    print(f"\n=== Visualization Data ===")
+    print("\n=== Visualisation Data ===")
     print(f"Chart labels: {viz_data['labels']}")
     print(f"Chart scores: {viz_data['scores']}")
     

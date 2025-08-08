@@ -344,12 +344,12 @@ if __name__ == "__main__":
     print(cleaned[:200] + "...")
     
     stats = processor.get_text_statistics(cleaned)
-    print(f"\nText Statistics:")
+    print("\nText Statistics:")
     for key, value in stats.items():
         print(f"  {key}: {value}")
     
     sentences = processor.tokenize_sentences(cleaned)
-    print(f"\nFirst 3 sentences:")
+    print("\nFirst 3 sentences:")
     for i, sentence in enumerate(sentences[:3], 1):
         print(f"  {i}. {sentence}")
     

@@ -29,7 +29,7 @@ import argparse
 import csv
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Set, Dict, Any
 
@@ -83,7 +83,7 @@ def validate(max_age: int, output_path: Path | None = None) -> None:
         print("⚠️  No references parsed – aborting.")
         return
 
-    current_year = datetime.utcnow().year
+    current_year = datetime.now(timezone.utc).year
     db = MongoOperations()
     cursor = db.recommendations.find({})
 

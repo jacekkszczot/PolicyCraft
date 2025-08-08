@@ -66,7 +66,7 @@ admin_bp = Blueprint("admin", __name__, template_folder="../web/templates/admin"
 # ---------------------------------------------------------------------------
 CONFIG_DIR = os.path.join(os.getcwd(), "data")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "admin_config.json")
-DEFAULT_PASSWORD = "admin123"
+DEFAULT_PASSWORD = os.getenv("ADMIN_PASSWORD", "change_me_immediately")  # Set ADMIN_PASSWORD in production
 
 mongo_db = MongoOperations()
 

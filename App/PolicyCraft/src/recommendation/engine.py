@@ -1864,12 +1864,12 @@ class RecommendationEngine:
         """
         try:
             logger.info(f"Generating comprehensive recommendations for analysis: {analysis_id}")
-            print(f"\n🔍 Analysing policy against enhanced ethical framework...")
+            print("\n🔍 Analysing policy against enhanced ethical framework...")
             
             # Step 1: Enhanced coverage analysis with weighted scoring
             coverage_analysis = self.framework_analyzer.analyze_coverage(themes, text)
             
-            print(f"📊 Enhanced Coverage Analysis (Fixed Scoring):")
+            print("📊 Enhanced Coverage Analysis (Fixed Scoring):")
             for dimension, analysis in coverage_analysis.items():
                 status_emoji = "🟢" if analysis['status'] == 'strong' else "🟡" if analysis['status'] == 'moderate' else "🔴"
                 matched_count = analysis.get('item_count', 0)
@@ -1879,10 +1879,10 @@ class RecommendationEngine:
             # Step 2: Detect existing policies to inform recommendations
             existing_policies = self.framework_analyzer.detect_existing_policies(text)
             existing_count = sum(1 for v in existing_policies.values() if v)
-            print(f"\n🏛️ Detected {existing_count} existing policy elements:")
+            print("\n🏛️ Detected {} existing policy elements:".format(existing_count))
             for policy, exists in existing_policies.items():
                 if exists:
-                    print(f"   ✅ {policy.replace('_', ' ').title()}")
+                    print("   ✅ {}".format(policy.replace('_', ' ').title()))
             
             # Step 3: Identify gaps with proper field mapping
             gaps = self.framework_analyzer.identify_gaps(
@@ -1890,9 +1890,13 @@ class RecommendationEngine:
                 classification.get('classification', 'Unknown')
             )
             
-            print(f"\n🎯 Identified {len(gaps)} improvement areas:")
+            print("\n🎯 Identified {} improvement areas:".format(len(gaps)))
             for gap in gaps[:3]:  # Show top 3
-                print(f"   📍 {gap['dimension'].replace('_', ' ').title()}: {gap['current_score']:.1f}% ({gap['type']})")
+                print("   📍 {}: {:.1f}% ({})".format(
+                    gap['dimension'].replace('_', ' ').title(),
+                    gap['current_score'],
+                    gap['type']
+                ))
             
             # Step 4: Generate contextual, non-duplicate recommendations using enhanced templates
             recommendations = self.recommendation_generator.generate_recommendations(
@@ -1905,9 +1909,9 @@ class RecommendationEngine:
             enhancement_count = len([r for r in recommendations if r.get('implementation_type') == 'enhancement'])
             new_count = len([r for r in recommendations if r.get('implementation_type') == 'new'])
             
-            print(f"💡 Generated {len(recommendations)} context-aware recommendations:")
-            print(f"    {enhancement_count} enhancements to existing policies")
-            print(f"   🆕 {new_count} new implementations")
+            print("💡 Generated {} context-aware recommendations:".format(len(recommendations)))
+            print("    {} enhancements to existing policies".format(enhancement_count))
+            print("   🆕 {} new implementations".format(new_count))
             
             # Step 5: Compile comprehensive recommendation package
             recommendation_package = {
@@ -1948,19 +1952,20 @@ class RecommendationEngine:
             has_disclosure = existing_policies.get('disclosure_requirements', False)
             
             if transparency_score > 0 and has_disclosure:
-                print(f"✅ Fix validation: Transparency score {transparency_score}% with disclosure detected")
+                print("✅ Fix validation: Transparency score {}% with disclosure detected".format(transparency_score))
             elif transparency_score == 0:
-                print(f"⚠️ Warning: Transparency still scoring 0% - may need further debugging")
+                print("⚠️ Warning: Transparency still scoring 0% - may need further debugging")
             
-            logger.info(f"Enhanced recommendation generation completed successfully")
+            logger.info("Enhanced recommendation generation completed successfully")
             return recommendation_package
             
         except Exception as e:
-            logger.error(f"Error in enhanced recommendation generation: {str(e)}")
-            print(f"❌ Error in enhanced recommendation generation: {str(e)}")
+            error_msg = str(e)
+            logger.error("Error in enhanced recommendation generation: {}".format(error_msg))
+            print("❌ Error in enhanced recommendation generation: {}".format(error_msg))
             
             # Enhanced fallback with debug info
-            return self._generate_enhanced_fallback(classification, themes, str(e))
+            return self._generate_enhanced_fallback(classification, themes, error_msg)
 
     def _generate_enhanced_fallback(self, classification: Dict, themes: List[Dict], error_msg: str) -> Dict:
         """

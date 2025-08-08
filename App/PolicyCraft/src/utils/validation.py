@@ -18,7 +18,7 @@ University: Leeds Trinity University
 from __future__ import annotations
 
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 from typing import List, Dict, Any
 
@@ -125,7 +125,7 @@ def validate_recommendation_sources(recommendations: List[Dict[str, Any]], max_a
     Empty issues list == pass.
     """
     allowed_refs = _load_reference_index()
-    current_year = datetime.utcnow().year
+    current_year = datetime.now(timezone.utc).year
     results: List[Dict[str, Any]] = []
 
     for idx, rec in enumerate(recommendations):

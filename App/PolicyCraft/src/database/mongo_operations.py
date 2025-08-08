@@ -38,6 +38,48 @@ from pymongo import MongoClient, ASCENDING, DESCENDING, ReturnDocument
 from pymongo.collection import Collection
 from pymongo.errors import DuplicateKeyError
 
+# MongoDB query constants
+MATCH_QUERY = "$match"
+SORT_QUERY = "$sort"
+GROUP_QUERY = "$group"
+SET_OPERATOR = "$set"
+PUSH_OPERATOR = "$push"
+SUM_OPERATOR = "$sum"
+AVG_OPERATOR = "$avg"
+SIZE_OPERATOR = "$size"
+NOT_OPERATOR = "$not"
+
+# Field name constants
+USER_ID_FIELD = "user_id"
+ANALYSIS_ID_FIELD = "analysis_id"
+FILENAME_FIELD = "filename"
+THEMES_FIELD = "themes"
+CLASSIFICATION_FIELD = "classification"
+RECOMMENDATIONS_FIELD = "recommendations"
+CREATED_AT_FIELD = "created_at"
+REGEX_OPERATOR = "$regex"
+OPTIONS_OPERATOR = "$options"
+IN_OPERATOR = "$in"
+GT_OPERATOR = "$gt"
+
+# Field names
+ID_FIELD = "_id"
+FILENAME_FIELD = "filename"
+USER_ID_FIELD = "user_id"
+ANALYSIS_DATE_FIELD = "analysis_date"
+COUNT_FIELD = "count"
+TOTAL_FIELD = "total"
+DOCS_FIELD = "docs"
+IDS_FIELD = "ids"
+THEMES_FIELD = "themes"
+CLASSIFICATION_FIELD = "classification"
+CONFIDENCE_FIELD = "confidence"
+AVG_CONFIDENCE_FIELD = "avg_confidence"
+AVG_THEMES_FIELD = "avg_themes_per_analysis"
+
+# Regular expressions
+BASELINE_REGEX = r"^\\[BASELINE\\]"
+
 # Helper types for better code readability
 Analysis = Dict
 Recommendation = Dict
@@ -187,25 +229,29 @@ class MongoOperations:
             int: Number of documents removed
         """
         pipeline = [
-            {"$match": {"user_id": user_id}},
-            {"$sort": {"analysis_date": -1}},  # newest first
-            {"$group": {
-                "_id": "$filename",
-                "docs": {"$push": "$_id"},
-                "count": {"$sum": 1}
+            {MATCH_QUERY: {USER_ID_FIELD: user_id}},
+            {SORT_QUERY: {ANALYSIS_DATE_FIELD: DESCENDING}},  # newest first
+            {GROUP_QUERY: {
+                ID_FIELD: f"${FILENAME_FIELD}",
+                DOCS_FIELD: {PUSH_OPERATOR: f"${ID_FIELD}"},
+                COUNT_FIELD: {SUM_OPERATOR: 1}
             }},
-            {"$match": {"count": {"$gt": 1}}}
+            {MATCH_QUERY: {COUNT_FIELD: {GT_OPERATOR: 1}}}
         ]
-        groups = list(self.analyses.aggregate(pipeline))
-        to_delete = []
-        for g in groups:
-            # skip first (newest) id, delete the rest
-            to_delete.extend(g["docs"][1:])
-        if to_delete:
-            result = self.analyses.delete_many({"_id": {"$in": to_delete}})
-            return result.deleted_count
-        return 0
-
+        
+        duplicates = list(self.analyses.aggregate(pipeline))
+        
+        # For each duplicate, keep the first (newest) and delete the rest
+        deleted_count = 0
+        for dup in duplicates:
+            # Skip the first document (keep it) and delete the rest
+            to_delete = dup[DOCS_FIELD][1:]
+            if to_delete:
+                result = self.analyses.delete_many({ID_FIELD: {IN_OPERATOR: to_delete}})
+                deleted_count += result.deleted_count
+                
+        return deleted_count
+            
     def _to_object_id(self, id_str: str):
         """
         Helper function to convert 24-character hex string to ObjectId.
@@ -331,8 +377,8 @@ class MongoOperations:
             str: MongoDB document ID of stored recommendations
         """
         payload = {
-            "user_id": user_id,
-            "analysis_id": analysis_id,
+            USER_ID_FIELD: user_id,
+            ANALYSIS_ID_FIELD: analysis_id,
             "recommendations": recs,
             "created_at": datetime.now(timezone.utc),
         }

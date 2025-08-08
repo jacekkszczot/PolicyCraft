@@ -185,6 +185,102 @@ class EthicalFrameworkAnalyzer:
             }
         }
 
+    def _calculate_keyword_matches(self, config: Dict, text_lower: str) -> tuple[float, list]:
+        """Calculate weighted keyword matches for a dimension.
+        
+        Args:
+            config: The configuration for the current dimension
+            text_lower: The policy text in lowercase for case-insensitive matching
+            
+        Returns:
+            tuple: (score, matched_items) where score is the total weight of matched keywords
+                   and matched_items is a list of strings describing the matches
+        """
+        score = 0.0
+        matched_items = []
+        
+        for keyword in config['keywords']:
+            if keyword.lower() in text_lower:
+                weight = config.get('keyword_weights', {}).get(keyword, 1.0)
+                score += weight
+                matched_items.append(f"{keyword} (weight: {weight})")
+                
+        return score, matched_items
+    
+    def _calculate_phrase_matches(self, config: Dict, text_lower: str) -> tuple[float, list]:
+        """Calculate phrase matches for a dimension.
+        
+        Args:
+            config: The configuration for the current dimension
+            text_lower: The policy text in lowercase for case-insensitive matching
+            
+        Returns:
+            tuple: (score, matched_items) where score is the total weight of matched phrases
+                   and matched_items is a list of strings describing the phrase matches
+        """
+        score = 0.0
+        matched_items = []
+        
+        for phrase in config.get('phrases', []):
+            if phrase.lower() in text_lower:
+                score += 2.0  # Phrases get bonus points
+                matched_items.append(f"PHRASE: {phrase}")
+                
+        return score, matched_items
+    
+    def _calculate_theme_boost(self, themes: List[Dict], config: Dict) -> float:
+        """Calculate theme boost based on theme relevance.
+        
+        Args:
+            themes: List of theme dictionaries with name and score
+            config: The configuration for the current dimension
+            
+        Returns:
+            float: The calculated theme boost score
+        """
+        theme_boost = 0.0
+        for theme in themes:
+            theme_name = theme.get('name', '').lower()
+            if any(kw.lower() in theme_name for kw in config['keywords'][:3]):
+                theme_boost += theme.get('score', 0) * 0.3
+        return theme_boost
+    
+    def _calculate_dimension_score(self, keyword_score: float, phrase_score: float, 
+                                 theme_boost: float, config: Dict) -> tuple[float, float]:
+        """Calculate the final score for a dimension.
+        
+        Args:
+            keyword_score: Score from keyword matches
+            phrase_score: Score from phrase matches
+            theme_boost: Score from theme relevance
+            config: The configuration for the current dimension
+            
+        Returns:
+            tuple: (final_score, raw_score) where final_score includes theme boost
+                   and is capped at 100, and raw_score is before theme boost
+        """
+        max_keyword_weight = 3.0
+        max_phrase_bonus = len(config.get('phrases', [])) * 2.0
+        max_possible_base = len(config['keywords']) * max_keyword_weight + max_phrase_bonus
+        
+        raw_score = (keyword_score + phrase_score) / max_possible_base * 100 if max_possible_base > 0 else 0
+        final_score = min(100, raw_score + theme_boost)
+        
+        return final_score, raw_score
+    
+    def _get_dimension_status(self, score: float) -> str:
+        """Determine the status of a dimension based on its score.
+        
+        Args:
+            score: The dimension's score (0-100)
+            
+        Returns:
+            str: 'strong', 'moderate', or 'weak'
+        """
+        if score >= 40:
+            return 'strong'
+        return 'moderate' if score >= 15 else 'weak'
+    
     def analyze_coverage(self, themes: List[Dict], text: str) -> Dict:
         """
         Analyse policy coverage against the established ethical framework dimensions.
@@ -208,10 +304,6 @@ class EthicalFrameworkAnalyzer:
         comprehensive policies scoring within the 15-35% range, accounting for the
         complexity and evolving nature of AI ethics in higher education.
         
-        The scoring system is calibrated to reflect realistic expectations, with typical
-        comprehensive policies scoring within the 15-35% range, accounting for the
-        complexity and evolving nature of AI ethics in higher education.
-        
         Args:
             themes: A list of dictionaries containing themes extracted from the policy
                    text by the NLP pipeline. Each dictionary should include:
@@ -222,95 +314,39 @@ class EthicalFrameworkAnalyzer:
             text: The complete policy text to be analysed, in its original form.
             
         Returns:
-            Dict: A comprehensive analysis containing:
-                - scores (Dict[str, float]): Coverage scores (0-100) for each dimension
-                - matches (Dict[str, List[Dict]]): Detailed breakdown of matched terms,
-                                                 phrases, and their weights
-                - overall_score (float): Weighted average score across all dimensions
-                - classification (str): Policy classification based on language patterns:
-                                     'restrictive', 'moderate', or 'permissive'
-                - recommendations (List[Dict]): Initial high-level recommendations
-                - confidence_scores (Dict[str, float]): Confidence levels (0-1) for
-                                                      each dimension's assessment
-                - key_findings (List[str]): Notable observations about the policy
-                - coverage_breakdown (Dict[str, Dict]): Detailed coverage metrics
-                                                      for each dimension
-        
-        Example:
-            >>> analyzer = EthicalFrameworkAnalyzer()
-            >>> themes = [{'theme': 'AI governance', 'relevance': 0.85}]
-            >>> policy_text = "The university requires all AI usage to be documented..."
-            >>> results = analyzer.analyze_coverage(themes, policy_text)
-            >>> print(results['scores']['transparency'])
-            72.5
-            >>> print(results['classification'])
-            'moderate'
+            Dict: A dictionary mapping each dimension to its analysis results
         """
         coverage = {}
         text_lower = text.lower()
         
         for dimension, config in self.ethical_dimensions.items():
-            dimension_score = 0
-            matched_items = []
+            # Calculate different score components
+            keyword_score, keyword_matches = self._calculate_keyword_matches(config, text_lower)
+            phrase_score, phrase_matches = self._calculate_phrase_matches(config, text_lower)
+            theme_boost = self._calculate_theme_boost(themes, config)
             
-            #  ENHANCED: Weighted keyword matching instead of binary counting
-            for keyword in config['keywords']:
-                if keyword.lower() in text_lower:
-                    weight = config.get('keyword_weights', {}).get(keyword, 1.0)
-                    dimension_score += weight
-                    matched_items.append(f"{keyword} (weight: {weight})")
+            # Combine scores and calculate final values
+            final_score, raw_score = self._calculate_dimension_score(
+                keyword_score, phrase_score, theme_boost, config
+            )
             
-            #  NEW: Phrase matching for contextual understanding
-            # This catches "must disclose" as stronger indicator than just "disclose"
-            for phrase in config.get('phrases', []):
-                if phrase.lower() in text_lower:
-                    dimension_score += 2.0  # Phrases get bonus points
-                    matched_items.append(f"PHRASE: {phrase}")
-            
-            #  ENHANCED: Theme boost (more generous than before)
-            theme_boost = 0
-            for theme in themes:
-                theme_name = theme.get('name', '').lower()
-                if any(kw.lower() in theme_name for kw in config['keywords'][:3]):
-                    theme_boost += theme.get('score', 0) * 0.3  # Increased from 0.1
-            
-            #  SCORING ALGORITHM
-            #  Use weighted maximum possible score
-            max_keyword_weight = 3.0  # Highest possible weight
-            max_phrase_bonus = len(config.get('phrases', [])) * 2.0
-            max_possible_base = len(config['keywords']) * max_keyword_weight + max_phrase_bonus
-            
-            # Calculate realistic percentage
-            if max_possible_base > 0:
-                raw_score = (dimension_score / max_possible_base) * 100
-            else:
-                raw_score = 0
-            
-            # Add theme boost and cap at 100%
-            final_score = min(100, raw_score + theme_boost)
-            
-            #  ADJUSTED THRESHOLDS: Much less restrictive than original 70%
-            # Columbia's disclosure should now get 'moderate' status instead of 'weak'
-            if final_score >= 40:
-                status = 'strong'
-            elif final_score >= 15:  # Was 70% before - way too high!
-                status = 'moderate'
-            else:
-                status = 'weak'
+            # Prepare results
+            all_matches = keyword_matches + phrase_matches
+            status = self._get_dimension_status(final_score)
             
             coverage[dimension] = {
                 'score': round(final_score, 1),
-                'matched_items': matched_items,
-                'item_count': len(matched_items),
+                'matched_items': all_matches,
+                'item_count': len(all_matches),
                 'description': config['description'],
                 'status': status,
                 'raw_score': round(raw_score, 1),
                 'theme_boost': round(theme_boost, 1),
                 'debug_info': {
-                    'dimension_score': dimension_score,
-                    'max_possible': max_possible_base,
-                    'keyword_matches': len([i for i in matched_items if 'PHRASE:' not in i]),
-                    'phrase_matches': len([i for i in matched_items if 'PHRASE:' in i])
+                    'dimension_score': keyword_score + phrase_score,
+                    'max_possible': len(config['keywords']) * 3.0 + len(config.get('phrases', [])) * 2.0,
+                    'keyword_matches': len(keyword_matches),
+                    'phrase_matches': len(phrase_matches)
                 }
             }
         

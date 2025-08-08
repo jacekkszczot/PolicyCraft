@@ -239,6 +239,96 @@ def index():
     logger.info("Landing page accessed")
     return render_template("index.html")
 
+def _to_epoch(val):
+    """Convert supported date formats to POSIX timestamp for consistent sorting."""
+    try:
+        if isinstance(val, datetime):
+            return val.replace(tzinfo=None).timestamp()
+        if isinstance(val, str):
+            dt = datetime.fromisoformat(val.replace('Z', '+00:00'))
+            return dt.replace(tzinfo=None).timestamp()
+    except Exception:
+        pass
+    return 0
+
+def _combine_stats(stats1, stats2):
+    """Combine two sets of statistics with weighted averaging."""
+    total1 = stats1.get('total', 0)
+    total2 = stats2.get('total', 0)
+    total = total1 + total2
+    
+    if total == 0:
+        return {
+            'total': 0,
+            'avg_confidence': 0,
+            'avg_themes_per_analysis': 0
+        }
+    
+    # Calculate weighted average for confidence and themes
+    conf1 = (stats1.get('avg_confidence', 0) or 0) * total1
+    conf2 = (stats2.get('avg_confidence', 0) or 0) * total2
+    
+    themes1 = (stats1.get('avg_themes_per_analysis', 0) or 0) * total1
+    themes2 = (stats2.get('avg_themes_per_analysis', 0) or 0) * total2
+    
+    return {
+        'total': total,
+        'avg_confidence': round((conf1 + conf2) / total, 1) if total > 0 else 0,
+        'avg_themes_per_analysis': round((themes1 + themes2) / total, 1) if total > 0 else 0
+    }
+
+def _process_analyses_for_display(analyses):
+    """Process analyses for display by converting dates and preparing data."""
+    processed = []
+    for analysis in analyses:
+        processed_analysis = analysis.copy()
+        if 'analysis_date' in processed_analysis:
+            if hasattr(processed_analysis['analysis_date'], 'strftime'):
+                processed_analysis['analysis_date'] = processed_analysis['analysis_date'].strftime('%Y-%m-%d %H:%M:%S')
+            elif isinstance(processed_analysis['analysis_date'], str):
+                try:
+                    dt = datetime.fromisoformat(processed_analysis['analysis_date'].replace('Z', '+00:00'))
+                    processed_analysis['analysis_date'] = dt.strftime('%Y-%m-%d %H:%M:%S')
+                except Exception:
+                    pass
+        processed.append(processed_analysis)
+    return processed
+
+def _calculate_analytics(analyses):
+    """Calculate analytics (classifications and themes) from analyses."""
+    classification_counts = {}
+    theme_frequencies = {}
+    
+    for analysis in analyses:
+        # Count classifications
+        classification = analysis.get('classification', {})
+        cls = classification.get('classification', 'Unknown') if isinstance(classification, dict) else 'Unknown'
+        classification_counts[cls] = classification_counts.get(cls, 0) + 1
+        
+        # Count theme frequencies
+        themes = analysis.get('themes', [])
+        for theme in themes:
+            theme_name = theme.get('name', 'Unknown') if isinstance(theme, dict) else str(theme)
+            theme_frequencies[theme_name] = theme_frequencies.get(theme_name, 0) + 1
+    
+    return classification_counts, theme_frequencies
+
+def _get_minimal_dashboard_data(user):
+    """Return minimal dashboard data for error cases."""
+    return {
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'full_name': user.get_full_name()
+        },
+        'total_policies': 0,
+        'classification_counts': {},
+        'theme_frequencies': {},
+        'charts': {},
+        'recent_analyses': [],
+        'statistics': {'total_analyses': 0, 'avg_confidence': 0, 'avg_themes_per_analysis': 0}
+    }
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -251,178 +341,95 @@ def dashboard():
     try:
         logger.info(f"Dashboard accessed by user: {current_user.username}")
         
-        # Remove potential baseline duplicates before fetching data
+        # Get and prepare analyses
         db_operations.deduplicate_baseline_analyses(current_user.id)
-        # Retrieve user analyses (already deduplicated)
         user_analyses = db_operations.get_user_analyses(current_user.id)
-        # Retrieve baseline analyses (global)
         baseline_analyses = db_operations.get_user_analyses(-1)
-        # Merge user's version has priority, avoid duplicate filenames
+        
+        # Merge analyses with user versions taking precedence
         analyses_by_filename = {a['filename']: a for a in baseline_analyses}
         analyses_by_filename.update({a['filename']: a for a in user_analyses})
         combined_analyses = list(analyses_by_filename.values())
-
-        # Ensure newest analyses appear first
-        def _to_epoch(val):
-            """Convert supported date formats to POSIX timestamp for consistent sorting."""
-            try:
-                if isinstance(val, datetime):
-                    return val.replace(tzinfo=None).timestamp()
-                if isinstance(val, str):
-                    dt = datetime.fromisoformat(val.replace('Z', '+00:00'))
-                    return dt.replace(tzinfo=None).timestamp()
-            except Exception:
-                pass
-            # Fallback for invalid dates
-            return 0
+        
+        # Sort by date (newest first)
         combined_analyses.sort(key=lambda a: _to_epoch(a.get('analysis_date')), reverse=True)
-
-        # If the user has no baseline analyses loaded, load them automatically
-        if not any(a.get('filename','').startswith('[BASELINE]') for a in user_analyses):
-            try:
-                loaded = db_operations.load_sample_policies_for_user(current_user.id)
-                if loaded:
-                    # refresh analyses list after loading
-                    user_analyses = db_operations.get_user_analyses(current_user.id)
-                    flash('Sample baseline policies have been loaded to your dashboard.', 'success')
-            except Exception as e:
-                logger.error(f"Failed to auto-load baseline policies: {e}")
         
-        # Generate dashboard charts
-        try:
-            dashboard_charts = chart_generator.generate_user_dashboard_charts(user_analyses)
-        except Exception as e:
-            logger.error(f"Chart generation error: {e}")
-            dashboard_charts = {}
+        # Load sample policies if needed
+        _load_sample_policies_if_needed(user_analyses)
         
-        # Calculate statistics
-        total_policies = len(combined_analyses)
-        classification_counts = {}
-        theme_frequencies = {}
-        
-        for analysis in combined_analyses:
-            # Count classifications
-            classification = analysis.get('classification', {})
-            cls = classification.get('classification', 'Unknown') if isinstance(classification, dict) else 'Unknown'
-            classification_counts[cls] = classification_counts.get(cls, 0) + 1
-            
-            # Count theme frequencies
-            themes = analysis.get('themes', [])
-            for theme in themes:
-                theme_name = theme.get('name', 'Unknown') if isinstance(theme, dict) else str(theme)
-                theme_frequencies[theme_name] = theme_frequencies.get(theme_name, 0) + 1
-        
-        # Get combined statistics (user's analyses + baselines)
-        try:
-            # Get user's own statistics
-            user_stats = db_operations.get_analysis_statistics(current_user.id)
-            
-            # Always include baseline statistics
-            baseline_stats = db_operations.get_analysis_statistics(-1)  # Get baseline stats (user_id: -1)
-            
-            # Combine user stats with baseline stats
-            def combine_stats(stats1, stats2):
-                total1 = stats1.get('total', 0)
-                total2 = stats2.get('total', 0)
-                total = total1 + total2
-                
-                if total == 0:
-                    return {
-                        'total': 0,
-                        'avg_confidence': 0,
-                        'avg_themes_per_analysis': 0
-                    }
-                
-                # Calculate weighted average for confidence and themes
-                conf1 = (stats1.get('avg_confidence', 0) or 0) * total1
-                conf2 = (stats2.get('avg_confidence', 0) or 0) * total2
-                
-                themes1 = (stats1.get('avg_themes_per_analysis', 0) or 0) * total1
-                themes2 = (stats2.get('avg_themes_per_analysis', 0) or 0) * total2
-                
-                return {
-                    'total': total,
-                    'avg_confidence': round((conf1 + conf2) / total, 1) if total > 0 else 0,
-                    'avg_themes_per_analysis': round((themes1 + themes2) / total, 1) if total > 0 else 0
-                }
-            
-            # Combine user stats with baseline stats
-            combined_stats = combine_stats(user_stats, baseline_stats)
-            
-            # Format the final statistics
-            db_stats = {
-                'total_analyses': combined_stats.get('total', 0),
-                'avg_confidence': round(combined_stats.get('avg_confidence', 0), 1),
-                'avg_themes_per_analysis': round(combined_stats.get('avg_themes_per_analysis', 0), 1)
-            }
-        except Exception as e:
-            logger.error(f"DB stats error: {e}")
-            db_stats = {
-                'total_analyses': 0, 
-                'avg_confidence': 0, 
-                'avg_themes_per_analysis': 0
-            }
-        
-        # Prepare serializable user data
-        user_data = {
-            'id': current_user.id,
-            'username': current_user.username,
-            'email': current_user.email,
-            'full_name': current_user.get_full_name(),
-            'institution': getattr(current_user, 'institution', None),
-            'role': getattr(current_user, 'role', 'user')
-        }
-        
-        # Convert dates to strings for JSON serialization
-        processed_analyses = []
-        for analysis in combined_analyses:
-            processed_analysis = analysis.copy()
-            
-            if 'analysis_date' in processed_analysis:
-                if hasattr(processed_analysis['analysis_date'], 'strftime'):
-                    processed_analysis['analysis_date'] = processed_analysis['analysis_date'].strftime('%Y-%m-%d %H:%M:%S')
-                elif isinstance(processed_analysis['analysis_date'], str):
-                    try:
-                        dt = datetime.fromisoformat(processed_analysis['analysis_date'].replace('Z', '+00:00'))
-                        processed_analysis['analysis_date'] = dt.strftime('%Y-%m-%d %H:%M:%S')
-                    except:
-                        pass
-            
-            processed_analyses.append(processed_analysis)
-        
-        # Prepare dashboard data
-        dashboard_data = {
-            'user': user_data,
-            'total_policies': total_policies,
-            'classification_counts': classification_counts,
-            'theme_frequencies': theme_frequencies,
-            'charts': dashboard_charts,
-            'recent_analyses': processed_analyses,
-            'statistics': db_stats
-        }
+        # Generate dashboard data
+        dashboard_data = _prepare_dashboard_data(
+            current_user, 
+            user_analyses, 
+            combined_analyses
+        )
         
         return render_template('dashboard.html', data=dashboard_data)
         
     except Exception as e:
         logger.error(f"Dashboard error: {str(e)}")
-        
-        # Return minimal data on error
-        minimal_data = {
-            'user': {
-                'id': current_user.id,
-                'username': current_user.username,
-                'full_name': current_user.get_full_name()
-            },
-            'total_policies': 0,
-            'classification_counts': {},
-            'theme_frequencies': {},
-            'charts': {},
-            'recent_analyses': [],
-            'statistics': {'total_analyses': 0, 'avg_confidence': 0, 'avg_themes_per_analysis': 0}
-        }
-        
         flash('Dashboard loaded with limited data due to an error.', 'warning')
-        return render_template('dashboard.html', data=minimal_data)
+        return render_template('dashboard.html', data=_get_minimal_dashboard_data(current_user))
+
+def _load_sample_policies_if_needed(user_analyses):
+    """Load sample policies if user has none."""
+    if not any(a.get('filename','').startswith('[BASELINE]') for a in user_analyses):
+        try:
+            loaded = db_operations.load_sample_policies_for_user(current_user.id)
+            if loaded:
+                flash('Sample baseline policies have been loaded to your dashboard.', 'success')
+        except Exception as e:
+            logger.error(f"Failed to auto-load baseline policies: {e}")
+
+def _prepare_dashboard_data(user, user_analyses, combined_analyses):
+    """Prepare the complete dashboard data structure."""
+    # Generate charts
+    try:
+        dashboard_charts = chart_generator.generate_user_dashboard_charts(user_analyses)
+    except Exception as e:
+        logger.error(f"Chart generation error: {e}")
+        dashboard_charts = {}
+    
+    # Calculate analytics
+    classification_counts, theme_frequencies = _calculate_analytics(combined_analyses)
+    
+    # Get combined statistics
+    try:
+        user_stats = db_operations.get_analysis_statistics(user.id)
+        baseline_stats = db_operations.get_analysis_statistics(-1)
+        combined_stats = _combine_stats(user_stats, baseline_stats)
+        
+        db_stats = {
+            'total_analyses': combined_stats.get('total', 0),
+            'avg_confidence': round(combined_stats.get('avg_confidence', 0), 1),
+            'avg_themes_per_analysis': round(combined_stats.get('avg_themes_per_analysis', 0), 1)
+        }
+    except Exception as e:
+        logger.error(f"DB stats error: {e}")
+        db_stats = {'total_analyses': 0, 'avg_confidence': 0, 'avg_themes_per_analysis': 0}
+    
+    # Prepare user data
+    user_data = {
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'full_name': user.get_full_name(),
+        'institution': getattr(user, 'institution', None),
+        'role': getattr(user, 'role', 'user')
+    }
+    
+    # Process analyses for display
+    processed_analyses = _process_analyses_for_display(combined_analyses)
+    
+    return {
+        'user': user_data,
+        'total_policies': len(combined_analyses),
+        'classification_counts': classification_counts,
+        'theme_frequencies': theme_frequencies,
+        'charts': dashboard_charts,
+        'recent_analyses': processed_analyses,
+        'statistics': db_stats
+    }
 
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required

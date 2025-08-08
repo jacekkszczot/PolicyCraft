@@ -222,8 +222,8 @@ class ChartGenerator:
         fig = go.Figure(data=[go.Bar(
             x=list(counts.keys()),
             y=list(counts.values()),
-            marker=dict(color=[self.color_schemes['classifications'].get(cls, '#95a5a6') 
-                             for cls in counts.keys()])
+            marker={'color': [self.color_schemes['classifications'].get(cls, '#95a5a6') 
+                           for cls in counts.keys()]}
         )])
         
         fig.update_layout(
@@ -254,7 +254,7 @@ class ChartGenerator:
             x=[count for theme, count in top_themes],
             y=[theme for theme, count in top_themes],
             orientation='h',
-            marker=dict(color=self.color_schemes['themes'][:len(top_themes)])
+            marker={'color': self.color_schemes['themes'][:len(top_themes)]}
         )])
         
         fig.update_layout(

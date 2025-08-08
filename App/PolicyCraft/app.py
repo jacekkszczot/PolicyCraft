@@ -185,7 +185,7 @@ def create_app():
     @app.context_processor
     def inject_current_user():
         """Make current_user available in all templates."""
-        return dict(current_user=current_user)
+        return {'current_user': current_user}
     
     # Initialize database and create tables
     with app.app_context():

@@ -28,7 +28,7 @@ from src.nlp.theme_extractor import ThemeExtractor
 from src.nlp.policy_classifier import PolicyClassifier
 from src.database.mongo_operations import MongoOperations
 from src.visualisation.charts import ChartGenerator
-from src.recommendation.engine import RecommendationEngine
+from src.recommendation.engine import RecommendationGenerator
 
 def run_batch_analysis():
     """Run complete analysis on clean dataset."""
@@ -47,7 +47,7 @@ def run_batch_analysis():
     # Remove any previous baseline recommendations to avoid duplicates
     mongo_db.recommendations.delete_many({"user_id": -1})
     chart_generator = ChartGenerator()
-    recommendation_engine = RecommendationEngine()
+    recommendation_engine = RecommendationGenerator()
     print("✅ All components loaded")
     
     # Dataset paths

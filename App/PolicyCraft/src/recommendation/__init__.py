@@ -12,8 +12,13 @@ University: Leeds Trinity University
 """
 
 # Import key components to make them available at package level
-from .engine import EthicalFrameworkAnalyzer, RecommendationGenerator
+from .engine import EthicalFrameworkAnalyzer, RecommendationGenerator, PolicyDimension, PolicyRecommendation
 
 # Define package version and exports
 __version__ = '1.0.0'
-__all__ = ['EthicalFrameworkAnalyzer', 'RecommendationGenerator']
+__all__ = [
+    'EthicalFrameworkAnalyzer', 
+    'RecommendationGenerator',
+    'PolicyDimension',
+    'PolicyRecommendation'
+]

@@ -15,19 +15,121 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timezone
 import json
 
-# Sample universities data used for onboarding
-SAMPLE_UNIVERSITIES = [
-    "University of Oxford",
-    "University of Cambridge",
-    "Imperial College London",
-    "UCL (University College London)",
-    "University of Edinburgh",
-    "University of Manchester",
-    "King's College London",
-    "University of Bristol",
-    "University of Warwick",
-    "University of Glasgow"
-]
+# Sample universities data used for onboarding and baseline policies
+SAMPLE_UNIVERSITIES = {
+    "oxford": {
+        "name": "University of Oxford",
+        "file": "oxford-ai-policy.pdf",
+        "country": "UK",
+        "themes": ["Ethics", "Governance", "Transparency"],
+        "classification": "Moderate"
+    },
+    "cambridge": {
+        "name": "University of Cambridge",
+        "file": "cambridge-ai-policy.pdf",
+        "country": "UK",
+        "themes": ["Ethics", "Research", "Education"],
+        "classification": "Moderate"
+    },
+    "cambridge_docx": {
+        "name": "University of Cambridge",
+        "file": "cambridge-ai-policy.docx",
+        "country": "UK",
+        "themes": ["Ethics", "Research", "Education"],
+        "classification": "Moderate"
+    },
+    "imperial": {
+        "name": "Imperial College London",
+        "file": "imperial-ai-policy.docx",
+        "country": "UK",
+        "themes": ["Research", "Innovation", "Governance"],
+        "classification": "Permissive"
+    },
+    "edinburgh": {
+        "name": "University of Edinburgh",
+        "file": "edinburgh university-ai-policy.pdf",
+        "country": "UK",
+        "themes": ["Ethics", "Governance", "Research"],
+        "classification": "Moderate"
+    },
+    "leeds": {
+        "name": "Leeds Trinity University",
+        "file": "leeds trinity university-ai-policy.pdf",
+        "country": "UK",
+        "themes": ["Education", "Ethics", "Student Support"],
+        "classification": "Restrictive"
+    },
+    "harvard": {
+        "name": "Harvard University",
+        "file": "harvard-ai-policy.pdf",
+        "country": "USA",
+        "themes": ["Research", "Ethics", "Innovation"],
+        "classification": "Permissive"
+    },
+    "mit": {
+        "name": "MIT",
+        "file": "mit-ai-policy.pdf",
+        "country": "USA",
+        "themes": ["Innovation", "Research", "Ethics"],
+        "classification": "Permissive"
+    },
+    "stanford": {
+        "name": "Stanford University",
+        "file": "stanford-ai-policy.pdf",
+        "country": "USA",
+        "themes": ["Research", "Education", "Ethics"],
+        "classification": "Moderate"
+    },
+    "tokyo": {
+        "name": "University of Tokyo",
+        "file": "tokyo-ai-policy.docx",
+        "country": "Japan",
+        "themes": ["Research", "Innovation", "Cultural Context"],
+        "classification": "Permissive"
+    },
+    "jagiellonian": {
+        "name": "Jagiellonian University",
+        "file": "jagiellonian university-ai-policy.pdf",
+        "country": "Poland",
+        "themes": ["Education", "Ethics", "European Context"],
+        "classification": "Restrictive"
+    },
+    "belfast": {
+        "name": "Belfast University",
+        "file": "belfast university-ai-policy.pdf",
+        "country": "UK",
+        "themes": ["Education", "Ethics", "Student Support"],
+        "classification": "Restrictive"
+    },
+    "chicago": {
+        "name": "University of Chicago",
+        "file": "chicago-ai-policy.docx",
+        "country": "USA",
+        "themes": ["Research", "Ethics", "Innovation"],
+        "classification": "Moderate"
+    },
+    "columbia": {
+        "name": "Columbia University",
+        "file": "columbia-ai-policy.pdf",
+        "country": "USA",
+        "themes": ["Research", "Ethics", "Innovation"],
+        "classification": "Moderate"
+    },
+    "cornell": {
+        "name": "Cornell University",
+        "file": "cornell-ai-policy.docx",
+        "country": "USA",
+        "themes": ["Research", "Education", "Ethics"],
+        "classification": "Moderate"
+    },
+    "liverpool": {
+        "name": "University of Liverpool",
+        "file": "liverpool policy-ai-policy.pdf",
+        "country": "UK",
+        "themes": ["Education", "Ethics", "Student Support"],
+        "classification": "Moderate"
+    }
+}
 
 # Initialize SQLAlchemy
 db = SQLAlchemy()

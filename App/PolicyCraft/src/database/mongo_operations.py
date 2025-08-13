@@ -31,6 +31,7 @@ University: Leeds Trinity University
 from __future__ import annotations
 
 import os
+import logging
 from datetime import datetime, timezone
 from typing import List, Dict, Optional, Tuple
 
@@ -78,7 +79,8 @@ AVG_CONFIDENCE_FIELD = "avg_confidence"
 AVG_THEMES_FIELD = "avg_themes_per_analysis"
 
 # Regular expressions
-BASELINE_REGEX = r"^\\[BASELINE\\]"
+# Matches filenames starting with "[BASELINE]"
+BASELINE_REGEX = r"^\[BASELINE\]"
 
 # Helper types for better code readability
 Analysis = Dict
@@ -216,7 +218,41 @@ class MongoOperations:
         Returns:
             List of analysis documents
         """
-        return list(self.analyses.find({"user_id": user_id}).sort("analysis_date", DESCENDING))
+        logger = logging.getLogger(__name__)
+        try:
+            logger.info(f"[DEBUG] MongoOperations: Fetching analyses for user_id: {user_id}")
+            logger.info(f"[DEBUG] MongoOperations: Collection name: {self.analyses.name}")
+            logger.info(f"[DEBUG] MongoOperations: Database name: {self.db.name}")
+            
+            # Log connection status
+            logger.info(f"[DEBUG] MongoOperations: Connection status: {self.client is not None}")
+            
+            # List all collections in the database
+            try:
+                collections = self.db.list_collection_names()
+                logger.info(f"[DEBUG] MongoOperations: Available collections: {collections}")
+            except Exception as e:
+                logger.error(f"[DEBUG] MongoOperations: Error listing collections: {str(e)}")
+            
+            # Get count of analyses for this user
+            count = self.analyses.count_documents({"user_id": user_id})
+            logger.info(f"[DEBUG] MongoOperations: Found {count} analyses for user {user_id}")
+            
+            # Get the analyses
+            cursor = self.analyses.find({"user_id": user_id}).sort("analysis_date", DESCENDING)
+            analyses = list(cursor)
+            
+            logger.info(f"[DEBUG] MongoOperations: Retrieved {len(analyses)} analyses")
+            if analyses:
+                logger.info(f"[DEBUG] MongoOperations: First analysis ID: {analyses[0].get('_id')}")
+                logger.info(f"[DEBUG] MongoOperations: First analysis filename: {analyses[0].get('filename')}")
+            
+            return analyses
+            
+        except Exception as e:
+            logger.error(f"[DEBUG] MongoOperations: Error in get_user_analyses: {str(e)}")
+            logger.error(f"[DEBUG] MongoOperations: Error type: {type(e).__name__}", exc_info=True)
+            raise
 
     def remove_duplicate_analyses(self, user_id: int) -> int:
         """
@@ -295,9 +331,9 @@ class MongoOperations:
         """
         oid = self._to_object_id(analysis_id)
         result = self.analyses.delete_one({
-            "_id": oid, 
-            "user_id": user_id, 
-            "filename": {"$not": {"$regex": r"^\\[BASELINE\\]"}}
+            "_id": oid,
+            "user_id": user_id,
+            "filename": {"$not": {"$regex": BASELINE_REGEX}}
         })
         return result.deleted_count == 1
 
@@ -389,14 +425,56 @@ class MongoOperations:
 
     def purge_user_data(self, user_id: int):
         """
-        Delete all analyses and recommendations associated with a user.
+        Delete all analyses, recommendations, and associated files for a user.
+        
+        CRITICAL SECURITY FIX: Now also deletes physical files from disk
+        to ensure complete data removal and GDPR compliance.
         
         Args:
             user_id: User identifier whose data should be purged
         """
+        import os
+        from flask import current_app
+        
+        # First, get all analyses to find associated files
+        user_analyses = list(self.analyses.find({"user_id": user_id}))
+        deleted_files = []
+        
+        # Delete physical files from disk
+        for analysis in user_analyses:
+            filename = analysis.get('filename', '')
+            if filename and not filename.startswith('[baseline]'):  # Don't delete baseline files
+                # Try multiple possible upload directories
+                possible_paths = [
+                    os.path.join(current_app.config.get('UPLOAD_FOLDER', 'uploads'), filename),
+                    os.path.join('uploads', filename),
+                    os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'uploads', filename)
+                ]
+                
+                for file_path in possible_paths:
+                    if os.path.exists(file_path):
+                        try:
+                            os.remove(file_path)
+                            deleted_files.append(filename)
+                            print(f"Deleted file: {file_path}")
+                            break  # File found and deleted, no need to check other paths
+                        except Exception as e:
+                            print(f"Warning: Could not delete file {file_path}: {e}")
+        
+        # Delete from MongoDB
         res1 = self.analyses.delete_many({"user_id": user_id})
         res2 = self.recommendations.delete_many({"user_id": user_id})
-        print(f"Purged {res1.deleted_count} analyses and {res2.deleted_count} recommendations for user {user_id}")
+        
+        print(f"SECURITY FIX: Purged {res1.deleted_count} analyses, {res2.deleted_count} recommendations, and {len(deleted_files)} files for user {user_id}")
+        if deleted_files:
+            print(f"Deleted files: {', '.join(deleted_files)}")
+        
+        return {
+            'analyses_deleted': res1.deleted_count,
+            'recommendations_deleted': res2.deleted_count,
+            'files_deleted': len(deleted_files),
+            'deleted_files': deleted_files
+        }
 
     # Baseline policy management helpers
 
@@ -410,7 +488,7 @@ class MongoOperations:
             user_id: User identifier to deduplicate baseline analyses for
         """
         pipeline = [
-            {"$match": {"user_id": user_id, "filename": {"$regex": r"^\\[BASELINE\\]", "$options": "i"}}},
+            {"$match": {"user_id": user_id, "filename": {"$regex": BASELINE_REGEX, "$options": "i"}}},
             {"$sort": {"analysis_date": -1}},
             {"$group": {
                 "_id": "$filename",
@@ -437,7 +515,7 @@ class MongoOperations:
         Keeps newest document per filename across all users.
         """
         pipeline = [
-            {"$match": {"filename": {"$regex": r"^\\[BASELINE\\]", "$options": "i"}}},
+            {"$match": {"filename": {"$regex": BASELINE_REGEX, "$options": "i"}}},
             {"$sort": {"analysis_date": -1}},
             {"$group": {"_id": "$filename", "ids": {"$push": "$_id"}, "count": {"$sum": 1}}},
             {"$match": {"count": {"$gt": 1}}}
@@ -462,8 +540,8 @@ class MongoOperations:
            "[BASELINE]", nothing is done and the method returns True.
         2. Otherwise, it looks for the global baseline set (user_id == -1)
            and duplicates those documents for the specified user.
-        3. When no global baseline is found, the method returns False so the
-           caller can decide how to proceed.
+        3. When no global baseline is found, the method creates baselines from
+           the clean_dataset files directly.
            
         Args:
             user_id: User identifier to load sample policies for
@@ -471,83 +549,112 @@ class MongoOperations:
         Returns:
             bool: True if baseline policies are available, False otherwise
         """
-        # Check if user already has baseline analyses
-        has_user_baseline = self.analyses.find_one({
+        import logging
+        logger = logging.getLogger(__name__)
+
+        # 1) If user already has any baselines, do nothing
+        user_baseline_count = self.analyses.count_documents({
             "user_id": user_id,
-            "filename": {"$regex": r"^\\[BASELINE\\]"}
+            "filename": {"$regex": BASELINE_REGEX, "$options": "i"}
         })
-        if has_user_baseline:
-            print(f"Baseline analyses already exist for user {user_id} – skipping copy.")
+        if user_baseline_count > 0:
+            logger.info(f"Baseline analyses already exist for user {user_id} (count={user_baseline_count}) – skipping load.")
             return True
 
-        # Fetch global baseline documents
+        # 2) If global baselines exist, copy them for the user
         global_baselines = list(self.analyses.find({
             "user_id": -1,
-            "filename": {"$regex": r"^\\[BASELINE\\]"}
+            "filename": {"$regex": BASELINE_REGEX, "$options": "i"}
         }))
-        if not global_baselines:
-            # Fallback: create baselines from dataset files
-            try:
-                from src.database.models import SAMPLE_UNIVERSITIES
-                from pathlib import Path
-
-                dataset_path = Path("data/policies/clean_dataset")
-                if not dataset_path.exists():
-                    print("Dataset path not found for baseline import.")
-                    return False
-
-                inserted = 0
-                for key, uni in SAMPLE_UNIVERSITIES.items():
-                    file_path = dataset_path / uni["file"]
-                    baseline_filename = f"[BASELINE] {uni['name']} - {uni['file']}"
-
-                    # Avoid duplicates just in case
-                    if self.analyses.find_one({"user_id": user_id, "filename": baseline_filename}):
-                        continue
-
-                    payload: Analysis = {
-                        "user_id": user_id,
-                        "document_id": f"sample_{key}",
-                        "filename": baseline_filename,
-                        "analysis_date": datetime.now(timezone.utc),
-                        "text_data": {
-                            "original_text": f"Sample policy from {uni['name']}",
-                            "cleaned_text": f"Sample policy from {uni['name']} ({uni['country']})",
-                            "text_length": 0,
-                        },
-                        "themes": [{"name": t, "score": 0.8, "confidence": 85} for t in uni.get("themes", [])],
-                        "classification": {
-                            "classification": uni.get("classification", "Unknown"),
-                            "confidence": 85,
-                            "source": "Sample Dataset",
-                        },
-                        "summary": {},
-                    }
-                    self.analyses.insert_one(payload)
+        if global_baselines:
+            logger.info(f"Found {len(global_baselines)} global baselines – cloning for user {user_id}")
+            inserted = 0
+            for baseline in global_baselines:
+                clone = baseline.copy()
+                clone.pop("_id", None)
+                clone["user_id"] = user_id
+                clone.pop("username", None)
+                try:
+                    self.analyses.insert_one(clone)
                     inserted += 1
-                print(f"Inserted {inserted} baseline analyses for user {user_id} from dataset files.")
-                return inserted > 0
-            except Exception as e:
-                print(f"Error loading baseline dataset: {e}")
+                except Exception as e:
+                    logger.warning(f"Could not clone baseline {baseline.get('filename')}: {e}")
+            logger.info(f"Cloned {inserted} baselines for user {user_id}")
+            return inserted > 0
+
+        # 3) Otherwise create global baselines from dataset (and also a user copy if user_id != -1)
+        logger.info("No global baselines found – creating from dataset files")
+        try:
+            from src.database.models import SAMPLE_UNIVERSITIES
+            from pathlib import Path
+            from src.nlp.text_processor import TextProcessor
+
+            dataset_path = Path("/Users/jaai/Desktop/PROJECT MASTER/App and Report/PolicyCraft/App/PolicyCraft/data/policies/clean_dataset")
+            if not dataset_path.exists():
+                logger.error(f"Dataset path not found for baseline import: {dataset_path}")
                 return False
 
-        # Clone global baselines for the specified user
-        inserted = 0
-        seen_filenames: set[str] = set()
-        for base_doc in global_baselines:
-            if base_doc.get("filename") in seen_filenames:
-                continue
-            seen_filenames.add(base_doc.get("filename"))
-            clone = base_doc.copy()
-            clone.pop("_id", None)  # Let MongoDB assign a new ID
-            clone["user_id"] = user_id
-            # Ensure username removed as it will be owner specific
-            clone.pop("username", None)
-            try:
-                self.analyses.insert_one(clone)
-                inserted += 1
-            except Exception as e:
-                # Ignore duplicates or other insertion errors per document
-                print(f"Could not clone baseline {base_doc.get('filename')}: {e}")
-        print(f"Added {inserted} baseline analyses for user {user_id}.")
-        return inserted > 0
+            text_processor = TextProcessor()
+            inserted = 0
+            failed = 0
+
+            for key, uni in SAMPLE_UNIVERSITIES.items():
+                file_path = dataset_path / uni["file"]
+                baseline_filename = f"[BASELINE] {uni['name']}"
+
+                logger.info(f"Processing baseline: {baseline_filename} from file {file_path}")
+
+                # Create global baseline if absent
+                if not self.analyses.find_one({"user_id": -1, "filename": baseline_filename}):
+                    if file_path.exists():
+                        extracted_text = text_processor.extract_text_from_file(str(file_path))
+                        if extracted_text:
+                            cleaned_text = text_processor.clean_text(extracted_text)
+                            text_length = len(cleaned_text) if cleaned_text else 0
+
+                            global_payload = {
+                                "user_id": -1,
+                                "document_id": uni["file"],
+                                "filename": baseline_filename,
+                                "analysis_date": datetime.now(timezone.utc),
+                                "text_data": {
+                                    "original_text": extracted_text,
+                                    "cleaned_text": cleaned_text,
+                                    "text_length": text_length,
+                                },
+                                "themes": [{"name": t, "score": 0.8, "confidence": 85} for t in uni.get("themes", [])],
+                                "classification": {
+                                    "classification": uni.get("classification", "Unknown"),
+                                    "confidence": 85,
+                                    "source": "Sample Dataset",
+                                },
+                                "summary": {},
+                                "is_baseline": True,
+                            }
+                            self.analyses.insert_one(global_payload)
+                            inserted += 1
+                        else:
+                            logger.warning(f"Failed to extract text from {file_path}")
+                            failed += 1
+                            continue
+                    else:
+                        logger.warning(f"File not found: {file_path}")
+                        failed += 1
+                        continue
+
+                # Create user copy (if requested user is not global)
+                if user_id != -1:
+                    doc = self.analyses.find_one({"user_id": -1, "filename": baseline_filename})
+                    if doc:
+                        clone = doc.copy()
+                        clone.pop("_id", None)
+                        clone["user_id"] = user_id
+                        clone.pop("username", None)
+                        self.analyses.insert_one(clone)
+                        inserted += 1
+
+            logger.info(f"Created {inserted} baseline analyses for user {user_id} from dataset. Failures: {failed}")
+            return inserted > 0
+        except Exception as e:
+            logger.error(f"Error creating baselines from dataset: {e}", exc_info=True)
+            return False

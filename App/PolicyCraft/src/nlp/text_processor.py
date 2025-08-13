@@ -245,7 +245,7 @@ class TextProcessor:
                 ))
                 return None
                 
-        logger.warning(f"Could not read file with any encoding: {file_path}")
+        logger.warning("Could not read file with any encoding: %s", file_path)
         return None
 
     def clean_text(self, text: str) -> str:
@@ -318,13 +318,13 @@ class TextProcessor:
             return text.strip()
             
         except Exception as e:
-            logger.warning(f"Error during text cleaning: {str(e)}")
+            logger.error("Error in text preprocessing: %s", str(e))
             return text  # Return partially cleaned text if an error occurs
         
         # Final whitespace normalization
         text = whitespace_pattern.sub(' ', text).strip()
         text = text.strip()
-        
+        logger.debug("Text cleaned: %s characters", len(text))
         print(f"Text cleaned: {len(text)} characters")
         return text
 

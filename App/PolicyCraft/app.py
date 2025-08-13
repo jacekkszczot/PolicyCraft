@@ -7,7 +7,7 @@ Project: MSc Data Science & AI - COM7016
 University: Leeds Trinity University
 """
 
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, make_response
 from flask_login import LoginManager, login_required, current_user
 from flask_wtf.csrf import CSRFProtect
 import os
@@ -28,8 +28,11 @@ from src.nlp.text_processor import TextProcessor
 from src.nlp.theme_extractor import ThemeExtractor
 from src.nlp.policy_classifier import PolicyClassifier
 from src.database.mongo_operations import MongoOperations as DatabaseOperations
+
+# Import automatic document management
+from src.utils.auto_document_manager import run_auto_document_scan
 from src.visualisation.charts import ChartGenerator
-from src.recommendation.engine import RecommendationEngine
+from src.recommendation.engine import RecommendationGenerator as RecommendationEngine
 from src.scripts.clean_dataset import process_new_upload
 
 
@@ -154,7 +157,7 @@ def create_app():
     # Create secure directories first
     create_secure_directories()
     
-    # Initialize Flask application
+    # Initialise Flask application
     app = Flask(__name__, 
                template_folder='src/web/templates',
                static_folder='src/web/static')
@@ -163,7 +166,7 @@ def create_app():
     config_obj = get_config()
     app.config.from_object(config_obj)
     
-    # Initialize extensions
+    # Initialise extensions
     db.init_app(app)
     
     # Setup Flask-Login
@@ -188,7 +191,7 @@ def create_app():
         """Make current_user available in all templates."""
         return {'current_user': current_user}
     
-    # Initialize database and create tables
+    # Initialise database and create tables
     with app.app_context():
         init_db(app)
     
@@ -197,7 +200,7 @@ def create_app():
 # Create Flask app and initialize modules
 app = create_app()
 
-# Initialize CSRF protection
+# Initialise CSRF protection
 csrf = CSRFProtect(app)
 
 text_processor = TextProcessor()
@@ -205,7 +208,9 @@ theme_extractor = ThemeExtractor()
 policy_classifier = PolicyClassifier()
 db_operations = DatabaseOperations(uri="mongodb://localhost:27017", db_name="policycraft")
 chart_generator = ChartGenerator()
-recommendation_engine = RecommendationEngine()
+# Initialise recommendation engine with knowledge base path (unified with admin panel)
+knowledge_base_path = "docs/knowledge_base"  # Use same path as LiteratureEngine
+recommendation_engine = RecommendationEngine(knowledge_base_path=knowledge_base_path)
 
 
 def allowed_file(filename):
@@ -285,18 +290,81 @@ def _process_analyses_for_display(analyses):
     """Process analyses for display by converting dates and preparing data."""
     processed = []
     for analysis in analyses:
+        # Skip if analysis is not a dictionary
+        if not isinstance(analysis, dict):
+            logger.error(f"Dashboard error: Skipping non-dict analysis: {type(analysis)}")
+            continue
+            
         processed_analysis = analysis.copy()
-        if 'analysis_date' in processed_analysis:
-            if hasattr(processed_analysis['analysis_date'], 'strftime'):
-                processed_analysis['analysis_date'] = processed_analysis['analysis_date'].strftime('%Y-%m-%d %H:%M:%S')
-            elif isinstance(processed_analysis['analysis_date'], str):
-                try:
-                    dt = datetime.fromisoformat(processed_analysis['analysis_date'].replace('Z', '+00:00'))
-                    processed_analysis['analysis_date'] = dt.strftime('%Y-%m-%d %H:%M:%S')
-                except Exception:
-                    pass
+        
+        # Ensure classification exists and is properly formatted
+        if 'classification' not in processed_analysis:
+            processed_analysis['classification'] = 'Moderate'  # Default classification
+            
+        # Standardise classification to use only Restrictive, Moderate, or Permissive
+        if isinstance(processed_analysis['classification'], dict):
+            cls = processed_analysis['classification'].get('classification', 'Moderate')
+            processed_analysis['classification']['classification'] = _standardize_classification(cls)
+        elif isinstance(processed_analysis['classification'], str):
+            processed_analysis['classification'] = _standardize_classification(processed_analysis['classification'])
+        else:
+            # Handle unexpected classification type
+            processed_analysis['classification'] = 'Moderate'
+            logger.error(f"Dashboard error: Unexpected classification type: {type(processed_analysis['classification'])}")
+        
+        # Ensure other required fields exist
+        if 'title' not in processed_analysis:
+            processed_analysis['title'] = processed_analysis.get('filename', 'Untitled Policy')
+            
+        if 'summary' not in processed_analysis:
+            processed_analysis['summary'] = 'No summary available'
+            
+        if 'themes' not in processed_analysis:
+            processed_analysis['themes'] = []
+            
+        if 'score' not in processed_analysis:
+            processed_analysis['score'] = 50  # Default score
+        
+        # Format dates
+        if 'analysis_date' not in processed_analysis:
+            processed_analysis['analysis_date'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        elif hasattr(processed_analysis['analysis_date'], 'strftime'):
+            processed_analysis['analysis_date'] = processed_analysis['analysis_date'].strftime('%Y-%m-%d %H:%M:%S')
+        elif isinstance(processed_analysis['analysis_date'], str):
+            try:
+                dt = datetime.fromisoformat(processed_analysis['analysis_date'].replace('Z', '+00:00'))
+                processed_analysis['analysis_date'] = dt.strftime('%Y-%m-%d %H:%M:%S')
+            except Exception:
+                # Keep the original string if parsing fails
+                pass
+                
         processed.append(processed_analysis)
     return processed
+
+def _standardize_classification(classification):
+    """
+    Standardize classification to use only Restrictive, Moderate, or Permissive.
+    Maps legacy categories to standard ones.
+    """
+    # Map of legacy categories to standard categories
+    category_map = {
+        # Standard categories (keep as is)
+        'Restrictive': 'Restrictive',
+        'Moderate': 'Moderate',
+        'Permissive': 'Permissive',
+        
+        # Legacy categories (map to standard)
+        'Educational': 'Moderate',
+        'Research-focused': 'Permissive',
+        'Comprehensive': 'Moderate',
+        'Balanced': 'Moderate',  # Just in case
+        
+        # Default for unknown
+        'Unknown': 'Moderate'
+    }
+    
+    # Return standardized classification or default to Moderate if not in map
+    return category_map.get(classification, 'Moderate')
 
 def _calculate_analytics(analyses):
     """Calculate analytics (classifications and themes) from analyses."""
@@ -304,16 +372,44 @@ def _calculate_analytics(analyses):
     theme_frequencies = {}
     
     for analysis in analyses:
-        # Count classifications
-        classification = analysis.get('classification', {})
-        cls = classification.get('classification', 'Unknown') if isinstance(classification, dict) else 'Unknown'
-        classification_counts[cls] = classification_counts.get(cls, 0) + 1
+        # Skip if analysis is not a dictionary
+        if not isinstance(analysis, dict):
+            logger.error(f"Analytics error: Skipping non-dict analysis: {type(analysis)}")
+            continue
+            
+        # Get classification with robust type checking
+        classification = analysis.get('classification', 'Moderate')
         
-        # Count theme frequencies
+        # Handle different classification formats
+        if isinstance(classification, dict):
+            cls = classification.get('classification', 'Moderate')
+        elif isinstance(classification, str):
+            cls = classification
+        else:
+            # Default for unexpected types
+            cls = 'Moderate'
+            logger.error(f"Analytics error: Unexpected classification type: {type(classification)}")
+        
+        # Standardize classification to use only Restrictive, Moderate, or Permissive
+        standardized_cls = _standardize_classification(cls)
+        classification_counts[standardized_cls] = classification_counts.get(standardized_cls, 0) + 1
+        
+        # Count theme frequencies with robust type checking
         themes = analysis.get('themes', [])
+        if not isinstance(themes, list):
+            themes = []
+            
         for theme in themes:
-            theme_name = theme.get('name', 'Unknown') if isinstance(theme, dict) else str(theme)
+            if isinstance(theme, dict):
+                theme_name = theme.get('name', 'Unknown')
+            else:
+                theme_name = str(theme)
             theme_frequencies[theme_name] = theme_frequencies.get(theme_name, 0) + 1
+    
+    # Ensure all standard classifications are present in counts
+    for cls in ['Restrictive', 'Moderate', 'Permissive']:
+        if cls not in classification_counts:
+            classification_counts[cls] = 0
     
     return classification_counts, theme_frequencies
 
@@ -350,10 +446,362 @@ def dashboard():
         user_analyses = db_operations.get_user_analyses(current_user.id)
         baseline_analyses = db_operations.get_user_analyses(-1)
         
-        # Merge analyses with user versions taking precedence
-        analyses_by_filename = {a['filename']: a for a in baseline_analyses}
-        analyses_by_filename.update({a['filename']: a for a in user_analyses})
+        logger.info(f"Dashboard: Found {len(user_analyses)} user analyses and {len(baseline_analyses)} baseline analyses")
+        
+        # Load all clean_dataset policies without duplicates
+        # This ensures we show exactly 15 unique policies from clean_dataset
+        clean_dataset_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'policies', 'clean_dataset')
+        clean_dataset_files = []
+        logger.info(f"Dashboard: Using clean_dataset directory: {clean_dataset_dir}")
+        
+        if os.path.exists(clean_dataset_dir):
+            for filename in os.listdir(clean_dataset_dir):
+                # Skip non-policy files like dataset_info.md or guidance files
+                if filename.endswith(('.pdf', '.docx')) and 'guidance' not in filename.lower():
+                    clean_dataset_files.append(filename)
+        
+        logger.info(f"Dashboard: Found {len(clean_dataset_files)} policy files in clean_dataset")
+        
+        # Create a dictionary to store unique policies by filename
+        # We'll prioritize user analyses over baseline analyses
+        analyses_by_filename = {}
+        
+        # First, add all user analyses to the dictionary
+        for analysis in user_analyses:
+            filename = analysis.get('filename', '')
+            if not filename:
+                continue
+            analyses_by_filename[filename] = analysis
+            analysis['is_user_analysis'] = True
+        
+        # Then, add baseline analyses only if they don't already exist in the dictionary
+        for analysis in baseline_analyses:
+            filename = analysis.get('filename', '')
+            if not filename or filename in analyses_by_filename:
+                continue
+            analyses_by_filename[filename] = analysis
+            analysis['is_user_analysis'] = False
+        
+        # Now ensure we have all clean_dataset files represented
+        missing_files = []
+        for clean_file in clean_dataset_files:
+            found = False
+            for filename in analyses_by_filename.keys():
+                # Check if the clean_dataset filename matches exactly or is the document_id
+                analysis = analyses_by_filename[filename]
+                if clean_file == filename or (analysis.get('document_id') and clean_file == analysis.get('document_id')):
+                    found = True
+                    logger.info(f"Dashboard: Found match for {clean_file} in analysis {filename}")
+                    break
+            if not found:
+                missing_files.append(clean_file)
+        
+        logger.info(f"Dashboard: Missing files from clean_dataset: {missing_files}")
+        
+        # Add missing files as proper baseline analyses
+        for missing_file in missing_files:
+            # Skip guidance files
+            if 'guidance' in missing_file.lower() or missing_file == 'dataset_info.md':
+                continue
+                
+            # Get the full path to the file
+            file_path = os.path.join(clean_dataset_dir, missing_file)
+            if not os.path.exists(file_path):
+                logger.error(f"Dashboard: Missing file not found: {file_path}")
+                continue
+                
+            # Create a baseline filename - use a more descriptive name based on the file
+            university_name = missing_file.split('-')[0].replace('university', '').strip().title()
+            if not university_name:
+                university_name = missing_file.split('.')[0].replace('university', '').strip().title()
+            
+            baseline_filename = f"[BASELINE] {university_name}"
+            logger.info(f"Dashboard: Creating baseline analysis for {missing_file} as '{baseline_filename}'")
+            
+            try:
+                # Extract text from the file with robust error handling
+                try:
+                    # First, verify the file exists and is readable
+                    if not os.path.exists(file_path):
+                        logger.error(f"Dashboard: File does not exist: {file_path}")
+                        raise FileNotFoundError(f"File not found: {file_path}")
+                        
+                    # Check file size to ensure it's not empty
+                    file_size = os.path.getsize(file_path)
+                    if file_size == 0:
+                        logger.warning(f"Dashboard: Empty file detected: {file_path} (0 bytes)")
+                        raise ValueError(f"Empty file: {file_path}")
+                        
+                    logger.info(f"Dashboard: Attempting to extract text from {file_path} ({file_size} bytes)")
+                    
+                    # Try multiple extraction methods if needed
+                    extracted_text = text_processor.extract_text_from_file(file_path)
+                    text_length = len(extracted_text) if extracted_text else 0
+                    logger.info(f"Dashboard: Extracted {text_length} characters from {file_path}")
+                    
+                    # If extraction returned very little text, try a fallback approach
+                    if not extracted_text or text_length < 50:  # Sanity check for minimum content
+                        logger.warning(f"Dashboard: Insufficient text extracted from {file_path} ({text_length} chars), attempting fallback extraction")
+                        
+                        # Fallback: For PDF files, try direct extraction with pdfplumber if PyPDF2 failed
+                        if file_path.lower().endswith('.pdf'):
+                            try:
+                                import pdfplumber
+                                with pdfplumber.open(file_path) as pdf:
+                                    fallback_text = ""
+                                    for page in pdf.pages:
+                                        page_text = page.extract_text()
+                                        if page_text:
+                                            fallback_text += page_text + "\n"
+                                            
+                                if fallback_text and len(fallback_text) > text_length:
+                                    extracted_text = fallback_text
+                                    text_length = len(extracted_text)
+                                    logger.info(f"Dashboard: Fallback extraction successful, got {text_length} characters")
+                            except Exception as fallback_error:
+                                logger.warning(f"Dashboard: Fallback extraction failed: {str(fallback_error)}")
+                        
+                        # For DOCX files, try a different approach
+                        elif file_path.lower().endswith(('.docx', '.doc')):
+                            try:
+                                from docx import Document
+                                doc = Document(file_path)
+                                fallback_text = "\n".join([para.text for para in doc.paragraphs if para.text])
+                                
+                                if fallback_text and len(fallback_text) > text_length:
+                                    extracted_text = fallback_text
+                                    text_length = len(extracted_text)
+                                    logger.info(f"Dashboard: Fallback extraction successful, got {text_length} characters")
+                            except Exception as fallback_error:
+                                logger.warning(f"Dashboard: Fallback extraction failed: {str(fallback_error)}")
+                
+                    # If we still don't have enough text, use a minimal placeholder but don't fail
+                    if not extracted_text or text_length < 20:  # Absolute minimum
+                        logger.warning(f"Dashboard: All extraction methods failed for {file_path}, using minimal placeholder text")
+                        extracted_text = f"AI Policy document from {university_name}. This is a placeholder text as the original document could not be fully processed."
+                        text_length = len(extracted_text)
+                except Exception as extract_error:
+                    logger.error(f"Dashboard: Text extraction failed for {file_path}: {str(extract_error)}")
+                    # Create minimal text instead of re-raising
+                    extracted_text = f"AI Policy document from {university_name}. This is a placeholder text as the original document could not be processed due to: {str(extract_error)}"
+                    text_length = len(extracted_text)
+                    logger.info(f"Dashboard: Using minimal placeholder text ({text_length} chars) after extraction failure")
+                    
+            except Exception as extract_error:
+                logger.error(f"Dashboard: Text extraction failed for {file_path}: {str(extract_error)}")
+                # Create minimal text instead of re-raising
+                extracted_text = f"AI Policy document from {university_name}. This is a placeholder text as the original document could not be processed due to: {str(extract_error)}"
+                text_length = len(extracted_text)
+                logger.info(f"Dashboard: Using minimal placeholder text ({text_length} chars) after extraction failure")
+                
+                # Process the text with robust error handling
+            try:
+                cleaned_text = text_processor.clean_text(extracted_text)
+                logger.info(f"Dashboard: Cleaned text for {missing_file}, now {len(cleaned_text)} characters")
+            except Exception as clean_error:
+                logger.error(f"Dashboard: Text cleaning failed for {missing_file}: {str(clean_error)}")
+                cleaned_text = extracted_text  # Use original text as fallback
+                logger.info(f"Dashboard: Using original text as fallback after cleaning failure")
+            
+            # Extract themes with error handling
+            try:
+                themes = theme_extractor.extract_themes(cleaned_text)
+                logger.info(f"Dashboard: Extracted {len(themes)} themes from {missing_file}")
+                
+                # Ensure we have at least some themes
+                if not themes or len(themes) == 0:
+                    logger.warning(f"Dashboard: No themes extracted for {missing_file}, using defaults")
+                    themes = [
+                        {"name": "Policy", "score": 0.8, "confidence": 75},
+                        {"name": "AI Ethics", "score": 0.7, "confidence": 70},
+                        {"name": "Guidelines", "score": 0.6, "confidence": 65}
+                    ]
+            except Exception as theme_error:
+                logger.error(f"Dashboard: Theme extraction failed for {missing_file}: {str(theme_error)}")
+                themes = [
+                    {"name": "Policy", "score": 0.8, "confidence": 75},
+                    {"name": "AI Ethics", "score": 0.7, "confidence": 70},
+                    {"name": "Guidelines", "score": 0.6, "confidence": 65}
+                ]  # Default themes
+            
+            # Classify with error handling
+            try:
+                classification = policy_classifier.classify_policy(cleaned_text)
+                if isinstance(classification, str):
+                    classification = {
+                        "classification": _standardize_classification(classification),
+                        "confidence": 80,
+                        "source": "Baseline Creation"
+                    }
+                elif isinstance(classification, dict) and 'classification' in classification:
+                    # Ensure standardized classification
+                    classification['classification'] = _standardize_classification(classification['classification'])
+                    if 'source' not in classification:
+                        classification['source'] = "Baseline Creation"
+                    if 'confidence' not in classification:
+                        classification['confidence'] = 80
+                else:
+                    # Handle unexpected classification format
+                    logger.warning(f"Dashboard: Unexpected classification format for {missing_file}: {classification}")
+                    classification = {
+                        "classification": "Moderate",  # Default classification
+                        "confidence": 75,
+                        "source": "Baseline Creation (Default Format)"
+                    }
+                    
+                logger.info(f"Dashboard: Classification for {missing_file}: {classification}")
+            except Exception as class_error:
+                logger.error(f"Dashboard: Classification failed for {missing_file}: {str(class_error)}")
+                classification = {
+                    "classification": "Moderate",  # Default classification
+                    "confidence": 75,
+                    "source": "Baseline Creation (Default)"
+                }
+                
+                
+                # Store as a proper baseline analysis with detailed logging
+                try:
+                    # Ensure we have valid data for storage
+                    if not extracted_text:
+                        extracted_text = f"AI Policy document from {university_name}. This is a placeholder text."
+                    if not cleaned_text:
+                        cleaned_text = extracted_text
+                    if not themes or len(themes) == 0:
+                        themes = [{"name": "Policy", "score": 0.8, "confidence": 75}]
+                    if not classification or not isinstance(classification, dict):
+                        classification = {
+                            "classification": "Moderate",
+                            "confidence": 75,
+                            "source": "Baseline Creation (Default)"
+                        }
+                        
+                    # Add metadata to help with debugging
+                    metadata = {
+                        "source_file": missing_file,
+                        "extraction_method": "dashboard_baseline_creation",
+                        "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "text_length": len(extracted_text) if extracted_text else 0,
+                        "is_baseline": True
+                    }
+                    
+                    logger.info(f"Dashboard: Storing baseline analysis for {missing_file} with {len(extracted_text)} chars of text")
+                    
+                    # Store the analysis
+                    analysis_id = db_operations.store_user_analysis_results(
+                        user_id=-1,  # Baseline user ID
+                        filename=baseline_filename,
+                        original_text=extracted_text,
+                        cleaned_text=cleaned_text,
+                        themes=themes,
+                        classification=classification,
+                        document_id=missing_file,  # Store original filename as document_id for matching
+                        metadata=metadata  # Add metadata for debugging
+                    )
+                    
+                    logger.info(f"Dashboard: Successfully stored baseline analysis with ID {analysis_id}")
+                    
+                    # Get the newly created analysis
+                    new_analysis = db_operations.get_analysis_by_id(analysis_id)
+                    if new_analysis:
+                        # Mark as baseline
+                        new_analysis['is_baseline'] = True
+                        new_analysis['is_user_analysis'] = False
+                        
+                        # Add to our analyses dictionary
+                        analyses_by_filename[missing_file] = new_analysis
+                        logger.info(f"Dashboard: Added proper baseline analysis for {missing_file} with ID {analysis_id}")
+                    else:
+                        logger.error(f"Dashboard: Failed to retrieve newly created analysis for {missing_file}")
+                        # Create a placeholder instead of raising an exception
+                        placeholder_analysis = {
+                            '_id': f"placeholder_{missing_file.replace('.', '_')}",
+                            'filename': baseline_filename,
+                            'document_id': missing_file,
+                            'title': f"Policy from {university_name}",
+                            'analysis_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            'user_id': -1,
+                            'is_user_analysis': False,
+                            'is_baseline': True,
+                            'classification': classification,
+                            'score': 50,
+                            'themes': themes,
+                            'summary': f"This is a baseline analysis for {missing_file}.",
+                            'text_data': {
+                                'original_text': extracted_text,
+                                'cleaned_text': cleaned_text,
+                                'text_length': len(extracted_text) if extracted_text else 0
+                            }
+                        }
+                        analyses_by_filename[missing_file] = placeholder_analysis
+                        logger.info(f"Dashboard: Added placeholder analysis for {missing_file} due to retrieval failure")
+                        
+                except Exception as store_error:
+                    logger.error(f"Dashboard: Error storing baseline analysis: {str(store_error)}")
+                    # Create a placeholder instead of failing
+                    placeholder_analysis = {
+                        '_id': f"placeholder_{missing_file.replace('.', '_')}",
+                        'filename': baseline_filename,
+                        'document_id': missing_file,
+                        'title': f"Policy from {university_name}",
+                        'analysis_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        'user_id': -1,
+                        'is_user_analysis': False,
+                        'is_baseline': True,
+                        'classification': classification,
+                        'score': 50,
+                        'themes': themes,
+                        'summary': f"This is a placeholder for {missing_file}. Storage error: {str(store_error)}",
+                        'text_data': {
+                            'original_text': extracted_text[:1000] if extracted_text else "No text extracted",
+                            'cleaned_text': cleaned_text[:1000] if cleaned_text else "No cleaned text",
+                            'text_length': len(extracted_text) if extracted_text else 0
+                        }
+                    }
+                    analyses_by_filename[missing_file] = placeholder_analysis
+                    logger.info(f"Dashboard: Added placeholder analysis for {missing_file} due to storage error")
+                    
+            except Exception as e:
+                import traceback
+                logger.error(f"Dashboard: Error creating baseline analysis for {missing_file}: {str(e)}")
+                logger.error(f"Dashboard: Error traceback: {traceback.format_exc()}")
+                
+                # Create a placeholder as fallback - ensure it has all required fields
+                placeholder_analysis = {
+                    '_id': f"placeholder_{missing_file.replace('.', '_')}",
+                    'filename': baseline_filename or f"[BASELINE] {missing_file}",
+                    'document_id': missing_file,  # Store original filename for matching
+                    'title': f"Policy from {university_name or missing_file.split('-')[0].title()}",
+                    'analysis_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'user_id': -1,  # Baseline user ID
+                    'is_user_analysis': False,
+                    'is_baseline': True,
+                    'is_placeholder': True,  # Mark as placeholder
+                    'classification': {
+                        "classification": "Moderate", 
+                        "confidence": 75,
+                        "source": "Placeholder"
+                    },
+                    'score': 50,
+                    'themes': [{"name": "Policy", "score": 0.8, "confidence": 75}],
+                    'summary': f"This is a placeholder for {missing_file}. The original file could not be processed.",
+                    'text_data': {
+                        'original_text': f"Placeholder for {missing_file}",
+                        'cleaned_text': f"Placeholder for {missing_file}",
+                        'text_length': 0
+                    }
+                }
+                
+                # Add to our analyses dictionary
+                analyses_by_filename[missing_file] = placeholder_analysis
+                logger.info(f"Dashboard: Added placeholder analysis for {missing_file} due to error")
+        
+        # Combine all analyses into a single list
         combined_analyses = list(analyses_by_filename.values())
+        logger.info(f"Dashboard: Combined into {len(combined_analyses)} total analyses")
+        
+        # Log the filenames of all analyses being displayed
+        displayed_files = [analysis.get('filename', '') for analysis in combined_analyses]
+        logger.info(f"Dashboard: Displaying analyses for: {sorted(displayed_files)}")
         
         # Sort by date (newest first)
         combined_analyses.sort(key=lambda a: _to_epoch(a.get('analysis_date')), reverse=True)
@@ -394,8 +842,25 @@ def _prepare_dashboard_data(user, user_analyses, combined_analyses):
         logger.error(f"Chart generation error: {e}")
         dashboard_charts = {}
     
+    # Log analyses before analytics calculation
+    for i, analysis in enumerate(combined_analyses):
+        logger.info(f"Dashboard debug: Analysis {i} type: {type(analysis)}")
+        if isinstance(analysis, dict):
+            cls = analysis.get('classification', 'Not found')
+            logger.info(f"Dashboard debug: Analysis {i} classification type: {type(cls)}, value: {cls}")
+        else:
+            logger.error(f"Dashboard debug: Analysis {i} is not a dict: {type(analysis)}")
+    
     # Calculate analytics
-    classification_counts, theme_frequencies = _calculate_analytics(combined_analyses)
+    try:
+        classification_counts, theme_frequencies = _calculate_analytics(combined_analyses)
+        logger.info(f"Dashboard debug: Classification counts: {classification_counts}")
+    except Exception as e:
+        logger.error(f"Analytics calculation error: {e}")
+        import traceback
+        logger.error(f"Analytics calculation traceback: {traceback.format_exc()}")
+        classification_counts = {'Restrictive': 0, 'Moderate': 0, 'Permissive': 0}
+        theme_frequencies = {}
     
     # Get combined statistics
     try:
@@ -423,9 +888,22 @@ def _prepare_dashboard_data(user, user_analyses, combined_analyses):
     }
     
     # Process analyses for display
-    processed_analyses = _process_analyses_for_display(combined_analyses)
+    try:
+        processed_analyses = _process_analyses_for_display(combined_analyses)
+        logger.info(f"Dashboard: Processed {len(processed_analyses)} analyses for display")
+        
+        # Debug first few processed analyses
+        for i, analysis in enumerate(processed_analyses[:3]):
+            logger.info(f"Dashboard debug: Processed analysis {i} keys: {list(analysis.keys())}")
+            if 'classification' in analysis:
+                logger.info(f"Dashboard debug: Processed analysis {i} classification type: {type(analysis['classification'])}, value: {analysis['classification']}")
+    except Exception as e:
+        logger.error(f"Processing analyses error: {e}")
+        import traceback
+        logger.error(f"Processing analyses traceback: {traceback.format_exc()}")
+        processed_analyses = []
     
-    return {
+    dashboard_data = {
         'user': user_data,
         'total_policies': len(combined_analyses),
         'classification_counts': classification_counts,
@@ -434,6 +912,11 @@ def _prepare_dashboard_data(user, user_analyses, combined_analyses):
         'recent_analyses': processed_analyses,
         'statistics': db_stats
     }
+
+    # Log dashboard data structure
+    logger.info(f"Dashboard debug: Dashboard data keys: {list(dashboard_data.keys())}")
+    
+    return dashboard_data
 
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
@@ -665,19 +1148,55 @@ def analyse_document(filename):
         is_baseline = filename.startswith('[BASELINE]')
         
         # Security check - allow baseline files or user's own files
-        if not (is_baseline or filename.startswith(f"{current_user.id}_")):
+        # Baseline files are accessible to all users for comparison purposes
+        if not is_baseline and not filename.startswith(f"{current_user.id}_"):
             flash('Access denied. You can only analyse your own documents or baseline policies.', 'error')
             return redirect(url_for('upload_file'))
         
         # Determine the correct file path
         if is_baseline:
-            # Extract original filename from the formatted baseline name
+            # For baseline files, we need to map the display name back to the actual filename
+            # First check if it's already a proper filename with extension
             original_filename = filename.split(' - ')[-1] if ' - ' in filename else filename.replace('[BASELINE] ', '')
-            file_path = os.path.join('data', 'policies', 'clean_dataset', original_filename)
+            
+            # Create a mapping of display names to actual filenames
+            university_file_mapping = {
+                'University of Oxford': 'oxford-ai-policy.pdf',
+                'University of Cambridge': 'cambridge-ai-policy.docx',
+                'Imperial College London': 'imperial-ai-policy.docx',
+                'University of Edinburgh': 'edinburgh university-ai-policy.pdf',
+                'Leeds Trinity University': 'leeds trinity university-ai-policy.pdf',
+                'MIT': 'mit-ai-policy.pdf',
+                'Harvard University': 'harvard-ai-policy.pdf',
+                'Stanford University': 'stanford-ai-policy.pdf',
+                'University of Tokyo': 'tokyo-ai-policy.docx',
+                'Jagiellonian University': 'jagiellonian university-ai-policy.pdf',
+                'Belfast University': 'belfast university-ai-policy.pdf',
+                'University of Chicago': 'chicago-ai-policy.docx',
+                'Columbia University': 'columbia-ai-policy.pdf',
+                'Cornell University': 'cornell-ai-policy.docx',
+                'University of Liverpool': 'liverpool policy-ai-policy.pdf'
+            }
+            
+            # Try to map the display name to actual filename
+            if original_filename in university_file_mapping:
+                actual_filename = university_file_mapping[original_filename]
+            else:
+                # If no mapping found, use the original filename as-is
+                actual_filename = original_filename
+            
+            file_path = os.path.join('data', 'policies', 'clean_dataset', actual_filename)
+            logger.info(f"Baseline analysis - Display name: {original_filename}")
+            logger.info(f"Baseline analysis - Mapped filename: {actual_filename}")
+            logger.info(f"Baseline analysis - File path: {file_path}")
+            logger.info(f"Baseline analysis - File exists: {os.path.exists(file_path)}")
         else:
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            logger.info(f"User analysis - File path: {file_path}")
+            logger.info(f"User analysis - File exists: {os.path.exists(file_path)}")
         
         if not os.path.exists(file_path):
+            logger.error(f"File not found: {file_path}")
             flash('File not found', 'error')
             return redirect(url_for('upload_file'))
         
@@ -779,9 +1298,7 @@ def validate_analysis(analysis_id):
             text_data = analysis.get('text_data', {})
             cleaned_text = text_data.get('cleaned_text', text_data.get('original_text', ''))
             rec_package = recommendation_engine.generate_recommendations(
-                themes=themes,
-                classification=classification,
-                text=cleaned_text,
+                policy_text=cleaned_text,
                 analysis_id=analysis_id
             )
             recs = rec_package.get('recommendations', [])
@@ -825,8 +1342,8 @@ def get_recommendations(analysis_id):
                 logger.info(f"Analysis user_id: {analysis.get('user_id')}, Current user ID: {current_user.id}")
                 logger.info(f"Analysis username: {analysis.get('username')}, Current username: {getattr(current_user, 'username', 'N/A')}")
                 
-                # Tymczasowo zezwalaj na dostęp do wszystkich analiz
-                # TODO: Przywrócić sprawdzanie uprawnień po zakończeniu testów
+                # Temporary disabling permission checks for testing
+                # Restore permission checks after testing
                 # is_baseline = analysis.get('is_baseline', False)
                 # is_owner = (
                 #     str(analysis.get('user_id')) in [str(current_user.id), 'None', ''] or 
@@ -878,12 +1395,27 @@ def get_recommendations(analysis_id):
             }
         else:
             # Generate new recommendations
-            recommendation_package = recommendation_engine.generate_recommendations(
-                themes=themes,
-                classification=classification,
-                text=cleaned_text,
+            try:
+                print("\n===== GENERATING RECOMMENDATIONS WITH KNOWLEDGE BASE =====\n")
+                recommendations = recommendation_engine.generate_recommendations(
+                    policy_text=cleaned_text,
+                    institution_type="university",
                 analysis_id=analysis_id
             )
+                print("\n===== RECOMMENDATIONS GENERATED =====\n")
+                
+                # Debug: Print sources for each recommendation
+                for i, rec in enumerate(recommendations.get("recommendations", [])):
+                    print(f"Recommendation {i+1}: {rec.get('title', 'Unknown')}")
+                    print(f"  Sources: {rec.get('sources', [])}")
+                    print(f"  References: {len(rec.get('references', []))} items")
+                print("\n===== END OF RECOMMENDATIONS DEBUG =====\n")
+                
+                recommendation_package = recommendations
+            except Exception as e:
+                logger.error(f"Error generating recommendations: {str(e)}")
+                flash('Error generating recommendations. Please try again.', 'error')
+                return redirect(url_for('dashboard'))
         
         # Prepare data for template
         recommendation_data = {
@@ -911,7 +1443,7 @@ def get_recommendations(analysis_id):
             rec_id = db_operations.store_recommendations(
                 user_id=current_user.id,
                 analysis_id=analysis_id,
-                recommendations=recommendation_package.get('recommendations', [])
+                recs=recommendation_package.get('recommendations', [])
             )
             logger.info(f"Recommendations stored with ID: {rec_id}")
         except Exception as e:
@@ -1099,10 +1631,267 @@ def internal_error(error):
     logger.error(f"500 error: {str(error)}")
     return render_template('errors/500.html'), 500
 
+# Export routes
+
+@app.route('/export/<analysis_id>')
+@login_required
+def export_view(analysis_id):
+    """
+    Display export view for recommendations and analysis results.
+    
+    Renders a dedicated template for exporting recommendations and
+    analysis results to various formats (PDF, Word, Excel).
+    """
+    try:
+        logger.info(f"=== Starting export view preparation ===")
+        logger.info(f"User ID: {current_user.id}, Analysis ID: {analysis_id}")
+        
+        # Get the analysis data
+        logger.info("Attempting to get user's analysis...")
+        analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
+        
+        if analysis:
+            logger.info("Found analysis in user's analyses")
+            logger.info(f"Analysis details - Filename: {analysis.get('filename')}, ID: {analysis_id}")
+        else:
+            logger.info(f"Analysis not found in user's analyses, trying global lookup...")
+            analysis = db_operations.get_analysis_by_id(analysis_id)
+            
+            if analysis:
+                logger.info("Found analysis in global collection")
+                logger.info(f"Analysis details - Filename: {analysis.get('filename')}, ID: {analysis_id}")
+            else:
+                logger.error(f"Analysis {analysis_id} not found in any collection")
+                flash('Analysis not found.', 'error')
+                return redirect(url_for('dashboard'))
+        
+        # Get recommendations
+        logger.info(f"Attempting to get recommendations for analysis {analysis_id}...")
+        recommendations = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
+        
+        if recommendations:
+            logger.info(f"Found {len(recommendations)} recommendations for analysis {analysis_id}")
+        else:
+            logger.warning(f"No recommendations found for analysis {analysis_id}")
+            flash('No recommendations found for this analysis.', 'warning')
+            return redirect(url_for('get_recommendations', analysis_id=analysis_id))
+        
+        # Generate charts for export view
+        logger.info("Generating charts for export view...")
+        themes = analysis.get('themes', [])
+        classification = analysis.get('classification', {})
+        cleaned_text = analysis.get('text_data', {}).get('cleaned_text', '')
+        
+        try:
+            charts = chart_generator.generate_analysis_charts(themes, classification, cleaned_text)
+            logger.info(f"Generated {len(charts)} charts for export view")
+        except Exception as chart_error:
+            logger.error(f"Error generating charts: {chart_error}")
+            charts = {}
+        
+        # Prepare data for template
+        export_data = {
+            'analysis': {
+                'filename': analysis.get('filename', 'Unknown'),
+                'classification': analysis.get('classification', {}).get('classification', 'Unknown'),
+                'confidence': analysis.get('classification', {}).get('confidence', 0),
+                'analysis_id': analysis_id,
+                'themes': analysis.get('themes', []),
+                'text_data': analysis.get('text_data', {})
+            },
+            'recommendations': recommendations,
+            'generated_date': datetime.now().isoformat(),
+            'total_recommendations': len(recommendations),
+            'charts': charts
+        }
+        
+        return render_template('export_recommendations.html', data=export_data)
+        
+    except Exception as e:
+        logger.error(f"Error preparing export view: {str(e)}")
+        logger.exception("Full traceback for export view error:")
+        flash('Error preparing export view. Please try again.', 'error')
+        return redirect(url_for('dashboard'))
+
+@app.route('/export/<analysis_id>/pdf')
+@login_required
+def export_pdf(analysis_id):
+    """
+    Export recommendations and analysis results as PDF.
+    
+    Generates a PDF document containing all recommendations and
+    analysis results for the specified analysis.
+    """
+    try:
+        # Get the analysis data
+        analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
+        
+        if not analysis:
+            analysis = db_operations.get_analysis_by_id(analysis_id)
+            
+            if not analysis:
+                return jsonify({'error': 'Analysis not found'}), 404
+        
+        # Get recommendations
+        recommendations = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
+        
+        if not recommendations:
+            return jsonify({'error': 'No recommendations found for this analysis'}), 404
+        
+        # Prepare data for export
+        export_data = {
+            'analysis': {
+                'filename': analysis.get('filename', 'Unknown'),
+                'classification': analysis.get('classification', {}).get('classification', 'Unknown'),
+                'confidence': analysis.get('classification', {}).get('confidence', 0),
+                'analysis_id': analysis_id,
+                'themes': analysis.get('themes', [])
+            },
+            'recommendations': recommendations,
+            'generated_date': datetime.now().isoformat(),
+            'total_recommendations': len(recommendations)
+        }
+        
+        # Initialise export engine
+        from src.export import ExportEngine
+        export_engine = ExportEngine()
+        
+        # Generate PDF
+        pdf_data = export_engine.export_to_pdf(export_data)
+        
+        # Create response
+        response = make_response(pdf_data)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename=PolicyCraft_Analysis_{analysis_id}.pdf'
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error exporting to PDF: {str(e)}")
+        return jsonify({'error': 'Error generating PDF export'}), 500
+
+@app.route('/export/<analysis_id>/word')
+@login_required
+def export_word(analysis_id):
+    """
+    Export recommendations and analysis results as Word document.
+    
+    Generates a Word document containing all recommendations and
+    analysis results for the specified analysis.
+    """
+    try:
+        # Get the analysis data
+        analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
+        
+        if not analysis:
+            analysis = db_operations.get_analysis_by_id(analysis_id)
+            
+            if not analysis:
+                return jsonify({'error': 'Analysis not found'}), 404
+        
+        # Get recommendations
+        recommendations = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
+        
+        if not recommendations:
+            return jsonify({'error': 'No recommendations found for this analysis'}), 404
+        
+        # Prepare data for export
+        export_data = {
+            'analysis': {
+                'filename': analysis.get('filename', 'Unknown'),
+                'classification': analysis.get('classification', {}).get('classification', 'Unknown'),
+                'confidence': analysis.get('classification', {}).get('confidence', 0),
+                'analysis_id': analysis_id,
+                'themes': analysis.get('themes', [])
+            },
+            'recommendations': recommendations,
+            'generated_date': datetime.now().isoformat(),
+            'total_recommendations': len(recommendations)
+        }
+        
+        # Initialise export engine
+        from src.export import ExportEngine
+        export_engine = ExportEngine()
+        
+        # Generate Word document
+        docx_data = export_engine.export_to_word(export_data)
+        
+        # Create response
+        response = make_response(docx_data)
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        response.headers['Content-Disposition'] = f'attachment; filename=PolicyCraft_Analysis_{analysis_id}.docx'
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error exporting to Word: {str(e)}")
+        return jsonify({'error': 'Error generating Word export'}), 500
+
+@app.route('/export/<analysis_id>/excel')
+@login_required
+def export_excel(analysis_id):
+    """
+    Export recommendations and analysis results as Excel spreadsheet.
+    
+    Generates an Excel spreadsheet containing all recommendations and
+    analysis results for the specified analysis.
+    """
+    try:
+        # Get the analysis data
+        analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
+        
+        if not analysis:
+            analysis = db_operations.get_analysis_by_id(analysis_id)
+            
+            if not analysis:
+                return jsonify({'error': 'Analysis not found'}), 404
+        
+        # Get recommendations
+        recommendations = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
+        
+        if not recommendations:
+            return jsonify({'error': 'No recommendations found for this analysis'}), 404
+        
+        # Prepare data for export
+        export_data = {
+            'analysis': {
+                'filename': analysis.get('filename', 'Unknown'),
+                'classification': analysis.get('classification', {}).get('classification', 'Unknown'),
+                'confidence': analysis.get('classification', {}).get('confidence', 0),
+                'analysis_id': analysis_id,
+                'themes': analysis.get('themes', [])
+            },
+            'recommendations': recommendations,
+            'generated_date': datetime.now().isoformat(),
+            'total_recommendations': len(recommendations)
+        }
+        
+        # Initialise export engine
+        from src.export import ExportEngine
+        export_engine = ExportEngine()
+        
+        # Generate Excel spreadsheet
+        excel_data = export_engine.export_to_excel(export_data)
+        
+        # Create response
+        response = make_response(excel_data)
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers['Content-Disposition'] = f'attachment; filename=PolicyCraft_Analysis_{analysis_id}.xlsx'
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error exporting to Excel: {str(e)}")
+        return jsonify({'error': 'Error generating Excel export'}), 500
+
 # Register template filters
 app.jinja_env.filters["clean_university_name"] = clean_university_name
 app.jinja_env.filters["clean_filename"] = clean_filename
 app.jinja_env.filters["format_british_date"] = format_british_date
+
+# Import and register additional template filters
+from src.web.utils.template_utils import clean_literature_name
+app.jinja_env.filters["clean_literature_name"] = clean_literature_name
 
 def handle_first_login_onboarding(user_id: int) -> bool:
     """
@@ -1159,6 +1948,11 @@ if __name__ == '__main__':
     create_upload_folder()
     
     logger.info("Starting PolicyCraft Application")
+    
+    # Note: Automatic document scanning disabled to prevent excessive backups
+    # Documents are now processed on-demand when uploaded via admin interface
+    logger.info("Automatic document scanning disabled - documents processed on upload")
+    
     print("PolicyCraft starting at: http://localhost:5001")
     
     app.run(debug=True, host='localhost', port=5001)

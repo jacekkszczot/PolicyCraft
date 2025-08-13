@@ -217,13 +217,27 @@ class ChartGenerator:
             cls = analysis.get('classification', {}).get('classification', 'Unknown')
             classifications.append(cls)
         
+        # Count occurrences of each classification
         counts = Counter(classifications)
         
+        # Ensure all standard categories are present, even if count is 0
+        standard_categories = ['Restrictive', 'Moderate', 'Permissive']
+        for category in standard_categories:
+            if category not in counts:
+                counts[category] = 0
+        
+        # Sort categories to ensure consistent order
+        sorted_categories = sorted(counts.keys(), key=lambda x: (
+            0 if x in standard_categories else 1,  # Standard categories first
+            standard_categories.index(x) if x in standard_categories else 999,  # In defined order
+            x  # Alphabetical for any others
+        ))
+        
         fig = go.Figure(data=[go.Bar(
-            x=list(counts.keys()),
-            y=list(counts.values()),
+            x=sorted_categories,
+            y=[counts[category] for category in sorted_categories],
             marker={'color': [self.color_schemes['classifications'].get(cls, '#95a5a6') 
-                           for cls in counts.keys()]}
+                           for cls in sorted_categories]}
         )])
         
         fig.update_layout(

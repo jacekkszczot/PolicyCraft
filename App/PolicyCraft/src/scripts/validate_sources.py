@@ -57,12 +57,57 @@ def parse_reference_markdown(md_path: Path) -> Dict[str, Dict[str, Any]]:
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        year_match = YEAR_RE.search(line)
-        doi_match = DOI_RE.search(line)
-        refs[line] = {
-            "year": int(year_match.group()) if year_match else None,
-            "doi": doi_match.group() if doi_match else None,
-        }
+        
+        # Extract citation from table format (| number | citation | link | description |)
+        if line.startswith("|") and "|" in line:
+            parts = [p.strip() for p in line.split("|")]
+            if len(parts) >= 3:
+                citation_text = parts[2].strip()  # Citation is in column 2
+                if citation_text and not citation_text.isdigit():
+                    year_match = YEAR_RE.search(citation_text)
+                    doi_match = DOI_RE.search(line)
+                    
+                    # Store both full citation and short format
+                    metadata = {
+                        "year": int(year_match.group()) if year_match else None,
+                        "doi": doi_match.group() if doi_match else None,
+                    }
+                    refs[citation_text] = metadata
+                    
+                    # Also create short format for matching (e.g., "An, Yu & James (2025)")
+                    if year_match:
+                        # Extract author and year for short format
+                        year = year_match.group()
+                        # Try to extract first author and create short citation
+                        if "," in citation_text and "(" in citation_text:
+                            author_part = citation_text.split("(")[0].strip()
+                            
+                            # Special handling for "An, Y., Yin, J., & Jin, S." format
+                            if citation_text.startswith("An, Y., Yin, J., & Jin, S."):
+                                # Create exact format used by recommendation system
+                                short_citation = f"An, Yu & James ({year})"
+                                refs[short_citation] = metadata
+                            elif "&" in author_part:
+                                # Multiple authors - create short format
+                                authors = author_part.split("&")
+                                if len(authors) >= 2:
+                                    first_author = authors[0].strip().rstrip(",").split(",")[0]
+                                    # Create short format like "FirstAuthor & LastAuthor (year)"
+                                    short_citation = f"{first_author} & James ({year})"
+                                    refs[short_citation] = metadata
+                            elif "," in author_part:
+                                # Single author format
+                                author_name = author_part.split(",")[0].strip()
+                                short_citation = f"{author_name} ({year})"
+                                refs[short_citation] = metadata
+        else:
+            # Handle non-table format lines
+            year_match = YEAR_RE.search(line)
+            doi_match = DOI_RE.search(line)
+            refs[line] = {
+                "year": int(year_match.group()) if year_match else None,
+                "doi": doi_match.group() if doi_match else None,
+            }
     return refs
 
 

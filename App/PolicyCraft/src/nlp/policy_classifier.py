@@ -87,7 +87,7 @@ class PolicyClassifier:
             },
             
             'Moderate': {
-                'balance': ['balanced', 'moderate', 'reasonable', 'appropriate', 'proportionate',
+                'balance': ['moderate', 'reasonable', 'appropriate', 'proportionate',
                            'thoughtful', 'careful', 'considered', 'measured', 'prudent'],
                 'conditions': ['conditions', 'guidelines', 'framework', 'principles', 'standards',
                               'criteria', 'requirements', 'considerations', 'factors'],
@@ -210,7 +210,7 @@ class PolicyClassifier:
             ("AI use is permitted with proper disclosure and citation of sources.", "Moderate"),
             ("Students may use AI tools responsibly, following ethical guidelines and transparency requirements.", "Moderate"),
             ("AI assistance is allowed when used appropriately and with instructor guidance.", "Moderate"),
-            ("Balanced approach to AI - permitted for research but not for final submissions without approval.", "Moderate"),
+            ("Moderate approach to AI - permitted for research but not for final submissions without approval.", "Moderate"),
             ("AI tools may be used thoughtfully, considering academic integrity and learning objectives.", "Moderate"),
             ("Responsible AI use is acceptable when following established guidelines and principles.", "Moderate")
         ]
@@ -219,7 +219,7 @@ class PolicyClassifier:
         texts = [item[0] for item in training_data]
         labels = [item[1] for item in training_data]
         
-        # Create ML pipeline
+        # Create ML pipeline (deterministic with consistent input ordering)
         self.ml_pipeline = Pipeline([
             ('tfidf', TfidfVectorizer(max_features=1000, stop_words='english', ngram_range=(1, 2))),
             ('classifier', MultinomialNB(alpha=0.1))
@@ -586,7 +586,7 @@ class PolicyClassifier:
                     'avg_sentence_length': float,# Average words per sentence
                     'strong_statements': int,    # Count of strong/mandatory statements
                     'conditional_statements': int, # Count of conditional statements
-                    'policy_tone': str           # Overall tone (Authoritative/Suggestive/Balanced)
+                    'policy_tone': str           # Overall tone (Authoritative/Suggestive/Moderate)
                 },
                 'keyword_density': Dict,        # Percentage of keywords by category
                 'classification_confidence_factors': List[str]  # Factors affecting confidence
@@ -617,7 +617,7 @@ class PolicyClassifier:
         elif conditional_statements > strong_statements:
             tone = 'Suggestive'
         else:
-            tone = 'Balanced'
+            tone = 'Moderate'
         
         details = {
             'classification_result': result,

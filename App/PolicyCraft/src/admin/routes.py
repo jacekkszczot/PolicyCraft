@@ -9,7 +9,8 @@ Key Functionality:
 - Dashboard with system statistics and health metrics
 - Comprehensive user management (view/delete users)
 - System configuration and maintenance tools
-- Password management for administrative accounts
+- Literature management and knowledge base updates
+- Academic document processing and quality assessment- Password management for administrative accounts
 
 Security Implementation:
 - Password-protected admin interface with secure hashing
@@ -48,16 +49,24 @@ University: Leeds Trinity University
 from __future__ import annotations
 
 import json
+import logging
 import os
 from functools import wraps
 from typing import Dict
 
-from flask import (Blueprint, current_app, flash, redirect, render_template,
-                   request, session, url_for)
+from flask import (
+    Blueprint, current_app, flash, redirect, render_template,
+    request, session, url_for, Response, json, jsonify
+)
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from src.database.models import User, db as sqlalchemy_db
 from src.database.mongo_operations import MongoOperations
+from src.literature.literature_engine import LiteratureEngine
+from datetime import datetime
+
+# Initialize logger
+logger = logging.getLogger(__name__)
 
 admin_bp = Blueprint("admin", __name__, template_folder="../web/templates/admin", url_prefix="/admin")
 
@@ -127,7 +136,10 @@ def logout():
 def dashboard():
     user_count = User.query.count()
     analysis_count = mongo_db.analyses.count_documents({})
-    baseline_global = mongo_db.analyses.count_documents({"user_id": -1, "filename": {"$regex": r"^\\[baseline\\]", "$options": "i"}})
+    baseline_global = mongo_db.analyses.count_documents({
+        "user_id": -1,
+        "filename": {"$regex": r"^\[BASELINE\]", "$options": "i"}
+    })
     return render_template("admin/dashboard.html", user_count=user_count, analysis_count=analysis_count, baseline_global=baseline_global)
 
 # ---------------------------------------------------------------------------
@@ -147,28 +159,99 @@ def delete_user(user_id):
     if not user:
         flash("User not found", "error")
         return redirect(url_for("admin.users"))
+    
+    # Prevent deletion of admin users
+    if user.role == 'admin':
+        flash("Cannot delete admin users for security reasons", "error")
+        return redirect(url_for("admin.users"))
+    
     username = user.username
+    
+    # First delete associated UserOnboarding record if it exists
+    if user.onboarding:
+        sqlalchemy_db.session.delete(user.onboarding)
+    
+    # Then delete the user
     sqlalchemy_db.session.delete(user)
     sqlalchemy_db.session.commit()
-    # Purge associated data
-    mongo_db.purge_user_data(user_id)
-    flash(f"Deleted user {username}", "success")
+    
+    # SECURITY FIX: Purge associated data from MongoDB AND delete files from disk
+    try:
+        purge_result = mongo_db.purge_user_data(user_id)
+        if purge_result and purge_result.get('files_deleted', 0) > 0:
+            flash(f"Deleted user {username} and {purge_result['files_deleted']} associated files", "success")
+        else:
+            flash(f"Deleted user {username}", "success")
+    except Exception as e:
+        flash(f"User {username} deleted, but error purging data: {str(e)}", "warning")
+    return redirect(url_for("admin.users"))
+
+@admin_bp.route("/users/reset_password/<int:user_id>")
+@admin_required
+def reset_password(user_id):
+    """Reset user password to a randomly generated one."""
+    import secrets
+    import string
+    
+    user = User.query.get(user_id)
+    if not user:
+        flash("User not found", "error")
+        return redirect(url_for("admin.users"))
+    
+    # Generate a secure random password (8 characters: letters + numbers)
+    alphabet = string.ascii_letters + string.digits
+    new_password = ''.join(secrets.choice(alphabet) for _ in range(8))
+    
+    # Update user password
+    user.set_password(new_password)
+    sqlalchemy_db.session.commit()
+    
+    # Show the new password to admin (they need to give it to the user)
+    flash(f"Password reset for {user.username}. New password: {new_password}", "success")
     return redirect(url_for("admin.users"))
 
 # ---------------------------------------------------------------------------
 # Baselines reset
 # ---------------------------------------------------------------------------
 
-@admin_bp.route("/reset_baselines", methods=["GET", "POST"])
+@admin_bp.route("/reset_progress")
+@admin_required
+def reset_progress():
+    """Stream progress updates during baseline reset."""
+    def generate():
+        try:
+            # Step 1: Remove existing baseline docs
+            delete_result = mongo_db.analyses.delete_many({"user_id": -1})
+            deleted_count = delete_result.deleted_count if hasattr(delete_result, 'deleted_count') else 0
+            yield f"data: {json.dumps({'step': 1, 'message': f'Removed {deleted_count} old baseline analyses'})}\n\n"
+            
+            # Step 2: Remove existing baseline recommendations
+            rec_delete_result = mongo_db.recommendations.delete_many({"user_id": -1})
+            rec_deleted_count = rec_delete_result.deleted_count if hasattr(rec_delete_result, 'deleted_count') else 0
+            yield f"data: {json.dumps({'step': 2, 'message': f'Removed {rec_deleted_count} old recommendations'})}\n\n"
+            
+            # Step 3: Recreate global baselines from dataset
+            success = mongo_db.load_sample_policies_for_user(-1)
+            if success:
+                yield "data: " + json.dumps({'step': 3, 'message': 'Successfully loaded new baseline policies'}) + "\n\n"
+                
+                # Step 4: Deduplicate
+                mongo_db.remove_duplicate_baselines_global()
+                mongo_db.deduplicate_baseline_analyses(-1)
+                yield "data: " + json.dumps({'step': 4, 'message': 'Deduplication complete', 'done': True}) + "\n\n"
+            else:
+                yield "data: " + json.dumps({'step': 3, 'message': 'Failed to load sample policies', 'error': True}) + "\n\n"
+                
+        except Exception as e:
+            current_app.logger.error(f"Error during baseline reset: {str(e)}")
+            yield "data: " + json.dumps({'step': 0, 'message': f'Error: {str(e)}', 'error': True}) + "\n\n"
+    
+    return Response(generate(), mimetype='text/event-stream')
+
+@admin_bp.route("/reset-baselines", methods=["GET"])
 @admin_required
 def reset_baselines():
-    if request.method == "POST":
-        # Remove existing baseline docs
-        mongo_db.analyses.delete_many({"filename": {"$regex": r"^\\[baseline\\]", "$options": "i"}})
-        # Recreate global baselines from dataset
-        mongo_db.load_sample_policies_for_user(-1)
-        flash("Baselines reset completed", "success")
-        return redirect(url_for("admin.dashboard"))
+    """Show the baseline reset page with progress tracking."""
     return render_template("admin/reset_baselines.html")
 
 # ---------------------------------------------------------------------------
@@ -194,3 +277,243 @@ def change_password():
         flash("Password updated", "success")
         return redirect(url_for("admin.dashboard"))
     return render_template("admin/change_password.html")
+
+
+# Literature Management Routes
+@admin_bp.route("/literature")
+@admin_required
+def literature_dashboard():
+    """Literature management dashboard displaying system status and recent processing history."""
+    try:
+        literature_engine = LiteratureEngine()
+        system_status = literature_engine.get_processing_status()
+        recent_history = literature_engine.get_recent_processing_history(limit=10)
+        
+        return render_template(
+            "admin/literature_dashboard.html",
+            system_status=system_status,
+            recent_history=recent_history,
+            page_title="Literature Management"
+        )
+        
+    except Exception as e:
+        flash(f"Error loading literature dashboard: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
+
+
+@admin_bp.route("/literature/upload", methods=["GET", "POST"])
+@admin_required
+def literature_upload():
+    """Handle academic literature document uploads and processing."""
+    if request.method == "GET":
+        return render_template("admin/literature_upload.html", page_title="Upload Literature")
+    
+    try:
+        literature_engine = LiteratureEngine()
+        
+        if 'file' not in request.files:
+            flash("No file provided", "error")
+            return redirect(request.url)
+        
+        file = request.files['file']
+        if file.filename == '':
+            flash("No file selected", "error")
+            return redirect(request.url)
+        
+        # Extract metadata from form
+        metadata = {
+            'title': request.form.get('title', ''),
+            'author': request.form.get('author', ''),
+            'publication_year': request.form.get('publication_year', ''),
+            'source_url': request.form.get('source_url', ''),
+            'description': request.form.get('description', ''),
+            'uploaded_by': 'admin',
+            'upload_date': datetime.now().isoformat()
+        }
+        
+        # Process the uploaded file
+        processing_results = literature_engine.process_uploaded_file(file, metadata)
+        
+        # Flash message based on results
+        status = processing_results.get('status')
+        if status == 'integrated_successfully':
+            # Run automatic document scanning after successful integration
+            try:
+                from src.utils.auto_document_manager import run_auto_document_scan
+                scan_results = run_auto_document_scan()
+                
+                success_msg = "Document processed and integrated successfully!"
+                if scan_results.get('scanned', 0) > 0:
+                    success_msg += f" Auto-scan found and processed {scan_results['scanned']} new documents."
+                else:
+                    success_msg += " Auto-scan completed (no new documents found)."
+                    
+                flash(success_msg, "success")
+                logger.info(f"Auto-scan after upload completed: {scan_results}")
+                
+            except Exception as scan_error:
+                flash("Document processed and integrated successfully! (Auto-scan failed)", "success")
+                logger.error(f"Auto-scan after upload failed: {scan_error}")
+                
+        elif status == 'requires_review':
+            flash("Document processed but requires manual review", "warning")
+        else:
+            flash(f"Processing failed: {processing_results.get('message', 'Unknown error')}", "error")
+        
+        return render_template(
+            "admin/literature_results.html",
+            results=processing_results,
+            page_title="Processing Results"
+        )
+        
+    except Exception as e:
+        flash(f"Error processing upload: {str(e)}", "error")
+        return redirect(request.url)
+
+
+@admin_bp.route("/literature/knowledge-base")
+@admin_required
+def literature_knowledge_base():
+    """Knowledge base management interface for reviewing and managing academic insights."""
+    try:
+        literature_engine = LiteratureEngine()
+        kb_status = literature_engine.get_processing_status()
+        
+        # Use unified document data function for consistent quality scores
+        recent_updates = literature_engine.get_unified_document_data(include_version_history=False)
+        
+        # Format document IDs for display (truncate if too long)
+        for doc in recent_updates:
+            doc_id = doc.get("document_id", "")
+            if len(doc_id) > 30:
+                doc["document_id"] = doc_id[:30] + "..."
+        
+        return render_template(
+            "admin/literature_knowledge_base.html",
+            kb_status=kb_status,
+            recent_updates=recent_updates,
+            page_title="Knowledge Base Management"
+        )
+        
+    except Exception as e:
+        flash(f"Error loading knowledge base: {str(e)}", "error")
+        return redirect(url_for("admin.dashboard"))
+@admin_bp.route("/literature/cleanup", methods=["GET", "POST"])
+@admin_required
+def literature_cleanup():
+    """Literature cleanup interface for removing outdated documents."""
+    if request.method == "GET":
+        # Show cleanup interface
+        try:
+            literature_engine = LiteratureEngine()
+            kb_status = literature_engine.get_processing_status()
+            
+            # Use unified document data function for consistent quality scores
+            documents_for_cleanup = literature_engine.get_unified_document_data(include_version_history=False)
+            
+            return render_template(
+                "admin/literature_cleanup.html",
+                kb_status=kb_status,
+                recent_updates=documents_for_cleanup,  # All documents, not just recent updates
+                page_title="Literature Cleanup"
+            )
+            
+        except Exception as e:
+            flash(f"Error loading cleanup interface: {str(e)}", "error")
+            return redirect(url_for("admin.literature_dashboard"))
+    
+    else:
+        # Handle cleanup actions
+        selected_docs = request.form.getlist("selected_documents")
+        action = request.form.get("action")
+        
+        if not selected_docs:
+            flash("No documents selected", "error")
+            return redirect(request.url)
+        
+        try:
+            if action == "delete":
+                literature_engine = LiteratureEngine()
+                kb_manager = literature_engine.knowledge_manager
+                
+                # Create backup before bulk operations
+                backup_id = kb_manager._create_backup()
+                
+                deleted_count = 0
+                kb_path = kb_manager.knowledge_base_path
+                
+                for doc_id in selected_docs:
+                    for filename in os.listdir(kb_path):
+                        if filename.endswith(".md") and doc_id in filename:
+                            file_path = os.path.join(kb_path, filename)
+                            os.remove(file_path)
+                            kb_manager.remove_document_from_history(doc_id)
+                            deleted_count += 1
+                            break
+                
+                flash(f"Successfully deleted {deleted_count} document(s). Backup created: {backup_id}", "success")
+            elif action == "archive":
+                flash(f"Successfully archived {len(selected_docs)} documents", "success")
+            
+            return redirect(url_for("admin.literature_knowledge_base"))
+            
+        except Exception as e:
+            flash(f"Error during cleanup: {str(e)}", "error")
+            return redirect(request.url)
+
+@admin_bp.route("/literature/document-details/<document_id>")
+@admin_required
+def document_details(document_id):
+    """API endpoint to get detailed information about a specific document."""
+    try:
+        literature_engine = LiteratureEngine()
+        
+        # Get all documents and find the one with matching ID
+        all_documents = literature_engine.get_unified_document_data(include_version_history=False)
+        
+        # Find document by ID
+        document = None
+        for doc in all_documents:
+            if doc.get('document_id') == document_id or doc.get('filename', '').replace('.md', '') == document_id:
+                document = doc
+                break
+        
+        if not document:
+            return jsonify({
+                'success': False,
+                'error': f'Document not found: {document_id}'
+            }), 404
+        
+        # Get additional details from knowledge manager
+        try:
+            kb_manager = literature_engine.knowledge_manager
+            doc_details = kb_manager.get_document_by_id(document_id)
+            
+            if doc_details:
+                # Merge additional details
+                document.update({
+                    'insights': doc_details.get('insights', []),
+                    'content': doc_details.get('content', ''),
+                    'original_filename': doc_details.get('metadata', {}).get('original_filename'),
+                    'file_size': doc_details.get('metadata', {}).get('file_size'),
+                    'processing_date': doc_details.get('metadata', {}).get('processing_date'),
+                    'confidence_level': doc_details.get('confidence_level', 'N/A'),
+                    'auto_approved': doc_details.get('auto_approved', False),
+                    'original_file_exists': doc_details.get('original_file_exists', False),
+                    'is_preloaded': doc_details.get('is_preloaded', False)
+                })
+        except Exception as e:
+            logger.warning(f"Could not get additional details for document {document_id}: {str(e)}")
+        
+        return jsonify({
+            'success': True,
+            'details': document
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting document details for {document_id}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'Internal server error: {str(e)}'
+        }), 500
+

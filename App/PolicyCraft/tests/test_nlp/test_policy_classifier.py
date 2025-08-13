@@ -55,7 +55,7 @@ class TestPolicyClassifier:
         assert 'method' in result
         
     def test_classify_moderate_policy(self, sample_policy_text):
-        """Test classification of moderate/balanced policy language."""
+        """Test classification of moderate policy language."""
         classifier = PolicyClassifier()
         
         result = classifier.classify_policy(sample_policy_text)

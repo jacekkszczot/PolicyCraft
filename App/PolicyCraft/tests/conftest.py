@@ -60,7 +60,7 @@ SAMPLE_CLASSIFICATION = {
     "classification": "Moderate",
     "confidence": 67,
     "method": "hybrid",
-    "reasoning": "Policy contains balanced approach with disclosure requirements and human oversight"
+    "reasoning": "Policy contains moderate approach with disclosure requirements and human oversight"
 }
 
 @pytest.fixture

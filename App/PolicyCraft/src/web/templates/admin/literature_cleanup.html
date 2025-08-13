@@ -138,8 +138,8 @@
                                 {% if update.quality_score %}
                                 <div class="quality-indicator">
                                     <div class="quality-bar">
-                                         <div class="quality-fill quality-{{ 'high' if update.quality_score >= 80 else 'medium' if update.quality_score >= 60 else 'low' }}" 
-                                              style="width: {{ update.quality_score|round }}%;"></div>
+                                          <div class="quality-fill quality-{{ 'high' if update.quality_score >= 90 else 'medium' if update.quality_score >= 70 else 'low' }}" 
+                                               style="width: {{ update.quality_score|round }}%"></div>
                                     </div>
                                      <small class="quality-text">{{ "%.1f%%"|format(update.quality_score) }}</small>
                                 </div>

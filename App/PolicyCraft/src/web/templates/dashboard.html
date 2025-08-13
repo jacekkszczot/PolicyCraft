@@ -312,21 +312,28 @@ function exportAnalysesTable() {
     let csvContent = "data:text/csv;charset=utf-8,";
     csvContent += "University,Classification,Confidence,Date,Top Themes\n";
     
-    {% for analysis in data.recent_analyses %}
-    const data{{ loop.index0 }} = [
-        "{{ analysis.filename|clean_filename }}",
-        {% if analysis.classification is string %}
-        "{{ analysis.classification }}",
-        {{ analysis.score if analysis.score else 0 }},
-        {% else %}
-        "{{ analysis.classification.classification if analysis.classification else 'Unknown' }}",
-        {{ analysis.classification.confidence if analysis.classification else 0 }},
-        {% endif %}
-        "{{ analysis.analysis_date if analysis.analysis_date else 'Unknown' }}",
-        "{% if analysis.themes %}{% for theme in analysis.themes[:3] %}{{ theme.name if theme.name else theme }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}"
+    // Pre-rendered analysis data
+    const analysesData = [
+        {% for analysis in data.recent_analyses %}
+        [
+            "{{ analysis.filename|clean_filename|replace('"', '""') }}",
+            {% if analysis.classification is string %}
+            "{{ analysis.classification|replace('"', '""') }}",
+            {{ analysis.score if analysis.score else 0 }},
+            {% else %}
+            "{{ analysis.classification.classification if analysis.classification else 'Unknown'|replace('"', '""') }}",
+            {{ analysis.classification.confidence if analysis.classification else 0 }},
+            {% endif %}
+            "{{ analysis.analysis_date if analysis.analysis_date else 'Unknown'|replace('"', '""') }}",
+            "{% if analysis.themes %}{% for theme in analysis.themes[:3] %}{{ (theme.name if theme.name else theme)|replace('"', '""') }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}"
+        ]{% if not loop.last %},{% endif %}
+        {% endfor %}
     ];
-    csvContent += `"${data{{ loop.index0 }}[0]}","${data{{ loop.index0 }}[1]}",${data{{ loop.index0 }}[2]},"${data{{ loop.index0 }}[3]}","${data{{ loop.index0 }}[4]}"\n`;
-    {% endfor %}
+    
+    // Add each analysis to CSV
+    analysesData.forEach(data => {
+        csvContent += `"${data[0]}","${data[1]}",${data[2]},"${data[3]}","${data[4]}"\n`;
+    });
     
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");

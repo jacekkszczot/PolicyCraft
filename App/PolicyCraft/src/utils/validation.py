@@ -74,6 +74,11 @@ def _load_reference_index() -> Dict[str, Dict[str, Any]]:
                                 # Create exact format used by recommendation system
                                 short_citation = f"EU AI Act ({year})"
                                 refs[short_citation] = metadata
+                            # Special handling for "Miao, F., Holmes, W., Huang, R., & Zhang, H. (2021)" format
+                            elif citation_text.startswith("Miao, F., Holmes, W., Huang, R., & Zhang, H."):
+                                # Create exact format used by recommendation system
+                                short_citation = f"Fengchun Miao (UNESCO), Wayne Holmes (Oxford/Nesta), Ronghuai Huang & Hui Zhang (Beijing Normal University) ({year})"
+                                refs[short_citation] = metadata
                             elif "&" in author_part:
                                 # Multiple authors - create short format
                                 authors = author_part.split("&")

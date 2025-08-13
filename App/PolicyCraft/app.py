@@ -24,22 +24,30 @@ from src.auth.routes import auth_bp
 from src.admin.routes import admin_bp
 
 # Import analysis modules
+# Constants for duplicated literals
+DOCX_EXTENSION = '.docx'
+TIMEZONE_SUFFIX = '+00:00'
+BASELINE_PREFIX = '[BASELINE]'
+ANALYSIS_NOT_FOUND = 'Analysis not found'
+NO_RECOMMENDATIONS_FOUND = 'No recommendations found for this analysis'
+
 from src.nlp.text_processor import TextProcessor
 from src.nlp.theme_extractor import ThemeExtractor
 from src.nlp.policy_classifier import PolicyClassifier
 from src.database.mongo_operations import MongoOperations as DatabaseOperations
-
-# Import automatic document management
-from src.utils.auto_document_manager import run_auto_document_scan
-from src.visualisation.charts import ChartGenerator
 from src.recommendation.engine import RecommendationGenerator as RecommendationEngine
+from src.export.export_engine import ExportEngine
+from src.literature.literature_engine import LiteratureEngine
+from src.literature.knowledge_manager import KnowledgeBaseManager as KnowledgeManager
+from src.utils.auto_document_manager import AutoDocumentManager
+from src.visualisation.charts import ChartGenerator
 from src.scripts.clean_dataset import process_new_upload
 
 
 def clean_baseline_filename(filename):
-    """Remove [BASELINE] prefix and clean filename for display"""
-    if filename.startswith("[BASELINE] "):
-        clean_name = filename.replace("[BASELINE] ", "")
+    """Remove BASELINE prefix and clean filename for display"""
+    if filename.startswith(BASELINE_PREFIX + " "):
+        clean_name = filename.replace(BASELINE_PREFIX + " ", "")
         if clean_name.endswith(".pdf"):
             clean_name = clean_name.replace(".pdf", "")
         return clean_name
@@ -59,7 +67,7 @@ def clean_university_name(filename):
         clean_name = filename
     
     # Remove file extensions
-    clean_name = clean_name.replace('.pdf', '').replace('.docx', '').replace('.doc', '').replace('.txt', '')
+    clean_name = clean_name.replace('.pdf', '').replace(DOCX_EXTENSION, '').replace('.doc', '').replace('.txt', '')
     clean_name = clean_name.replace('-ai-policy', '').replace('_ai_policy', '')
     
     # Map to clean university names
@@ -127,13 +135,13 @@ def format_british_date(date_str):
         from datetime import datetime
         if isinstance(date_str, str):
             if 'T' in date_str:
-                dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                dt = datetime.fromisoformat(date_str.replace('Z', TIMEZONE_SUFFIX))
             else:
                 dt = datetime.strptime(date_str[:19], '%Y-%m-%d %H:%M:%S')
         else:
             dt = date_str
         return dt.strftime('%d/%m/%Y')
-    except Exception as e:
+    except Exception:
         return str(date_str)[:10] if len(str(date_str)) > 10 else str(date_str)
 
 # Configure logging
@@ -254,7 +262,7 @@ def _to_epoch(val):
         if isinstance(val, datetime):
             return val.replace(tzinfo=None).timestamp()
         if isinstance(val, str):
-            dt = datetime.fromisoformat(val.replace('Z', '+00:00'))
+            dt = datetime.fromisoformat(val.replace('Z', TIMEZONE_SUFFIX))
             return dt.replace(tzinfo=None).timestamp()
     except Exception:
         pass
@@ -332,7 +340,7 @@ def _process_analyses_for_display(analyses):
             processed_analysis['analysis_date'] = processed_analysis['analysis_date'].strftime('%Y-%m-%d %H:%M:%S')
         elif isinstance(processed_analysis['analysis_date'], str):
             try:
-                dt = datetime.fromisoformat(processed_analysis['analysis_date'].replace('Z', '+00:00'))
+                dt = datetime.fromisoformat(processed_analysis['analysis_date'].replace('Z', TIMEZONE_SUFFIX))
                 processed_analysis['analysis_date'] = dt.strftime('%Y-%m-%d %H:%M:%S')
             except Exception:
                 # Keep the original string if parsing fails
@@ -457,7 +465,7 @@ def dashboard():
         if os.path.exists(clean_dataset_dir):
             for filename in os.listdir(clean_dataset_dir):
                 # Skip non-policy files like dataset_info.md or guidance files
-                if filename.endswith(('.pdf', '.docx')) and 'guidance' not in filename.lower():
+                if filename.endswith(('.pdf', DOCX_EXTENSION)) and 'guidance' not in filename.lower():
                     clean_dataset_files.append(filename)
         
         logger.info(f"Dashboard: Found {len(clean_dataset_files)} policy files in clean_dataset")
@@ -515,7 +523,7 @@ def dashboard():
             if not university_name:
                 university_name = missing_file.split('.')[0].replace('university', '').strip().title()
             
-            baseline_filename = f"[BASELINE] {university_name}"
+            baseline_filename = f"{BASELINE_PREFIX} {university_name}"
             logger.info(f"Dashboard: Creating baseline analysis for {missing_file} as '{baseline_filename}'")
             
             try:
@@ -562,7 +570,7 @@ def dashboard():
                                 logger.warning(f"Dashboard: Fallback extraction failed: {str(fallback_error)}")
                         
                         # For DOCX files, try a different approach
-                        elif file_path.lower().endswith(('.docx', '.doc')):
+                        elif file_path.lower().endswith((DOCX_EXTENSION, '.doc')):
                             try:
                                 from docx import Document
                                 doc = Document(file_path)
@@ -768,7 +776,7 @@ def dashboard():
                 # Create a placeholder as fallback - ensure it has all required fields
                 placeholder_analysis = {
                     '_id': f"placeholder_{missing_file.replace('.', '_')}",
-                    'filename': baseline_filename or f"[BASELINE] {missing_file}",
+                    'filename': baseline_filename or f"{BASELINE_PREFIX} {missing_file}",
                     'document_id': missing_file,  # Store original filename for matching
                     'title': f"Policy from {university_name or missing_file.split('-')[0].title()}",
                     'analysis_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -825,7 +833,7 @@ def dashboard():
 
 def _load_sample_policies_if_needed(user_analyses):
     """Load sample policies if user has none."""
-    if not any(a.get('filename','').startswith('[BASELINE]') for a in user_analyses):
+    if not any(a.get('filename','').startswith(BASELINE_PREFIX) for a in user_analyses):
         try:
             loaded = db_operations.load_sample_policies_for_user(current_user.id)
             if loaded:
@@ -1145,7 +1153,7 @@ def analyse_document(filename):
     including text extraction, theme analysis, and policy classification.
     """
     try:
-        is_baseline = filename.startswith('[BASELINE]')
+        is_baseline = filename.startswith(BASELINE_PREFIX)
         
         # Security check - allow baseline files or user's own files
         # Baseline files are accessible to all users for comparison purposes
@@ -1157,7 +1165,7 @@ def analyse_document(filename):
         if is_baseline:
             # For baseline files, we need to map the display name back to the actual filename
             # First check if it's already a proper filename with extension
-            original_filename = filename.split(' - ')[-1] if ' - ' in filename else filename.replace('[BASELINE] ', '')
+            original_filename = filename.split(' - ')[-1] if ' - ' in filename else filename.replace(BASELINE_PREFIX + ' ', '')
             
             # Create a mapping of display names to actual filenames
             university_file_mapping = {
@@ -1284,7 +1292,7 @@ def validate_analysis(analysis_id):
     from flask import jsonify
     analysis = db_operations.get_analysis_by_id(analysis_id)
     if not analysis:
-        return jsonify({"error": "Analysis not found"}), 404
+        return jsonify({"error": ANALYSIS_NOT_FOUND}), 404
     recs = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
     if not recs:
         # fallback: any user_id
@@ -1328,7 +1336,7 @@ def get_recommendations(analysis_id):
             logger.info("Found analysis in user's analyses")
             logger.info(f"Analysis details - User ID: {analysis.get('user_id')}, Is Baseline: {analysis.get('is_baseline', False)}")
         else:
-            logger.warning(f"Analysis not found in user's analyses, trying global lookup...")
+            logger.warning(f"{ANALYSIS_NOT_FOUND} in user's analyses, trying global lookup...")
             analysis = db_operations.get_analysis_by_id(analysis_id)
             
             if analysis:
@@ -1360,7 +1368,7 @@ def get_recommendations(analysis_id):
                 #     return redirect(url_for('dashboard'))
             else:
                 logger.error(f"Analysis {analysis_id} not found in global lookup")
-                flash('Analysis not found.', 'error')
+                flash(f'{ANALYSIS_NOT_FOUND}.', 'error')
                 return redirect(url_for('dashboard'))
         
         logger.info(f"Found analysis data for ID: {analysis_id}")
@@ -1505,12 +1513,12 @@ def delete_analysis(analysis_id):
         # Get analysis to check ownership and type
         analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
         if not analysis:
-            flash('Analysis not found or access denied.', 'error')
+            flash(f'{ANALYSIS_NOT_FOUND} or access denied.', 'error')
             return redirect(url_for('dashboard'))
         
         # Check if it's a baseline policy (protect from deletion)
         filename = analysis.get('filename', '')
-        if filename.startswith('[BASELINE]'):
+        if filename.startswith(BASELINE_PREFIX):
             flash('Baseline policies cannot be deleted.', 'warning')
             return redirect(url_for('dashboard'))
         
@@ -1575,7 +1583,7 @@ def api_explain_analysis(analysis_id):
     db_ops = DatabaseOperations(uri="mongodb://localhost:27017", db_name="policycraft")
     analysis = db_ops.get_analysis_by_id(analysis_id)
     if not analysis or analysis.get('user_id') != current_user.id:
-        return jsonify({'error': 'Analysis not found'}), 404
+        return jsonify({'error': ANALYSIS_NOT_FOUND}), 404
 
     cleaned_text = analysis.get('text_data', {}).get('cleaned_text', '')
     if not cleaned_text:
@@ -1600,7 +1608,7 @@ def api_get_analysis(analysis_id):
         if analysis:
             return jsonify({'success': True, 'data': analysis})
         else:
-            return jsonify({'success': False, 'error': 'Analysis not found'}), 404
+            return jsonify({'success': False, 'error': ANALYSIS_NOT_FOUND}), 404
     except Exception as e:
         logger.error(f"API error for analysis {analysis_id}: {str(e)}")
         return jsonify({'success': False, 'error': 'Internal server error'}), 500
@@ -1654,16 +1662,16 @@ def export_view(analysis_id):
             logger.info("Found analysis in user's analyses")
             logger.info(f"Analysis details - Filename: {analysis.get('filename')}, ID: {analysis_id}")
         else:
-            logger.info(f"Analysis not found in user's analyses, trying global lookup...")
+            logger.info(f"{ANALYSIS_NOT_FOUND} in user's analyses, trying global lookup...")
             analysis = db_operations.get_analysis_by_id(analysis_id)
             
             if analysis:
                 logger.info("Found analysis in global collection")
                 logger.info(f"Analysis details - Filename: {analysis.get('filename')}, ID: {analysis_id}")
             else:
-                logger.error(f"Analysis {analysis_id} not found in any collection")
-                flash('Analysis not found.', 'error')
-                return redirect(url_for('dashboard'))
+                logger.error(f"Analysis {analysis_id} not found in global lookup")
+                flash(f'{ANALYSIS_NOT_FOUND}.', 'error')
+                return redirect(url_for('recommendations'))
         
         # Get recommendations
         logger.info(f"Attempting to get recommendations for analysis {analysis_id}...")
@@ -1673,7 +1681,7 @@ def export_view(analysis_id):
             logger.info(f"Found {len(recommendations)} recommendations for analysis {analysis_id}")
         else:
             logger.warning(f"No recommendations found for analysis {analysis_id}")
-            flash('No recommendations found for this analysis.', 'warning')
+            flash(f'{NO_RECOMMENDATIONS_FOUND}.', 'warning')
             return redirect(url_for('get_recommendations', analysis_id=analysis_id))
         
         # Generate charts for export view
@@ -1730,13 +1738,13 @@ def export_pdf(analysis_id):
             analysis = db_operations.get_analysis_by_id(analysis_id)
             
             if not analysis:
-                return jsonify({'error': 'Analysis not found'}), 404
+                return jsonify({'error': ANALYSIS_NOT_FOUND}), 404
         
         # Get recommendations
         recommendations = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
         
         if not recommendations:
-            return jsonify({'error': 'No recommendations found for this analysis'}), 404
+            return jsonify({'error': NO_RECOMMENDATIONS_FOUND}), 404
         
         # Prepare data for export
         export_data = {
@@ -1787,13 +1795,13 @@ def export_word(analysis_id):
             analysis = db_operations.get_analysis_by_id(analysis_id)
             
             if not analysis:
-                return jsonify({'error': 'Analysis not found'}), 404
+                return jsonify({'error': ANALYSIS_NOT_FOUND}), 404
         
         # Get recommendations
         recommendations = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
         
         if not recommendations:
-            return jsonify({'error': 'No recommendations found for this analysis'}), 404
+            return jsonify({'error': NO_RECOMMENDATIONS_FOUND}), 404
         
         # Prepare data for export
         export_data = {
@@ -1844,13 +1852,13 @@ def export_excel(analysis_id):
             analysis = db_operations.get_analysis_by_id(analysis_id)
             
             if not analysis:
-                return jsonify({'error': 'Analysis not found'}), 404
+                return jsonify({'error': ANALYSIS_NOT_FOUND}), 404
         
         # Get recommendations
         recommendations = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
         
         if not recommendations:
-            return jsonify({'error': 'No recommendations found for this analysis'}), 404
+            return jsonify({'error': NO_RECOMMENDATIONS_FOUND}), 404
         
         # Prepare data for export
         export_data = {
@@ -1922,10 +1930,10 @@ def handle_first_login_onboarding(user_id: int) -> bool:
                 return True
             else:
                 # If sample load failed, but user already has baseline analyses, treat as success
-                # Robust baseline detection check if ANY analysis filename starts with [BASELINE]
+                # Robust baseline detection check if ANY analysis filename starts with BASELINE
                 try:
                     user_analyses = db_operations.get_user_analyses(user_id)
-                    baseline_exists = any(a.get('filename', '').startswith('[BASELINE]') for a in user_analyses)
+                    baseline_exists = any(a.get('filename', '').startswith(BASELINE_PREFIX) for a in user_analyses)
                 except Exception as _:
                     baseline_exists = False
                 if baseline_exists:

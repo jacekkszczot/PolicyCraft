@@ -79,7 +79,7 @@
     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:2rem;">
       <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
         <h4 style="margin-bottom:0.5rem; color:#333;">System Status</h4>
-        <div style="font-size:1.5rem; font-weight:bold; color:{% if system_status.system_status == 'operational' %}#28a745{% else %}#dc3545{% endif %};">
+        <div style="font-size:1.5rem; font-weight:bold; color:{% if system_status.system_status == 'operational' %}#28a745{% else %}#dc3545{% endif %}">
           {{ system_status.system_status|title }}
         </div>
         <small style="color:#666;">Last check: {{ system_status.last_check[:19] }}</small>
@@ -137,8 +137,8 @@
                                 {% if item.quality_score %}
                                 <div class="quality-indicator">
                                     <div class="quality-bar">
-                                        <div class="quality-fill quality-{{ 'high' if item.quality_score >= 80 else 'medium' if item.quality_score >= 60 else 'low' }}" 
-                                             style="width: {{ item.quality_score|round }}%;"></div>
+                                         <div class="quality-fill quality-{{ 'high' if item.quality_score >= 90 else 'medium' if item.quality_score >= 70 else 'low' }}" 
+                                              style="width: {{ item.quality_score|round }}%"></div>
                                     </div>
                                     <span class="quality-text">{{ "%.1f%%"|format(item.quality_score) }}</span>
                                 </div>

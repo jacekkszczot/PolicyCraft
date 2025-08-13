@@ -14,6 +14,7 @@ Below is the canonical list of peer-reviewed and institutional sources that grou
 | 8 | UNESCO. (2023). *ChatGPT and artificial intelligence in higher education: Quick start guide*. | [Official Document](https://unesdoc.unesco.org/ark:/48223/pf0000385146) ✅ | Global policy perspective used in our ethical dimension keywords. |
 | 9 | Selwyn, N., Aagaard, J., & Knox, J. (2020). Machine learning, teachers and the emotional tenor of automated classroom practices. *Learning, Media and Technology, 45*(3), 308-322. | [Full Article](https://www.tandfonline.com/doi/full/10.1080/17439884.2020.1798995) ✅ | Socio-emotional impact research informing our "Human Agency" dimension. |
 | 10 | Barnes, E., & Hutson, J. (2024). Navigating the ethical terrain of AI in higher education: Strategies for mitigating bias and promoting fairness. *Forum for Education Studies, 2*(2), 1229. | [Full Article](https://ojs.acad-pub.com/index.php/FES/article/view/1229) ✅ | Bias mitigation strategies informing our NLP pipeline and fairness metrics. |
+| 11 | Miao, F., Holmes, W., Huang, R., & Zhang, H. (2021). *AI and education: A guidance for policymakers*. UNESCO. | [Official Document](https://unesdoc.unesco.org/ark:/48223/pf0000376709) ✅ | Comprehensive AI policy framework for educational institutions and government decision-makers. |
 
 _Last updated_: 2025-07-23
 

@@ -11,7 +11,7 @@
     AI policies in higher education institutions.
     
     Key Components:
-    1. Analysis Summary - Overview of the analyzed document
+    1. Analysis Summary - Overview of the analysed document
     2. Strategic Recommendations - Actionable insights
     3. Implementation Roadmap - Phased approach to policy improvement
     4. Citation Validation - Academic reference verification
@@ -132,18 +132,18 @@
             <div class="general-recommendations">
                 {% if data.analysis.classification == 'Restrictive' %}
                 <div class="general-rec-card">
-                    <h4>Consider Balanced Approach</h4>
-                    <p>Your policy appears restrictive. Consider incorporating flexibility for legitimate academic use while maintaining integrity safeguards.</p>
+                    <h4>Consider Moderate Approach</h4>
+                    <p>Your policy is restrictive, prohibiting or strictly limiting AI usage. Consider incorporating flexibility for legitimate academic use while maintaining integrity safeguards.</p>
                 </div>
                 {% elif data.analysis.classification == 'Permissive' %}
                 <div class="general-rec-card">
                     <h4>Strengthen Guidelines</h4>
-                    <p>Your policy appears permissive. Consider adding clearer guidelines and assessment criteria to maintain academic standards.</p>
+                    <p>Your policy is permissive, encouraging or allowing broad AI usage. Consider adding clearer guidelines and assessment criteria to maintain academic standards.</p>
                 </div>
                 {% else %}
                 <div class="general-rec-card">
                     <h4>Maintain Balance</h4>
-                    <p>Your policy shows a balanced approach. Continue monitoring effectiveness and adjust based on student and faculty feedback.</p>
+                    <p>Your policy is moderate, allowing AI usage with specific guidelines or conditions. Continue monitoring effectiveness and adjust based on student and faculty feedback.</p>
                 </div>
                 {% endif %}
                 
@@ -168,10 +168,10 @@
                 <span class="btn-icon">📤</span>
                 Analyse Another Document
             </a>
-            <button onclick="exportRecommendations()" class="btn btn-outline">
-                 <span class="btn-icon">💾</span>
-                 Export Recommendations
-             </button>
+            <a href="{{ url_for('export_view', analysis_id=data.analysis.analysis_id) }}" class="btn btn-outline">
+                <span class="btn-icon">📊</span>
+                Export Recommendations
+            </a>
              <button onclick="validateCitations('{{ data.analysis.analysis_id }}')" class="btn btn-secondary">
                  <span class="btn-icon">🔍</span>
                  Validate Citations

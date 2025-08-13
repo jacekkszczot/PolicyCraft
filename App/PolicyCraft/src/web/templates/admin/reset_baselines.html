@@ -2,67 +2,435 @@
 
 {% block title %}Reset Baseline Policies - PolicyCraft{% endblock %}
 
+{% block extra_css %}
+<style>
+.progress {
+    height: 25px;
+    margin: 20px 0;
+    border-radius: 5px;
+    background-color: #f0f0f0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0;
+    background-color: #4CAF50;
+    text-align: center;
+    line-height: 25px;
+    color: white;
+    transition: width 0.3s;
+}
+
+.progress-steps {
+    margin: 20px 0;
+}
+
+.progress-step {
+    padding: 10px;
+    margin: 5px 0;
+    border-left: 4px solid #ddd;
+    transition: all 0.3s;
+}
+
+.progress-step.active {
+    border-left-color: #4CAF50;
+    background-color: #f8f9fa;
+}
+
+.progress-step.completed {
+    border-left-color: #4CAF50;
+    background-color: #e8f5e9;
+}
+
+.progress-step.error {
+    border-left-color: #f44336;
+    background-color: #ffebee;
+}
+
+.reset-container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 0;
+}
+
+.reset-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 600px;
+}
+
+.warning-section {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border: 2px solid #ffc107;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.warning-icon {
+    font-size: 2.5rem;
+    margin-right: 1rem;
+}
+
+.warning-content h3 {
+    margin: 0 0 0.5rem 0;
+    color: #856404;
+    font-weight: 600;
+}
+
+.warning-content p {
+    margin: 0;
+    color: #856404;
+}
+
+.initial-state {
+    text-align: center;
+}
+
+.reset-info {
+    margin-bottom: 2rem;
+}
+
+.reset-info h4 {
+    color: #333;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.reset-steps-list {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.reset-steps-list li {
+    padding: 0.5rem 0;
+    color: #666;
+    font-weight: 500;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-reset {
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    border-radius: 8px;
+    font-size: 1.1rem;
+}
+
+.progress-state {
+    text-align: center;
+}
+
+.progress-header {
+    margin-bottom: 2rem;
+}
+
+.progress-header h4 {
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.progress-header p {
+    color: #666;
+    margin: 0;
+}
+
+.status-message {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border-radius: 8px;
+    min-height: 60px;
+}
+
+.status-message.info {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #bbdefb;
+}
+
+.status-message.error {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+
+.completion-state {
+    text-align: center;
+}
+
+.completion-content {
+    padding: 2rem 0;
+}
+
+.completion-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.completion-content h4 {
+    color: #2e7d32;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.completion-content p {
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+.btn-retry {
+    margin-right: 1rem;
+}
+
+@media (max-width: 768px) {
+    .reset-card {
+        padding: 1.5rem;
+        margin: 0 1rem;
+    }
+    
+    .warning-section {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .warning-icon {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<!-- 
-    PolicyCraft - Reset Baseline Policies
+<div class="dashboard-container">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Reset Baseline Policies</h1>
+            <p class="hero-subtitle">Reset system baseline policies to default state</p>
+        </div>
+    </div>
     
-    This page allows administrators to reset the system's baseline policies
-    to their default values. This action should be used with caution as it
-    will affect all users' analysis results.
-    
-    Features:
-    - Confirmation dialog for safety
-    - Logs all reset actions
-    - Maintains system integrity
-    
-    Author: Jacek Robert Kszczot
-    Project: MSc Data Science & AI - COM7016
-    University: Leeds Trinity University
--->
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-warning text-dark">
-                    <h4 class="mb-0">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Reset Baseline Policies
-                    </h4>
+    <!-- Reset Section -->
+    <div class="dashboard-section">
+        <div class="reset-container">
+            <div class="reset-card">
+                <!-- Warning Section - Always Visible -->
+                <div class="warning-section">
+                    <div class="warning-icon">⚠️</div>
+                    <div class="warning-content">
+                        <h3>Warning</h3>
+                        <p>This action cannot be undone and may take a few minutes to complete.</p>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <h5 class="card-title">Confirm Reset</h5>
-                    
-                    <div class="alert alert-warning" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i>
-                        <strong>Warning:</strong> This action cannot be undone!
+                
+                <!-- Initial State - Before Reset Starts -->
+                <div id="initialState" class="initial-state">
+                    <div class="reset-info">
+                        <h4>What will happen:</h4>
+                        <ul class="reset-steps-list">
+                            <li>🗑️ Remove all existing baseline analyses</li>
+                            <li>📁 Load fresh baseline policies from dataset</li>
+                            <li>🔄 Process and analyse new baselines</li>
+                            <li>✅ Update system with clean baseline data</li>
+                        </ul>
                     </div>
                     
-                    <p>You are about to reset all baseline policies. This will:</p>
-                    <ul>
-                        <li>Create a backup of the current {{ baseline_count }} baseline policies</li>
-                        <li>Remove all existing baseline policies</li>
-                        <li>Reload the baseline policies with fixed dates (28/06/2025)</li>
-                    </ul>
-                    
-                    <p class="text-muted">
-                        <i class="fas fa-info-circle me-1"></i>
-                        This operation may take a few moments to complete.
-                    </p>
-                    
-                    <div class="d-flex justify-content-between mt-4">
-                        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-danger btn-reset" id="startButton">
+                            🔄 Start Reset Process
+                        </button>
+                        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+                            ← Back to Dashboard
                         </a>
+                    </div>
+                </div>
+                
+                <!-- Progress State - During Reset -->
+                <div id="progressState" class="progress-state" style="display: none;">
+                    <div class="progress-header">
+                        <h4>Reset in Progress</h4>
+                        <p>Please wait while the system resets baseline policies...</p>
+                    </div>
+                    
+                    <div class="progress">
+                        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%">0%</div>
+                    </div>
+                    
+                    <div class="progress-steps" id="progressSteps">
+                        <div class="progress-step" id="step1">Preparing to reset baselines...</div>
+                        <div class="progress-step" id="step2">Removing old baseline analyses...</div>
+                        <div class="progress-step" id="step3">Loading new baseline policies...</div>
+                        <div class="progress-step" id="step4">Finalizing and cleaning up...</div>
+                    </div>
+                    
+                    <div id="statusMessage" class="status-message"></div>
+                </div>
+                
+                <!-- Completion State - After Reset -->
+                <div id="completionState" class="completion-state" style="display: none;">
+                    <div class="completion-content">
+                        <div class="completion-icon">✅</div>
+                        <h4>Reset Complete!</h4>
+                        <p>Baseline policies have been successfully reset.</p>
                         
-                        <form method="POST" action="{{ url_for('admin.reset_baselines') }}" class="d-inline">
-                            <button type="submit" class="btn btn-warning" onclick="return confirm('Are you sure you want to reset all baseline policies? This action cannot be undone.');">
-                                <i class="fas fa-sync-alt me-1"></i> Confirm Reset
-                            </button>
-                        </form>
+                        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">
+                            ← Return to Dashboard
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startButton = document.getElementById('startButton');
+    // Remove this line as we don't have backButton in new design
+    const progressBar = document.getElementById('progressBar');
+    const statusMessage = document.getElementById('statusMessage');
+    const steps = {
+        'step1': document.getElementById('step1'),
+        'step2': document.getElementById('step2'),
+        'step3': document.getElementById('step3'),
+        'step4': document.getElementById('step4')
+    };
+
+    startButton.addEventListener('click', function() {
+        // Reset UI state
+        startButton.disabled = true;
+        startButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Resetting...';
+        // Hide initial state and show progress state
+        document.getElementById('initialState').style.display = 'none';
+        document.getElementById('progressState').style.display = 'block';
+        
+        statusMessage.className = 'status-message info';
+        statusMessage.innerHTML = 'Starting baseline reset process...';
+        
+        // Reset progress bar and steps
+        progressBar.style.width = '0%';
+        progressBar.textContent = '0%';
+        Object.values(steps).forEach(step => {
+            step.className = 'progress-step';
+        });
+        
+        // Show first step as active
+        steps.step1.classList.add('active');
+        
+        // Create a new EventSource to receive updates from the server
+        const eventSource = new EventSource("{{ url_for('admin.reset_progress') }}");
+        
+        eventSource.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                const step = data.step;
+                const message = data.message;
+                
+                // Update progress bar
+                const progress = Math.min(100, (step / 4) * 100);
+                progressBar.style.width = progress + '%';
+                progressBar.textContent = Math.round(progress) + '%';
+                
+                // Update current step
+                for (let i = 1; i <= 4; i++) {
+                    const stepEl = steps['step' + i];
+                    if (i < step) {
+                        stepEl.classList.add('completed');
+                        stepEl.classList.remove('active');
+                    } else if (i === step) {
+                        stepEl.classList.add('active');
+                        if (message) stepEl.textContent = message;
+                    } else {
+                        stepEl.classList.remove('active', 'completed');
+                    }
+                }
+                
+                // Update status message
+                if (message) {
+                    statusMessage.textContent = message;
+                }
+                
+                // Handle completion or error
+                if (data.done) {
+                    // Show completion state
+                    document.getElementById('progressState').style.display = 'none';
+                    document.getElementById('completionState').style.display = 'block';
+                    eventSource.close();
+                } else if (data.error) {
+                    statusMessage.className = 'status-message error';
+                    statusMessage.innerHTML = '❌ Error: ' + message;
+                    
+                    // Show retry button
+                    const retryButton = document.createElement('button');
+                    retryButton.className = 'btn btn-danger btn-retry';
+                    retryButton.innerHTML = '🔄 Try Again';
+                    retryButton.onclick = () => location.reload();
+                    
+                    const backButton = document.createElement('a');
+                    backButton.href = "{{ url_for('admin.dashboard') }}";
+                    backButton.className = 'btn btn-secondary';
+                    backButton.innerHTML = '← Back to Dashboard';
+                    
+                    const buttonContainer = document.createElement('div');
+                    buttonContainer.className = 'action-buttons';
+                    buttonContainer.appendChild(retryButton);
+                    buttonContainer.appendChild(backButton);
+                    
+                    statusMessage.appendChild(buttonContainer);
+                    eventSource.close();
+                }
+            } catch (e) {
+                console.error('Error processing server event:', e);
+            }
+        };
+        
+        eventSource.onerror = function() {
+            statusMessage.className = 'status-message error';
+            statusMessage.innerHTML = '❌ Connection to server was lost. Please try again.';
+            
+            // Show retry button
+            const retryButton = document.createElement('button');
+            retryButton.className = 'btn btn-danger btn-retry';
+            retryButton.innerHTML = '🔄 Try Again';
+            retryButton.onclick = () => location.reload();
+            
+            const backButton = document.createElement('a');
+            backButton.href = "{{ url_for('admin.dashboard') }}";
+            backButton.className = 'btn btn-secondary';
+            backButton.innerHTML = '← Back to Dashboard';
+            
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'action-buttons';
+            buttonContainer.appendChild(retryButton);
+            buttonContainer.appendChild(backButton);
+            
+            statusMessage.appendChild(buttonContainer);
+            eventSource.close();
+        };
+    });
+});
+</script>
 {% endblock %}

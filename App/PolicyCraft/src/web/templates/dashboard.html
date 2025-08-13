@@ -158,6 +158,15 @@
                         
                         <td class="classification-cell">
                             <div class="classification-wrapper">
+                                {% if analysis.classification is string %}
+                                <span class="classification-badge classification-{{ analysis.classification.lower() }}">
+                                    {{ analysis.classification }}
+                                </span>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" style="--w: {{ analysis.score if analysis.score else 0 }}%;"></div>
+                                    <span class="confidence-text">{{ analysis.score if analysis.score else 0 }}%</span>
+                                </div>
+                                {% else %}
                                 <span class="classification-badge classification-{{ analysis.classification.classification.lower() if analysis.classification else 'unknown' }}">
                                     {{ analysis.classification.classification if analysis.classification else 'Unknown' }}
                                 </span>
@@ -165,6 +174,7 @@
                                     <div class="confidence-fill" style="--w: {{ analysis.classification.confidence if analysis.classification else 0 }}%;"></div>
                                     <span class="confidence-text">{{ analysis.classification.confidence if analysis.classification else 0 }}%</span>
                                 </div>
+                                {% endif %}
                             </div>
                         </td>
                         
@@ -197,7 +207,7 @@
                         
                         <td class="actions-cell">
                             <div class="action-buttons" style="display:flex; align-items:center; gap:8px;">
-                                {% if analysis.filename.startswith('[BASELINE]') %}
+                                {% if analysis.is_placeholder or analysis.is_baseline or '[BASELINE]' in analysis.filename %}
     <a href="{{ url_for('analyse_document', filename=analysis.filename) }}" class="btn btn-view" style="padding:4px 12px; font-size:0.9rem;" title="View analysis">View</a>
     <span class="baseline-icon" style="font-size:1.6rem; line-height:1;" title="Base policy">🏅</span>
 {% else %}
@@ -305,8 +315,13 @@ function exportAnalysesTable() {
     {% for analysis in data.recent_analyses %}
     const data{{ loop.index0 }} = [
         "{{ analysis.filename|clean_filename }}",
+        {% if analysis.classification is string %}
+        "{{ analysis.classification }}",
+        {{ analysis.score if analysis.score else 0 }},
+        {% else %}
         "{{ analysis.classification.classification if analysis.classification else 'Unknown' }}",
         {{ analysis.classification.confidence if analysis.classification else 0 }},
+        {% endif %}
         "{{ analysis.analysis_date if analysis.analysis_date else 'Unknown' }}",
         "{% if analysis.themes %}{% for theme in analysis.themes[:3] %}{{ theme.name if theme.name else theme }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}"
     ];

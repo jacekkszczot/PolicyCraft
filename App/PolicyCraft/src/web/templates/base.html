@@ -27,11 +27,11 @@
     Project: MSc Data Science & AI - COM7016
     University: Leeds Trinity University
     - Responsive design with proper viewport settings
-    - SEO-optimized meta tags
+    - SEO-optimised meta tags
     - Consistent navigation and footer across all pages
     - Flash message system for user feedback
     - Block-based template inheritance system
-    - Optimized resource loading (CSS/JS)
+    - Optimised resource loading (CSS/JS)
     
     Template Blocks (for child templates to override):
     - title: Page title (appended to site name)
@@ -77,7 +77,7 @@
         
         <div class="nav-links">
                 <a href="{{ url_for('index') }}">Home</a>
-            {% if session.get('is_admin') %}
+            {% if session.get('is_admin') or (current_user and current_user.is_authenticated and current_user.role == 'admin') %}
                 <a href="{{ url_for('admin.dashboard') }}">Admin</a>
             {% endif %}
             {% if current_user and current_user.is_authenticated %}
@@ -125,5 +125,8 @@
             document.querySelectorAll('.alert').forEach(alert => alert.remove());
         }, 5000);
     </script>
+    
+    <!-- Additional scripts from child templates -->
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

@@ -49,4 +49,5 @@ python-json-logger>=2.0.7  # For structured logging
 # python -m spacy download en_core_web_sm
 #
 # For development dependencies, install from requirements-dev.txt:
-# pip install -r requirements-dev.txt
+# pip install -r requirements-dev.txtPyMuPDF>=1.23.0
+sentence-transformers>=2.2.0

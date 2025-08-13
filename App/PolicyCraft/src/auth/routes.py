@@ -105,7 +105,11 @@ def login():
                 user.update_last_login()
                 db.session.commit()
                 
-                logger.info(f"User {user.username} logged in successfully")
+                # Set admin session flag if user is admin
+                if user.role == 'admin':
+                    session['is_admin'] = True
+                
+                logger.info("User %s logged in successfully", user.username)
                 
                 # Check if this is user's first login and handle onboarding
                 if user.is_first_login():
@@ -193,14 +197,14 @@ def register():
             db.session.add(user)
             db.session.commit()
             
-            logger.info(f"New user registered: {user.username}")
+            logger.info("New user registered: %s", user.username)
             flash('Registration successful! You can now log in.', 'success')
             
             return redirect(url_for('auth.login'))
             
         except Exception as e:
             db.session.rollback()
-            logger.error(f"Registration error: {str(e)}")
+            logger.error("Registration error: %s", str(e))
             flash('Registration failed. Please try again.', 'error')
     
     return render_template('auth/register.html', form=form)
@@ -260,7 +264,7 @@ def logout():
     resp.set_cookie('remember_token', '', expires=0, httponly=True)
     
     # Log the logout
-    logger.info(f"User {username} logged out successfully")
+    logger.info("User %s logged out successfully", username)
     flash('You have been logged out successfully.', 'info')
     
     # Create response with cache headers
@@ -384,7 +388,7 @@ def update_profile():
         flash('Profile updated successfully.', 'success')
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Profile update error for {current_user.username}: {str(e)}")
+        logger.error("Profile update error for %s: %s", current_user.username, str(e))
         flash('Failed to update profile.', 'error')
     return redirect(url_for('auth.profile'))
 
@@ -450,7 +454,7 @@ def change_password():
         flash('Password changed successfully.', 'success')
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Password change error for {current_user.username}: {str(e)}")
+        logger.error("Password change error for %s: %s", current_user.username, str(e))
         flash('Failed to change password.', 'error')
     return redirect(url_for('auth.profile'))
 
@@ -503,22 +507,24 @@ def delete_account():
         # Log the user out first to invalidate session
         logout_user()
 
-        # Delete associated analyses & recommendations in Mongo
+        # SECURITY FIX: Delete associated analyses, recommendations AND files from disk
         try:
             from app import db_operations  # late import to avoid circular deps
             if hasattr(db_operations, "purge_user_data"):
-                db_operations.purge_user_data(user_id)
+                purge_result = db_operations.purge_user_data(user_id)
+                if purge_result and purge_result.get('files_deleted', 0) > 0:
+                    logger.info("SECURITY FIX: Deleted %d files for user %s", purge_result['files_deleted'], user_id)
         except Exception as purge_err:
-            logger.warning(f"Could not purge Mongo data for user {user_id}: {purge_err}")
+            logger.warning("Could not purge Mongo data for user %s: %s", user_id, str(purge_err))
 
         # Delete user record (and potentially cascade related data)
         User.query.filter_by(id=user_id).delete()
         db.session.commit()
 
         flash('Your account has been deleted.', 'info')
-        logger.info(f"Account deleted for user {username} (id={user_id})")
+        logger.info("Account deleted for user %s (id=%s)", username, user_id)
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Account deletion error for user {locals().get('username','unknown')}: {str(e)}")
+        logger.error("Account deletion error for user %s: %s", locals().get('username', 'unknown'), str(e))
         flash('Failed to delete account.', 'error')
     return redirect(url_for('index'))

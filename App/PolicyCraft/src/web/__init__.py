@@ -12,6 +12,7 @@ Key Components:
 - User session management
 - Template rendering and static file serving
 - API endpoints for client-side interactivity
+- Template filters for consistent data presentation
 
 Author: Jacek Robert Kszczot
 Project: MSc Data Science & AI - COM7016
@@ -24,9 +25,22 @@ from flask import Blueprint
 # Create the main web Blueprint
 web_bp = Blueprint('web', __name__)
 
-# Import routes after creating the blueprint to avoid circular imports
-from . import routes  # noqa: E402, F401
+def init_app(app):
+    """Initialize the web application with the Flask app instance.
+    
+    Args:
+        app: The Flask application instance
+    """
+    # Import and register template filters
+    from .utils import template_utils
+    template_utils.register_template_filters(app)
+    
+    # Register blueprints
+    from . import routes  # Import here to avoid circular imports
+    app.register_blueprint(web_bp)
+    
+    return app
 
 # Define package version and exports
 __version__ = '1.0.0'
-__all__ = ['web_bp']
+__all__ = ['web_bp', 'init_app']

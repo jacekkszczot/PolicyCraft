@@ -1,0 +1,458 @@
+<!--
+    PolicyCraft - Document Details View
+    
+    This template displays detailed information about a specific document in the knowledge base,
+    including file status, metadata, and quality metrics.
+    
+    Features:
+    - Displays both original and generated file information
+    - Shows document statistics (word count, character count)
+    - Visual indicators for file availability
+    - Quality assessment metrics
+    - Extracted insights and metadata
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
+{% extends 'base.html' %}
+
+{% block title %}Document Details - PolicyCraft Admin{% endblock %}
+
+{% block content %}
+<div style="max-width:1000px;margin:2rem auto;">
+  <div style="background:#ffffffcc; padding:1.5rem 2rem; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.2);">
+    <!-- Navigation -->
+    <div style="margin-bottom:1.5rem; padding-bottom:0.75rem; border-bottom:1px solid #eee;">
+      <a href="{{ url_for('admin.dashboard') }}" style="color:#0077cc; text-decoration:none;">Admin Dashboard</a> 
+      → <a href="{{ url_for('admin.literature_dashboard') }}" style="color:#0077cc; text-decoration:none;">Literature Management</a>
+      → <a href="{{ url_for('admin.literature_knowledge_base') }}" style="color:#0077cc; text-decoration:none;">Knowledge Base</a>
+      → <span style="color:#6c757d;">Document Details</span>
+    </div>
+    
+    <!-- Document Header -->
+    <div style="margin-bottom:1.5rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+        <h1 style="margin:0; color:#333; font-size:1.75rem; font-weight:600;">
+          {{ document.metadata.title if document.metadata and document.metadata.title else document.filename|default('Document Details') }}
+        </h1>
+        <a href="{{ url_for('admin.literature_knowledge_base') }}" class="btn btn-outline-secondary">
+          <i class="fas fa-arrow-left"></i> Back to Knowledge Base
+        </a>
+      </div>
+      
+      <div style="color:#4a5568; margin:0.75rem 0; font-size:1.05rem;">
+        {% if document.author or document.university or document.publication_year %}
+          {% if document.author %}
+            <span style="font-weight:500;">{{ document.author }}</span>
+            {% if document.university or document.publication_year %}
+              <span style="color:#a0aec0;"> • </span>
+            {% endif %}
+          {% endif %}
+          
+          {% if document.university %}
+            <span style="color:#2d3748;">{{ document.university }}</span>
+            {% if document.publication_year %}
+              <span style="color:#a0aec0;"> • </span>
+            {% endif %}
+          {% endif %}
+          
+          {% if document.publication_year %}
+            <span style="color:#4a5568;">{{ document.publication_year }}</span>
+          {% endif %}
+          
+          {% if document.metadata and document.metadata.document_type %}
+            <span style="color:#a0aec0;"> • </span>
+            <span style="color:#4a5568; text-transform:capitalize;">{{ document.metadata.document_type|lower }}</span>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        <div style="font-size:1.5rem; font-weight:bold; color:#17a2b8;">
+          {% set word_count = document.word_count|default(0) %}
+          {{ "{:,}".format(word_count) }}
+        </div>
+        <small style="color:#666;">Words</small>
+      </div>
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        <div style="font-size:1.5rem; font-weight:bold; color:#6f42c1;">
+          {% set char_count = document.character_count|default(0) %}
+          {{ "{:,}".format(char_count) }}
+        </div>
+        <small style="color:#666;">Characters</small>
+      </div>
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        <div style="font-size:1.5rem; font-weight:bold; color:#20c997;">{{ document.insights_extracted|default(0) }}</div>
+        <small style="color:#666;">Insights</small>
+      </div>
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        {% if document.quality_score is defined and document.quality_score is not none %}
+          {% if document.quality_score >= 7 %}
+            {% set quality_style = 'color:#28a745;' %}
+          {% elif document.quality_score >= 4 %}
+            {% set quality_style = 'color:#ffc107;' %}
+          {% else %}
+            {% set quality_style = 'color:#dc3545;' %}
+          {% endif %}
+          <div style="font-size:1.5rem; font-weight:bold; {{ quality_style }}">
+            {{ document.quality_score }}
+          </div>
+        {% else %}
+          <div style="font-size:1.5rem; font-weight:bold; color:#6c757d;">
+            N/A
+          </div>
+        {% endif %}
+        <small style="color:#666;">Quality Score</small>
+      </div>
+    </div>
+    
+    <!-- Document Files -->
+    <div style="margin-bottom:2rem;">
+      <h4 style="margin-bottom:1rem; color:#495057; border-bottom:1px solid #eee; padding-bottom:0.5rem;">Document Files</h4>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+        <!-- Original File -->
+        <div style="border:1px solid #dee2e6; border-radius:6px; padding:1.25rem; background:white;">
+          <div style="display:flex; align-items:center; margin-bottom:1rem;">
+            <i class="fas fa-file-upload" style="font-size:1.25rem; color:#6c757d; margin-right:0.5rem;"></i>
+            <h5 style="margin:0; flex-grow:1;">Original File</h5>
+            {% if document.original_file_exists %}
+              <span style="font-size:0.8em; background:#28a745; color:white; padding:0.2em 0.5em; border-radius:10px;">
+                Available
+              </span>
+            {% elif document.is_preloaded %}
+              <span style="font-size:0.8em; background:#6c757d; color:white; padding:0.2em 0.5em; border-radius:10px;">
+                Pre-loaded Document
+              </span>
+            {% else %}
+              <span style="font-size:0.8em; background:#dc3545; color:white; padding:0.2em 0.5em; border-radius:10px;">
+                Not Found
+              </span>
+            {% endif %}
+          </div>
+          
+          {% if document.original_filename %}
+            <div style="margin-bottom:1rem;">
+              <div><strong>Filename:</strong> {{ document.original_filename }}</div>
+              <div><strong>Uploaded:</strong> 
+                {% if document.timestamp %}
+                  {{ document.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                {% else %}
+                  N/A
+                {% endif %}
+              </div>
+              {% if document.original_file_exists %}
+                <div style="margin-top:0.75rem;">
+                  <a href="{{ url_for('static', filename='uploads/' ~ document.original_filename) }}" 
+                     target="_blank" 
+                     class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-download"></i> Download
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+          
+          {% if not document.original_file_exists and not document.is_preloaded %}
+            <div class="alert alert-warning" style="margin:0;">
+              <i class="fas fa-exclamation-triangle"></i> Original file not found in the system.
+            </div>
+          {% elif not document.original_file_exists and document.is_preloaded %}
+            <div class="alert alert-info" style="margin:0;">
+              <i class="fas fa-info-circle"></i> This is a pre-loaded document. The original file is not available for download.
+            </div>
+          {% endif %}
+        </div>
+        
+        <!-- Generated Markdown -->
+        <div style="border:1px solid #dee2e6; border-radius:6px; padding:1.25rem; background:white;">
+          <div style="display:flex; align-items:center; margin-bottom:1rem;">
+            <i class="fas fa-file-alt" style="font-size:1.25rem; color:#6c757d; margin-right:0.5rem;"></i>
+            <h5 style="margin:0; flex-grow:1;">Generated Markdown</h5>
+            {% if document.generated_file_exists %}
+              <span style="font-size:0.8em; background:#28a745; color:white; padding:0.2em 0.5em; border-radius:10px;">
+                Available
+              </span>
+            {% else %}
+              <span style="font-size:0.8em; background:#dc3545; color:white; padding:0.2em 0.5em; border-radius:10px;">
+                Not Found
+              </span>
+            {% endif %}
+          </div>
+          
+          {% if document.generated_filename %}
+            <div style="margin-bottom:1rem;">
+              <div><strong>Filename:</strong> {{ document.generated_filename }}</div>
+              {% if document.generated_file_exists %}
+                <div style="margin-top:0.75rem;">
+                  <a href="{{ url_for('static', filename='knowledge_base/' ~ document.generated_filename) }}" 
+                     target="_blank" 
+                     class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-download"></i> Download
+                  </a>
+                  <a href="{{ url_for('admin.view_document_details', document_id=document.id) }}" 
+                     target="_blank" 
+                     class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-eye"></i> View
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+          
+          {% if not document.generated_file_exists %}
+            <div class="alert alert-warning" style="margin:0;">
+              <i class="fas fa-exclamation-triangle"></i> Generated markdown file not found.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    
+    <!-- Analysis Summary -->
+    {% if document.analysis_data and document.analysis_data.analysis_summary %}
+    <div style="margin-bottom:2rem;">
+      <h4 style="margin-bottom:1rem; color:#495057; border-bottom:1px solid #eee; padding-bottom:0.5rem;">Analysis Summary</h4>
+      <div style="background:#f8f9fa; padding:1.5rem; border-radius:6px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
+          <div>
+            <h5 style="color:#0077cc; margin-bottom:0.5rem;">Document Statistics</h5>
+            <table class="table table-sm" style="margin-bottom:0;">
+              <tbody>
+                <tr>
+                  <td><strong>Word Count</strong></td>
+                  <td>
+                    {% set word_count = document.analysis_data.analysis_summary.word_count|default(0) %}
+                    {{ "{:,}".format(word_count) }}
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Character Count</strong></td>
+                  <td>
+                    {% set char_count = document.analysis_data.analysis_summary.character_count|default(0) %}
+                    {{ "{:,}".format(char_count) }}
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Quality Score</strong></td>
+                  <td>
+                    {% if document.analysis_data.analysis_summary.quality_score is defined %}
+                      {{ "%.1f"|format(document.analysis_data.analysis_summary.quality_score * 10) }}/10
+                    {% else %}
+                      N/A
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Insights Extracted</strong></td>
+                  <td>{{ document.analysis_data.analysis_summary.insights_count|default(0) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          {% if document.analysis_data.analysis_summary.key_themes %}
+          <div>
+            <h5 style="color:#0077cc; margin-bottom:0.5rem;">Key Themes</h5>
+            <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+              {% for theme in document.analysis_data.analysis_summary.key_themes %}
+              <span class="badge bg-primary" style="font-size:0.85em;">{{ theme }}</span>
+              {% endfor %}
+            </div>
+            
+            {% if document.analysis_data.analysis_summary.recommendations %}
+            <h5 style="color:#0077cc; margin-top:1rem; margin-bottom:0.5rem;">Recommendations</h5>
+            <ul style="margin-bottom:0; padding-left:1.2rem;">
+              {% for rec in document.analysis_data.analysis_summary.recommendations %}
+              <li style="margin-bottom:0.25rem;">{{ rec }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+        
+        {% if document.analysis_data.processing_date %}
+        <div style="font-size:0.85em; color:#6c757d; text-align:right; margin-top:0.5rem;">
+          Last analysed: {{ document.analysis_data.processing_date }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Document Metadata -->
+    {% if document.metadata is defined and document.metadata is not none %}
+    <div style="margin-bottom:2rem;">
+      <h4 style="margin-bottom:1rem; color:#495057; border-bottom:1px solid #eee; padding-bottom:0.5rem;">Document Metadata</h4>
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px;">
+        <table class="table table-sm" style="margin-bottom:0;">
+          <tbody>
+            {% if document.metadata is mapping %}
+              {% for key, value in document.metadata.items() %}
+                {% if value is defined and value is not none %}
+                <tr>
+                  <th style="width:30%;">{{ key|replace('_', ' ')|title }}</th>
+                  <td>
+                    {% if value is mapping %}
+                      {% for k, v in value.items() %}
+                        <div><strong>{{ k|replace('_', ' ')|title }}:</strong> {{ v }}</div>
+                      {% endfor %}
+                    {% elif value is iterable and value is not string %}
+                      {{ value|join(', ') }}
+                    {% else %}
+                      {{ value }}
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endif %}
+              {% endfor %}
+            {% elif document.metadata is iterable %}
+              {% for item in document.metadata %}
+                {% if item is mapping %}
+                  {% for key, value in item.items() %}
+                  <tr>
+                    <th style="width:30%;">{{ key|replace('_', ' ')|title }}</th>
+                    <td>
+                      {% if value is mapping %}
+                        {% for k, v in value.items() %}
+                          <div><strong>{{ k|replace('_', ' ')|title }}:</strong> {{ v }}</div>
+                        {% endfor %}
+                      {% elif value is iterable and value is not string %}
+                        {{ value|join(', ') }}
+                      {% else %}
+                        {{ value }}
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="2">{{ item }}</td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="2">{{ document.metadata|tojson if document.metadata is defined else 'No metadata available' }}</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Quality Assessment -->
+    {% if document.quality_dimensions %}
+    <div style="margin-bottom:2rem;">
+      <h4 style="margin-bottom:1rem; color:#495057; border-bottom:1px solid #eee; padding-bottom:0.5rem;">Quality Assessment</h4>
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px;">
+        {% for dimension in document.quality_dimensions %}
+        <div style="margin-bottom:1rem;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+            <span>{{ dimension.name }}</span>
+            <span>{{ dimension.score }}/10</span>
+          </div>
+          <div class="progress" style="height:8px;">
+            <div class="progress-bar 
+                 {% if dimension.score >= 8 %}
+                   bg-success
+                 {% elif dimension.score >= 5 %}
+                   bg-warning
+                 {% else %}
+                   bg-danger
+                 {% endif %}" 
+                 role="progressbar" 
+                 style="width: {{ dimension.score * 10 }}%" 
+                 aria-valuenow="{{ dimension.score * 10 }}" 
+                 aria-valuemin="0" 
+                 aria-valuemax="100">
+            </div>
+          </div>
+          {% if dimension.comments %}
+            <div class="text-muted" style="font-size:0.85em; margin-top:0.25rem;">{{ dimension.comments }}</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Extracted Insights -->
+    {% if document.insights %}
+    <div style="margin-bottom:2rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h4 style="margin:0; color:#495057;">Extracted Insights ({{ document.insights|length }})</h4>
+      </div>
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; max-height:400px; overflow-y:auto;">
+        <div class="accordion" id="insightsAccordion">
+          {% for insight in document.insights %}
+          <div class="card mb-2">
+            <div class="card-header p-2" id="heading{{ loop.index }}" style="background-color:rgba(0,0,0,.03);">
+              <h5 class="mb-0">
+                <button class="btn btn-link text-dark text-decoration-none w-100 text-left" 
+                        type="button" 
+                        data-toggle="collapse" 
+                        data-target="#collapse{{ loop.index }}" 
+                        {% if loop.first %}
+                        aria-expanded="true" 
+                        {% else %}
+                        aria-expanded="false"
+                        {% endif %}
+                        aria-controls="collapse{{ loop.index }}"
+                        style="white-space:normal; text-align:left;">
+                  <i class="fas fa-chevron-{% if loop.first %}down{% else %}right{% endif %} mr-2"></i>
+                  {{ insight.title|default('Insight #' ~ loop.index) }}
+                </button>
+              </h5>
+            </div>
+            <div id="collapse{{ loop.index }}" 
+                 class="collapse {% if loop.first %}show{% endif %}" 
+                 aria-labelledby="heading{{ loop.index }}" 
+                 data-parent="#insightsAccordion">
+              <div class="card-body p-3">
+                {{ insight.content.replace('\n', '<br>')|safe }}
+                {% if insight.citations %}
+                  <div class="mt-2">
+                    <strong>Citations:</strong>
+                    <ul class="mb-0 pl-3">
+                      {% for citation in insight.citations %}
+                        <li>{{ citation }}</li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Raw Data (for debugging) -->
+    <div style="margin-top:2rem; font-size:0.85rem;">
+      <details>
+        <summary class="btn btn-sm btn-outline-secondary">
+          <i class="fas fa-code"></i> View Raw Data
+        </summary>
+        <div style="margin-top:0.5rem;">
+          <pre style="background:#f8f9fa; padding:1rem; border-radius:4px; max-height:300px; overflow:auto; margin:0;"><code>{{ document|tojson(indent=2) }}</code></pre>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ parent() }}
+<script>
+// Any additional JavaScript for the document details page can go here
+</script>
+{% endblock %}

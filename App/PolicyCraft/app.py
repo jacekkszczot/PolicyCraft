@@ -40,6 +40,38 @@ def _load_or_generate_recommendations(analysis_id, cleaned_text):
             }
         }
 
+def _build_basic_export_data(analysis_id, analysis, recommendations):
+    """Zbuduj bazowy pakiet danych exportu używany przez PDF/Word/Excel (bez wykresów)."""
+    return {
+        'analysis': {
+            'filename': analysis.get('filename', 'Unknown'),
+            'classification': analysis.get('classification', {}).get('classification', 'Unknown'),
+            'confidence': analysis.get('classification', {}).get('confidence', 0),
+            'analysis_id': analysis_id,
+            'themes': analysis.get('themes', [])
+        },
+        'recommendations': recommendations,
+        'generated_date': datetime.now().isoformat(),
+        'total_recommendations': len(recommendations)
+    }
+
+def _prepare_basic_export_data_or_error(analysis_id):
+    """Pobierz analizę i rekomendacje; zwróć (export_data, None) albo (None, (json, code))."""
+    analysis = _get_export_analysis(analysis_id)
+    if not analysis:
+        return None, (jsonify({'error': ANALYSIS_NOT_FOUND}), 404)
+    recommendations = _get_export_recommendations(analysis_id)
+    if not recommendations:
+        return None, (jsonify({'error': NO_RECOMMENDATIONS_FOUND}), 404)
+    return _build_basic_export_data(analysis_id, analysis, recommendations), None
+
+def _make_binary_response(binary_data: bytes, content_type: str, filename: str):
+    """Utwórz binarną odpowiedź HTTP z odpowiednimi nagłówkami."""
+    response = make_response(binary_data)
+    response.headers['Content-Type'] = content_type
+    response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+    return response
+
     try:
         print("\n===== GENERATING RECOMMENDATIONS WITH KNOWLEDGE BASE =====\n")
         recommendations = recommendation_engine.generate_recommendations(
@@ -1748,48 +1780,13 @@ def export_pdf(analysis_id):
     analysis results for the specified analysis.
     """
     try:
-        # Get the analysis data
-        analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
-        
-        if not analysis:
-            analysis = db_operations.get_analysis_by_id(analysis_id)
-            
-            if not analysis:
-                return jsonify({'error': ANALYSIS_NOT_FOUND}), 404
-        
-        # Get recommendations
-        recommendations = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
-        
-        if not recommendations:
-            return jsonify({'error': NO_RECOMMENDATIONS_FOUND}), 404
-        
-        # Prepare data for export
-        export_data = {
-            'analysis': {
-                'filename': analysis.get('filename', 'Unknown'),
-                'classification': analysis.get('classification', {}).get('classification', 'Unknown'),
-                'confidence': analysis.get('classification', {}).get('confidence', 0),
-                'analysis_id': analysis_id,
-                'themes': analysis.get('themes', [])
-            },
-            'recommendations': recommendations,
-            'generated_date': datetime.now().isoformat(),
-            'total_recommendations': len(recommendations)
-        }
-        
-        # Initialise export engine
+        export_data, error = _prepare_basic_export_data_or_error(analysis_id)
+        if error:
+            return error
         from src.export import ExportEngine
         export_engine = ExportEngine()
-        
-        # Generate PDF
         pdf_data = export_engine.export_to_pdf(export_data)
-        
-        # Create response
-        response = make_response(pdf_data)
-        response.headers['Content-Type'] = 'application/pdf'
-        response.headers['Content-Disposition'] = f'attachment; filename=PolicyCraft_Analysis_{analysis_id}.pdf'
-        
-        return response
+        return _make_binary_response(pdf_data, 'application/pdf', f'PolicyCraft_Analysis_{analysis_id}.pdf')
         
     except Exception as e:
         logger.error(f"Error exporting to PDF: {str(e)}")
@@ -1805,48 +1802,17 @@ def export_word(analysis_id):
     analysis results for the specified analysis.
     """
     try:
-        # Get the analysis data
-        analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
-        
-        if not analysis:
-            analysis = db_operations.get_analysis_by_id(analysis_id)
-            
-            if not analysis:
-                return jsonify({'error': ANALYSIS_NOT_FOUND}), 404
-        
-        # Get recommendations
-        recommendations = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
-        
-        if not recommendations:
-            return jsonify({'error': NO_RECOMMENDATIONS_FOUND}), 404
-        
-        # Prepare data for export
-        export_data = {
-            'analysis': {
-                'filename': analysis.get('filename', 'Unknown'),
-                'classification': analysis.get('classification', {}).get('classification', 'Unknown'),
-                'confidence': analysis.get('classification', {}).get('confidence', 0),
-                'analysis_id': analysis_id,
-                'themes': analysis.get('themes', [])
-            },
-            'recommendations': recommendations,
-            'generated_date': datetime.now().isoformat(),
-            'total_recommendations': len(recommendations)
-        }
-        
-        # Initialise export engine
+        export_data, error = _prepare_basic_export_data_or_error(analysis_id)
+        if error:
+            return error
         from src.export import ExportEngine
         export_engine = ExportEngine()
-        
-        # Generate Word document
         docx_data = export_engine.export_to_word(export_data)
-        
-        # Create response
-        response = make_response(docx_data)
-        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        response.headers['Content-Disposition'] = f'attachment; filename=PolicyCraft_Analysis_{analysis_id}.docx'
-        
-        return response
+        return _make_binary_response(
+            docx_data,
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            f'PolicyCraft_Analysis_{analysis_id}.docx'
+        )
         
     except Exception as e:
         logger.error(f"Error exporting to Word: {str(e)}")
@@ -1862,48 +1828,17 @@ def export_excel(analysis_id):
     analysis results for the specified analysis.
     """
     try:
-        # Get the analysis data
-        analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
-        
-        if not analysis:
-            analysis = db_operations.get_analysis_by_id(analysis_id)
-            
-            if not analysis:
-                return jsonify({'error': ANALYSIS_NOT_FOUND}), 404
-        
-        # Get recommendations
-        recommendations = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
-        
-        if not recommendations:
-            return jsonify({'error': NO_RECOMMENDATIONS_FOUND}), 404
-        
-        # Prepare data for export
-        export_data = {
-            'analysis': {
-                'filename': analysis.get('filename', 'Unknown'),
-                'classification': analysis.get('classification', {}).get('classification', 'Unknown'),
-                'confidence': analysis.get('classification', {}).get('confidence', 0),
-                'analysis_id': analysis_id,
-                'themes': analysis.get('themes', [])
-            },
-            'recommendations': recommendations,
-            'generated_date': datetime.now().isoformat(),
-            'total_recommendations': len(recommendations)
-        }
-        
-        # Initialise export engine
+        export_data, error = _prepare_basic_export_data_or_error(analysis_id)
+        if error:
+            return error
         from src.export import ExportEngine
         export_engine = ExportEngine()
-        
-        # Generate Excel spreadsheet
         excel_data = export_engine.export_to_excel(export_data)
-        
-        # Create response
-        response = make_response(excel_data)
-        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        response.headers['Content-Disposition'] = f'attachment; filename=PolicyCraft_Analysis_{analysis_id}.xlsx'
-        
-        return response
+        return _make_binary_response(
+            excel_data,
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            f'PolicyCraft_Analysis_{analysis_id}.xlsx'
+        )
         
     except Exception as e:
         logger.error(f"Error exporting to Excel: {str(e)}")

@@ -1193,12 +1193,8 @@ def _load_sample_policies_if_needed(user_analyses):
 def _prepare_dashboard_data(user, user_analyses, combined_analyses):
     """Prepare the complete dashboard data structure."""
     # Generate charts
-    try:
-        dashboard_charts = chart_generator.generate_user_dashboard_charts(user_analyses)
-    except Exception as e:
-        logger.error(f"Chart generation error: {e}")
-        dashboard_charts = {}
-    
+    dashboard_charts = _safe_generate_dashboard_charts(user_analyses)
+
     # Log analyses before analytics calculation
     for i, analysis in enumerate(combined_analyses):
         logger.info(f"Dashboard debug: Analysis {i} type: {type(analysis)}")
@@ -1207,33 +1203,13 @@ def _prepare_dashboard_data(user, user_analyses, combined_analyses):
             logger.info(f"Dashboard debug: Analysis {i} classification type: {type(cls)}, value: {cls}")
         else:
             logger.error(f"Dashboard debug: Analysis {i} is not a dict: {type(analysis)}")
-    
+
     # Calculate analytics
-    try:
-        classification_counts, theme_frequencies = _calculate_analytics(combined_analyses)
-        logger.info(f"Dashboard debug: Classification counts: {classification_counts}")
-    except Exception as e:
-        logger.error(f"Analytics calculation error: {e}")
-        import traceback
-        logger.error(f"Analytics calculation traceback: {traceback.format_exc()}")
-        classification_counts = {'Restrictive': 0, 'Moderate': 0, 'Permissive': 0}
-        theme_frequencies = {}
-    
+    classification_counts, theme_frequencies = _safe_calculate_analytics(combined_analyses)
+
     # Get combined statistics
-    try:
-        user_stats = db_operations.get_analysis_statistics(user.id)
-        baseline_stats = db_operations.get_analysis_statistics(-1)
-        combined_stats = _combine_stats(user_stats, baseline_stats)
-        
-        db_stats = {
-            'total_analyses': combined_stats.get('total', 0),
-            'avg_confidence': round(combined_stats.get('avg_confidence', 0), 1),
-            'avg_themes_per_analysis': round(combined_stats.get('avg_themes_per_analysis', 0), 1)
-        }
-    except Exception as e:
-        logger.error(f"DB stats error: {e}")
-        db_stats = {'total_analyses': 0, 'avg_confidence': 0, 'avg_themes_per_analysis': 0}
-    
+    db_stats = _safe_get_combined_stats(user.id)
+
     # Prepare user data
     user_data = {
         'id': user.id,
@@ -1245,20 +1221,7 @@ def _prepare_dashboard_data(user, user_analyses, combined_analyses):
     }
     
     # Process analyses for display
-    try:
-        processed_analyses = _process_analyses_for_display(combined_analyses)
-        logger.info(f"Dashboard: Processed {len(processed_analyses)} analyses for display")
-        
-        # Debug first few processed analyses
-        for i, analysis in enumerate(processed_analyses[:3]):
-            logger.info(f"Dashboard debug: Processed analysis {i} keys: {list(analysis.keys())}")
-            if 'classification' in analysis:
-                logger.info(f"Dashboard debug: Processed analysis {i} classification type: {type(analysis['classification'])}, value: {analysis['classification']}")
-    except Exception as e:
-        logger.error(f"Processing analyses error: {e}")
-        import traceback
-        logger.error(f"Processing analyses traceback: {traceback.format_exc()}")
-        processed_analyses = []
+    processed_analyses = _safe_process_analyses_for_display(combined_analyses)
     
     dashboard_data = {
         'user': user_data,
@@ -1274,6 +1237,53 @@ def _prepare_dashboard_data(user, user_analyses, combined_analyses):
     logger.info(f"Dashboard debug: Dashboard data keys: {list(dashboard_data.keys())}")
     
     return dashboard_data
+
+def _safe_generate_dashboard_charts(user_analyses):
+    """Generate charts with error handling and concise logging."""
+    try:
+        return chart_generator.generate_user_dashboard_charts(user_analyses)
+    except Exception as e:
+        logger.error(f"Chart generation error: {e}")
+        return {}
+
+def _safe_calculate_analytics(combined_analyses):
+    """Calculate analytics with fallbacks; log concise error."""
+    try:
+        classification_counts, theme_frequencies = _calculate_analytics(combined_analyses)
+        logger.info(f"Dashboard debug: Classification counts: {classification_counts}")
+        return classification_counts, theme_frequencies
+    except Exception as e:
+        logger.error(f"Analytics calculation error: {e}")
+        return {'Restrictive': 0, 'Moderate': 0, 'Permissive': 0}, {}
+
+def _safe_get_combined_stats(user_id: int):
+    """Fetch and combine DB stats with rounding; on error return zeros."""
+    try:
+        user_stats = db_operations.get_analysis_statistics(user_id)
+        baseline_stats = db_operations.get_analysis_statistics(-1)
+        combined_stats = _combine_stats(user_stats, baseline_stats)
+        return {
+            'total_analyses': combined_stats.get('total', 0),
+            'avg_confidence': round(combined_stats.get('avg_confidence', 0), 1),
+            'avg_themes_per_analysis': round(combined_stats.get('avg_themes_per_analysis', 0), 1)
+        }
+    except Exception as e:
+        logger.error(f"DB stats error: {e}")
+        return {'total_analyses': 0, 'avg_confidence': 0, 'avg_themes_per_analysis': 0}
+
+def _safe_process_analyses_for_display(combined_analyses):
+    """Process analyses for display with error handling and debug logs."""
+    try:
+        processed = _process_analyses_for_display(combined_analyses)
+        logger.info(f"Dashboard: Processed {len(processed)} analyses for display")
+        for i, analysis in enumerate(processed[:3]):
+            logger.info(f"Dashboard debug: Processed analysis {i} keys: {list(analysis.keys())}")
+            if 'classification' in analysis:
+                logger.info(f"Dashboard debug: Processed analysis {i} classification type: {type(analysis['classification'])}, value: {analysis['classification']}")
+        return processed
+    except Exception as e:
+        logger.error(f"Processing analyses error: {e}")
+        return []
 
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
@@ -1340,8 +1350,7 @@ def batch_analyse(files):
     try:
         file_list = _parse_batch_file_list(files)
         if not _authorize_batch_files(file_list):
-            flash('Access denied. You can only analyse your own documents.', 'error')
-            return redirect(url_for('upload_file'))
+            return _flash_and_redirect('upload_file', 'Access denied. You can only analyse your own documents.', 'error')
 
         logger.info(f"Starting batch analysis of {len(file_list)} files")
 
@@ -1355,8 +1364,7 @@ def batch_analyse(files):
         
     except Exception as e:
         logger.error(f"Error in batch analysis: {str(e)}")
-        flash('Error during batch analysis. Please try again.', 'error')
-        return redirect(url_for('upload_file'))
+        return _flash_and_redirect('upload_file', 'Error during batch analysis. Please try again.', 'error')
 
 def _is_authorised_for_filename(filename: str, is_baseline: bool) -> bool:
     """Authorisation: allow baseline files to all, user files must be prefixed with user id."""
@@ -1499,8 +1507,7 @@ def analyse_document(filename):
                 filename, is_baseline, file_path
             )
         except ValueError:
-            flash('Could not extract text from file', 'error')
-            return redirect(url_for('upload_file'))
+            return _flash_and_redirect('upload_file', 'Could not extract text from file', 'error')
 
         charts, text_stats, theme_summary, classification_details = _generate_analysis_derivatives(cleaned_text, themes, classification)
 
@@ -1514,14 +1521,12 @@ def analyse_document(filename):
 
     except Exception as e:
         logger.error(f"Error during analysis of {filename}: {str(e)}")
-        flash('Error analysing document. Please try again.', 'error')
-        return redirect(url_for('upload_file'))
+        return _flash_and_redirect('upload_file', 'Error analysing document. Please try again.', 'error')
 
 def _authorize_analysis_or_redirect(filename: str, is_baseline: bool):
     """Authorize analysis request or return a redirect Response if not allowed."""
     if not _is_authorised_for_filename(filename, is_baseline):
-        flash('Access denied. You can only analyse your own documents or baseline policies.', 'error')
-        return redirect(url_for('upload_file'))
+        return _flash_and_redirect('upload_file', 'Access denied. You can only analyse your own documents or baseline policies.', 'error')
     return None
 
 def _resolve_and_validate_path_or_redirect(filename: str, is_baseline: bool):
@@ -1529,8 +1534,7 @@ def _resolve_and_validate_path_or_redirect(filename: str, is_baseline: bool):
     file_path, _, _ = _resolve_file_path_for_analysis(filename, is_baseline)
     if not os.path.exists(file_path):
         logger.error(f"File not found: {file_path}")
-        flash('File not found', 'error')
-        return None, redirect(url_for('upload_file'))
+        return None, _flash_and_redirect('upload_file', 'File not found', 'error')
     return file_path, None
 
 @app.route('/validate/<analysis_id>')
@@ -1930,6 +1934,11 @@ app.jinja_env.filters["format_british_date"] = format_british_date
 # Import and register additional template filters
 from src.web.utils.template_utils import clean_literature_name
 app.jinja_env.filters["clean_literature_name"] = clean_literature_name
+
+def _flash_and_redirect(endpoint: str, message: str, category: str, **kwargs):
+    """Utility: flash a message and redirect to a named endpoint."""
+    flash(message, category)
+    return redirect(url_for(endpoint, **kwargs))
 
 def handle_first_login_onboarding(user_id: int) -> bool:
     """

@@ -373,9 +373,9 @@ class KnowledgeBaseManager:
         """Merge new insights with existing document content."""
         new_insights = processing_results.get('extracted_insights', [])
         
-        # Find insertion point (before integration metadata section)
-        if "## Integration Metadata" in existing_content:
-            base_content = existing_content.split("## Integration Metadata")[0]
+        # Find insertion point (before integration details section)
+        if "## Integration Details" in existing_content:
+            base_content = existing_content.split("## Integration Details")[0]
         else:
             base_content = existing_content
         
@@ -389,7 +389,7 @@ class KnowledgeBaseManager:
             merge_section += f"### Additional Insight {i}\n{insight.strip()}\n\n"
         
         # Update metadata
-        metadata_section = f"""## Integration Metadata
+        metadata_section = f"""## Integration Details
 - **Last Updated**: {datetime.now().isoformat()}
 - **Update Source**: {processing_results.get('document_id', 'Unknown')}
 - **Quality Score**: {processing_results.get('quality_assessment', {}).get('total_score', 0):.2f}

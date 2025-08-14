@@ -39,6 +39,8 @@ from pymongo import MongoClient, ASCENDING, DESCENDING, ReturnDocument
 from pymongo.collection import Collection
 from pymongo.errors import DuplicateKeyError
 
+logger = logging.getLogger(__name__)
+
 # MongoDB query constants
 MATCH_QUERY = "$match"
 SORT_QUERY = "$sort"
@@ -63,17 +65,13 @@ OPTIONS_OPERATOR = "$options"
 IN_OPERATOR = "$in"
 GT_OPERATOR = "$gt"
 
-# Field names
+# Additional field name constants (non-duplicates)
 ID_FIELD = "_id"
-FILENAME_FIELD = "filename"
-USER_ID_FIELD = "user_id"
 ANALYSIS_DATE_FIELD = "analysis_date"
 COUNT_FIELD = "count"
 TOTAL_FIELD = "total"
 DOCS_FIELD = "docs"
 IDS_FIELD = "ids"
-THEMES_FIELD = "themes"
-CLASSIFICATION_FIELD = "classification"
 CONFIDENCE_FIELD = "confidence"
 AVG_CONFIDENCE_FIELD = "avg_confidence"
 AVG_THEMES_FIELD = "avg_themes_per_analysis"
@@ -116,7 +114,7 @@ class MongoOperations:
         try:
             self.analyses.create_index([("user_id", ASCENDING), ("filename", ASCENDING)])
         except Exception as e:
-            print(f"[MongoOperations] Index creation warning: {e}")
+            logger.warning("[MongoOperations] Index creation warning: %s", e)
 
         self.recommendations.create_index([("analysis_id", ASCENDING), ("user_id", ASCENDING)])
 

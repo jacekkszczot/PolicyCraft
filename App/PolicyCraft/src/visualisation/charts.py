@@ -29,6 +29,8 @@ from typing import Dict, List
 from collections import Counter
 import re
 
+logger = logging.getLogger(__name__)
+
 # Visualization libraries
 try:
     import plotly.graph_objects as go
@@ -36,9 +38,7 @@ try:
     PLOTLY_AVAILABLE = True
 except ImportError:
     PLOTLY_AVAILABLE = False
-    print("Warning: Plotly not available. Install with: pip install plotly")
-
-logger = logging.getLogger(__name__)
+    logger.warning("Plotly not available. Install with: pip install plotly")
 
 class ChartGenerator:
     """
@@ -80,7 +80,7 @@ class ChartGenerator:
             'Societal Impact': [r"\bimpact\b", r"\bsociet(al)?\b", r"\bsustainab(le|ility)\b"]
         }
         
-        print(f"ChartGenerator initialized - Plotly: {PLOTLY_AVAILABLE}")
+        logger.info("ChartGenerator initialized - Plotly: %s", PLOTLY_AVAILABLE)
 
     def generate_analysis_charts(self, themes: List[Dict], classification: Dict, text: str | None = None) -> Dict:
         """Generate charts for a single analysis result."""
@@ -96,10 +96,10 @@ class ChartGenerator:
             if text:
                 charts['ethics_radar'] = self._create_ethics_radar_chart(text)
             
-            print(f"Generated {len(charts)} charts for analysis")
+            logger.info("Generated %d charts for analysis", len(charts))
             
         except Exception as e:
-            print(f"Error generating analysis charts: {e}")
+            logger.warning("Error generating analysis charts: %s", e)
             return self._generate_fallback_charts(themes, classification)
             
         return charts
@@ -118,10 +118,10 @@ class ChartGenerator:
             charts['classification_distribution'] = self._create_classification_distribution(analyses)
             charts['theme_frequency'] = self._create_theme_frequency_chart(analyses)
             
-            print(f"Generated {len(charts)} dashboard charts for {len(analyses)} analyses")
+            logger.info("Generated %d dashboard charts for %d analyses", len(charts), len(analyses))
             
         except Exception as e:
-            print(f"Error generating dashboard charts: {e}")
+            logger.warning("Error generating dashboard charts: %s", e)
             return self._generate_fallback_dashboard(analyses)
             
         return charts
@@ -350,7 +350,7 @@ class ChartGenerator:
 
 # Test the chart generator
 if __name__ == "__main__":
-    print("Starting chart generator test...")
+    logger.info("Starting chart generator test...")
     
     chart_gen = ChartGenerator()
     
@@ -381,14 +381,14 @@ if __name__ == "__main__":
         }
     ]
     
-    print("\n=== Chart Generation Test ===")
+    logger.info("=== Chart Generation Test ===")
     
     # Test analysis charts
     analysis_charts = chart_gen.generate_analysis_charts(test_themes, test_classification)
-    print(f"Generated analysis charts: {list(analysis_charts.keys())}")
+    logger.info("Generated analysis charts: %s", list(analysis_charts.keys()))
     
     # Test dashboard charts
     dashboard_charts = chart_gen.generate_user_dashboard_charts(test_analyses)
-    print(f"Generated dashboard charts: {list(dashboard_charts.keys())}")
+    logger.info("Generated dashboard charts: %s", list(dashboard_charts.keys()))
     
-    print("\n✅ Chart generator working correctly!")
+    logger.info("✅ Chart generator working correctly!")

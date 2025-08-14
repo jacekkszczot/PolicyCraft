@@ -11,6 +11,7 @@ import os
 import io
 import json
 import base64
+import logging
 from datetime import datetime
 from typing import Dict, Any, List, Optional, Union, Tuple
 
@@ -27,6 +28,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 # Excel generation
 import xlsxwriter
+
+logger = logging.getLogger(__name__)
 
 class ExportEngine:
     """
@@ -99,10 +102,10 @@ class ExportEngine:
                 img_bytes = pio.to_image(fig, format='png')
                 return img_bytes
             else:
-                print(f"Invalid chart data format: {type(chart_data)}")
+                logger.warning("Invalid chart data format: %s", type(chart_data))
                 return None
         except Exception as e:
-            print(f"Error converting chart to image: {str(e)}")
+            logger.warning("Error converting chart to image: %s", str(e))
             return None
             
     def _process_charts_for_export(self, charts: Dict) -> Dict[str, bytes]:
@@ -131,9 +134,9 @@ class ExportEngine:
             if charts.get('ethics_radar'):
                 chart_images['ethics_radar'] = self._convert_chart_to_image(charts['ethics_radar'])
                 
-            print(f"Processed {len(chart_images)} charts for export")
+            logger.info("Processed %d charts for export", len(chart_images))
         except Exception as e:
-            print(f"Error processing charts for export: {str(e)}")
+            logger.warning("Error processing charts for export: %s", str(e))
             
         return chart_images
     

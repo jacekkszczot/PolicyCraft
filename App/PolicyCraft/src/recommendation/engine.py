@@ -1,6 +1,7 @@
 import sys
 import json
 import os
+import logging
 from typing import Dict, List, Any, Optional, Union
 from enum import Enum, auto
 from dataclasses import dataclass
@@ -10,6 +11,8 @@ try:
 except ImportError:
     KnowledgeBaseManager = None
     
+logger = logging.getLogger(__name__)
+
 class PolicyDimension(Enum):
     ACCOUNTABILITY = "Accountability and Governance"
     TRANSPARENCY = "Transparency and Explainability"
@@ -484,37 +487,37 @@ class RecommendationGenerator:
         Args:
             knowledge_base_path: Optional path to the knowledge base directory
         """  
-        print("Initializing RecommendationGenerator...")
+        logger.info("Initializing RecommendationGenerator...")
         
         # Initialize knowledge manager if available
         self.knowledge_manager = None
         if KnowledgeBaseManager is not None and knowledge_base_path:
             try:
-                print(f"Initializing KnowledgeBaseManager with path: {knowledge_base_path}")
+                logger.info("Initializing KnowledgeBaseManager with path: %s", knowledge_base_path)
                 self.knowledge_manager = KnowledgeBaseManager(knowledge_base_path)
-                print("KnowledgeBaseManager initialized successfully")
+                logger.info("KnowledgeBaseManager initialized successfully")
                 
                 # Test knowledge base access
                 try:
                     doc_count = len(self.knowledge_manager.get_all_documents())
-                    print(f"Knowledge base contains {doc_count} documents")
+                    logger.info("Knowledge base contains %d documents", doc_count)
                 except Exception as e:
-                    print(f"Warning: Could not access knowledge base documents: {str(e)}")
+                    logger.warning("Could not access knowledge base documents: %s", str(e))
                     
             except Exception as e:
-                print(f"Warning: Could not initialize KnowledgeBaseManager: {str(e)}")
-                print("Knowledge base integration will be disabled")
+                logger.warning("Could not initialize KnowledgeBaseManager: %s", str(e))
+                logger.warning("Knowledge base integration will be disabled")
         else:
-            print("Knowledge base integration disabled: No path provided or KnowledgeBaseManager not available")
+            logger.info("Knowledge base integration disabled: No path provided or KnowledgeBaseManager not available")
         
         # Initialize the ethical framework analyzer
         self.analyzer = EthicalFrameworkAnalyzer(self.knowledge_manager)
         
-        print("PolicyCraft Recommendation Engine loaded with the following capabilities:")
-        print("   • Ethical framework analysis with multi-dimensional scoring")
-        print("   • Evidence-based policy recommendations")
-        print("   • Knowledge base integration for academic references")
-        print("   • Context-aware prioritization of recommendations")
+        logger.info("PolicyCraft Recommendation Engine loaded with the following capabilities:")
+        logger.info("   • Ethical framework analysis with multi-dimensional scoring")
+        logger.info("   • Evidence-based policy recommendations")
+        logger.info("   • Knowledge base integration for academic references")
+        logger.info("   • Context-aware prioritization of recommendations")
         
     def generate_recommendations(self, policy_text: str, institution_type: str = "university", **kwargs) -> Dict[str, Any]:
         """
@@ -531,7 +534,7 @@ class RecommendationGenerator:
         if not policy_text.strip():
             raise ValueError("Policy text cannot be empty")
             
-        print(f"Generating recommendations for {institution_type} policy ({len(policy_text)} characters)")
+        logger.info("Generating recommendations for %s policy (%d characters)", institution_type, len(policy_text))
         
         # Analyze the policy using the ethical framework
         analysis = self.analyzer.analyze_policy(policy_text, institution_type)
@@ -553,22 +556,23 @@ class RecommendationGenerator:
         # Enhance with knowledge base if available
         if self.knowledge_manager:
             try:
-                print("Enhancing recommendations with knowledge base integration")
+                logger.info("Enhancing recommendations with knowledge base integration")
                 analysis["knowledge_base_integration"] = True
                 analysis["kb_references"] = []
                 
                 # Get all documents from the knowledge base
                 kb_documents = self.knowledge_manager.get_all_documents()
-                print(f"Found {len(kb_documents)} documents in knowledge base")
+                logger.info("Found %d documents in knowledge base", len(kb_documents))
                 
                 # Debug: Print details of each document
                 for i, doc in enumerate(kb_documents):
-                    print(f"Document {i+1}:")
-                    print(f"  - ID: {doc.get('id', 'Unknown')}")
-                    print(f"  - Title: {doc.get('title', 'Unknown')}")
-                    print(f"  - Author: {doc.get('author', 'Unknown')}")
-                    print(f"  - Publication Date: {doc.get('publication_date', 'Unknown')}")
-                    print(f"  - Quality Score: {doc.get('quality_score', 'Unknown')}")
+                    logger.debug("Document %d: ID=%s Title=%s Author=%s PubDate=%s QualityScore=%s",
+                                 i+1,
+                                 doc.get('id', 'Unknown'),
+                                 doc.get('title', 'Unknown'),
+                                 doc.get('author', 'Unknown'),
+                                 doc.get('publication_date', 'Unknown'),
+                                 doc.get('quality_score', 'Unknown'))
                 
                 # Track used citations across all recommendations to promote diversity
                 all_used_citations = []
@@ -576,9 +580,9 @@ class RecommendationGenerator:
                 # Process each recommendation to add supporting evidence
                 for rec in analysis["recommendations"]:
                     # Find relevant documents for this recommendation, considering already used citations
-                    print(f"Finding supporting evidence for recommendation: {rec.get('title', 'Unknown')}")
+                    logger.debug("Finding supporting evidence for recommendation: %s", rec.get('title', 'Unknown'))
                     supporting_evidence = self._find_supporting_evidence(rec, kb_documents, all_used_citations)
-                    print(f"Found {len(supporting_evidence)} supporting evidence items")
+                    logger.debug("Found %d supporting evidence items", len(supporting_evidence))
                     rec["supporting_evidence"] = supporting_evidence
                     
                     # Add references to the recommendation
@@ -613,7 +617,7 @@ class RecommendationGenerator:
                             rec["sources"].append(ref["citation"])
                     
                     # Debug: Print sources for this recommendation
-                    print(f"Final sources for recommendation '{rec.get('title', 'Unknown')}': {rec.get('sources', [])}")
+                    logger.debug("Final sources for recommendation '%s': %s", rec.get('title', 'Unknown'), rec.get('sources', []))
                     
                     # If no sources were found, add diverse placeholder sources
                     if not rec["sources"]:
@@ -642,12 +646,12 @@ class RecommendationGenerator:
                         if ref.get("citation") and not any(r.get("citation") == ref.get("citation") for r in analysis["kb_references"]):
                             analysis["kb_references"].append(ref)
                     
-                print(f"Enhanced {len(analysis['recommendations'])} recommendations with knowledge base evidence")
-                print(f"Added {len(analysis['kb_references'])} unique references from knowledge base")
-                print(f"Total unique citations used across recommendations: {len(all_used_citations)}")
+                logger.info("Enhanced %d recommendations with knowledge base evidence", len(analysis['recommendations']))
+                logger.info("Added %d unique references from knowledge base", len(analysis['kb_references']))
+                logger.info("Total unique citations used across recommendations: %d", len(all_used_citations))
                     
             except Exception as e:
-                print(f"Warning: Error querying knowledge base: {str(e)}")
+                logger.warning("Error querying knowledge base: %s", str(e))
                 analysis["knowledge_base_integration"] = False
                 
                 # Even if knowledge base integration fails, ensure recommendations have diverse sources

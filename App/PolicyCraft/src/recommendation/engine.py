@@ -259,215 +259,15 @@ class EthicalFrameworkAnalyzer:
         found_keywords = [kw for kw in DIMENSION_KEYWORDS.get(dimension, []) if kw in text_lower]
         missing_keywords = [kw for kw in DIMENSION_KEYWORDS.get(dimension, []) if kw not in text_lower]
         
-        # Generate context-aware recommendations based on missing keywords and dimension
+        # Generate context-aware recommendations via per-dimension helpers
         if dimension == PolicyDimension.ACCOUNTABILITY:
-            if len(missing_keywords) > len(found_keywords):
-                add_rec(
-                    "acc-001",
-                    "Establish Clear Accountability Structures",
-                    "Define clear roles and responsibilities for AI governance within your institution.",
-                    "Clear accountability ensures that AI systems are used responsibly and that there is oversight at all levels.",
-                    "high",
-                    IMPLEMENTATION_TIME_MEDIUM,
-                    [
-                        "Form an AI governance committee with representatives from key stakeholders",
-                        "Define clear roles and responsibilities for AI oversight",
-                        "Establish reporting lines and accountability mechanisms",
-                        "Document governance structures in formal policy documents",
-                        "Communicate governance framework to all relevant staff",
-                    ],
-                )
-                
-            if "audit" not in found_keywords or "monitor" not in found_keywords:
-                add_rec(
-                    "acc-002",
-                    "Implement Regular Auditing and Monitoring",
-                    "Establish procedures for regular auditing and monitoring of AI systems to ensure compliance with ethical standards.",
-                    "Regular auditing helps identify issues early and ensures continuous improvement of AI governance.",
-                    "medium",
-                    IMPLEMENTATION_TIME_SHORT,
-                    [
-                        "Develop an AI audit framework with clear metrics and benchmarks",
-                        "Establish a regular audit schedule (quarterly or bi-annually)",
-                        "Create audit templates and checklists for consistency",
-                        "Train staff on audit procedures and ethical standards",
-                        "Implement reporting mechanisms for audit findings",
-                    ],
-                )
-                
-            if "compliance" not in found_keywords:
-                recommendations.append({
-                    "id": "acc-003",
-                    "title": "Develop Compliance Frameworks for AI Systems",
-                    "description": "Create comprehensive compliance frameworks that align with regulatory requirements and ethical standards.",
-                    "rationale": "Structured compliance frameworks reduce legal risks and ensure ethical AI deployment.",
-                    "priority": "high",
-                    "dimension": dimension.value,
-                    "implementation_time": IMPLEMENTATION_TIME_4_8,
-                    "implementation_steps": [
-                        "Research relevant AI regulations and ethical standards in your jurisdiction",
-                        "Develop a compliance matrix mapping requirements to institutional policies",
-                        "Create compliance documentation templates and checklists",
-                        "Establish compliance verification procedures for AI systems",
-                        "Implement regular compliance reviews and updates as regulations evolve"
-                    ]
-                })
-                
+            self._recs_accountability(dimension, found_keywords, missing_keywords, add_rec, recommendations)
         elif dimension == PolicyDimension.TRANSPARENCY:
-            if "explain" not in found_keywords or "explainable" not in found_keywords:
-                add_rec(
-                    "trans-001",
-                    "Improve Explainability of AI Systems",
-                    "Implement mechanisms to explain AI decisions in clear, non-technical language to affected stakeholders.",
-                    "Explainable AI builds trust and enables meaningful human oversight of automated decisions.",
-                    "high",
-                    IMPLEMENTATION_TIME_MEDIUM,
-                    [
-                        "Audit current AI systems for explainability gaps",
-                        "Develop explainability standards for different stakeholder groups",
-                        "Implement technical solutions for generating explanations (e.g., LIME, SHAP)",
-                        "Create user-friendly interfaces for displaying explanations",
-                        "Train staff on communicating AI decisions to non-technical audiences",
-                    ],
-                )
-                
-            if "document" not in found_keywords:
-                add_rec(
-                    "trans-002",
-                    "Enhance Documentation of AI Systems",
-                    "Create comprehensive documentation for all AI systems, including their purpose, limitations, and potential risks.",
-                    "Thorough documentation enables better understanding and evaluation of AI systems by all stakeholders.",
-                    "medium",
-                    IMPLEMENTATION_TIME_SHORT,
-                    [
-                        "Develop documentation templates for AI systems",
-                        "Conduct inventory of all AI systems requiring documentation",
-                        "Document technical specifications, data sources, and algorithms used",
-                        "Include known limitations, biases, and potential risks in documentation",
-                        "Establish a process for regular documentation updates as systems evolve",
-                    ],
-                )
-                
-            if "disclose" not in found_keywords:
-                add_rec(
-                    "trans-003",
-                    "Establish Disclosure Protocols",
-                    "Develop clear protocols for when and how to disclose AI use to affected individuals and communities.",
-                    "Appropriate disclosure respects autonomy and enables informed consent regarding AI-driven decisions.",
-                    "medium",
-                    IMPLEMENTATION_TIME_2_3,
-                    [
-                        "Identify all contexts where AI is used to make or support decisions",
-                        "Develop disclosure templates for different stakeholder groups and contexts",
-                        "Create guidelines for timing and method of AI use disclosure",
-                        "Train staff on disclosure protocols and addressing stakeholder concerns",
-                        "Implement feedback mechanisms to improve disclosure effectiveness",
-                    ],
-                )
-                
+            self._recs_transparency(dimension, found_keywords, add_rec)
         elif dimension == PolicyDimension.HUMAN_AGENCY:
-            if "oversight" not in found_keywords or "control" not in found_keywords:
-                add_rec(
-                    "human-001",
-                    "Strengthen Human Oversight Mechanisms",
-                    "Implement robust human oversight processes for all high-impact AI decision systems.",
-                    "Human oversight ensures that AI systems remain aligned with human values and institutional goals.",
-                    "high",
-                    IMPLEMENTATION_TIME_3_5,
-                    [
-                        "Identify all high-impact AI decision systems requiring human oversight",
-                        "Design oversight protocols with clear escalation paths",
-                        "Establish oversight committees with diverse expertise",
-                        "Implement technical solutions for human review of AI decisions",
-                        "Create regular reporting mechanisms on oversight activities",
-                    ],
-                )
-                
-            if "intervention" not in found_keywords:
-                add_rec(
-                    "human-002",
-                    "Enable Meaningful Human Intervention",
-                    "Design AI systems with clear mechanisms for human intervention when necessary.",
-                    "The ability to intervene in automated processes is essential for maintaining human agency and addressing edge cases.",
-                    "high",
-                    IMPLEMENTATION_TIME_SHORT,
-                    [
-                        "Assess current AI systems for intervention capabilities",
-                        "Design intervention interfaces for different user roles",
-                        "Implement technical safeguards and override mechanisms",
-                        "Create decision logs for all human interventions",
-                        "Train staff on intervention protocols and decision criteria",
-                    ],
-                )
-                
-            if "review" not in found_keywords:
-                add_rec(
-                    "human-003",
-                    "Establish Regular Review Processes",
-                    "Implement scheduled reviews of AI systems to assess their impact on human agency and decision-making.",
-                    "Regular reviews help identify mission creep and ensure AI systems continue to support rather than undermine human agency.",
-                    "medium",
-                    IMPLEMENTATION_TIME_1_3,
-                    [
-                        "Develop review criteria focused on human agency impacts",
-                        "Establish a review schedule for all AI systems",
-                        "Create review templates and documentation processes",
-                        "Form review committees with diverse stakeholder representation",
-                        "Implement feedback loops to incorporate review findings into system improvements",
-                    ],
-                )
-                
+            self._recs_human_agency(dimension, found_keywords, add_rec)
         elif dimension == PolicyDimension.INCLUSIVENESS:
-            if "bias" not in found_keywords:
-                add_rec(
-                    "incl-001",
-                    "Implement Bias Detection and Mitigation",
-                    "Develop processes to systematically identify and address biases in AI systems throughout their lifecycle.",
-                    "Proactive bias mitigation is essential for ensuring AI systems serve all users fairly and equitably.",
-                    "high",
-                    IMPLEMENTATION_TIME_MEDIUM,
-                    [
-                        "Develop bias assessment frameworks for different types of AI systems",
-                        "Implement regular bias audits throughout the AI lifecycle",
-                        "Create diverse test datasets that represent varied demographics",
-                        "Establish bias mitigation protocols for identified issues",
-                        "Train development teams on bias detection and mitigation techniques",
-                    ],
-                )
-                
-            if "diverse" not in found_keywords or "representation" not in found_keywords:
-                add_rec(
-                    "incl-002",
-                    "Enhance Diversity in AI Development",
-                    "Ensure diverse perspectives are included in the design, development, and testing of AI systems.",
-                    "Diverse teams and inclusive design processes lead to AI systems that work better for all users.",
-                    "medium",
-                    IMPLEMENTATION_TIME_6_12,
-                    [
-                        "Assess current diversity in AI development teams and processes",
-                        "Develop recruitment and retention strategies for diverse talent",
-                        "Implement inclusive design methodologies for AI systems",
-                        "Create diverse stakeholder panels for testing and feedback",
-                        "Establish metrics to track progress on diversity and inclusion goals",
-                    ],
-                )
-                
-            if "discrimination" not in found_keywords:
-                add_rec(
-                    "incl-003",
-                    "Prevent Algorithmic Discrimination",
-                    "Establish safeguards to prevent AI systems from creating or reinforcing discriminatory practices.",
-                    "Preventing discrimination is both an ethical imperative and often a legal requirement for AI systems.",
-                    "high",
-                    IMPLEMENTATION_TIME_4_8,
-                    [
-                        "Develop anti-discrimination guidelines for AI development",
-                        "Implement pre-deployment testing for discriminatory outcomes",
-                        "Create monitoring systems to detect discrimination in deployed AI",
-                        "Establish remediation protocols for addressing identified discrimination",
-                        "Provide training on legal and ethical aspects of algorithmic discrimination",
-                    ],
-                )
+            self._recs_inclusiveness(dimension, found_keywords, add_rec)
         
         # If no specific recommendations were generated, provide a generic one
         if not recommendations:
@@ -488,6 +288,176 @@ class EthicalFrameworkAnalyzer:
             )
             
         return recommendations
+
+    # ---- Extracted per-dimension helpers to reduce branching ----
+    def _recs_accountability(self, dimension: PolicyDimension, found_keywords: List[str], missing_keywords: List[str], add_rec, recommendations: List[Dict[str, Any]]) -> None:
+        if len(missing_keywords) > len(found_keywords):
+            add_rec(
+                "acc-001",
+                "Establish Clear Accountability Structures",
+                "Define clear roles and responsibilities for AI governance within your institution.",
+                "Clear accountability ensures that AI systems are used responsibly and that there is oversight at all levels.",
+                "high",
+                IMPLEMENTATION_TIME_MEDIUM,
+                [
+                    "Form an AI governance committee with representatives from key stakeholders",
+                    "Define clear roles and responsibilities for AI oversight",
+                    "Establish reporting lines and accountability mechanisms",
+                    "Document governance structures in formal policy documents",
+                    "Communicate governance framework to all relevant staff",
+                ],
+            )
+        if "audit" not in found_keywords or "monitor" not in found_keywords:
+            add_rec(
+                "acc-002",
+                "Implement Regular Auditing and Monitoring",
+                "Establish procedures for regular auditing and monitoring of AI systems to ensure compliance with ethical standards.",
+                "Regular auditing helps identify issues early and ensures continuous improvement of AI governance.",
+                "medium",
+                IMPLEMENTATION_TIME_SHORT,
+                [
+                    "Develop an AI audit framework with clear metrics and benchmarks",
+                    "Establish a regular audit schedule (quarterly or bi-annually)",
+                    "Create audit templates and checklists for consistency",
+                    "Train staff on audit procedures and ethical standards",
+                    "Implement reporting mechanisms for audit findings",
+                ],
+            )
+        if "compliance" not in found_keywords:
+            recommendations.append({
+                "id": "acc-003",
+                "title": "Develop Compliance Frameworks for AI Systems",
+                "description": "Create comprehensive compliance frameworks that align with regulatory requirements and ethical standards.",
+                "rationale": "Structured compliance frameworks reduce legal risks and ensure ethical AI deployment.",
+                "priority": "high",
+                "dimension": dimension.value,
+                "implementation_time": IMPLEMENTATION_TIME_4_8,
+                "implementation_steps": [
+                    "Research relevant AI regulations and ethical standards in your jurisdiction",
+                    "Develop a compliance matrix mapping requirements to institutional policies",
+                    "Create compliance documentation templates and checklists",
+                    "Establish compliance verification procedures for AI systems",
+                    "Implement regular compliance reviews and updates as regulations evolve"
+                ]
+            })
+
+    def _recs_transparency(self, dimension: PolicyDimension, found_keywords: List[str], add_rec) -> None:
+        if "explain" not in found_keywords or "explainable" not in found_keywords:
+            add_rec(
+                "trans-001",
+                "Improve Explainability of AI Systems",
+                "Implement mechanisms to explain AI decisions in clear, non-technical language to affected stakeholders.",
+                "Explainable AI builds trust and enables meaningful human oversight of automated decisions.",
+                "high",
+                IMPLEMENTATION_TIME_MEDIUM,
+                [
+                    "Audit current AI systems for explainability gaps",
+                    "Develop explainability standards for different stakeholder groups",
+                    "Implement technical solutions for generating explanations (e.g., LIME, SHAP)",
+                    "Create user-friendly interfaces for displaying explanations",
+                    "Train staff on communicating AI decisions to non-technical audiences",
+                ],
+            )
+        if "document" not in found_keywords:
+            add_rec(
+                "trans-002",
+                "Enhance Documentation of AI Systems",
+                "Create comprehensive documentation for all AI systems, including their purpose, limitations, and potential risks.",
+                "Thorough documentation enables better understanding and evaluation of AI systems by all stakeholders.",
+                "medium",
+                IMPLEMENTATION_TIME_SHORT,
+                [
+                    "Develop documentation templates for AI systems",
+                    "Conduct inventory of all AI systems requiring documentation",
+                    "Document technical specifications, data sources, and algorithms used",
+                    "Include known limitations, biases, and potential risks in documentation",
+                    "Establish a process for regular documentation updates as systems evolve",
+                ],
+            )
+        if "disclose" not in found_keywords:
+            add_rec(
+                "trans-003",
+                "Establish Disclosure Protocols",
+                "Develop clear protocols for when and how to disclose AI use to affected individuals and communities.",
+                "Appropriate disclosure respects autonomy and enables informed consent regarding AI-driven decisions.",
+                "medium",
+                IMPLEMENTATION_TIME_2_3,
+                [
+                    "Identify all contexts where AI is used to make or support decisions",
+                    "Define clear disclosure requirements for each context",
+                    "Create standardised disclosure templates",
+                    "Train staff on when and how to disclose AI use",
+                    "Establish processes for obtaining informed consent where appropriate",
+                ],
+            )
+
+    def _recs_human_agency(self, dimension: PolicyDimension, found_keywords: List[str], add_rec) -> None:
+        if "oversight" not in found_keywords or "intervention" not in found_keywords:
+            add_rec(
+                "human-001",
+                "Strengthen Human Oversight Mechanisms",
+                "Ensure that human oversight is built into all AI decision-making processes.",
+                "Human oversight is essential for ensuring accountability and preventing harmful outcomes from automated systems.",
+                "high",
+                IMPLEMENTATION_TIME_MEDIUM,
+                [
+                    "Define clear criteria for when human intervention is required",
+                    "Implement human-in-the-loop controls for critical decisions",
+                    "Establish procedures for reviewing and overriding AI decisions",
+                    "Train staff on responsible use and oversight of AI systems",
+                    "Create feedback mechanisms for reporting concerns about AI decisions",
+                ],
+            )
+        if "approval" not in found_keywords:
+            add_rec(
+                "human-002",
+                "Implement Approval Processes for AI Use",
+                "Establish approval processes for AI use in sensitive academic contexts.",
+                "Approval processes ensure appropriate oversight and alignment with institutional values.",
+                "medium",
+                IMPLEMENTATION_TIME_SHORT,
+                [
+                    "Define criteria for AI use requiring prior approval",
+                    "Establish an approval committee with cross-disciplinary representation",
+                    "Create application and review processes for AI use proposals",
+                    "Document approval decisions and conditions",
+                    "Implement review procedures for ongoing AI use",
+                ],
+            )
+
+    def _recs_inclusiveness(self, dimension: PolicyDimension, found_keywords: List[str], add_rec) -> None:
+        if "bias" not in found_keywords or "fairness" not in found_keywords:
+            add_rec(
+                "incl-001",
+                "Implement Bias Mitigation Strategies",
+                "Develop and implement strategies to identify and mitigate bias in AI systems used in academic contexts.",
+                "Bias mitigation is essential for ensuring equitable outcomes and preventing discrimination.",
+                "high",
+                IMPLEMENTATION_TIME_MEDIUM,
+                [
+                    "Conduct bias audits of AI systems",
+                    "Develop fairness metrics appropriate for academic contexts",
+                    "Implement debiasing techniques and fairness-aware algorithms",
+                    "Train staff on recognising and addressing bias in AI systems",
+                    "Establish monitoring procedures for fairness over time",
+                ],
+            )
+        if "accessibility" not in found_keywords:
+            add_rec(
+                "incl-002",
+                "Ensure Accessibility in AI Systems",
+                "Ensure that AI systems and their interfaces are accessible to all users, including those with disabilities.",
+                "Accessibility is a fundamental requirement for inclusive AI systems in higher education.",
+                "medium",
+                IMPLEMENTATION_TIME_SHORT,
+                [
+                    "Audit AI system interfaces for accessibility compliance",
+                    "Implement accessibility improvements based on audit findings",
+                    "Provide alternative formats and assistive technologies where needed",
+                    "Train staff on accessibility best practices for AI systems",
+                    "Establish ongoing accessibility monitoring and user feedback channels",
+                ],
+            )
 
     # --- Compatibility API expected by tests ---
     def analyze_coverage(self, themes: List[Dict[str, Any]], text: str) -> Dict[str, Any]:
@@ -643,35 +613,7 @@ class RecommendationGenerator:
         if "gaps" in kwargs:
             gaps: List[Dict[str, Any]] = kwargs.get("gaps", []) or []
             themes = kwargs.get("themes", []) or []
-
-            # Simple institution context analysis
-            institution_context = self._analyze_institution_context(themes, policy_text)
-
-            recs: List[Dict[str, Any]] = []
-            for gap in gaps:
-                rec = self._generate_contextual_recommendation(
-                    dimension=gap.get("dimension", "transparency"),
-                    institution_context=institution_context,
-                    implementation_type="enhancement" if self._detect_existing_policies(policy_text).get("disclosure_requirements") else "new_implementation",
-                    priority=gap.get("priority", "medium"),
-                    current_score=float(gap.get("current_score", 0.0)),
-                    gap_details=gap,
-                )
-                if rec:
-                    # Ensure timeframe alias for templates
-                    if "implementation_time" in rec and "timeframe" not in rec:
-                        rec["timeframe"] = rec["implementation_time"]
-                    recs.append(rec)
-
-            # De-duplicate by title
-            seen = set()
-            deduped: List[Dict[str, Any]] = []
-            for r in recs:
-                title = r.get("title", "")
-                if title not in seen:
-                    seen.add(title)
-                    deduped.append(r)
-            return deduped
+            return self._generate_from_gaps(gaps=gaps, themes=themes, policy_text=policy_text)
 
         if not policy_text.strip():
             raise ValueError("Policy text cannot be empty")
@@ -692,137 +634,14 @@ class RecommendationGenerator:
             self._tailor_for_university_context(rec)
             
             # Ensure timeframe is set for template display
-            if "implementation_time" in rec and "timeframe" not in rec:
-                rec["timeframe"] = rec["implementation_time"]
+            self._ensure_timeframe(rec)
         
         # Enhance with knowledge base if available
         if self.knowledge_manager:
-            try:
-                logger.info("Enhancing recommendations with knowledge base integration")
-                analysis["knowledge_base_integration"] = True
-                analysis["kb_references"] = []
-                
-                # Get all documents from the knowledge base
-                kb_documents = self.knowledge_manager.get_all_documents()
-                logger.info("Found %d documents in knowledge base", len(kb_documents))
-                
-                # Debug: Print details of each document
-                for i, doc in enumerate(kb_documents):
-                    logger.debug("Document %d: ID=%s Title=%s Author=%s PubDate=%s QualityScore=%s",
-                                 i+1,
-                                 doc.get('id', 'Unknown'),
-                                 doc.get('title', 'Unknown'),
-                                 doc.get('author', 'Unknown'),
-                                 doc.get('publication_date', 'Unknown'),
-                                 doc.get('quality_score', 'Unknown'))
-                
-                # Track used citations across all recommendations to promote diversity
-                all_used_citations = []
-                
-                # Process each recommendation to add supporting evidence
-                for rec in analysis["recommendations"]:
-                    # Find relevant documents for this recommendation, considering already used citations
-                    logger.debug("Finding supporting evidence for recommendation: %s", rec.get('title', 'Unknown'))
-                    supporting_evidence = self._find_supporting_evidence(rec, kb_documents, all_used_citations)
-                    logger.debug("Found %d supporting evidence items", len(supporting_evidence))
-                    rec["supporting_evidence"] = supporting_evidence
-                    
-                    # Add references to the recommendation
-                    if not rec.get("references"):
-                        rec["references"] = []
-                    
-                    # Add unique references from supporting evidence
-                    for evidence in supporting_evidence:
-                        citation = evidence.get("citation")
-                        reference = {
-                            "citation": citation,
-                            "source": evidence.get("source"),
-                            "year": evidence.get("year"),
-                            "relevance": evidence.get("relevance", "high")
-                        }
-                        
-                        # Only add if not already present
-                        if citation and not any(r.get("citation") == citation for r in rec["references"]):
-                            rec["references"].append(reference)
-                            
-                            # Track this citation for diversity across recommendations
-                            if citation not in all_used_citations:
-                                all_used_citations.append(citation)
-                    
-                    # Set sources field for template display
-                    if not rec.get("sources"):
-                        rec["sources"] = []
-                    
-                    # Add citations to sources for template display
-                    for ref in rec.get("references", []):
-                        if ref.get("citation") and ref["citation"] not in rec["sources"]:
-                            rec["sources"].append(ref["citation"])
-                    
-                    # Debug: Print sources for this recommendation
-                    logger.debug("Final sources for recommendation '%s': %s", rec.get('title', 'Unknown'), rec.get('sources', []))
-                    
-                    # If no sources were found, add diverse placeholder sources
-                    if not rec["sources"]:
-                        # Use different default sources for each recommendation to ensure diversity
-                        default_sources = self.DEFAULT_SOURCES
-                        
-                        # Select sources not already used in other recommendations
-                        available_sources = [s for s in default_sources if s not in all_used_citations]
-                        
-                        # If all sources are used, reuse some but ensure each recommendation has different ones
-                        if not available_sources:
-                            available_sources = default_sources
-                            
-                        # Select 4-6 sources for this recommendation to ensure more diversity
-                        import random
-                        selected_sources = random.sample(available_sources, min(6, len(available_sources)))
-                        rec["sources"] = selected_sources
-                        
-                        # Track these sources as used
-                        for source in selected_sources:
-                            if source not in all_used_citations:
-                                all_used_citations.append(source)
-                    
-                    # Track all unique references for the entire analysis
-                    for ref in rec.get("references", []):
-                        if ref.get("citation") and not any(r.get("citation") == ref.get("citation") for r in analysis["kb_references"]):
-                            analysis["kb_references"].append(ref)
-                    
-                logger.info("Enhanced %d recommendations with knowledge base evidence", len(analysis['recommendations']))
-                logger.info("Added %d unique references from knowledge base", len(analysis['kb_references']))
-                logger.info("Total unique citations used across recommendations: %d", len(all_used_citations))
-                    
-            except Exception as e:
-                logger.warning("Error querying knowledge base: %s", str(e))
-                analysis["knowledge_base_integration"] = False
-                
-                # Even if knowledge base integration fails, ensure recommendations have diverse sources
-                default_sources = self.DEFAULT_SOURCES
-                
-                used_sources = []
-                for i, rec in enumerate(analysis["recommendations"]):
-                    if not rec.get("sources"):
-                        # Select different sources for each recommendation
-                        import random
-                        start_idx = (i * 2) % len(default_sources)
-                        rec_sources = [default_sources[(start_idx + j) % len(default_sources)] for j in range(3)]
-                        rec["sources"] = rec_sources
-                        used_sources.extend(rec_sources)
+            self._enhance_with_kb(analysis)
         else:
             analysis["knowledge_base_integration"] = False
-            
-            # Even without knowledge base, ensure recommendations have diverse sources
-            default_sources = self.DEFAULT_SOURCES
-            
-            used_sources = []
-            for i, rec in enumerate(analysis["recommendations"]):
-                if not rec.get("sources"):
-                    # Select different sources for each recommendation
-                    import random
-                    start_idx = (i * 2) % len(default_sources)
-                    rec_sources = [default_sources[(start_idx + j) % len(default_sources)] for j in range(3)]
-                    rec["sources"] = rec_sources
-                    used_sources.extend(rec_sources)
+            self._assign_diverse_sources(analysis["recommendations"], self.DEFAULT_SOURCES)
         
         return analysis
         
@@ -833,43 +652,207 @@ class RecommendationGenerator:
         Args:
             recommendation: The recommendation to tailor
         """
-        # Get the current title and description
+        # Get current fields
         title = recommendation.get("title", "")
         description = recommendation.get("description", "")
         
-        # Only modify if not already tailored for universities
         university_terms = ["university", "universities", "higher education", "academic", "faculty", "campus"]
+        if self._is_already_university_tailored(title, description, university_terms):
+            return
         
-        # Check if already tailored
-        already_tailored = any(term in title.lower() or term in description.lower() for term in university_terms)
+        # Title adjustment
+        recommendation["title"] = self._adjust_title_for_university(title)
         
-        if not already_tailored:
-            # Adjust title for university context if needed
-            if "policy" in title.lower() and UNIVERSITY_POLICY_LITERAL not in title.lower():
-                recommendation["title"] = title.replace("Policy", "University Policy").replace("policy", UNIVERSITY_POLICY_LITERAL)
-            
-            # Enhance description with university context
-            if "university" not in description.lower() and "higher education" not in description.lower():
-                recommendation["description"] = f"In the university context, {description.lower()[0]}{description[1:]}"
-            
-            # Ensure implementation steps are university-specific
-            if "implementation_steps" in recommendation:
-                steps = recommendation["implementation_steps"]
-                university_specific_steps = []
-                
-                for step in steps:
-                    # Only modify if not already tailored
-                    if not any(term in step.lower() for term in university_terms):
-                        if "stakeholders" in step.lower() and "faculty" not in step.lower():
-                            step = step.replace("stakeholders", "faculty, staff, students and other stakeholders")
-                        elif "training" in step.lower() and "faculty" not in step.lower():
-                            step = step.replace("training", "faculty and staff training")
-                        elif "policy" in step.lower() and "university" not in step.lower():
-                            step = step.replace("policy", UNIVERSITY_POLICY_LITERAL)
-                    
-                    university_specific_steps.append(step)
-                
-                recommendation["implementation_steps"] = university_specific_steps
+        # Description augmentation
+        recommendation["description"] = self._augment_description_for_university(description)
+        
+        # Steps tailoring
+        if "implementation_steps" in recommendation:
+            recommendation["implementation_steps"] = self._tailor_steps_for_university(
+                recommendation.get("implementation_steps", []), university_terms
+            )
+
+    # ---- Extracted micro-helpers for tailoring ----
+    def _is_already_university_tailored(self, title: str, description: str, terms: List[str]) -> bool:
+        t = (title or "").lower()
+        d = (description or "").lower()
+        return any(term in t or term in d for term in terms)
+
+    def _adjust_title_for_university(self, title: str) -> str:
+        if not title:
+            return title
+        lower = title.lower()
+        if "policy" in lower and UNIVERSITY_POLICY_LITERAL not in lower:
+            return title.replace("Policy", "University Policy").replace("policy", UNIVERSITY_POLICY_LITERAL)
+        return title
+
+    def _augment_description_for_university(self, description: str) -> str:
+        if not description:
+            return description
+        lower = description.lower()
+        if "university" in lower or "higher education" in lower:
+            return description
+        # Keep original capitalisation after the prefix where possible
+        return f"In the university context, {lower[0]}{description[1:]}"
+
+    def _tailor_steps_for_university(self, steps: List[str], terms: List[str]) -> List[str]:
+        tailored: List[str] = []
+        for step in steps:
+            s_lower = (step or "").lower()
+            if any(term in s_lower for term in terms):
+                tailored.append(step)
+                continue
+            if "stakeholders" in s_lower and "faculty" not in s_lower:
+                step = step.replace("stakeholders", "faculty, staff, students and other stakeholders")
+            elif "training" in s_lower and "faculty" not in s_lower:
+                step = step.replace("training", "faculty and staff training")
+            elif "policy" in s_lower and "university" not in s_lower:
+                step = step.replace("policy", UNIVERSITY_POLICY_LITERAL)
+            tailored.append(step)
+        return tailored
+
+    # ---- Helper methods to reduce cognitive complexity ----
+    def _generate_from_gaps(self, gaps: List[Dict[str, Any]], themes: List[Dict[str, Any]], policy_text: str) -> List[Dict[str, Any]]:
+        """Generate contextual recommendations from gaps flow and dedupe results."""
+        institution_context = self._analyze_institution_context(themes, policy_text)
+        recs: List[Dict[str, Any]] = []
+        existing = self._detect_existing_policies(policy_text)
+        impl_type = "enhancement" if existing.get("disclosure_requirements") else "new_implementation"
+
+        for gap in gaps:
+            rec = self._generate_contextual_recommendation(
+                dimension=gap.get("dimension", "transparency"),
+                institution_context=institution_context,
+                implementation_type=impl_type,
+                priority=gap.get("priority", "medium"),
+                current_score=float(gap.get("current_score", 0.0)),
+                gap_details=gap,
+            )
+            if rec:
+                self._ensure_timeframe(rec)
+                recs.append(rec)
+
+        return self._dedupe_by_title(recs)
+
+    def _dedupe_by_title(self, recs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        seen: set[str] = set()
+        deduped: List[Dict[str, Any]] = []
+        for r in recs:
+            title = r.get("title", "")
+            if title not in seen:
+                seen.add(title)
+                deduped.append(r)
+        return deduped
+
+    def _ensure_timeframe(self, rec: Dict[str, Any]) -> None:
+        if "implementation_time" in rec and "timeframe" not in rec:
+            rec["timeframe"] = rec["implementation_time"]
+
+    def _enhance_with_kb(self, analysis: Dict[str, Any]) -> None:
+        """Attach KB-based evidence and ensure diverse sources; keep behaviour identical."""
+        try:
+            logger.info("Enhancing recommendations with knowledge base integration")
+            analysis["knowledge_base_integration"] = True
+            analysis["kb_references"] = []
+
+            kb_documents = self.knowledge_manager.get_all_documents()
+            logger.info("Found %d documents in knowledge base", len(kb_documents))
+
+            for i, doc in enumerate(kb_documents):
+                logger.debug(
+                    "Document %d: ID=%s Title=%s Author=%s PubDate=%s QualityScore=%s",
+                    i + 1,
+                    doc.get('id', 'Unknown'),
+                    doc.get('title', 'Unknown'),
+                    doc.get('author', 'Unknown'),
+                    doc.get('publication_date', 'Unknown'),
+                    doc.get('quality_score', 'Unknown'),
+                )
+
+            all_used_citations: List[str] = []
+
+            for rec in analysis["recommendations"]:
+                logger.debug("Finding supporting evidence for recommendation: %s", rec.get('title', 'Unknown'))
+                supporting_evidence = self._find_supporting_evidence(rec, kb_documents, all_used_citations)
+                logger.debug("Found %d supporting evidence items", len(supporting_evidence))
+                rec["supporting_evidence"] = supporting_evidence
+
+                if not rec.get("references"):
+                    rec["references"] = []
+
+                for evidence in supporting_evidence:
+                    citation = evidence.get("citation")
+                    reference = {
+                        "citation": citation,
+                        "source": evidence.get("source"),
+                        "year": evidence.get("year"),
+                        "relevance": evidence.get("relevance", "high"),
+                    }
+                    if citation and not any(r.get("citation") == citation for r in rec["references"]):
+                        rec["references"].append(reference)
+                        if citation not in all_used_citations:
+                            all_used_citations.append(citation)
+
+                if not rec.get("sources"):
+                    rec["sources"] = []
+                for ref in rec.get("references", []):
+                    if ref.get("citation") and ref["citation"] not in rec["sources"]:
+                        rec["sources"].append(ref["citation"])
+
+                logger.debug("Final sources for recommendation '%s': %s", rec.get('title', 'Unknown'), rec.get('sources', []))
+
+                if not rec["sources"]:
+                    self._assign_diverse_sources([rec], self.DEFAULT_SOURCES, used=all_used_citations, sample_up_to=6)
+
+                for ref in rec.get("references", []):
+                    if ref.get("citation") and not any(r.get("citation") == ref.get("citation") for r in analysis["kb_references"]):
+                        analysis["kb_references"].append(ref)
+
+            logger.info("Enhanced %d recommendations with knowledge base evidence", len(analysis['recommendations']))
+            logger.info("Added %d unique references from knowledge base", len(analysis['kb_references']))
+            logger.info("Total unique citations used across recommendations: %d", len(all_used_citations))
+
+        except Exception as e:
+            logger.warning("Error querying knowledge base: %s", str(e))
+            analysis["knowledge_base_integration"] = False
+            # Fallback to diverse sources assignment
+            self._assign_diverse_sources(analysis["recommendations"], self.DEFAULT_SOURCES)
+
+    def _assign_diverse_sources(
+        self,
+        recs: List[Dict[str, Any]],
+        default_sources: List[str],
+        *,
+        used: Optional[List[str]] = None,
+        sample_up_to: int = 3,
+    ) -> None:
+        """Assign diverse placeholder sources to recommendations that lack them.
+
+        Arguments:
+            recs: recommendations to mutate
+            default_sources: pool of default citations
+            used: optional list to track already used citations across recs
+            sample_up_to: max number of sources to sample per recommendation (default 3, earlier path used 6)
+        """
+        import random
+
+        if used is None:
+            used = []
+
+        for i, rec in enumerate(recs):
+            if rec.get("sources"):
+                continue
+            start_idx = (i * 2) % len(default_sources)
+            pool = [s for s in default_sources if s not in used] or default_sources
+            # Keep behaviour similar: deterministic slice or random sample in KB path
+            if sample_up_to <= 3:
+                rec_sources = [pool[(start_idx + j) % len(pool)] for j in range(min(3, len(pool)))]
+            else:
+                rec_sources = random.sample(pool, min(sample_up_to, len(pool)))
+            rec["sources"] = rec_sources
+            for s in rec_sources:
+                if s not in used:
+                    used.append(s)
     
     def _find_supporting_evidence(self, recommendation: Dict[str, Any], kb_documents: List[Dict[str, Any]], used_citations: List[str] = None) -> List[Dict[str, Any]]:
         """

@@ -53,9 +53,6 @@ except Exception:
 from .quality_validator import LiteratureQualityValidator
 
 logger = logging.getLogger(__name__)
-from .quality_validator import LiteratureQualityValidator
-
-logger = logging.getLogger(__name__)
 
 class LiteratureProcessor:
     """
@@ -74,8 +71,6 @@ class LiteratureProcessor:
         Args:
             knowledge_base_path: Path to the existing knowledge base directory
         """
-        self.knowledge_base_path = knowledge_base_path
-        self.quality_validator = LiteratureQualityValidator()
         self.knowledge_base_path = knowledge_base_path
         self.quality_validator = LiteratureQualityValidator()
         
@@ -385,34 +380,53 @@ class LiteratureProcessor:
                                           similarity_analysis: Dict,
                                           insights: List[str]) -> Dict:
         """Generate recommendation for how to process this document."""
+        # Determine core action/confidence in a separate helper
+        action, confidence, merge_with_existing = self._decide_action(quality_assessment, similarity_analysis)
+
+        # Build reasoning list via helper for clarity and testability
+        reasoning = self._build_reasoning(quality_assessment, similarity_analysis, insights)
+
         recommendation = {
-            'action': 'review_required',
-            'confidence': 'low',
-            'reasoning': [],
+            'action': action,
+            'confidence': confidence,
+            'reasoning': reasoning,
             'suggested_filename': '',
-            'merge_with_existing': False
+            'merge_with_existing': merge_with_existing
         }
-        
-        # Determine action based on quality and novelty
-        if (quality_assessment.get('auto_approve', False) and
-            similarity_analysis.get('novelty_score', 0) > 0.5):
-            recommendation['action'] = 'approve_new_document'
-            recommendation['confidence'] = quality_assessment.get('confidence_level', 'medium')
-        elif (quality_assessment.get('auto_approve', False) and
-              similarity_analysis.get('similar_documents')):
-            recommendation['action'] = 'merge_with_existing'
-            recommendation['merge_with_existing'] = True
-            recommendation['confidence'] = 'medium'
-        
-        # Generate reasoning
-        if quality_assessment.get('total_score', 0) >= 0.8:
-            recommendation['reasoning'].append("High quality document with strong academic credentials")
-        if similarity_analysis.get('novelty_score', 0) > 0.7:
-            recommendation['reasoning'].append("Document contains novel insights not present in knowledge base")
-        if len(insights) >= 10:
-            recommendation['reasoning'].append("Rich insight extraction suggests valuable content")
-        
+
         return recommendation
+
+    def _decide_action(self, quality_assessment: Dict, similarity_analysis: Dict) -> Tuple[str, str, bool]:
+        """Decide processing action, confidence and merge flag based on inputs.
+
+        Preserves original thresholds and outcomes.
+        """
+        action = 'review_required'
+        confidence = 'low'
+        merge_with_existing = False
+
+        if quality_assessment.get('auto_approve', False) and similarity_analysis.get('novelty_score', 0) > 0.5:
+            action = 'approve_new_document'
+            confidence = quality_assessment.get('confidence_level', 'medium')
+        elif quality_assessment.get('auto_approve', False) and similarity_analysis.get('similar_documents'):
+            action = 'merge_with_existing'
+            merge_with_existing = True
+            confidence = 'medium'
+
+        return action, confidence, merge_with_existing
+
+    def _build_reasoning(self, quality_assessment: Dict, similarity_analysis: Dict, insights: List[str]) -> List[str]:
+        """Construct reasoning list for recommendation without changing semantics."""
+        reasoning: List[str] = []
+
+        if quality_assessment.get('total_score', 0) >= 0.8:
+            reasoning.append("High quality document with strong academic credentials")
+        if similarity_analysis.get('novelty_score', 0) > 0.7:
+            reasoning.append("Document contains novel insights not present in knowledge base")
+        if len(insights) >= 10:
+            reasoning.append("Rich insight extraction suggests valuable content")
+
+        return reasoning
 
     def _generate_document_id(self, file_path: str, content: str) -> str:
         """Generate unique identifier for document."""

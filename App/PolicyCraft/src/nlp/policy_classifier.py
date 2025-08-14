@@ -325,21 +325,7 @@ class PolicyClassifier:
             interpretability due to its rule-based nature.
         """
         text_lower = text.lower()
-        category_scores = {category: 0.0 for category in self.categories}
-        keyword_matches = {category: [] for category in self.categories}
-        
-        # Calculate scores for each category
-        for category in self.categories:
-            for subcategory, keywords in self.classification_keywords[category].items():
-                weight = self.category_weights[category][subcategory]
-                
-                for keyword in keywords:
-                    # Count keyword occurrences
-                    count = len(re.findall(r'\b' + re.escape(keyword) + r'\b', text_lower))
-                    if count > 0:
-                        score = count * weight
-                        category_scores[category] += score
-                        keyword_matches[category].append((keyword, count, score))
+        category_scores, keyword_matches = self._compute_rule_scores(text_lower)
         
         # Determine classification
         if max(category_scores.values()) == 0:
@@ -357,6 +343,26 @@ class PolicyClassifier:
             'keyword_matches': keyword_matches,
             'method': 'rule_based'
         }
+
+    def _compute_rule_scores(self, text_lower: str) -> Tuple[Dict[str, float], Dict[str, List[Tuple[str, int, float]]]]:
+        """Compute rule-based category scores and keyword matches for a lowercased text.
+
+        Preserves the original scoring logic exactly.
+        """
+        category_scores: Dict[str, float] = {category: 0.0 for category in self.categories}
+        keyword_matches: Dict[str, List[Tuple[str, int, float]]] = {category: [] for category in self.categories}
+
+        for category in self.categories:
+            for subcategory, keywords in self.classification_keywords[category].items():
+                weight = self.category_weights[category][subcategory]
+                for keyword in keywords:
+                    count = len(re.findall(r'\b' + re.escape(keyword) + r'\b', text_lower))
+                    if count > 0:
+                        score = count * weight
+                        category_scores[category] += score
+                        keyword_matches[category].append((keyword, count, score))
+
+        return category_scores, keyword_matches
 
     def _classify_ml_based(self, text: str) -> Optional[Dict]:
         """
@@ -457,34 +463,13 @@ class PolicyClassifier:
             }
         
         # If both methods available - weighted combination
-        rule_weight = 0.6  # Prefer rule-based for interpretability
-        ml_weight = 0.4
-        
-        # Combine scores
-        combined_scores = {}
-        for category in self.categories:
-            rule_score = rule_result['scores'].get(category, 0)
-            ml_score = ml_result['scores'].get(category, 0) * 10  # Scale ML scores
-            combined_scores[category] = (rule_score * rule_weight + ml_score * ml_weight)
-        
-        # Determine final classification
-        if max(combined_scores.values()) == 0:
-            final_classification = 'Moderate'
-            final_confidence = 40
-        else:
-            final_classification = max(combined_scores, key=combined_scores.get)
-            
-            # Calculate confidence based on agreement
-            rule_class = rule_result['classification']
-            ml_class = ml_result['classification']
-            
-            if rule_class == ml_class == final_classification:
-                # Both methods agree
-                final_confidence = min(95, int((rule_result['confidence'] + ml_result['confidence']) / 2 * 1.2))
-            else:
-                # Methods disagree
-                final_confidence = min(85, int((rule_result['confidence'] + ml_result['confidence']) / 2 * 0.8))
-        
+        combined_scores = self._combine_hybrid_scores(rule_result, ml_result)
+
+        # Determine final classification and confidence
+        final_classification, final_confidence = self._finalise_hybrid_decision(
+            combined_scores, rule_result, ml_result
+        )
+
         return {
             'classification': final_classification,
             'confidence': final_confidence,
@@ -497,6 +482,33 @@ class PolicyClassifier:
                 'agreement': rule_result['classification'] == ml_result['classification']
             }
         }
+
+    def _combine_hybrid_scores(self, rule_result: Dict, ml_result: Dict) -> Dict[str, float]:
+        """Combine rule-based and ML scores using original weights and scaling."""
+        rule_weight = 0.6  # Prefer rule-based for interpretability
+        ml_weight = 0.4
+        combined_scores: Dict[str, float] = {}
+        for category in self.categories:
+            rule_score = rule_result['scores'].get(category, 0)
+            ml_score = ml_result['scores'].get(category, 0) * 10  # Scale ML scores
+            combined_scores[category] = (rule_score * rule_weight + ml_score * ml_weight)
+        return combined_scores
+
+    def _finalise_hybrid_decision(self, combined_scores: Dict[str, float], rule_result: Dict, ml_result: Dict) -> Tuple[str, int]:
+        """Determine final class and confidence preserving original logic."""
+        if max(combined_scores.values()) == 0:
+            return 'Moderate', 40
+
+        final_classification = max(combined_scores, key=combined_scores.get)
+        rule_class = rule_result['classification']
+        ml_class = ml_result['classification']
+
+        if rule_class == ml_class == final_classification:
+            final_confidence = min(95, int((rule_result['confidence'] + ml_result['confidence']) / 2 * 1.2))
+        else:
+            final_confidence = min(85, int((rule_result['confidence'] + ml_result['confidence']) / 2 * 0.8))
+
+        return final_classification, final_confidence
 
     def _generate_reasoning(self, rule_result: Dict, text: str) -> str:
         """

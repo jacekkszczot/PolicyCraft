@@ -38,6 +38,58 @@ import logging
 auth_bp = Blueprint('auth', __name__)
 logger = logging.getLogger(__name__)
 
+# Reused endpoint names
+PROFILE_ENDPOINT = 'auth.profile'
+LOGIN_TEMPLATE = 'auth/login.html'
+
+def _process_login(form: LoginForm):
+    """
+    Handle POST login logic and return an appropriate Flask response.
+    Extracted from login() to reduce cognitive complexity.
+    """
+    # Get form data
+    username_or_email = form.username_or_email.data.strip()
+    password = form.password.data
+    remember = form.remember_me.data
+
+    # Find user by username or email
+    user = User.query.filter(
+        (User.username == username_or_email) |
+        (User.email == username_or_email)
+    ).first()
+
+    # Verify user and password
+    if user and user.check_password(password):
+        if not user.is_active:
+            flash('Your account has been deactivated. Please contact support.', 'error')
+            return render_template(LOGIN_TEMPLATE, form=form)
+
+        # Log user in
+        login_user(user, remember=remember)
+        user.update_last_login()
+        db.session.commit()
+
+        # Set admin session flag if user is admin
+        if user.role == 'admin':
+            session['is_admin'] = True
+
+        logger.info("User %s logged in successfully", user.username)
+
+        # Check if this is user's first login and handle onboarding
+        if user.is_first_login():
+            from app import handle_first_login_onboarding
+            handle_first_login_onboarding(user.id)
+
+        flash(f'Welcome back, {user.get_full_name()}!', 'success')
+
+        # Redirect to intended page or dashboard
+        next_page = request.args.get('next')
+        return redirect(next_page) if next_page else redirect(url_for('dashboard'))
+
+    flash('Invalid username/email or password. Please try again.', 'error')
+    return render_template(LOGIN_TEMPLATE, form=form)
+
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """
@@ -84,49 +136,9 @@ def login():
         return redirect(url_for('dashboard'))
     
     form = LoginForm()
-    
     if form.validate_on_submit():
-        # Get form data
-        username_or_email = form.username_or_email.data.strip()
-        password = form.password.data
-        remember = form.remember_me.data
-        
-        # Find user by username or email
-        user = User.query.filter(
-            (User.username == username_or_email) | 
-            (User.email == username_or_email)
-        ).first()
-        
-        # Verify user and password
-        if user and user.check_password(password):
-            if user.is_active:
-                # Log user in
-                login_user(user, remember=remember)
-                user.update_last_login()
-                db.session.commit()
-                
-                # Set admin session flag if user is admin
-                if user.role == 'admin':
-                    session['is_admin'] = True
-                
-                logger.info("User %s logged in successfully", user.username)
-                
-                # Check if this is user's first login and handle onboarding
-                if user.is_first_login():
-                    from app import handle_first_login_onboarding
-                    handle_first_login_onboarding(user.id)
-                
-                flash(f'Welcome back, {user.get_full_name()}!', 'success')
-                
-                # Redirect to intended page or dashboard
-                next_page = request.args.get('next')
-                return redirect(next_page) if next_page else redirect(url_for('dashboard'))
-            else:
-                flash('Your account has been deactivated. Please contact support.', 'error')
-        else:
-            flash('Invalid username/email or password. Please try again.', 'error')
-    
-    return render_template('auth/login.html', form=form)
+        return _process_login(form)
+    return render_template(LOGIN_TEMPLATE, form=form)
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -377,7 +389,7 @@ def update_profile():
         existing = User.query.filter_by(email=email).first()
         if existing:
             flash('Email address already in use.', 'error')
-            return redirect(url_for('auth.profile'))
+            return redirect(url_for(PROFILE_ENDPOINT))
         current_user.email = email
     
     current_user.first_name = first_name or None
@@ -390,7 +402,7 @@ def update_profile():
         db.session.rollback()
         logger.error("Profile update error for %s: %s", current_user.username, str(e))
         flash('Failed to update profile.', 'error')
-    return redirect(url_for('auth.profile'))
+    return redirect(url_for(PROFILE_ENDPOINT))
 
 @auth_bp.route('/profile/change_password', methods=['POST'])
 @login_required
@@ -443,10 +455,10 @@ def change_password():
 
     if not current_user.check_password(current_pwd):
         flash('Current password is incorrect.', 'error')
-        return redirect(url_for('auth.profile'))
+        return redirect(url_for(PROFILE_ENDPOINT))
     if new_pwd != confirm_pwd or len(new_pwd) < 6:
         flash('New passwords do not match or are too short.', 'error')
-        return redirect(url_for('auth.profile'))
+        return redirect(url_for(PROFILE_ENDPOINT))
     
     current_user.set_password(new_pwd)
     try:
@@ -456,7 +468,7 @@ def change_password():
         db.session.rollback()
         logger.error("Password change error for %s: %s", current_user.username, str(e))
         flash('Failed to change password.', 'error')
-    return redirect(url_for('auth.profile'))
+    return redirect(url_for(PROFILE_ENDPOINT))
 
 @auth_bp.route('/profile/delete', methods=['POST'])
 @login_required

@@ -91,14 +91,8 @@
       </div>
       <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
         {% if document.quality_score is defined and document.quality_score is not none %}
-          {% if document.quality_score >= 7 %}
-            {% set quality_style = 'color:#28a745;' %}
-          {% elif document.quality_score >= 4 %}
-            {% set quality_style = 'color:#ffc107;' %}
-          {% else %}
-            {% set quality_style = 'color:#dc3545;' %}
-          {% endif %}
-          <div style="font-size:1.5rem; font-weight:bold; {{ quality_style }}">
+          {% set quality_class = 'text-success' if document.quality_score >= 7 else ('text-warning' if document.quality_score >= 4 else 'text-danger') %}
+          <div class="{{ quality_class }}" style="font-size:1.5rem; font-weight:bold;">
             {{ document.quality_score }}
           </div>
         {% else %}
@@ -223,21 +217,21 @@
             <table class="table table-sm" style="margin-bottom:0;">
               <tbody>
                 <tr>
-                  <td><strong>Word Count</strong></td>
+                  <th scope="row"><strong>Word Count</strong></th>
                   <td>
                     {% set word_count = document.analysis_data.analysis_summary.word_count|default(0) %}
                     {{ "{:,}".format(word_count) }}
                   </td>
                 </tr>
                 <tr>
-                  <td><strong>Character Count</strong></td>
+                  <th scope="row"><strong>Character Count</strong></th>
                   <td>
                     {% set char_count = document.analysis_data.analysis_summary.character_count|default(0) %}
                     {{ "{:,}".format(char_count) }}
                   </td>
                 </tr>
                 <tr>
-                  <td><strong>Quality Score</strong></td>
+                  <th scope="row"><strong>Quality Score</strong></th>
                   <td>
                     {% if document.analysis_data.analysis_summary.quality_score is defined %}
                       {{ "%.1f"|format(document.analysis_data.analysis_summary.quality_score * 10) }}/10
@@ -247,7 +241,7 @@
                   </td>
                 </tr>
                 <tr>
-                  <td><strong>Insights Extracted</strong></td>
+                  <th scope="row"><strong>Insights Extracted</strong></th>
                   <td>{{ document.analysis_data.analysis_summary.insights_count|default(0) }}</td>
                 </tr>
               </tbody>
@@ -295,7 +289,7 @@
               {% for key, value in document.metadata.items() %}
                 {% if value is defined and value is not none %}
                 <tr>
-                  <th style="width:30%;">{{ key|replace('_', ' ')|title }}</th>
+                  <th scope="row" style="width:30%;">{{ key|replace('_', ' ')|title }}</th>
                   <td>
                     {% if value is mapping %}
                       {% for k, v in value.items() %}
@@ -315,7 +309,7 @@
                 {% if item is mapping %}
                   {% for key, value in item.items() %}
                   <tr>
-                    <th style="width:30%;">{{ key|replace('_', ' ')|title }}</th>
+                    <th scope="row" style="width:30%;">{{ key|replace('_', ' ')|title }}</th>
                     <td>
                       {% if value is mapping %}
                         {% for k, v in value.items() %}
@@ -357,21 +351,9 @@
             <span>{{ dimension.name }}</span>
             <span>{{ dimension.score }}/10</span>
           </div>
+          {% set bar_class = 'bg-success' if dimension.score >= 8 else ('bg-warning' if dimension.score >= 5 else 'bg-danger') %}
           <div class="progress" style="height:8px;">
-            <div class="progress-bar 
-                 {% if dimension.score >= 8 %}
-                   bg-success
-                 {% elif dimension.score >= 5 %}
-                   bg-warning
-                 {% else %}
-                   bg-danger
-                 {% endif %}" 
-                 role="progressbar" 
-                 style="width: {{ dimension.score * 10 }}%" 
-                 aria-valuenow="{{ dimension.score * 10 }}" 
-                 aria-valuemin="0" 
-                 aria-valuemax="100">
-            </div>
+            <progress class="progress-bar {{ bar_class }}" max="100" value="{{ dimension.score * 10 }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ dimension.score * 10 }}"></progress>
           </div>
           {% if dimension.comments %}
             <div class="text-muted" style="font-size:0.85em; margin-top:0.25rem;">{{ dimension.comments }}</div>

@@ -79,7 +79,8 @@
     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:2rem;">
       <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
         <h4 style="margin-bottom:0.5rem; color:#333;">System Status</h4>
-        <div style="font-size:1.5rem; font-weight:bold; color:{% if system_status.system_status == 'operational' %}#28a745{% else %}#dc3545{% endif %}">
+        {% set status_class = 'text-success' if system_status.system_status == 'operational' else 'text-danger' %}
+        <div class="{{ status_class }}" style="font-size:1.5rem; font-weight:bold;">
           {{ system_status.system_status|title }}
         </div>
         <small style="color:#666;">Last check: {{ system_status.last_check[:19] }}</small>
@@ -137,8 +138,8 @@
                                 {% if item.quality_score %}
                                 <div class="quality-indicator">
                                     <div class="quality-bar">
-                                         <div class="quality-fill quality-{{ 'high' if item.quality_score >= 90 else 'medium' if item.quality_score >= 70 else 'low' }}" 
-                                              style="width: {{ item.quality_score|round }}%"></div>
+                                         <div class="quality-fill quality-{{ 'high' if item.quality_score >= 90 else 'medium' if item.quality_score >= 70 else 'low' }}"
+                                              data-width="{{ item.quality_score|round }}"></div>
                                     </div>
                                     <span class="quality-text">{{ "%.1f%%"|format(item.quality_score) }}</span>
                                 </div>
@@ -748,23 +749,9 @@
     border-bottom: none;
 }
 
-.activity-title {
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 0.25rem;
-}
-
 .activity-details {
     font-size: 0.9rem;
     color: #6c757d;
-}
-
-.activity-status {
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    margin-right: 1rem;
 }
 
 .status-success {
@@ -780,12 +767,6 @@
 .status-error {
     background: #f8d7da;
     color: #721c24;
-}
-
-.activity-time {
-    font-size: 0.85rem;
-    color: #6c757d;
-    white-space: nowrap;
 }
 
 .info-grid {
@@ -825,19 +806,6 @@
     border-bottom: none;
 }
 
-.empty-state {
-    background: white;
-    border-radius: 10px;
-    padding: 3rem;
-    text-align: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-}
-
-.empty-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
-
 .empty-state h4 {
     color: #333;
     margin: 0 0 0.5rem 0;
@@ -875,4 +843,17 @@
 }
 </style>
 
+{% endblock %}
+
+{% block scripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.quality-fill[data-width]')
+    .forEach(el => {
+      const w = parseInt(el.getAttribute('data-width'), 10);
+      if (!isNaN(w)) el.style.width = `${Math.max(0, Math.min(100, w))}%`;
+    });
+});
+</script>
 {% endblock %}

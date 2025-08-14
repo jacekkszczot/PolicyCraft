@@ -111,7 +111,7 @@ class TestAnalysisPipeline:
         print("✅ End-to-end pipeline integration successful")
         
         # Store results for potential inspection (without returning)
-        integration_results = {
+        _integration_results = {
             'extracted_text': extracted_text,
             'cleaned_text': cleaned_text,
             'themes': themes,
@@ -120,7 +120,6 @@ class TestAnalysisPipeline:
         }
         
         # Test passes by reaching this point without exceptions
-        assert True
 
     def test_batch_processing_simulation(self):
         """Test processing multiple policies in sequence (batch analysis simulation)."""
@@ -211,7 +210,7 @@ class TestAnalysisPipeline:
         print(f"\n✅ Batch processing completed: {len(batch_results)} policies processed")
         
         # Store results for inspection without returning
-        batch_processing_results = batch_results
+        _batch_processing_results = batch_results
         
         # Test passes if we reach this point
         assert len(batch_results) == len(test_policies)
@@ -409,10 +408,10 @@ class TestAnalysisPipeline:
         assert classification['confidence'] > 30, "Should have reasonable classification confidence"
         assert rec_count >= 2, "Should generate multiple recommendations"
         
-        print(f"✅ Performance benchmarking passed")
+        print("✅ Performance benchmarking passed")
         
         # Store performance data without returning
-        performance_data = {
+        _performance_data = {
             'text_time': text_time,
             'theme_time': theme_time,
             'classification_time': classification_time,

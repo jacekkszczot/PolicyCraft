@@ -294,7 +294,7 @@ def run_batch_analysis():
             }
             
             all_results.append(result)
-            print(f"✅ Enhanced analysis completed successfully!")
+            print("✅ Enhanced analysis completed successfully!")
             
         except Exception as e:
             print(f"❌ ERROR: {str(e)}")
@@ -323,7 +323,7 @@ def run_batch_analysis():
         avg_confidence = round(sum(r['classification']['confidence'] for r in all_results) / successful, 1)
         avg_coverage = round(sum(r['recommendations']['overall_coverage'] for r in all_results) / successful, 1)
         
-        print(f"\n📈 AGGREGATE STATISTICS:")
+        print("\n📈 AGGREGATE STATISTICS:")
         print(f"   ⏱️  Average processing time: {avg_processing_time}s")
         print(f"   🎯 Average themes per policy: {avg_themes_count}")
         print(f"   📊 Average classification confidence: {avg_confidence}%")
@@ -332,14 +332,14 @@ def run_batch_analysis():
         # Classification distribution
         classifications = [r['classification']['type'] for r in all_results]
         classification_counts = {cls: classifications.count(cls) for cls in set(classifications)}
-        print(f"\n🏷️  CLASSIFICATION DISTRIBUTION:")
+        print("\n🏷️  CLASSIFICATION DISTRIBUTION:")
         for cls, count in classification_counts.items():
             print(f"   {cls}: {count} policies ({count/successful*100:.1f}%)")
         
         # Country breakdown
         countries = [r['country'] for r in all_results]
         country_counts = {country: countries.count(country) for country in set(countries)}
-        print(f"\n🌍 COUNTRY BREAKDOWN:")
+        print("\n🌍 COUNTRY BREAKDOWN:")
         for country, count in country_counts.items():
             print(f"   {country}: {count} policies")
     
@@ -390,8 +390,8 @@ def run_batch_analysis():
         generate_enhanced_csv_summary(all_results, csv_file)
         print(f"📈 CSV summary saved to: {csv_file}")
     
-    print(f"\n🎉 BATCH ANALYSIS COMPLETED!")
-    print(f"Ready for validation and report writing! 📝")
+    print("\n🎉 BATCH ANALYSIS COMPLETED!")
+    print("Ready for validation and report writing! 📝")
     
     return all_results
 
@@ -462,7 +462,7 @@ def generate_enhanced_csv_summary(all_results, csv_file):
     print(f"📈 Enhanced CSV summary saved with {len(df.columns)} metrics: {csv_file}")
     
     # Print summary of enhanced metrics
-    print(f"\n🔍 ENHANCED METRICS SUMMARY:")
+    print("\n🔍 ENHANCED METRICS SUMMARY:")
     print(f"   📊 Average overall coverage: {df['Overall_Coverage_Score'].mean():.1f}%")
     print(f"   🎯 Average recommendations per policy: {df['Recommendations_Count'].mean():.1f}")
     print(f"   🔧 Enhancement vs New ratio: {df['Enhancement_Recs'].sum()}:{df['New_Implementation_Recs'].sum()}")
@@ -477,7 +477,7 @@ def generate_enhanced_csv_summary(all_results, csv_file):
         'Inclusiveness': df['Inclusiveness_Score'].mean()
     }
     
-    print(f"\n📈 ETHICAL DIMENSION AVERAGES:")
+    print("\n📈 ETHICAL DIMENSION AVERAGES:")
     for dimension, avg_score in dimension_averages.items():
         print(f"   {dimension}: {avg_score:.1f}%")
     

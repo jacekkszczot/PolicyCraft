@@ -10,7 +10,11 @@ University: Leeds Trinity University
 import re
 import logging
 from collections import defaultdict, Counter
-from typing import List, Dict, Optional
+from typing import List, Dict, Any, Optional
+
+# Common repeated literals extracted as constants to reduce duplication
+PROFESSIONAL_DEVELOPMENT = 'professional development'
+RISK_ASSESSMENT = 'risk assessment'
 
 # NLP libraries
 try:
@@ -335,9 +339,9 @@ class ThemeExtractor:
             
             'Faculty Guidelines': {
                 'keywords': ['faculty', 'teacher', 'instructor', 'professor', 'staff', 'educator',
-                           'teaching', 'pedagogy', 'curriculum', 'course', 'classroom',
-                           'emotional impact', 'autonomy', 'trust', 'agency', 'decision-making',
-                           'professional development', 'training', 'support', 'guidance'],
+                            'teaching', 'pedagogy', 'curriculum', 'course', 'classroom',
+                            'emotional impact', 'autonomy', 'trust', 'agency', 'decision-making',
+                            PROFESSIONAL_DEVELOPMENT, 'training', 'support', 'guidance'],
                 'patterns': [
                     'faculty guidelines', 'instructor policy', 'teaching with ai',
                     'faculty responsibilities', 'classroom ai', 'pedagogical use',
@@ -476,14 +480,14 @@ class ThemeExtractor:
             
             'AI Literacy and Training': {
                 'keywords': ['literacy', 'training', 'skills', 'competencies', 'capacity',
-                           'professional development', 'workshop', 'seminar', 'course', 'program',
-                           'pedagogical', 'didactic', 'instructional', 'faculty development',
-                           'student training', 'digital skills', 'ai competencies', 'workshop',
-                           'tutorial', 'handbook', 'guide', 'resource', 'toolkit', 'workshop series',
-                           'certification', 'microcredentials', 'upskilling', 'reskilling',
-                           'faculty resources', 'staff development', 'continuous learning', 'capacity building'],
+                            PROFESSIONAL_DEVELOPMENT, 'workshop', 'seminar', 'course', 'program',
+                            'pedagogical', 'didactic', 'instructional', 'faculty development',
+                            'student training', 'digital skills', 'ai competencies', 'workshop',
+                            'tutorial', 'handbook', 'guide', 'resource', 'toolkit', 'workshop series',
+                            'certification', 'microcredentials', 'upskilling', 'reskilling',
+                            'faculty resources', 'staff development', 'continuous learning', 'capacity building'],
                 'patterns': [
-                    'ai literacy', 'digital literacy', 'ai training', 'professional development',
+                    'ai literacy', 'digital literacy', 'ai training', PROFESSIONAL_DEVELOPMENT,
                     'faculty training', 'student training', 'ai skills', 'digital competencies',
                     'ai education program', 'teacher training in ai', 'ai curriculum',
                     'pedagogical training', 'digital upskilling', 'ai workshops', 'training materials',
@@ -502,7 +506,7 @@ class ThemeExtractor:
                            'law enforcement', 'justice', 'democracy', 'cybersecurity', 'robustness',
                            'transparency', 'disclosure', 'labeling', 'deepfake', 'synthetic media'],
                 'patterns': [
-                    'risk assessment', 'risk mitigation', 'safety evaluations', 'compliance requirements',
+                    RISK_ASSESSMENT, 'risk mitigation', 'safety evaluations', 'compliance requirements',
                     'unacceptable risk ai', 'banned ai practices', 'harmful manipulation', 'deceptive ai',
                     'exploitation of vulnerabilities', 'social credit system', 'emotion recognition ban',
                     'real-time biometric identification', 'biometric categorization ban', 'high risk ai systems',
@@ -524,7 +528,7 @@ class ThemeExtractor:
                            'eu ai act', 'artificial intelligence act', 'ai regulation', 'legal framework'],
                 'patterns': [
                     'ai policy framework', 'governance structure', 'policy development',
-                    'compliance monitoring', 'ethics review', 'risk assessment',
+                    'compliance monitoring', 'ethics review', RISK_ASSESSMENT,
                     'stakeholder consultation', 'decision-making framework', 'transparency in ai',
                     'policy implementation', 'monitoring and evaluation', 'interdisciplinary planning',
                     'intersectoral governance', 'multistakeholder collaboration', 'global coordination',
@@ -544,7 +548,7 @@ class ThemeExtractor:
                 'patterns': [
                     'institutional governance', 'ai policy framework', 'governance structure',
                     'policy development', 'compliance monitoring', 'ethics review',
-                    'risk assessment', 'stakeholder consultation', 'decision-making framework',
+                    RISK_ASSESSMENT, 'stakeholder consultation', 'decision-making framework',
                     'transparency in ai', 'policy implementation', 'monitoring and evaluation'
                 ]
             },

@@ -79,7 +79,7 @@ def clean_university_name(filename):
     elif 'mit' in name_lower:
         return 'MIT'
     elif 'cambridge' in name_lower:
-        return 'Cambridge University'
+        return 'University of Cambridge'
     elif 'oxford' in name_lower:
         return 'Oxford University'
     elif 'belfast' in name_lower:
@@ -1170,7 +1170,7 @@ def analyse_document(filename):
             # Create a mapping of display names to actual filenames
             university_file_mapping = {
                 'University of Oxford': 'oxford-ai-policy.pdf',
-                'University of Cambridge': 'cambridge-ai-policy.docx',
+                'University of Cambridge': 'cambridge-ai-policy.pdf',
                 'Imperial College London': 'imperial-ai-policy.docx',
                 'University of Edinburgh': 'edinburgh university-ai-policy.pdf',
                 'Leeds Trinity University': 'leeds trinity university-ai-policy.pdf',
@@ -1193,7 +1193,9 @@ def analyse_document(filename):
                 # If no mapping found, use the original filename as-is
                 actual_filename = original_filename
             
-            file_path = os.path.join('data', 'policies', 'clean_dataset', actual_filename)
+            # Use absolute path (consistent with dashboard listing) to avoid CWD issues
+            clean_dataset_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'policies', 'clean_dataset')
+            file_path = os.path.join(clean_dataset_dir, actual_filename)
             logger.info(f"Baseline analysis - Display name: {original_filename}")
             logger.info(f"Baseline analysis - Mapped filename: {actual_filename}")
             logger.info(f"Baseline analysis - File path: {file_path}")
@@ -1301,8 +1303,6 @@ def validate_analysis(analysis_id):
             recs = any_doc.get("recommendations", [])
         else:
             # As a last resort, generate recommendations on the fly for validation
-            themes = analysis.get('themes', [])
-            classification = analysis.get('classification', {})
             text_data = analysis.get('text_data', {})
             cleaned_text = text_data.get('cleaned_text', text_data.get('original_text', ''))
             rec_package = recommendation_engine.generate_recommendations(

@@ -297,7 +297,7 @@ class ChartGenerator:
             total_matches += score
         # Normalize to percentage
         if total_matches == 0:
-            dimension_scores = {dim: 0 for dim in dimension_scores}
+            dimension_scores = dict.fromkeys(dimension_scores, 0)
         else:
             dimension_scores = {dim: round((count / total_matches) * 100, 1) for dim, count in dimension_scores.items()}
         categories = list(dimension_scores.keys())

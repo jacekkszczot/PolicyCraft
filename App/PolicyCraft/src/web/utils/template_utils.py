@@ -6,8 +6,11 @@ that can be registered with the Flask application.
 """
 from typing import Dict, Optional
 
+# Common default title used across templates
+UNTITLED_DOCUMENT = 'Untitled Document'
 
-def clean_literature_name(data, default: str = 'Untitled Document') -> str:
+
+def clean_literature_name(data, default: str = UNTITLED_DOCUMENT) -> str:
     """
     Generate a clean display name for literature from metadata or document ID.
 
@@ -53,14 +56,14 @@ def format_document_title(metadata: Optional[Dict[str, str]]) -> str:
         Formatted title string
     """
     if not metadata:
-        return 'Untitled Document'
+        return UNTITLED_DOCUMENT
 
     title = metadata.get('title', '').strip()
     author = metadata.get('author', '').strip()
 
     if title and author:
         return f"{title} - {author}"
-    return title or author or 'Untitled Document'
+    return title or author or UNTITLED_DOCUMENT
 
 
 def register_template_filters(app):

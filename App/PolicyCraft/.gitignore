@@ -50,3 +50,6 @@ PolicyCraft-Databases/development/*.db
 *.db
 PolicyCraft-Databases/
 App/PolicyCraft-Databases/development/policycraft_dev.db
+
+# SonarQube local artifacts
+.scannerwork/

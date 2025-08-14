@@ -126,7 +126,7 @@ class SimpleAutoProcessor:
         
         # Basic dataset info
         content = "# PolicyCraft Dataset Information\n\n"
-        content += f"## Dataset Statistics\n"
+        content += "## Dataset Statistics\n"
         content += f"- **Total Files**: {len(files)}\n"
         content += f"- **Last Updated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
         

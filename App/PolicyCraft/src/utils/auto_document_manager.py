@@ -149,7 +149,6 @@ class AutoDocumentManager:
             Tuple of (document_type, organization)
         """
         title_lower = title.lower()
-        content_lower = content.lower()
         
         # Determine organization
         if any(term in title_lower for term in ['eu', 'european union', 'european']):

@@ -473,52 +473,14 @@ def dashboard():
         
         # Load all clean_dataset policies without duplicates
         # This ensures we show exactly 15 unique policies from clean_dataset
-        clean_dataset_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'policies', 'clean_dataset')
-        clean_dataset_files = []
-        logger.info(f"Dashboard: Using clean_dataset directory: {clean_dataset_dir}")
+        clean_dataset_dir = _get_clean_dataset_dir()
+        clean_dataset_files = _list_clean_dataset_files(clean_dataset_dir)
         
-        if os.path.exists(clean_dataset_dir):
-            for filename in os.listdir(clean_dataset_dir):
-                # Skip non-policy files like dataset_info.md or guidance files
-                if filename.endswith(('.pdf', DOCX_EXTENSION)) and 'guidance' not in filename.lower():
-                    clean_dataset_files.append(filename)
+        # Merge user and baseline analyses
+        analyses_by_filename = _merge_user_and_baseline_analyses(user_analyses, baseline_analyses)
         
-        logger.info(f"Dashboard: Found {len(clean_dataset_files)} policy files in clean_dataset")
-        
-        # Create a dictionary to store unique policies by filename
-        # We'll prioritize user analyses over baseline analyses
-        analyses_by_filename = {}
-        
-        # First, add all user analyses to the dictionary
-        for analysis in user_analyses:
-            filename = analysis.get('filename', '')
-            if not filename:
-                continue
-            analyses_by_filename[filename] = analysis
-            analysis['is_user_analysis'] = True
-        
-        # Then, add baseline analyses only if they don't already exist in the dictionary
-        for analysis in baseline_analyses:
-            filename = analysis.get('filename', '')
-            if not filename or filename in analyses_by_filename:
-                continue
-            analyses_by_filename[filename] = analysis
-            analysis['is_user_analysis'] = False
-        
-        # Now ensure we have all clean_dataset files represented
-        missing_files = []
-        for clean_file in clean_dataset_files:
-            found = False
-            for filename in analyses_by_filename.keys():
-                # Check if the clean_dataset filename matches exactly or is the document_id
-                analysis = analyses_by_filename[filename]
-                if clean_file == filename or (analysis.get('document_id') and clean_file == analysis.get('document_id')):
-                    found = True
-                    logger.info(f"Dashboard: Found match for {clean_file} in analysis {filename}")
-                    break
-            if not found:
-                missing_files.append(clean_file)
-        
+        # Identify missing clean_dataset files and ensure baselines exist
+        missing_files = _identify_missing_clean_files(clean_dataset_files, analyses_by_filename)
         logger.info(f"Dashboard: Missing files from clean_dataset: {missing_files}")
         
         # Add missing files as proper baseline analyses
@@ -845,6 +807,250 @@ def dashboard():
         logger.error(f"Dashboard error: {str(e)}")
         flash('Dashboard loaded with limited data due to an error.', 'warning')
         return render_template('dashboard.html', data=_get_minimal_dashboard_data(current_user))
+
+def _get_clean_dataset_dir():
+    """Return absolute path to clean_dataset directory."""
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'policies', 'clean_dataset')
+
+def _list_clean_dataset_files(clean_dataset_dir):
+    """List valid policy files from clean_dataset directory."""
+    logger.info(f"Dashboard: Using clean_dataset directory: {clean_dataset_dir}")
+    files = []
+    if os.path.exists(clean_dataset_dir):
+        for filename in os.listdir(clean_dataset_dir):
+            if filename.endswith(('.pdf', DOCX_EXTENSION)) and 'guidance' not in filename.lower():
+                files.append(filename)
+    logger.info(f"Dashboard: Found {len(files)} policy files in clean_dataset")
+    return files
+
+def _merge_user_and_baseline_analyses(user_analyses, baseline_analyses):
+    """Merge analyses preferring user analyses over baseline ones."""
+    analyses_by_filename = {}
+    for analysis in user_analyses:
+        filename = analysis.get('filename', '')
+        if not filename:
+            continue
+        analyses_by_filename[filename] = analysis
+        analysis['is_user_analysis'] = True
+    for analysis in baseline_analyses:
+        filename = analysis.get('filename', '')
+        if not filename or filename in analyses_by_filename:
+            continue
+        analyses_by_filename[filename] = analysis
+        analysis['is_user_analysis'] = False
+    return analyses_by_filename
+
+def _identify_missing_clean_files(clean_dataset_files, analyses_by_filename):
+    """Return clean_dataset files that are not represented in analyses."""
+    missing_files = []
+    for clean_file in clean_dataset_files:
+        found = False
+        for filename in analyses_by_filename.keys():
+            analysis = analyses_by_filename[filename]
+            if clean_file == filename or (analysis.get('document_id') and clean_file == analysis.get('document_id')):
+                found = True
+                logger.info(f"Dashboard: Found match for {clean_file} in analysis {filename}")
+                break
+        if not found:
+            missing_files.append(clean_file)
+    return missing_files
+
+def _create_or_placeholder_baseline_for_file(*, missing_file, clean_dataset_dir, analyses_by_filename):
+    """Create baseline analysis for missing clean_dataset file or add placeholder on failure."""
+    # Skip guidance files
+    if 'guidance' in missing_file.lower() or missing_file == 'dataset_info.md':
+        return
+
+    # Resolve path
+    file_path = os.path.join(clean_dataset_dir, missing_file)
+    if not os.path.exists(file_path):
+        logger.error(f"Dashboard: Missing file not found: {file_path}")
+        return
+
+    # Derive baseline filename
+    university_name = missing_file.split('-')[0].replace('university', '').strip().title()
+    if not university_name:
+        university_name = missing_file.split('.')[0].replace('university', '').strip().title()
+    baseline_filename = f"{BASELINE_PREFIX} {university_name}"
+    logger.info(f"Dashboard: Creating baseline analysis for {missing_file} as '{baseline_filename}'")
+
+    # Extraction and cleaning
+    try:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File not found: {file_path}")
+        file_size = os.path.getsize(file_path)
+        if file_size == 0:
+            raise ValueError(f"Empty file: {file_path}")
+        extracted_text = text_processor.extract_text_from_file(file_path)
+        text_length = len(extracted_text) if extracted_text else 0
+        if not extracted_text or text_length < 50:
+            if file_path.lower().endswith('.pdf'):
+                try:
+                    import pdfplumber
+                    with pdfplumber.open(file_path) as pdf:
+                        fallback_text = ""
+                        for page in pdf.pages:
+                            page_text = page.extract_text()
+                            if page_text:
+                                fallback_text += page_text + "\n"
+                    if fallback_text and len(fallback_text) > text_length:
+                        extracted_text = fallback_text
+                        text_length = len(extracted_text)
+                except Exception as fallback_error:
+                    logger.warning(f"Dashboard: Fallback extraction failed: {str(fallback_error)}")
+            elif file_path.lower().endswith((DOCX_EXTENSION, '.doc')):
+                try:
+                    from docx import Document
+                    doc = Document(file_path)
+                    fallback_text = "\n".join([para.text for para in doc.paragraphs if para.text])
+                    if fallback_text and len(fallback_text) > text_length:
+                        extracted_text = fallback_text
+                        text_length = len(extracted_text)
+                except Exception as fallback_error:
+                    logger.warning(f"Dashboard: Fallback extraction failed: {str(fallback_error)}")
+        if not extracted_text or text_length < 20:
+            extracted_text = f"AI Policy document from {university_name}. This is a placeholder text as the original document could not be fully processed."
+            text_length = len(extracted_text)
+    except Exception as extract_error:
+        logger.error(f"Dashboard: Text extraction failed for {file_path}: {str(extract_error)}")
+        extracted_text = f"AI Policy document from {university_name}. This is a placeholder text as the original document could not be processed due to: {str(extract_error)}"
+        text_length = len(extracted_text)
+
+    try:
+        cleaned_text = text_processor.clean_text(extracted_text)
+    except Exception as clean_error:
+        logger.error(f"Dashboard: Text cleaning failed for {missing_file}: {str(clean_error)}")
+        cleaned_text = extracted_text
+
+    # Themes
+    try:
+        themes = theme_extractor.extract_themes(cleaned_text)
+        if not themes or len(themes) == 0:
+            themes = [
+                {"name": "Policy", "score": 0.8, "confidence": 75},
+                {"name": "AI Ethics", "score": 0.7, "confidence": 70},
+                {"name": "Guidelines", "score": 0.6, "confidence": 65}
+            ]
+    except Exception as theme_error:
+        logger.error(f"Dashboard: Theme extraction failed for {missing_file}: {str(theme_error)}")
+        themes = [
+            {"name": "Policy", "score": 0.8, "confidence": 75},
+            {"name": "AI Ethics", "score": 0.7, "confidence": 70},
+            {"name": "Guidelines", "score": 0.6, "confidence": 65}
+        ]
+
+    # Classification
+    try:
+        classification = policy_classifier.classify_policy(cleaned_text)
+        if isinstance(classification, str):
+            classification = {
+                "classification": _standardize_classification(classification),
+                "confidence": 80,
+                "source": "Baseline Creation"
+            }
+        elif isinstance(classification, dict) and 'classification' in classification:
+            classification['classification'] = _standardize_classification(classification['classification'])
+            if 'source' not in classification:
+                classification['source'] = "Baseline Creation"
+            if 'confidence' not in classification:
+                classification['confidence'] = 80
+        else:
+            logger.warning(f"Dashboard: Unexpected classification format for {missing_file}: {classification}")
+            classification = {
+                "classification": "Moderate",
+                "confidence": 75,
+                "source": "Baseline Creation (Default Format)"
+            }
+    except Exception as class_error:
+        logger.error(f"Dashboard: Classification failed for {missing_file}: {str(class_error)}")
+        classification = {
+            "classification": "Moderate",
+            "confidence": 75,
+            "source": "Baseline Creation (Default)"
+        }
+
+    # Store baseline or create placeholder
+    try:
+        if not extracted_text:
+            extracted_text = f"AI Policy document from {university_name}. This is a placeholder text."
+        if not cleaned_text:
+            cleaned_text = extracted_text
+        if not themes or len(themes) == 0:
+            themes = [{"name": "Policy", "score": 0.8, "confidence": 75}]
+        if not classification or not isinstance(classification, dict):
+            classification = {
+                "classification": "Moderate",
+                "confidence": 75,
+                "source": "Baseline Creation (Default)"
+            }
+
+        metadata = {
+            "source_file": missing_file,
+            "extraction_method": "dashboard_baseline_creation",
+            "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "text_length": len(extracted_text) if extracted_text else 0,
+            "is_baseline": True
+        }
+
+        analysis_id = db_operations.store_user_analysis_results(
+            user_id=-1,
+            filename=f"{BASELINE_PREFIX} {university_name}",
+            original_text=extracted_text,
+            cleaned_text=cleaned_text,
+            themes=themes,
+            classification=classification,
+            document_id=missing_file,
+            metadata=metadata
+        )
+
+        new_analysis = db_operations.get_analysis_by_id(analysis_id)
+        if new_analysis:
+            new_analysis['is_baseline'] = True
+            new_analysis['is_user_analysis'] = False
+            analyses_by_filename[missing_file] = new_analysis
+        else:
+            placeholder_analysis = {
+                '_id': f"placeholder_{missing_file.replace('.', '_')}",
+                'filename': f"{BASELINE_PREFIX} {university_name}",
+                'document_id': missing_file,
+                'title': f"Policy from {university_name}",
+                'analysis_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                'user_id': -1,
+                'is_user_analysis': False,
+                'is_baseline': True,
+                'classification': classification,
+                'score': 50,
+                'themes': themes,
+                'summary': f"This is a baseline analysis for {missing_file}.",
+                'text_data': {
+                    'original_text': extracted_text,
+                    'cleaned_text': cleaned_text,
+                    'text_length': len(extracted_text) if extracted_text else 0
+                }
+            }
+            analyses_by_filename[missing_file] = placeholder_analysis
+    except (ValueError, KeyError, RuntimeError, OSError) as store_error:
+        logger.error(f"Dashboard: Error storing baseline analysis: {str(store_error)}")
+        placeholder_analysis = {
+            '_id': f"placeholder_{missing_file.replace('.', '_')}",
+            'filename': f"{BASELINE_PREFIX} {university_name}",
+            'document_id': missing_file,
+            'title': f"Policy from {university_name}",
+            'analysis_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'user_id': -1,
+            'is_user_analysis': False,
+            'is_baseline': True,
+            'classification': classification,
+            'score': 50,
+            'themes': themes,
+            'summary': f"This is a placeholder for {missing_file}. Storage error: {str(store_error)}",
+            'text_data': {
+                'original_text': extracted_text[:1000] if extracted_text else "No text extracted",
+                'cleaned_text': cleaned_text[:1000] if cleaned_text else "No cleaned text",
+                'text_length': len(extracted_text) if extracted_text else 0
+            }
+        }
+        analyses_by_filename[missing_file] = placeholder_analysis
 
 def _load_sample_policies_if_needed(user_analyses):
     """Load sample policies if user has none."""

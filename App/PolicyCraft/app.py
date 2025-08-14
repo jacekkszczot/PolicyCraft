@@ -1557,6 +1557,63 @@ def get_recommendations(analysis_id):
         return _fallback_recommendations_response(analysis_id, locals().get('analysis'))
 
 
+def _get_analysis_for_deletion(user_id: int, analysis_id: str):
+    """Pobierz analizę użytkownika do usunięcia lub zwróć None."""
+    return db_operations.get_user_analysis_by_id(user_id, analysis_id)
+
+def _is_protected_baseline(filename: str) -> bool:
+    """Sprawdź, czy plik jest polityką bazową chronioną przed usunięciem."""
+    return bool(filename and filename.startswith(BASELINE_PREFIX))
+
+def _build_possible_filenames(filename: str, user_id: int, document_id: str) -> list:
+    """Zbuduj listę możliwych nazw plików do posprzątania po usunięciu analizy."""
+    names = [filename]
+    if user_id is not None:
+        names.append(f"{user_id}_{filename}")
+    if document_id:
+        names.append(document_id)
+    if not filename.lower().endswith('.pdf'):
+        names.append(f"{filename}.pdf")
+        if user_id is not None:
+            names.append(f"{user_id}_{filename}.pdf")
+    # Filtruj puste/duplikaty, zachowując kolejność
+    seen = set()
+    ordered = []
+    for n in names:
+        if n and n not in seen:
+            seen.add(n)
+            ordered.append(n)
+    return ordered
+
+def _cleanup_analysis_files(upload_folder: str, possible_filenames: list) -> None:
+    """Spróbuj usunąć fizyczne pliki powiązane z analizą; nie podnoś wyjątków."""
+    for fname in possible_filenames:
+        file_path = os.path.join(upload_folder, fname)
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                logger.info(f"Successfully deleted file: {file_path}")
+                break  # zatrzymaj po pierwszym skutecznym usunięciu
+            except Exception as e:
+                logger.warning(f"Could not delete file {file_path}: {e}")
+
+def _delete_analysis_record(user_id: int, analysis_id: str) -> bool:
+    """Usuń wpis analizy użytkownika; zwróć True/False zgodnie z wynikiem DB."""
+    return db_operations.delete_user_analysis(user_id, analysis_id)
+
+def _cleanup_analysis_files_after_deletion(analysis: dict, upload_folder: str) -> None:
+    """Wykonaj sprzątanie plików powiązanych z analizą po jej usunięciu (bez podnoszenia wyjątków)."""
+    try:
+        filename = analysis.get('filename', '')
+        possible_filenames = _build_possible_filenames(
+            filename,
+            analysis.get('user_id', None),
+            analysis.get('document_id', '')
+        )
+        _cleanup_analysis_files(upload_folder, possible_filenames)
+    except Exception as e:
+        logger.error(f"Error during file cleanup for analysis {analysis.get('_id', 'unknown')}: {str(e)}")
+
 @app.route('/delete_analysis/<analysis_id>', methods=['POST'])
 @login_required
 def delete_analysis(analysis_id):
@@ -1568,68 +1625,27 @@ def delete_analysis(analysis_id):
     """
     logger.info(f"Attempting deletion of analysis {analysis_id} by user {current_user.id}")
     try:
-        # Get analysis to check ownership and type
-        analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
+        analysis = _get_analysis_for_deletion(current_user.id, analysis_id)
         if not analysis:
             flash(f'{ANALYSIS_NOT_FOUND} or access denied.', 'error')
             return redirect(url_for('dashboard'))
-        
-        # Check if it's a baseline policy (protect from deletion)
-        filename = analysis.get('filename', '')
-        if filename.startswith(BASELINE_PREFIX):
+
+        if _is_protected_baseline(analysis.get('filename', '')):
             flash('Baseline policies cannot be deleted.', 'warning')
             return redirect(url_for('dashboard'))
-        
-        # Delete the analysis and related data
-        success = db_operations.delete_user_analysis(current_user.id, analysis_id)
-        if success:
-            # Try to delete the physical file if it exists
-            try:
-                # Check multiple possible file locations and naming patterns
-                possible_filenames = [
-                    filename,  # Original filename
-                    f"{current_user.id}_{filename}",  # Prefixed with user ID
-                    analysis.get('document_id', '')  # Document ID if different
-                ]
-                
-                # Also check for files with .pdf extension if original doesn't have it
-                if not filename.lower().endswith('.pdf'):
-                    possible_filenames.append(f"{filename}.pdf")
-                    possible_filenames.append(f"{current_user.id}_{filename}.pdf")
-                
-                # Try each possible filename
-                for fname in possible_filenames:
-                    if not fname:  # Skip empty filenames
-                        continue
-                        
-                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], fname)
-                    if os.path.exists(file_path):
-                        try:
-                            os.remove(file_path)
-                            logger.info(f"Successfully deleted file: {file_path}")
-                            break  # Stop after first successful deletion
-                        except Exception as e:
-                            logger.warning(f"Could not delete file {file_path}: {e}")
-            
-            except Exception as e:
-                logger.error(f"Error during file cleanup for analysis {analysis_id}: {str(e)}")
-                # Don't fail the whole operation if file deletion fails
-            
-            flash('Analysis and related data deleted successfully.', 'success')
-        else:
-            logger.error(f"Failed to delete analysis {analysis_id} for user {current_user.id}")
-            flash('Error deleting analysis. Please try again or contact support if the issue persists.', 'error')
-        
+
+        if not _delete_analysis_record(current_user.id, analysis_id):
+            flash('Failed to delete analysis. Please try again.', 'error')
+            return redirect(url_for('dashboard'))
+
+        _cleanup_analysis_files_after_deletion(analysis, app.config['UPLOAD_FOLDER'])
+        flash('Analysis and related data deleted successfully.', 'success')
         return redirect(url_for('dashboard'))
-        
     except Exception as e:
-        logger.error(f"Error deleting analysis: {str(e)}")
-        flash('Error deleting analysis.', 'error')
+        logger.error(f"Error deleting analysis {analysis_id}: {str(e)}")
+        flash('An error occurred while deleting the analysis.', 'error')
         return redirect(url_for('dashboard'))
 
-# API routes for additional functionality
-
-@app.route('/api/explain/<analysis_id>')
 @login_required
 def api_explain_analysis(analysis_id):
     """

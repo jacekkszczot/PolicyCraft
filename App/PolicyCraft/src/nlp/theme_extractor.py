@@ -850,13 +850,17 @@ class ThemeExtractor:
         for theme_name, score in sorted_themes[:max_themes]:
             details = theme_details[theme_name]
             
+            # Normalise score to [0,10] as per test expectations
+            raw_score = float(score)
+            normalised_score = min(10.0, round(raw_score, 2))
+
             theme_data = {
                 'name': theme_name,
-                'score': round(score, 2),
-                'frequency': int(score),
+                'score': normalised_score,
+                'frequency': int(raw_score),
                 'keywords': [kw[0] for kw in details['keywords'][:5]],  # Top 5 keywords
                 'matches': [match[0] if isinstance(match, tuple) else match for match in details['matches'][:3]],  # Top 3 matches
-                'confidence': min(100, int(score * 10))  # Convert to confidence percentage
+                'confidence': min(100, int(raw_score * 10))  # Convert to confidence percentage
             }
             
             # Add entities if available

@@ -28,6 +28,10 @@ venv/
 env/
 ENV/
 
+# Flask instance and local data
+instance/
+instance/uploads/
+
 # macOS files
 .DS_Store
 .AppleDouble

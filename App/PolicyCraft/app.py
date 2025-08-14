@@ -39,6 +39,21 @@ def _load_or_generate_recommendations(analysis_id, cleaned_text):
                 'methodology': 'Previously generated'
             }
         }
+    # No stored recommendations – generate new ones
+    try:
+        logger.info("Generating new recommendations with knowledge base")
+        recommendations = recommendation_engine.generate_recommendations(
+            policy_text=cleaned_text,
+            institution_type="university",
+            analysis_id=analysis_id
+        )
+        # Optional debug print kept as in original implementation
+        for i, rec in enumerate(recommendations.get("recommendations", [])):
+            logger.debug(f"Recommendation {i+1}: {rec.get('title', 'Unknown')}")
+        return recommendations
+    except Exception as e:
+        logger.error(f"Error generating recommendations: {str(e)}")
+        return None
 
 def _get_or_create_analysis_record(filename: str, is_baseline: bool, file_path: str):
     """Pobierz istniejącą analizę lub uruchom nową i zwróć komplet danych.
@@ -88,25 +103,25 @@ def _make_binary_response(binary_data: bytes, content_type: str, filename: str):
     response.headers['Content-Disposition'] = f'attachment; filename={filename}'
     return response
 
-    try:
-        print("\n===== GENERATING RECOMMENDATIONS WITH KNOWLEDGE BASE =====\n")
-        recommendations = recommendation_engine.generate_recommendations(
-            policy_text=cleaned_text,
-            institution_type="university",
-            analysis_id=analysis_id
-        )
-        print("\n===== RECOMMENDATIONS GENERATED =====\n")
-
-        for i, rec in enumerate(recommendations.get("recommendations", [])):
-            print(f"Recommendation {i+1}: {rec.get('title', 'Unknown')}")
-            print(f"  Sources: {rec.get('sources', [])}")
-            print(f"  References: {len(rec.get('references', []))} items")
-        print("\n===== END OF RECOMMENDATIONS DEBUG =====\n")
-
-        return recommendations
-    except Exception as e:
-        logger.error(f"Error generating recommendations: {str(e)}")
-        return None
+def _export_binary_via_engine(export_data: dict, analysis_id: str, fmt: str):
+    """Common export helper for PDF/Word/Excel. fmt in {'pdf','word','excel'}."""
+    from src.export import ExportEngine
+    export_engine = ExportEngine()
+    if fmt == 'pdf':
+        binary = export_engine.export_to_pdf(export_data)
+        ctype = 'application/pdf'
+        ext = 'pdf'
+    elif fmt == 'word':
+        binary = export_engine.export_to_word(export_data)
+        ctype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ext = 'docx'
+    elif fmt == 'excel':
+        binary = export_engine.export_to_excel(export_data)
+        ctype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ext = 'xlsx'
+    else:
+        raise ValueError(f"Unsupported export format: {fmt}")
+    return _make_binary_response(binary, ctype, f'PolicyCraft_Analysis_{analysis_id}.{ext}')
 
 def _build_recommendation_data(analysis_id, analysis, themes, classification, recommendation_package):
     """Build the data dict for recommendations template, matching original keys."""
@@ -248,47 +263,49 @@ def clean_university_name(filename):
         clean_name = filename.split('_', 2)[-1] if len(filename.split('_')) > 2 else filename.split('_')[-1]
     else:
         clean_name = filename
-    
-    # Remove file extensions
-    clean_name = clean_name.replace('.pdf', '').replace(DOCX_EXTENSION, '').replace('.doc', '').replace('.txt', '')
-    clean_name = clean_name.replace('-ai-policy', '').replace('_ai_policy', '')
-    
-    # Map to clean university names
+
+    # Remove file extensions and common suffixes
+    clean_name = (
+        clean_name
+        .replace('.pdf', '')
+        .replace(DOCX_EXTENSION, '')
+        .replace('.doc', '')
+        .replace('.txt', '')
+        .replace('-ai-policy', '')
+        .replace('_ai_policy', '')
+    )
+
     name_lower = clean_name.lower()
-    if 'harvard' in name_lower:
-        return 'Harvard University'
-    elif 'stanford' in name_lower:
-        return 'Stanford University'
-    elif 'mit' in name_lower:
-        return 'MIT'
-    elif 'cambridge' in name_lower:
-        return 'University of Cambridge'
-    elif 'oxford' in name_lower:
-        return 'Oxford University'
-    elif 'belfast' in name_lower:
-        return 'Belfast University'
-    elif 'edinburgh' in name_lower:
-        return 'Edinburgh University'
-    elif 'columbia' in name_lower:
-        return 'Columbia University'
-    elif 'cornell' in name_lower:
-        return 'Cornell University'
-    elif 'chicago' in name_lower:
-        return 'University of Chicago'
-    elif 'imperial' in name_lower:
-        return 'Imperial College London'
-    elif 'tokyo' in name_lower:
-        return 'University of Tokyo'
-    elif 'jagiellonian' in name_lower:
-        return 'Jagiellonian University'
-    elif 'leeds' in name_lower and 'trinity' in name_lower:
+
+    # Special composite case first
+    if 'leeds' in name_lower and 'trinity' in name_lower:
         return 'Leeds Trinity University'
-    elif 'liverpool' in name_lower:
-        return 'University of Liverpool'
-    else:
-        # Generic cleanup
-        clean_name = clean_name.replace('-', ' ').replace('_', ' ').title()
-        return clean_name[:30] + '...' if len(clean_name) > 30 else clean_name
+
+    # Keyword mapping to canonical names
+    keyword_map = [
+        ('harvard', 'Harvard University'),
+        ('stanford', 'Stanford University'),
+        ('mit', 'MIT'),
+        ('cambridge', 'University of Cambridge'),
+        ('oxford', 'Oxford University'),
+        ('belfast', 'Belfast University'),
+        ('edinburgh', 'Edinburgh University'),
+        ('columbia', 'Columbia University'),
+        ('cornell', 'Cornell University'),
+        ('chicago', 'University of Chicago'),
+        ('imperial', 'Imperial College London'),
+        ('tokyo', 'University of Tokyo'),
+        ('jagiellonian', 'Jagiellonian University'),
+        ('liverpool', 'University of Liverpool'),
+    ]
+
+    for keyword, canonical in keyword_map:
+        if keyword in name_lower:
+            return canonical
+
+    # Generic cleanup fallback
+    clean_name = clean_name.replace('-', ' ').replace('_', ' ').title()
+    return clean_name[:30] + '...' if len(clean_name) > 30 else clean_name
 
 def clean_filename(filename):
     """
@@ -1267,33 +1284,43 @@ def upload_file():
     
     # Handle file uploads
     uploaded_files = _get_uploaded_files_from_request(request)
-    if not uploaded_files:
-        flash('No files selected', 'error')
-        return redirect(request.url)
-
-    # Check file limit
     max_files = app.config.get('MAX_FILES_PER_UPLOAD', 10)
-    if len(uploaded_files) > max_files:
-        flash(f'Too many files. Maximum {max_files} files allowed.', 'error')
-        return redirect(request.url)
+    early = _validate_upload_request(uploaded_files, max_files)
+    if early is not None:
+        return early
 
     successful_uploads, failed_uploads = _process_uploaded_files(uploaded_files)
     
     # Provide feedback
+    outcome = _handle_upload_outcome(successful_uploads, failed_uploads)
+    if outcome is not None:
+        return outcome
+    return redirect(request.url)
+
+def _validate_upload_request(uploaded_files, max_files):
+    """Walidacja wejścia dla uploadu. Zwraca Response lub None jeśli OK."""
+    if not uploaded_files:
+        flash('No files selected', 'error')
+        return redirect(request.url)
+    if len(uploaded_files) > max_files:
+        flash(f'Too many files. Maximum {max_files} files allowed.', 'error')
+        return redirect(request.url)
+    return None
+
+def _handle_upload_outcome(successful_uploads, failed_uploads):
+    """Zbuduj odpowiedni redirect i komunikaty flash po uploadzie, albo zwróć None."""
     if successful_uploads:
         if len(successful_uploads) == 1:
             flash('File uploaded successfully! Starting analysis...', 'success')
             return redirect(url_for('analyse_document', filename=successful_uploads[0]['unique']))
-        else:
-            flash(f'{len(successful_uploads)} files uploaded successfully! Starting batch analysis...', 'success')
-            file_list = [f['unique'] for f in successful_uploads]
-            return redirect(url_for('batch_analyse', files=','.join(file_list)))
-    
+        flash(f"{len(successful_uploads)} files uploaded successfully! Starting batch analysis...", 'success')
+        file_list = [f['unique'] for f in successful_uploads]
+        return redirect(url_for('batch_analyse', files=','.join(file_list)))
     if failed_uploads:
         error_msg = f"{len(failed_uploads)} files failed to upload: " + ", ".join([f['filename'] for f in failed_uploads])
         flash(error_msg, 'error')
-    
-    return redirect(request.url)
+        # brak redirectu tutaj – pozwól wywołującemu zdecydować (upload_file -> request.url)
+    return None
 
 @app.route('/batch-analyse/<path:files>')
 @login_required
@@ -1451,15 +1478,13 @@ def analyse_document(filename):
     try:
         is_baseline = filename.startswith(BASELINE_PREFIX)
 
-        if not _is_authorised_for_filename(filename, is_baseline):
-            flash('Access denied. You can only analyse your own documents or baseline policies.', 'error')
-            return redirect(url_for('upload_file'))
+        early = _authorize_analysis_or_redirect(filename, is_baseline)
+        if early is not None:
+            return early
 
-        file_path, _, _ = _resolve_file_path_for_analysis(filename, is_baseline)
-        if not os.path.exists(file_path):
-            logger.error(f"File not found: {file_path}")
-            flash('File not found', 'error')
-            return redirect(url_for('upload_file'))
+        file_path, early = _resolve_and_validate_path_or_redirect(filename, is_baseline)
+        if early is not None:
+            return early
 
         logger.info(f"Starting analysis of file: {filename}")
 
@@ -1485,6 +1510,22 @@ def analyse_document(filename):
         logger.error(f"Error during analysis of {filename}: {str(e)}")
         flash('Error analysing document. Please try again.', 'error')
         return redirect(url_for('upload_file'))
+
+def _authorize_analysis_or_redirect(filename: str, is_baseline: bool):
+    """Authorize analysis request or return a redirect Response if not allowed."""
+    if not _is_authorised_for_filename(filename, is_baseline):
+        flash('Access denied. You can only analyse your own documents or baseline policies.', 'error')
+        return redirect(url_for('upload_file'))
+    return None
+
+def _resolve_and_validate_path_or_redirect(filename: str, is_baseline: bool):
+    """Resolve path for analysis and ensure it exists; return (path, redirect_or_none)."""
+    file_path, _, _ = _resolve_file_path_for_analysis(filename, is_baseline)
+    if not os.path.exists(file_path):
+        logger.error(f"File not found: {file_path}")
+        flash('File not found', 'error')
+        return None, redirect(url_for('upload_file'))
+    return file_path, None
 
 @app.route('/validate/<analysis_id>')
 @login_required
@@ -1833,11 +1874,7 @@ def export_pdf(analysis_id):
         export_data, error = _prepare_basic_export_data_or_error(analysis_id)
         if error:
             return error
-        from src.export import ExportEngine
-        export_engine = ExportEngine()
-        pdf_data = export_engine.export_to_pdf(export_data)
-        return _make_binary_response(pdf_data, 'application/pdf', f'PolicyCraft_Analysis_{analysis_id}.pdf')
-        
+        return _export_binary_via_engine(export_data, analysis_id, 'pdf')
     except Exception as e:
         logger.error(f"Error exporting to PDF: {str(e)}")
         return jsonify({'error': 'Error generating PDF export'}), 500
@@ -1855,15 +1892,7 @@ def export_word(analysis_id):
         export_data, error = _prepare_basic_export_data_or_error(analysis_id)
         if error:
             return error
-        from src.export import ExportEngine
-        export_engine = ExportEngine()
-        docx_data = export_engine.export_to_word(export_data)
-        return _make_binary_response(
-            docx_data,
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            f'PolicyCraft_Analysis_{analysis_id}.docx'
-        )
-        
+        return _export_binary_via_engine(export_data, analysis_id, 'word')
     except Exception as e:
         logger.error(f"Error exporting to Word: {str(e)}")
         return jsonify({'error': 'Error generating Word export'}), 500
@@ -1881,15 +1910,7 @@ def export_excel(analysis_id):
         export_data, error = _prepare_basic_export_data_or_error(analysis_id)
         if error:
             return error
-        from src.export import ExportEngine
-        export_engine = ExportEngine()
-        excel_data = export_engine.export_to_excel(export_data)
-        return _make_binary_response(
-            excel_data,
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            f'PolicyCraft_Analysis_{analysis_id}.xlsx'
-        )
-        
+        return _export_binary_via_engine(export_data, analysis_id, 'excel')
     except Exception as e:
         logger.error(f"Error exporting to Excel: {str(e)}")
         return jsonify({'error': 'Error generating Excel export'}), 500
@@ -1912,45 +1933,47 @@ def handle_first_login_onboarding(user_id: int) -> bool:
     """
     try:
         from src.database.models import User
-        
+
         user = User.query.get(user_id)
         if not user:
             return False
-            
-        # Check if user needs onboarding
-        if user.is_first_login():
-            logger.info(f"Starting onboarding for new user: {user.username}")
-            
-            # Load sample policies automatically
-            success = db_operations.load_sample_policies_for_user(user_id)
-            
-            if success:
-                # Mark onboarding as completed
-                user.complete_onboarding()
-                logger.info(f"Onboarding completed for user: {user.username}")
-                flash("Welcome! We have loaded 15 sample university policies to get you started.", "success")
-                return True
-            else:
-                # If sample load failed, but user already has baseline analyses, treat as success
-                # Robust baseline detection check if ANY analysis filename starts with BASELINE
-                try:
-                    user_analyses = db_operations.get_user_analyses(user_id)
-                    baseline_exists = any(a.get('filename', '').startswith(BASELINE_PREFIX) for a in user_analyses)
-                except Exception as _:
-                    baseline_exists = False
-                if baseline_exists:
-                    user.complete_onboarding()
-                    logger.info(f"Baseline analyses detected despite load failure onboarding marked complete for {user.username}")
-                    flash("Welcome! Sample policies are already available in your dashboard.", "info")
-                    return True
-                logger.warning(f"Onboarding failed for user: {user.username}")
-                flash("Welcome! There was an issue loading sample policies.", "warning")
-                
+
+        if not user.is_first_login():
+            return False
+
+        logger.info(f"Starting onboarding for new user: {user.username}")
+
+        success = db_operations.load_sample_policies_for_user(user_id)
+        if success:
+            return _complete_onboarding_with_message(user, "Welcome! We have loaded 15 sample university policies to get you started.", "success")
+
+        # Fallback: treat as success if baselines already exist
+        if _baseline_exists_for_user(user_id):
+            logger.info("Baselines already exist; marking onboarding complete.")
+            return _complete_onboarding_with_message(user, "Welcome! Sample policies are already available in your dashboard.", "info")
+
+        logger.warning(f"Onboarding failed for user: {user.username}")
+        flash("Welcome! There was an issue loading sample policies.", "warning")
         return False
-        
+
     except Exception as e:
         logger.error(f"Error in onboarding: {e}")
         return False
+
+def _baseline_exists_for_user(user_id: int) -> bool:
+    """Check if user already has any baseline analyses available."""
+    try:
+        user_analyses = db_operations.get_user_analyses(user_id)
+        return any(a.get('filename', '').startswith(BASELINE_PREFIX) for a in user_analyses)
+    except Exception as _:
+        return False
+
+def _complete_onboarding_with_message(user, message: str, category: str) -> bool:
+    """Mark onboarding complete, log, flash message, and return True."""
+    user.complete_onboarding()
+    logger.info(f"Onboarding completed for user: {user.username}")
+    flash(message, category)
+    return True
 
 if __name__ == '__main__':
     """Run the PolicyCraft application in development mode."""

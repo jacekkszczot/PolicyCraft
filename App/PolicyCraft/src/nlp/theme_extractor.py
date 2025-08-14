@@ -905,24 +905,31 @@ class ThemeExtractor:
         if not text or not theme:
             return 0.0
         text_lower = text.lower()
-        # Find the theme definition by name (case-insensitive substring match)
-        theme_def = None
-        for name, data in self.theme_categories.items():
-            if theme.lower() in name.lower():
-                theme_def = data
-                break
+        theme_def = self._match_theme_def(theme)
         if theme_def is None:
             # Unknown theme: estimate via generic keyword presence
-            occurrences = len(re.findall(r"\b" + re.escape(theme.lower()) + r"\b", text_lower))
+            occurrences = self._count_word_occurrences(text_lower, theme.lower())
             return min(1.0, occurrences / 5.0)
-        # Count keyword and pattern occurrences
-        occ = 0
-        for kw in theme_def.get('keywords', []):
-            occ += len(re.findall(r"\b" + re.escape(kw) + r"\b", text_lower))
-        for patt in theme_def.get('patterns', []):
-            occ += 2 * len(re.findall(r"\b" + re.escape(patt.lower()) + r"\b", text_lower))
+        # Count keyword and pattern occurrences (patterns weighted x2)
+        occ = sum(self._count_word_occurrences(text_lower, kw) for kw in theme_def.get('keywords', []))
+        occ += 2 * sum(self._count_word_occurrences(text_lower, patt.lower()) for patt in theme_def.get('patterns', []))
         # Normalise with a soft cap
         return min(1.0, occ / 10.0)
+
+    def _match_theme_def(self, theme: str) -> Optional[dict]:
+        """Find theme definition by case-insensitive substring name match."""
+        t = (theme or '').lower()
+        for name, data in self.theme_categories.items():
+            if t in name.lower():
+                return data
+        return None
+
+    @staticmethod
+    def _count_word_occurrences(text_lower: str, token: str) -> int:
+        """Count whole-word occurrences of token within pre-lowered text."""
+        if not token:
+            return 0
+        return len(re.findall(r"\b" + re.escape(token) + r"\b", text_lower))
 
     def categorise_themes(self, themes: List[str]) -> Dict[str, Any]:
         """

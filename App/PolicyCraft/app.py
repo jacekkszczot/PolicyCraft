@@ -551,12 +551,29 @@ def _process_single_batch_file(filename: str):
 
 def _summarize_batch_results(file_list, successful_analyses, failed_analyses):
     """Create a summary dict for batch analysis template."""
+    total = len(file_list)
     return {
-        'requested': len(file_list),
+        'total_files': total,
         'successful': successful_analyses,
         'failed': failed_analyses,
-        'filenames': file_list,
+        'success_rate': round((successful_analyses / total) * 100, 2) if total else 0.0
     }
+
+def _process_batch_files(file_list):
+    """Przetwórz listę plików w trybie wsadowym i zwróć (results, ok_count, fail_count)."""
+    batch_results = []
+    successful_analyses = 0
+    failed_analyses = 0
+
+    for filename in file_list:
+        result, ok = _process_single_batch_file(filename)
+        batch_results.append(result)
+        if ok:
+            successful_analyses += 1
+        else:
+            failed_analyses += 1
+
+    return batch_results, successful_analyses, failed_analyses
 
 def _combine_stats(stats1, stats2):
     """Combine two sets of statistics with weighted averaging."""
@@ -1295,17 +1312,7 @@ def batch_analyse(files):
 
         logger.info(f"Starting batch analysis of {len(file_list)} files")
 
-        batch_results = []
-        successful_analyses = 0
-        failed_analyses = 0
-
-        for i, filename in enumerate(file_list, 1):
-            result, ok = _process_single_batch_file(filename)
-            batch_results.append(result)
-            if ok:
-                successful_analyses += 1
-            else:
-                failed_analyses += 1
+        batch_results, successful_analyses, failed_analyses = _process_batch_files(file_list)
 
         batch_summary = _summarize_batch_results(file_list, successful_analyses, failed_analyses)
 
@@ -1511,6 +1518,29 @@ def validate_analysis(analysis_id):
     issues = validate_recommendation_sources(recs)
     return jsonify({"issues": issues})
 
+def _prepare_recommendation_inputs(analysis_id):
+    """
+    Pobiera i waliduje dane wejściowe dla rekomendacji.
+    Zwraca krotkę: ((analysis, themes, classification, cleaned_text), None) lub (None, response)
+    gdzie 'response' to redirect/response do zwrócenia w przypadku błędu.
+    """
+    analysis = _fetch_analysis_for_recommendations(analysis_id)
+    if analysis is None:
+        logger.error(f"Analysis {analysis_id} not found in global lookup")
+        flash(f'{ANALYSIS_NOT_FOUND}.', 'error')
+        return None, redirect(url_for('dashboard'))
+
+    themes = analysis.get('themes', [])
+    classification = analysis.get('classification', {})
+    cleaned_text = _extract_cleaned_text_with_logging(analysis)
+
+    if not cleaned_text:
+        logger.error("No text content found in analysis to generate recommendations")
+        flash('Analysis text not found. Cannot generate recommendations.', 'warning')
+        return None, redirect(url_for('dashboard'))
+
+    return (analysis, themes, classification, cleaned_text), None
+
 @app.route('/recommendations/<analysis_id>')
 @login_required
 def get_recommendations(analysis_id):
@@ -1525,20 +1555,10 @@ def get_recommendations(analysis_id):
         logger.info(f"User ID: {current_user.id}, Username: {getattr(current_user, 'username', 'N/A')}")
         logger.info(f"Analysis ID: {analysis_id}")
 
-        analysis = _fetch_analysis_for_recommendations(analysis_id)
-        if analysis is None:
-            logger.error(f"Analysis {analysis_id} not found in global lookup")
-            flash(f'{ANALYSIS_NOT_FOUND}.', 'error')
-            return redirect(url_for('dashboard'))
-
-        themes = analysis.get('themes', [])
-        classification = analysis.get('classification', {})
-        cleaned_text = _extract_cleaned_text_with_logging(analysis)
-
-        if not cleaned_text:
-            logger.error("No text content found in analysis to generate recommendations")
-            flash('Analysis text not found. Cannot generate recommendations.', 'warning')
-            return redirect(url_for('dashboard'))
+        prep, error = _prepare_recommendation_inputs(analysis_id)
+        if error:
+            return error
+        analysis, themes, classification, cleaned_text = prep
 
         recommendation_package = _load_or_generate_recommendations(analysis_id, cleaned_text)
         if recommendation_package is None:

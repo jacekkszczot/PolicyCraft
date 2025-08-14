@@ -452,8 +452,8 @@ class EthicalFrameworkAnalyzer:
                     f"Conduct a comprehensive review of your policy's {dimension.value.lower()} provisions",
                     f"Benchmark against best practices in {dimension.value.lower()} from leading institutions",
                     f"Identify specific gaps in your {dimension.value.lower()} approach",
-                    f"Develop targeted improvements for each identified gap",
-                    f"Implement changes and establish metrics to track effectiveness"
+                    "Develop targeted improvements for each identified gap",
+                    "Implement changes and establish metrics to track effectiveness"
                 ]
             })
             

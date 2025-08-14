@@ -609,7 +609,7 @@ def dashboard():
             except Exception as clean_error:
                 logger.error(f"Dashboard: Text cleaning failed for {missing_file}: {str(clean_error)}")
                 cleaned_text = extracted_text  # Use original text as fallback
-                logger.info(f"Dashboard: Using original text as fallback after cleaning failure")
+                logger.info("Dashboard: Using original text as fallback after cleaning failure")
             
             # Extract themes with error handling
             try:
@@ -1006,7 +1006,7 @@ def upload_file():
     # Provide feedback
     if successful_uploads:
         if len(successful_uploads) == 1:
-            flash(f'File uploaded successfully! Starting analysis...', 'success')
+            flash('File uploaded successfully! Starting analysis...', 'success')
             return redirect(url_for('analyse_document', filename=successful_uploads[0]['unique']))
         else:
             flash(f'{len(successful_uploads)} files uploaded successfully! Starting batch analysis...', 'success')
@@ -1324,7 +1324,7 @@ def get_recommendations(analysis_id):
     AI framework analysis and institutional context assessment.
     """
     try:
-        logger.info(f"=== Starting recommendation generation ===")
+        logger.info("=== Starting recommendation generation ===")
         logger.info(f"User ID: {current_user.id}, Username: {getattr(current_user, 'username', 'N/A')}")
         logger.info(f"Analysis ID: {analysis_id}")
         
@@ -1651,7 +1651,7 @@ def export_view(analysis_id):
     analysis results to various formats (PDF, Word, Excel).
     """
     try:
-        logger.info(f"=== Starting export view preparation ===")
+        logger.info("=== Starting export view preparation ===")
         logger.info(f"User ID: {current_user.id}, Analysis ID: {analysis_id}")
         
         # Get the analysis data

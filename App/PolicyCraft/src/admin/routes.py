@@ -79,6 +79,13 @@ DEFAULT_PASSWORD = os.getenv("ADMIN_PASSWORD", "change_me_immediately")  # Set A
 
 mongo_db = MongoOperations()
 
+# ---------------------------------------------------------------------------
+# Common literals/constants
+# ---------------------------------------------------------------------------
+ADMIN_DASHBOARD_ENDPOINT = "admin.dashboard"
+ADMIN_USERS_ENDPOINT = "admin.users"
+SSE_DATA_PREFIX = "data: "
+
 
 def _load_config() -> Dict:
     if not os.path.exists(CONFIG_PATH):
@@ -116,7 +123,7 @@ def login():
         if check_password_hash(cfg["password_hash"], password):
             session["is_admin"] = True
             flash("Logged in as admin", "success")
-            return redirect(request.args.get("next") or url_for("admin.dashboard"))
+            return redirect(request.args.get("next") or url_for(ADMIN_DASHBOARD_ENDPOINT))
         flash("Invalid admin password", "error")
     return render_template("admin/login.html")
 
@@ -158,12 +165,12 @@ def delete_user(user_id):
     user = User.query.get(user_id)
     if not user:
         flash("User not found", "error")
-        return redirect(url_for("admin.users"))
+        return redirect(url_for(ADMIN_USERS_ENDPOINT))
     
     # Prevent deletion of admin users
     if user.role == 'admin':
         flash("Cannot delete admin users for security reasons", "error")
-        return redirect(url_for("admin.users"))
+        return redirect(url_for(ADMIN_USERS_ENDPOINT))
     
     username = user.username
     
@@ -184,7 +191,7 @@ def delete_user(user_id):
             flash(f"Deleted user {username}", "success")
     except Exception as e:
         flash(f"User {username} deleted, but error purging data: {str(e)}", "warning")
-    return redirect(url_for("admin.users"))
+    return redirect(url_for(ADMIN_USERS_ENDPOINT))
 
 @admin_bp.route("/users/reset_password/<int:user_id>")
 @admin_required
@@ -196,7 +203,7 @@ def reset_password(user_id):
     user = User.query.get(user_id)
     if not user:
         flash("User not found", "error")
-        return redirect(url_for("admin.users"))
+        return redirect(url_for(ADMIN_USERS_ENDPOINT))
     
     # Generate a secure random password (8 characters: letters + numbers)
     alphabet = string.ascii_letters + string.digits
@@ -208,7 +215,7 @@ def reset_password(user_id):
     
     # Show the new password to admin (they need to give it to the user)
     flash(f"Password reset for {user.username}. New password: {new_password}", "success")
-    return redirect(url_for("admin.users"))
+    return redirect(url_for(ADMIN_USERS_ENDPOINT))
 
 # ---------------------------------------------------------------------------
 # Baselines reset
@@ -223,28 +230,28 @@ def reset_progress():
             # Step 1: Remove existing baseline docs
             delete_result = mongo_db.analyses.delete_many({"user_id": -1})
             deleted_count = delete_result.deleted_count if hasattr(delete_result, 'deleted_count') else 0
-            yield f"data: {json.dumps({'step': 1, 'message': f'Removed {deleted_count} old baseline analyses'})}\n\n"
+            yield f"{SSE_DATA_PREFIX}{json.dumps({'step': 1, 'message': f'Removed {deleted_count} old baseline analyses'})}\n\n"
             
             # Step 2: Remove existing baseline recommendations
             rec_delete_result = mongo_db.recommendations.delete_many({"user_id": -1})
             rec_deleted_count = rec_delete_result.deleted_count if hasattr(rec_delete_result, 'deleted_count') else 0
-            yield f"data: {json.dumps({'step': 2, 'message': f'Removed {rec_deleted_count} old recommendations'})}\n\n"
+            yield f"{SSE_DATA_PREFIX}{json.dumps({'step': 2, 'message': f'Removed {rec_deleted_count} old recommendations'})}\n\n"
             
             # Step 3: Recreate global baselines from dataset
             success = mongo_db.load_sample_policies_for_user(-1)
             if success:
-                yield "data: " + json.dumps({'step': 3, 'message': 'Successfully loaded new baseline policies'}) + "\n\n"
+                yield SSE_DATA_PREFIX + json.dumps({'step': 3, 'message': 'Successfully loaded new baseline policies'}) + "\n\n"
                 
                 # Step 4: Deduplicate
                 mongo_db.remove_duplicate_baselines_global()
                 mongo_db.deduplicate_baseline_analyses(-1)
-                yield "data: " + json.dumps({'step': 4, 'message': 'Deduplication complete', 'done': True}) + "\n\n"
+                yield SSE_DATA_PREFIX + json.dumps({'step': 4, 'message': 'Deduplication complete', 'done': True}) + "\n\n"
             else:
-                yield "data: " + json.dumps({'step': 3, 'message': 'Failed to load sample policies', 'error': True}) + "\n\n"
+                yield SSE_DATA_PREFIX + json.dumps({'step': 3, 'message': 'Failed to load sample policies', 'error': True}) + "\n\n"
                 
         except Exception as e:
             current_app.logger.error(f"Error during baseline reset: {str(e)}")
-            yield "data: " + json.dumps({'step': 0, 'message': f'Error: {str(e)}', 'error': True}) + "\n\n"
+            yield SSE_DATA_PREFIX + json.dumps({'step': 0, 'message': f'Error: {str(e)}', 'error': True}) + "\n\n"
     
     return Response(generate(), mimetype='text/event-stream')
 

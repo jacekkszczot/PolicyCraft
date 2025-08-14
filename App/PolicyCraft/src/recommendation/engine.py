@@ -231,6 +231,19 @@ class EthicalFrameworkAnalyzer:
         text_lower = text.lower()
         recommendations = []
         
+        # Local helper to reduce repeated dict construction
+        def add_rec(rid: str, title: str, description: str, rationale: str, priority: str, impl_time: str, steps: List[str]) -> None:
+            recommendations.append({
+                "id": rid,
+                "title": title,
+                "description": description,
+                "rationale": rationale,
+                "priority": priority,
+                "dimension": dimension.value,
+                "implementation_time": impl_time,
+                "implementation_steps": steps,
+            })
+        
         # Get dimension-specific keywords and their presence in the text
         found_keywords = [kw for kw in DIMENSION_KEYWORDS.get(dimension, []) if kw in text_lower]
         missing_keywords = [kw for kw in DIMENSION_KEYWORDS.get(dimension, []) if kw not in text_lower]
@@ -238,40 +251,38 @@ class EthicalFrameworkAnalyzer:
         # Generate context-aware recommendations based on missing keywords and dimension
         if dimension == PolicyDimension.ACCOUNTABILITY:
             if len(missing_keywords) > len(found_keywords):
-                recommendations.append({
-                    "id": "acc-001",
-                    "title": "Establish Clear Accountability Structures",
-                    "description": "Define clear roles and responsibilities for AI governance within your institution.",
-                    "rationale": "Clear accountability ensures that AI systems are used responsibly and that there is oversight at all levels.",
-                    "priority": "high",
-                    "dimension": dimension.value,
-                    "implementation_time": IMPLEMENTATION_TIME_MEDIUM,
-                    "implementation_steps": [
+                add_rec(
+                    "acc-001",
+                    "Establish Clear Accountability Structures",
+                    "Define clear roles and responsibilities for AI governance within your institution.",
+                    "Clear accountability ensures that AI systems are used responsibly and that there is oversight at all levels.",
+                    "high",
+                    IMPLEMENTATION_TIME_MEDIUM,
+                    [
                         "Form an AI governance committee with representatives from key stakeholders",
                         "Define clear roles and responsibilities for AI oversight",
                         "Establish reporting lines and accountability mechanisms",
                         "Document governance structures in formal policy documents",
-                        "Communicate governance framework to all relevant staff"
-                    ]
-                })
+                        "Communicate governance framework to all relevant staff",
+                    ],
+                )
                 
             if "audit" not in found_keywords or "monitor" not in found_keywords:
-                recommendations.append({
-                    "id": "acc-002",
-                    "title": "Implement Regular Auditing and Monitoring",
-                    "description": "Establish procedures for regular auditing and monitoring of AI systems to ensure compliance with ethical standards.",
-                    "rationale": "Regular auditing helps identify issues early and ensures continuous improvement of AI governance.",
-                    "priority": "medium",
-                    "dimension": dimension.value,
-                    "implementation_time": IMPLEMENTATION_TIME_SHORT,
-                    "implementation_steps": [
+                add_rec(
+                    "acc-002",
+                    "Implement Regular Auditing and Monitoring",
+                    "Establish procedures for regular auditing and monitoring of AI systems to ensure compliance with ethical standards.",
+                    "Regular auditing helps identify issues early and ensures continuous improvement of AI governance.",
+                    "medium",
+                    IMPLEMENTATION_TIME_SHORT,
+                    [
                         "Develop an AI audit framework with clear metrics and benchmarks",
                         "Establish a regular audit schedule (quarterly or bi-annually)",
                         "Create audit templates and checklists for consistency",
                         "Train staff on audit procedures and ethical standards",
-                        "Implement reporting mechanisms for audit findings"
-                    ]
-                })
+                        "Implement reporting mechanisms for audit findings",
+                    ],
+                )
                 
             if "compliance" not in found_keywords:
                 recommendations.append({
@@ -293,187 +304,177 @@ class EthicalFrameworkAnalyzer:
                 
         elif dimension == PolicyDimension.TRANSPARENCY:
             if "explain" not in found_keywords or "explainable" not in found_keywords:
-                recommendations.append({
-                    "id": "trans-001",
-                    "title": "Improve Explainability of AI Systems",
-                    "description": "Implement mechanisms to explain AI decisions in clear, non-technical language to affected stakeholders.",
-                    "rationale": "Explainable AI builds trust and enables meaningful human oversight of automated decisions.",
-                    "priority": "high",
-                    "dimension": dimension.value,
-                    "implementation_time": IMPLEMENTATION_TIME_MEDIUM,
-                    "implementation_steps": [
+                add_rec(
+                    "trans-001",
+                    "Improve Explainability of AI Systems",
+                    "Implement mechanisms to explain AI decisions in clear, non-technical language to affected stakeholders.",
+                    "Explainable AI builds trust and enables meaningful human oversight of automated decisions.",
+                    "high",
+                    IMPLEMENTATION_TIME_MEDIUM,
+                    [
                         "Audit current AI systems for explainability gaps",
                         "Develop explainability standards for different stakeholder groups",
                         "Implement technical solutions for generating explanations (e.g., LIME, SHAP)",
                         "Create user-friendly interfaces for displaying explanations",
-                        "Train staff on communicating AI decisions to non-technical audiences"
-                    ]
-                })
+                        "Train staff on communicating AI decisions to non-technical audiences",
+                    ],
+                )
                 
             if "document" not in found_keywords:
-                recommendations.append({
-                    "id": "trans-002",
-                    "title": "Enhance Documentation of AI Systems",
-                    "description": "Create comprehensive documentation for all AI systems, including their purpose, limitations, and potential risks.",
-                    "rationale": "Thorough documentation enables better understanding and evaluation of AI systems by all stakeholders.",
-                    "priority": "medium",
-                    "dimension": dimension.value,
-                    "implementation_time": IMPLEMENTATION_TIME_SHORT,
-                    "implementation_steps": [
+                add_rec(
+                    "trans-002",
+                    "Enhance Documentation of AI Systems",
+                    "Create comprehensive documentation for all AI systems, including their purpose, limitations, and potential risks.",
+                    "Thorough documentation enables better understanding and evaluation of AI systems by all stakeholders.",
+                    "medium",
+                    IMPLEMENTATION_TIME_SHORT,
+                    [
                         "Develop documentation templates for AI systems",
                         "Conduct inventory of all AI systems requiring documentation",
                         "Document technical specifications, data sources, and algorithms used",
                         "Include known limitations, biases, and potential risks in documentation",
-                        "Establish a process for regular documentation updates as systems evolve"
-                    ]
-                })
+                        "Establish a process for regular documentation updates as systems evolve",
+                    ],
+                )
                 
             if "disclose" not in found_keywords:
-                recommendations.append({
-                    "id": "trans-003",
-                    "title": "Establish Disclosure Protocols",
-                    "description": "Develop clear protocols for when and how to disclose AI use to affected individuals and communities.",
-                    "rationale": "Appropriate disclosure respects autonomy and enables informed consent regarding AI-driven decisions.",
-                    "priority": "medium",
-                    "dimension": dimension.value,
-                    "implementation_time": "2-3 months",
-                    "implementation_steps": [
+                add_rec(
+                    "trans-003",
+                    "Establish Disclosure Protocols",
+                    "Develop clear protocols for when and how to disclose AI use to affected individuals and communities.",
+                    "Appropriate disclosure respects autonomy and enables informed consent regarding AI-driven decisions.",
+                    "medium",
+                    "2-3 months",
+                    [
                         "Identify all contexts where AI is used to make or support decisions",
                         "Develop disclosure templates for different stakeholder groups and contexts",
                         "Create guidelines for timing and method of AI use disclosure",
                         "Train staff on disclosure protocols and addressing stakeholder concerns",
-                        "Implement feedback mechanisms to improve disclosure effectiveness"
-                    ]
-                })
+                        "Implement feedback mechanisms to improve disclosure effectiveness",
+                    ],
+                )
                 
         elif dimension == PolicyDimension.HUMAN_AGENCY:
             if "oversight" not in found_keywords or "control" not in found_keywords:
-                recommendations.append({
-                    "id": "human-001",
-                    "title": "Strengthen Human Oversight Mechanisms",
-                    "description": "Implement robust human oversight processes for all high-impact AI decision systems.",
-                    "rationale": "Human oversight ensures that AI systems remain aligned with human values and institutional goals.",
-                    "priority": "high",
-                    "dimension": dimension.value,
-                    "implementation_time": "3-5 months",
-                    "implementation_steps": [
+                add_rec(
+                    "human-001",
+                    "Strengthen Human Oversight Mechanisms",
+                    "Implement robust human oversight processes for all high-impact AI decision systems.",
+                    "Human oversight ensures that AI systems remain aligned with human values and institutional goals.",
+                    "high",
+                    "3-5 months",
+                    [
                         "Identify all high-impact AI decision systems requiring human oversight",
                         "Design oversight protocols with clear escalation paths",
                         "Establish oversight committees with diverse expertise",
                         "Implement technical solutions for human review of AI decisions",
-                        "Create regular reporting mechanisms on oversight activities"
-                    ]
-                })
+                        "Create regular reporting mechanisms on oversight activities",
+                    ],
+                )
                 
             if "intervention" not in found_keywords:
-                recommendations.append({
-                    "id": "human-002",
-                    "title": "Enable Meaningful Human Intervention",
-                    "description": "Design AI systems with clear mechanisms for human intervention when necessary.",
-                    "rationale": "The ability to intervene in automated processes is essential for maintaining human agency and addressing edge cases.",
-                    "priority": "high",
-                    "dimension": dimension.value,
-                    "implementation_time": "2-4 months",
-                    "implementation_steps": [
+                add_rec(
+                    "human-002",
+                    "Enable Meaningful Human Intervention",
+                    "Design AI systems with clear mechanisms for human intervention when necessary.",
+                    "The ability to intervene in automated processes is essential for maintaining human agency and addressing edge cases.",
+                    "high",
+                    IMPLEMENTATION_TIME_SHORT,
+                    [
                         "Assess current AI systems for intervention capabilities",
                         "Design intervention interfaces for different user roles",
                         "Implement technical safeguards and override mechanisms",
                         "Create decision logs for all human interventions",
-                        "Train staff on intervention protocols and decision criteria"
-                    ]
-                })
+                        "Train staff on intervention protocols and decision criteria",
+                    ],
+                )
                 
             if "review" not in found_keywords:
-                recommendations.append({
-                    "id": "human-003",
-                    "title": "Establish Regular Review Processes",
-                    "description": "Implement scheduled reviews of AI systems to assess their impact on human agency and decision-making.",
-                    "rationale": "Regular reviews help identify mission creep and ensure AI systems continue to support rather than undermine human agency.",
-                    "priority": "medium",
-                    "dimension": dimension.value,
-                    "implementation_time": "1-3 months",
-                    "implementation_steps": [
+                add_rec(
+                    "human-003",
+                    "Establish Regular Review Processes",
+                    "Implement scheduled reviews of AI systems to assess their impact on human agency and decision-making.",
+                    "Regular reviews help identify mission creep and ensure AI systems continue to support rather than undermine human agency.",
+                    "medium",
+                    "1-3 months",
+                    [
                         "Develop review criteria focused on human agency impacts",
                         "Establish a review schedule for all AI systems",
                         "Create review templates and documentation processes",
                         "Form review committees with diverse stakeholder representation",
-                        "Implement feedback loops to incorporate review findings into system improvements"
-                    ]
-                })
+                        "Implement feedback loops to incorporate review findings into system improvements",
+                    ],
+                )
                 
         elif dimension == PolicyDimension.INCLUSIVENESS:
             if "bias" not in found_keywords:
-                recommendations.append({
-                    "id": "incl-001",
-                    "title": "Implement Bias Detection and Mitigation",
-                    "description": "Develop processes to systematically identify and address biases in AI systems throughout their lifecycle.",
-                    "rationale": "Proactive bias mitigation is essential for ensuring AI systems serve all users fairly and equitably.",
-                    "priority": "high",
-                    "dimension": dimension.value,
-                    "implementation_time": "3-6 months",
-                    "implementation_steps": [
+                add_rec(
+                    "incl-001",
+                    "Implement Bias Detection and Mitigation",
+                    "Develop processes to systematically identify and address biases in AI systems throughout their lifecycle.",
+                    "Proactive bias mitigation is essential for ensuring AI systems serve all users fairly and equitably.",
+                    "high",
+                    IMPLEMENTATION_TIME_MEDIUM,
+                    [
                         "Develop bias assessment frameworks for different types of AI systems",
                         "Implement regular bias audits throughout the AI lifecycle",
                         "Create diverse test datasets that represent varied demographics",
                         "Establish bias mitigation protocols for identified issues",
-                        "Train development teams on bias detection and mitigation techniques"
-                    ]
-                })
+                        "Train development teams on bias detection and mitigation techniques",
+                    ],
+                )
                 
             if "diverse" not in found_keywords or "representation" not in found_keywords:
-                recommendations.append({
-                    "id": "incl-002",
-                    "title": "Enhance Diversity in AI Development",
-                    "description": "Ensure diverse perspectives are included in the design, development, and testing of AI systems.",
-                    "rationale": "Diverse teams and inclusive design processes lead to AI systems that work better for all users.",
-                    "priority": "medium",
-                    "dimension": dimension.value,
-                    "implementation_time": "6-12 months",
-                    "implementation_steps": [
+                add_rec(
+                    "incl-002",
+                    "Enhance Diversity in AI Development",
+                    "Ensure diverse perspectives are included in the design, development, and testing of AI systems.",
+                    "Diverse teams and inclusive design processes lead to AI systems that work better for all users.",
+                    "medium",
+                    "6-12 months",
+                    [
                         "Assess current diversity in AI development teams and processes",
                         "Develop recruitment and retention strategies for diverse talent",
                         "Implement inclusive design methodologies for AI systems",
                         "Create diverse stakeholder panels for testing and feedback",
-                        "Establish metrics to track progress on diversity and inclusion goals"
-                    ]
-                })
+                        "Establish metrics to track progress on diversity and inclusion goals",
+                    ],
+                )
                 
             if "discrimination" not in found_keywords:
-                recommendations.append({
-                    "id": "incl-003",
-                    "title": "Prevent Algorithmic Discrimination",
-                    "description": "Establish safeguards to prevent AI systems from creating or reinforcing discriminatory practices.",
-                    "rationale": "Preventing discrimination is both an ethical imperative and often a legal requirement for AI systems.",
-                    "priority": "high",
-                    "dimension": dimension.value,
-                    "implementation_time": "4-8 months",
-                    "implementation_steps": [
+                add_rec(
+                    "incl-003",
+                    "Prevent Algorithmic Discrimination",
+                    "Establish safeguards to prevent AI systems from creating or reinforcing discriminatory practices.",
+                    "Preventing discrimination is both an ethical imperative and often a legal requirement for AI systems.",
+                    "high",
+                    "4-8 months",
+                    [
                         "Develop anti-discrimination guidelines for AI development",
                         "Implement pre-deployment testing for discriminatory outcomes",
                         "Create monitoring systems to detect discrimination in deployed AI",
                         "Establish remediation protocols for addressing identified discrimination",
-                        "Provide training on legal and ethical aspects of algorithmic discrimination"
-                    ]
-                })
+                        "Provide training on legal and ethical aspects of algorithmic discrimination",
+                    ],
+                )
         
         # If no specific recommendations were generated, provide a generic one
         if not recommendations:
-            recommendations.append({
-                "id": f"{dimension.value.lower().split()[0][:5]}-gen",
-                "title": f"Strengthen {dimension.value} in Your AI Policy",
-                "description": f"Review and enhance your policy's approach to {dimension.value.lower()}.",
-                "rationale": f"A robust approach to {dimension.value.lower()} is essential for ethical AI governance.",
-                "priority": "medium",
-                "dimension": dimension.value,
-                "implementation_time": "3-6 months",
-                "implementation_steps": [
+            add_rec(
+                f"{dimension.value.lower().split()[0][:5]}-gen",
+                f"Strengthen {dimension.value} in Your AI Policy",
+                f"Review and enhance your policy's approach to {dimension.value.lower()}.",
+                f"A robust approach to {dimension.value.lower()} is essential for ethical AI governance.",
+                "medium",
+                IMPLEMENTATION_TIME_MEDIUM,
+                [
                     f"Conduct a comprehensive review of your policy's {dimension.value.lower()} provisions",
                     f"Benchmark against best practices in {dimension.value.lower()} from leading institutions",
                     f"Identify specific gaps in your {dimension.value.lower()} approach",
                     "Develop targeted improvements for each identified gap",
-                    "Implement changes and establish metrics to track effectiveness"
-                ]
-            })
+                    "Implement changes and establish metrics to track effectiveness",
+                ],
+            )
             
         return recommendations
 

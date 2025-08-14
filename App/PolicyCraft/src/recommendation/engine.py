@@ -17,6 +17,11 @@ logger = logging.getLogger(__name__)
 # Reused literals/constants
 IMPLEMENTATION_TIME_MEDIUM = "3-6 months"
 IMPLEMENTATION_TIME_SHORT = "2-4 months"
+IMPLEMENTATION_TIME_2_3 = "2-3 months"
+IMPLEMENTATION_TIME_3_5 = "3-5 months"
+IMPLEMENTATION_TIME_1_3 = "1-3 months"
+IMPLEMENTATION_TIME_4_8 = "4-8 months"
+IMPLEMENTATION_TIME_6_12 = "6-12 months"
 UNIVERSITY_POLICY_LITERAL = "university policy"
 YEAR_REGEX = r"(19|20)\d{2}"
 
@@ -292,7 +297,7 @@ class EthicalFrameworkAnalyzer:
                     "rationale": "Structured compliance frameworks reduce legal risks and ensure ethical AI deployment.",
                     "priority": "high",
                     "dimension": dimension.value,
-                    "implementation_time": "4-8 months",
+                    "implementation_time": IMPLEMENTATION_TIME_4_8,
                     "implementation_steps": [
                         "Research relevant AI regulations and ethical standards in your jurisdiction",
                         "Develop a compliance matrix mapping requirements to institutional policies",
@@ -344,7 +349,7 @@ class EthicalFrameworkAnalyzer:
                     "Develop clear protocols for when and how to disclose AI use to affected individuals and communities.",
                     "Appropriate disclosure respects autonomy and enables informed consent regarding AI-driven decisions.",
                     "medium",
-                    "2-3 months",
+                    IMPLEMENTATION_TIME_2_3,
                     [
                         "Identify all contexts where AI is used to make or support decisions",
                         "Develop disclosure templates for different stakeholder groups and contexts",
@@ -362,7 +367,7 @@ class EthicalFrameworkAnalyzer:
                     "Implement robust human oversight processes for all high-impact AI decision systems.",
                     "Human oversight ensures that AI systems remain aligned with human values and institutional goals.",
                     "high",
-                    "3-5 months",
+                    IMPLEMENTATION_TIME_3_5,
                     [
                         "Identify all high-impact AI decision systems requiring human oversight",
                         "Design oversight protocols with clear escalation paths",
@@ -396,7 +401,7 @@ class EthicalFrameworkAnalyzer:
                     "Implement scheduled reviews of AI systems to assess their impact on human agency and decision-making.",
                     "Regular reviews help identify mission creep and ensure AI systems continue to support rather than undermine human agency.",
                     "medium",
-                    "1-3 months",
+                    IMPLEMENTATION_TIME_1_3,
                     [
                         "Develop review criteria focused on human agency impacts",
                         "Establish a review schedule for all AI systems",
@@ -431,7 +436,7 @@ class EthicalFrameworkAnalyzer:
                     "Ensure diverse perspectives are included in the design, development, and testing of AI systems.",
                     "Diverse teams and inclusive design processes lead to AI systems that work better for all users.",
                     "medium",
-                    "6-12 months",
+                    IMPLEMENTATION_TIME_6_12,
                     [
                         "Assess current diversity in AI development teams and processes",
                         "Develop recruitment and retention strategies for diverse talent",
@@ -448,7 +453,7 @@ class EthicalFrameworkAnalyzer:
                     "Establish safeguards to prevent AI systems from creating or reinforcing discriminatory practices.",
                     "Preventing discrimination is both an ethical imperative and often a legal requirement for AI systems.",
                     "high",
-                    "4-8 months",
+                    IMPLEMENTATION_TIME_4_8,
                     [
                         "Develop anti-discrimination guidelines for AI development",
                         "Implement pre-deployment testing for discriminatory outcomes",

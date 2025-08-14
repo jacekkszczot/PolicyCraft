@@ -40,6 +40,22 @@ def _load_or_generate_recommendations(analysis_id, cleaned_text):
             }
         }
 
+def _get_or_create_analysis_record(filename: str, is_baseline: bool, file_path: str):
+    """Pobierz istniejącą analizę lub uruchom nową i zwróć komplet danych.
+    Zwraca: extracted_text, cleaned_text, themes, classification, analysis_id
+    Rzuca ValueError('no_text'), jeśli nie udało się wydobyć tekstu (zachowanie jak dotychczas).
+    """
+    existing = _get_existing_analysis_record(filename, is_baseline)
+    if existing:
+        themes, classification, cleaned_text, extracted_text, analysis_id = _unpack_existing_analysis(existing)
+        return extracted_text, cleaned_text, themes, classification, analysis_id
+
+    extracted_text, cleaned_text, themes, classification = _extract_and_analyse_text(file_path)
+    if not extracted_text:
+        raise ValueError('no_text')
+    analysis_id = _store_analysis_results(filename, extracted_text, cleaned_text, themes, classification)
+    return extracted_text, cleaned_text, themes, classification, analysis_id
+
 def _build_basic_export_data(analysis_id, analysis, recommendations):
     """Zbuduj bazowy pakiet danych exportu używany przez PDF/Word/Excel (bez wykresów)."""
     return {
@@ -1440,15 +1456,13 @@ def analyse_document(filename):
 
         logger.info(f"Starting analysis of file: {filename}")
 
-        existing = _get_existing_analysis_record(filename, is_baseline)
-        if existing:
-            themes, classification, cleaned_text, extracted_text, analysis_id = _unpack_existing_analysis(existing)
-        else:
-            extracted_text, cleaned_text, themes, classification = _extract_and_analyse_text(file_path)
-            if not extracted_text:
-                flash('Could not extract text from file', 'error')
-                return redirect(url_for('upload_file'))
-            analysis_id = _store_analysis_results(filename, extracted_text, cleaned_text, themes, classification)
+        try:
+            extracted_text, cleaned_text, themes, classification, analysis_id = _get_or_create_analysis_record(
+                filename, is_baseline, file_path
+            )
+        except ValueError:
+            flash('Could not extract text from file', 'error')
+            return redirect(url_for('upload_file'))
 
         charts, text_stats, theme_summary, classification_details = _generate_analysis_derivatives(cleaned_text, themes, classification)
 

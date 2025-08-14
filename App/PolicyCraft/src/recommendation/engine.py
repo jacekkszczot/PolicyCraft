@@ -2,9 +2,10 @@ import sys
 import json
 import os
 import logging
+import re
 from typing import Dict, List, Any, Optional, Union
 from enum import Enum, auto
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 try:
     from src.literature.knowledge_manager import KnowledgeBaseManager
@@ -13,12 +14,33 @@ except ImportError:
     
 logger = logging.getLogger(__name__)
 
+# Reused literals/constants
+IMPLEMENTATION_TIME_MEDIUM = "3-6 months"
+IMPLEMENTATION_TIME_SHORT = "2-4 months"
+UNIVERSITY_POLICY_LITERAL = "university policy"
+YEAR_REGEX = r"(19|20)\d{2}"
+
 class PolicyDimension(Enum):
     ACCOUNTABILITY = "Accountability and Governance"
     TRANSPARENCY = "Transparency and Explainability"
     HUMAN_AGENCY = "Human Agency and Oversight"
     INCLUSIVENESS = "Inclusiveness and Fairness"
     
+DIMENSION_KEYWORDS = {
+    PolicyDimension.ACCOUNTABILITY: [
+        "accountable", "governance", "oversight", "responsibility", "compliance", "audit", "monitor"
+    ],
+    PolicyDimension.TRANSPARENCY: [
+        "transparent", "explain", "disclose", "document", "clear", "interpretable", "explainable"
+    ],
+    PolicyDimension.HUMAN_AGENCY: [
+        "human", "oversight", "control", "decision", "judgment", "intervention", "review"
+    ],
+    PolicyDimension.INCLUSIVENESS: [
+        "inclusive", "fair", "bias", "diverse", "equitable", "discrimination", "representation"
+    ],
+}
+
 @dataclass
 class PolicyRecommendation:
     """A single recommendation for improving a policy."""
@@ -29,7 +51,7 @@ class PolicyRecommendation:
     priority: str  # "high", "medium", "low"
     dimension: PolicyDimension
     implementation_guidance: str = ""
-    references: List[Dict[str, str]] = None
+    references: List[Dict[str, str]] = field(default_factory=list)
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert the recommendation to a dictionary for JSON serialization."""
@@ -210,15 +232,8 @@ class EthicalFrameworkAnalyzer:
         recommendations = []
         
         # Get dimension-specific keywords and their presence in the text
-        keywords = {
-            PolicyDimension.ACCOUNTABILITY: ["accountable", "governance", "oversight", "responsibility", "compliance", "audit", "monitor"],
-            PolicyDimension.TRANSPARENCY: ["transparent", "explain", "disclose", "document", "clear", "interpretable", "explainable"],
-            PolicyDimension.HUMAN_AGENCY: ["human", "oversight", "control", "decision", "judgment", "intervention", "review"],
-            PolicyDimension.INCLUSIVENESS: ["inclusive", "fair", "bias", "diverse", "equitable", "discrimination", "representation"]
-        }
-        
-        found_keywords = [kw for kw in keywords.get(dimension, []) if kw in text_lower]
-        missing_keywords = [kw for kw in keywords.get(dimension, []) if kw not in text_lower]
+        found_keywords = [kw for kw in DIMENSION_KEYWORDS.get(dimension, []) if kw in text_lower]
+        missing_keywords = [kw for kw in DIMENSION_KEYWORDS.get(dimension, []) if kw not in text_lower]
         
         # Generate context-aware recommendations based on missing keywords and dimension
         if dimension == PolicyDimension.ACCOUNTABILITY:
@@ -230,7 +245,7 @@ class EthicalFrameworkAnalyzer:
                     "rationale": "Clear accountability ensures that AI systems are used responsibly and that there is oversight at all levels.",
                     "priority": "high",
                     "dimension": dimension.value,
-                    "implementation_time": "3-6 months",
+                    "implementation_time": IMPLEMENTATION_TIME_MEDIUM,
                     "implementation_steps": [
                         "Form an AI governance committee with representatives from key stakeholders",
                         "Define clear roles and responsibilities for AI oversight",
@@ -248,7 +263,7 @@ class EthicalFrameworkAnalyzer:
                     "rationale": "Regular auditing helps identify issues early and ensures continuous improvement of AI governance.",
                     "priority": "medium",
                     "dimension": dimension.value,
-                    "implementation_time": "2-4 months",
+                    "implementation_time": IMPLEMENTATION_TIME_SHORT,
                     "implementation_steps": [
                         "Develop an AI audit framework with clear metrics and benchmarks",
                         "Establish a regular audit schedule (quarterly or bi-annually)",
@@ -285,7 +300,7 @@ class EthicalFrameworkAnalyzer:
                     "rationale": "Explainable AI builds trust and enables meaningful human oversight of automated decisions.",
                     "priority": "high",
                     "dimension": dimension.value,
-                    "implementation_time": "3-6 months",
+                    "implementation_time": IMPLEMENTATION_TIME_MEDIUM,
                     "implementation_steps": [
                         "Audit current AI systems for explainability gaps",
                         "Develop explainability standards for different stakeholder groups",
@@ -303,7 +318,7 @@ class EthicalFrameworkAnalyzer:
                     "rationale": "Thorough documentation enables better understanding and evaluation of AI systems by all stakeholders.",
                     "priority": "medium",
                     "dimension": dimension.value,
-                    "implementation_time": "2-4 months",
+                    "implementation_time": IMPLEMENTATION_TIME_SHORT,
                     "implementation_steps": [
                         "Develop documentation templates for AI systems",
                         "Conduct inventory of all AI systems requiring documentation",
@@ -703,11 +718,11 @@ class RecommendationGenerator:
         
         if not already_tailored:
             # Adjust title for university context if needed
-            if "policy" in title.lower() and not "university policy" in title.lower():
-                recommendation["title"] = title.replace("Policy", "University Policy").replace("policy", "university policy")
+            if "policy" in title.lower() and UNIVERSITY_POLICY_LITERAL not in title.lower():
+                recommendation["title"] = title.replace("Policy", "University Policy").replace("policy", UNIVERSITY_POLICY_LITERAL)
             
             # Enhance description with university context
-            if not "university" in description.lower() and not "higher education" in description.lower():
+            if "university" not in description.lower() and "higher education" not in description.lower():
                 recommendation["description"] = f"In the university context, {description.lower()[0]}{description[1:]}"
             
             # Ensure implementation steps are university-specific
@@ -718,12 +733,12 @@ class RecommendationGenerator:
                 for step in steps:
                     # Only modify if not already tailored
                     if not any(term in step.lower() for term in university_terms):
-                        if "stakeholders" in step.lower() and not "faculty" in step.lower():
+                        if "stakeholders" in step.lower() and "faculty" not in step.lower():
                             step = step.replace("stakeholders", "faculty, staff, students and other stakeholders")
-                        elif "training" in step.lower() and not "faculty" in step.lower():
+                        elif "training" in step.lower() and "faculty" not in step.lower():
                             step = step.replace("training", "faculty and staff training")
-                        elif "policy" in step.lower() and not "university" in step.lower():
-                            step = step.replace("policy", "university policy")
+                        elif "policy" in step.lower() and "university" not in step.lower():
+                            step = step.replace("policy", UNIVERSITY_POLICY_LITERAL)
                     
                     university_specific_steps.append(step)
                 
@@ -731,6 +746,13 @@ class RecommendationGenerator:
     
     def _find_supporting_evidence(self, recommendation: Dict[str, Any], kb_documents: List[Dict[str, Any]], used_citations: List[str] = None) -> List[Dict[str, Any]]:
         """
+{{ ... }}
+        # Try to extract year from publication date
+        pub_date = doc.get("publication_date", "")
+        if pub_date:
+            year_match = YEAR_REGEX.search(pub_date)
+            if year_match:
+                doc_year = year_match.group(0)
         Find supporting evidence for a recommendation from knowledge base documents.
         Prioritizes diverse sources that haven't been used in other recommendations.
         
@@ -796,10 +818,10 @@ class RecommendationGenerator:
                         with open(file_path, 'r', encoding='utf-8') as f:
                             doc["content"] = f.read()
                     else:
-                        print(f"Warning: Could not find file for document {doc.get('id', 'Unknown')}: {file_path}")
+                        logger.warning("Could not find file for document %s: %s", doc.get('id', 'Unknown'), file_path)
                         continue
                 except Exception as e:
-                    print(f"Warning: Could not read content for document {doc.get('id', 'Unknown')}: {str(e)}")
+                    logger.warning("Could not read content for document %s: %s", doc.get('id', 'Unknown'), str(e))
                     continue
                 
             doc_id = doc.get("id", "")
@@ -811,14 +833,13 @@ class RecommendationGenerator:
             # Try to extract year from publication date
             pub_date = doc.get("publication_date", "")
             if pub_date:
-                import re
-                year_match = re.search(r'(19|20)\d{2}', pub_date)
+                year_match = re.search(YEAR_REGEX, pub_date)
                 if year_match:
                     doc_year = year_match.group(0)
             
             # Format citation in APA style - skip documents with missing metadata
             if not doc_author or doc_author == "Unknown":
-                print(f"Skipping document with missing author: {doc.get('title', 'Unknown title')}")
+                logger.info("Skipping document with missing author: %s", doc.get('title', 'Unknown title'))
                 continue
                 
             if doc_year != "Unknown":
@@ -826,8 +847,7 @@ class RecommendationGenerator:
             else:
                 # Try to extract year from filename or other metadata if available
                 if doc.get("filename"):
-                    import re
-                    year_match = re.search(r'(19|20)\d{2}', doc.get("filename", ""))
+                    year_match = re.search(YEAR_REGEX, doc.get("filename", ""))
                     if year_match:
                         doc_year = year_match.group(0)
                         citation = f"{doc_author} ({doc_year})"
@@ -876,9 +896,9 @@ class RecommendationGenerator:
         scored_documents.sort(key=lambda x: (-x.get("match_score", 0), 0 if x.get("citation") in used_citations else 1))
         
         # Debug: Print scored documents
-        print(f"Found {len(scored_documents)} potentially relevant documents for recommendation")
+        logger.debug("Found %d potentially relevant documents for recommendation", len(scored_documents))
         for i, doc in enumerate(scored_documents[:5]):
-            print(f"  Document {i+1}: {doc.get('title', 'Unknown')} - Score: {doc.get('match_score', 0)} - Citation: {doc.get('citation', 'Unknown')}")
+            logger.debug("  Document %d: %s - Score: %s - Citation: %s", i+1, doc.get('title', 'Unknown'), doc.get('match_score', 0), doc.get('citation', 'Unknown'))
         
         # Select diverse sources - prioritize different authors and unused citations
         authors_selected = set()
@@ -922,9 +942,9 @@ class RecommendationGenerator:
             remaining_docs.sort(key=lambda x: (1 if x.get("citation") not in used_citations else 0, x.get("quality_score", 0)), reverse=True)
             
             # Debug: Print remaining docs
-            print(f"Adding more documents to reach minimum evidence count ({min_evidence_count}). Currently have {len(supporting_evidence)}")
+            logger.debug("Adding more documents to reach minimum evidence count (%d). Currently have %d", min_evidence_count, len(supporting_evidence))
             for i, doc in enumerate(remaining_docs[:3]):
-                print(f"  Additional document {i+1}: {doc.get('title', 'Unknown')} - Quality: {doc.get('quality_score', 0)} - Citation: {doc.get('citation', 'Unknown')}")
+                logger.debug("  Additional document %d: %s - Quality: %s - Citation: %s", i+1, doc.get('title', 'Unknown'), doc.get('quality_score', 0), doc.get('citation', 'Unknown'))
             
             # Add top documents until we reach minimum count
             for doc in remaining_docs:
@@ -955,8 +975,8 @@ class RecommendationGenerator:
             remaining_docs = [doc for doc in kb_documents if doc.get("id") and doc.get("id") not in used_ids]
             
             # Debug: Print fallback docs
-            print(f"Using fallback method to add documents. Need {min_evidence_count - len(supporting_evidence)} more documents")
-            print(f"Found {len(remaining_docs)} unused documents in knowledge base")
+            logger.debug("Using fallback method to add documents. Need %d more documents", min_evidence_count - len(supporting_evidence))
+            logger.debug("Found %d unused documents in knowledge base", len(remaining_docs))
             
             # Sort by quality score if available
             remaining_docs.sort(key=lambda x: x.get("quality_score", 0), reverse=True)
@@ -973,8 +993,7 @@ class RecommendationGenerator:
                 # Try to extract year from publication date
                 pub_date = doc.get("publication_date", "")
                 if pub_date:
-                    import re
-                    year_match = re.search(r'(19|20)\d{2}', pub_date)
+                    year_match = re.search(YEAR_REGEX, pub_date)
                     if year_match:
                         doc_year = year_match.group(0)
                 
@@ -1008,8 +1027,8 @@ class RecommendationGenerator:
                         break
         
         # Debug: Print final supporting evidence
-        print(f"Final supporting evidence count: {len(supporting_evidence)}")
+        logger.debug("Final supporting evidence count: %d", len(supporting_evidence))
         for i, evidence in enumerate(supporting_evidence):
-            print(f"  Evidence {i+1}: {evidence.get('citation', 'Unknown')} - Relevance: {evidence.get('relevance', 'Unknown')}")
+            logger.debug("  Evidence %d: %s - Relevance: %s", i+1, evidence.get('citation', 'Unknown'), evidence.get('relevance', 'Unknown'))
             
         return supporting_evidence

@@ -139,13 +139,13 @@ class ChartGenerator:
             y=[theme['name'] for theme in reversed(top_themes)],
             x=[theme['score'] for theme in reversed(top_themes)],
             orientation='h',
-            marker=dict(
-                color=self.color_schemes['themes'][:len(top_themes)],
-                line=dict(color='rgba(50, 50, 50, 0.2)', width=1)
-            ),
+            marker={
+                'color': self.color_schemes['themes'][:len(top_themes)],
+                'line': {'color': 'rgba(50, 50, 50, 0.2)', 'width': 1}
+            },
             text=[f"{theme.get('confidence', '')}%" if theme.get('confidence') is not None else '' for theme in reversed(top_themes)],
             textposition='inside',
-            textfont=dict(color='white', size=10)
+            textfont={'color': 'white', 'size': 10}
         ))
         
         fig.update_layout(
@@ -204,7 +204,7 @@ class ChartGenerator:
             labels=[theme['name'] for theme in display_themes],
             values=[theme['score'] for theme in display_themes],
             hole=.3,
-            marker=dict(colors=self.color_schemes['themes'][:len(display_themes)])
+            marker={'colors': self.color_schemes['themes'][:len(display_themes)]}
         )])
         
         fig.update_layout(title='Theme Distribution', height=400, **self.default_layout)
@@ -306,7 +306,7 @@ class ChartGenerator:
         categories.append(categories[0])
         fig = go.Figure()
         fig.add_trace(go.Scatterpolar(r=values, theta=categories, fill='toself', name='Ethical Coverage', marker_color='#2ecc71'))
-        fig.update_layout(title='Ethical Dimension Coverage', polar=dict(radialaxis=dict(visible=True, range=[0,100])), height=400, **self.default_layout)
+        fig.update_layout(title='Ethical Dimension Coverage', polar={'radialaxis': {'visible': True, 'range': [0, 100]}}, height=400, **self.default_layout)
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     def _generate_fallback_charts(self, themes: List[Dict], classification: Dict) -> Dict:

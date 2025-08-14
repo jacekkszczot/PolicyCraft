@@ -1216,7 +1216,7 @@ class RecommendationEngine:
         )
 
         # Build metadata and summary
-        from datetime import datetime
+        from datetime import datetime, timezone
 
         scores = [dim.get("score", 0.0) for dim in coverage.values()] if isinstance(coverage, dict) else []
         avg_coverage = round(sum(scores) / len(scores), 2) if scores else 0.0
@@ -1231,7 +1231,8 @@ class RecommendationEngine:
         result = {
             "analysis_metadata": {
                 "analysis_id": analysis_id or "unknown",
-                "generated_date": datetime.utcnow().isoformat() + "Z",
+                # Use timezone-aware UTC timestamp and keep 'Z' suffix for compatibility
+                "generated_date": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                 "framework_version": "1.0",
                 "methodology": "EthicalFrameworkAnalyzer + Contextual RecommendationGenerator",
                 "academic_sources": normalised_sources,

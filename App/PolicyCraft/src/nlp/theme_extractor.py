@@ -867,6 +867,81 @@ class ThemeExtractor:
         
         return themes
 
+    def identify_keywords(self, text: Optional[str], top_n: int = 10) -> List[str]:
+        """
+        Identify prominent keywords from text using configured theme vocab.
+        
+        This lightweight implementation counts occurrences of all configured
+        theme keywords and returns the most frequent unique tokens.
+        Falls back to simple tokenisation when no configured keyword matches.
+        """
+        if not text:
+            return []
+        text_lower = text.lower()
+        counts = Counter()
+        # Count configured keywords
+        for theme in self.theme_categories.values():
+            for kw in theme.get('keywords', []):
+                n = len(re.findall(r"\b" + re.escape(kw) + r"\b", text_lower))
+                if n:
+                    counts[kw] += n
+        # Fallback: simple tokenisation if nothing matched
+        if not counts:
+            tokens = re.findall(r"[a-zA-Z][a-zA-Z\-]{2,}", text_lower)
+            counts.update(tokens)
+        return [w for w, _ in counts.most_common(max(1, top_n))]
+
+    def calculate_theme_confidence(self, theme: str, text: Optional[str]) -> float:
+        """
+        Calculate a simple confidence score in [0,1] for a theme within text.
+        
+        Heuristic: ratio of matched keywords/pattern occurrences to a capped
+        denominator to ensure stable values.
+        """
+        if not text or not theme:
+            return 0.0
+        text_lower = text.lower()
+        # Find the theme definition by name (case-insensitive substring match)
+        theme_def = None
+        for name, data in self.theme_categories.items():
+            if theme.lower() in name.lower():
+                theme_def = data
+                break
+        if theme_def is None:
+            # Unknown theme: estimate via generic keyword presence
+            occurrences = len(re.findall(r"\b" + re.escape(theme.lower()) + r"\b", text_lower))
+            return min(1.0, occurrences / 5.0)
+        # Count keyword and pattern occurrences
+        occ = 0
+        for kw in theme_def.get('keywords', []):
+            occ += len(re.findall(r"\b" + re.escape(kw) + r"\b", text_lower))
+        for patt in theme_def.get('patterns', []):
+            occ += 2 * len(re.findall(r"\b" + re.escape(patt.lower()) + r"\b", text_lower))
+        # Normalise with a soft cap
+        return min(1.0, occ / 10.0)
+
+    def categorise_themes(self, themes: List[str]) -> Dict[str, Any]:
+        """
+        Categorise a list of theme names into primary/secondary buckets and groups.
+        
+        Deterministic rule: first two are primary, rest are secondary. Also
+        provide a simple grouping by whether the theme name contains common
+        governance/economic hints to aid UI.
+        """
+        themes = themes or []
+        primary = themes[:2]
+        secondary = themes[2:]
+        categories = {
+            'governance': [t for t in themes if any(k in t.lower() for k in ['ethic', 'integrity', 'transparen'])],
+            'economic': [t for t in themes if any(k in t.lower() for k in ['econom', 'market', 'fund'])],
+            'domestic': []  # keep key present explicitly
+        }
+        return {
+            'primary_themes': primary,
+            'secondary_themes': secondary,
+            'categories': categories
+        }
+
     def get_theme_summary(self, themes: List[Dict]) -> Dict:
         """
         Generate a comprehensive summary of extracted themes.

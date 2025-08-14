@@ -21,6 +21,9 @@ import argparse
 import os
 from pathlib import Path
 
+# Configuration constants
+PYTEST_SHORT_TRACEBACK = "--tb=short"
+
 def run_command(cmd, description):
     """Run a shell command with error handling."""
     print(f"\n🚀 {description}")

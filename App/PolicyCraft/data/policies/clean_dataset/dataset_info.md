@@ -1,12 +1,11 @@
 # PolicyCraft Dataset Information
 
 ## Dataset Statistics
-- **Total Files**: 17
-- **Last Updated**: 2025-08-14 02:32:44
+- **Total Files**: 16
+- **Last Updated**: 2025-08-14 13:32:53
 
 ## Files
 - **Belfast University**: belfast university-ai-policy.pdf (0.13 MB)
-- **University of Cambridge**: cambridge-ai-policy.docx (0.02 MB)
 - **University of Cambridge**: cambridge-ai-policy.pdf (0.07 MB)
 - **University of Chicago**: chicago-ai-policy.docx (0.02 MB)
 - **Columbia University**: columbia-ai-policy.pdf (0.09 MB)

@@ -18,6 +18,12 @@ class Config:
     
     # Basic Flask configuration
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    MONGODB_SETTINGS = {
+        'db': os.environ.get('MONGODB_DB', 'policycraft'),
+        'host': os.environ.get('MONGODB_HOST', 'localhost'),
+        'port': int(os.environ.get('MONGODB_PORT', 27017))
+    }
+
     
     # File upload configuration
     UPLOAD_FOLDER = os.path.join(os.getcwd(), 'data', 'policies', 'pdf_originals')
@@ -67,6 +73,11 @@ class Config:
     APP_VERSION = '1.0.0'
     APP_AUTHOR = 'Jacek Robert Kszczot'
     APP_DESCRIPTION = 'AI Policy Analysis for Higher Education'
+
+    def __init__(self):
+        # Ensure instance-level override for SECRET_KEY (tests patch os.environ)
+        self.SECRET_KEY = os.environ.get('SECRET_KEY') or self.SECRET_KEY
+        # MONGODB_SETTINGS remains a dict; keep as-is for tests
 
 class DevelopmentConfig(Config):
     """

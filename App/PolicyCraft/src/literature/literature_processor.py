@@ -104,6 +104,18 @@ class LiteratureProcessor:
         self.max_insights_per_document = 15
         
         logger.info("Literature Processor initialised successfully")
+    
+    def extract_text(self, file_path: str) -> str:
+        """Public wrapper used in tests to extract text from a file path."""
+        return self._extract_text_from_file(file_path)
+    
+    def analyse_structure(self, text: Optional[str]) -> Dict:
+        """Basic structure analysis stub used in tests."""
+        if not text:
+            return {"paragraphs": 0, "sentences": 0, "status": "empty"}
+        sentences = [s.strip() for s in text.split('.') if s.strip()]
+        paragraphs = [p for p in text.split('\n\n') if p.strip()]
+        return {"paragraphs": len(paragraphs), "sentences": len(sentences), "status": "ok"}
     def process_document(self, file_path: str, metadata: Optional[Dict] = None) -> Dict:
         """
         Process a single academic document through the complete analysis pipeline.

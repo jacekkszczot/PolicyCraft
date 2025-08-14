@@ -1,3 +1,131 @@
+def _fetch_analysis_for_recommendations(analysis_id):
+    """Fetch analysis by user first, then globally, mirroring logs and test-temporary permission notes."""
+    logger.info("Attempting to get user's analysis...")
+    analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
+    if analysis:
+        logger.info("Found analysis in user's analyses")
+        logger.info(f"Analysis details - User ID: {analysis.get('user_id')}, Is Baseline: {analysis.get('is_baseline', False)}")
+        return analysis
+
+    logger.warning(f"{ANALYSIS_NOT_FOUND} in user's analyses, trying global lookup...")
+    analysis = db_operations.get_analysis_by_id(analysis_id)
+    if analysis:
+        logger.info("Found analysis in global collection")
+        logger.info(f"Analysis details - ID: {analysis.get('_id')}")
+        logger.info(f"Analysis owner: User ID: {analysis.get('user_id')}, Username: {analysis.get('username')}")
+        logger.info(f"Is baseline: {analysis.get('is_baseline', False)}")
+        logger.warning("Temporary disabling permission checks for testing")
+        logger.info(f"Analysis user_id: {analysis.get('user_id')}, Current user ID: {current_user.id}")
+        logger.info(f"Analysis username: {analysis.get('username')}, Current username: {getattr(current_user, 'username', 'N/A')}")
+        return analysis
+    return None
+
+def _extract_cleaned_text_with_logging(analysis):
+    """Extract cleaned text and log sizes as in original code."""
+    text_data = analysis.get('text_data', {})
+    cleaned_text = text_data.get('cleaned_text', text_data.get('original_text', ''))
+    logger.info(f"Extracted data - Themes: {len(analysis.get('themes', []))}, Classification: {analysis.get('classification', {})}")
+    logger.info(f"Text data length: {len(cleaned_text) if cleaned_text else 0} chars")
+    return cleaned_text
+
+def _load_or_generate_recommendations(analysis_id, cleaned_text):
+    """Load stored recommendations or generate new ones with debug prints; return package or None on error."""
+    stored_recs = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
+    if stored_recs:
+        return {
+            'recommendations': stored_recs,
+            'analysis_metadata': {
+                'generated_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                'methodology': 'Previously generated'
+            }
+        }
+
+    try:
+        print("\n===== GENERATING RECOMMENDATIONS WITH KNOWLEDGE BASE =====\n")
+        recommendations = recommendation_engine.generate_recommendations(
+            policy_text=cleaned_text,
+            institution_type="university",
+            analysis_id=analysis_id
+        )
+        print("\n===== RECOMMENDATIONS GENERATED =====\n")
+
+        for i, rec in enumerate(recommendations.get("recommendations", [])):
+            print(f"Recommendation {i+1}: {rec.get('title', 'Unknown')}")
+            print(f"  Sources: {rec.get('sources', [])}")
+            print(f"  References: {len(rec.get('references', []))} items")
+        print("\n===== END OF RECOMMENDATIONS DEBUG =====\n")
+
+        return recommendations
+    except Exception as e:
+        logger.error(f"Error generating recommendations: {str(e)}")
+        return None
+
+def _build_recommendation_data(analysis_id, analysis, themes, classification, recommendation_package):
+    """Build the data dict for recommendations template, matching original keys."""
+    return {
+        'analysis': {
+            'filename': analysis.get('filename', 'Unknown'),
+            'classification': classification.get('classification', 'Unknown'),
+            'confidence': classification.get('confidence', 0),
+            'analysis_id': analysis_id,
+            'themes_count': len(themes)
+        },
+        'recommendations': recommendation_package.get('recommendations', []),
+        'coverage_analysis': recommendation_package.get('coverage_analysis', {}),
+        'gaps': recommendation_package.get('identified_gaps', []),
+        'generated_date': recommendation_package.get('analysis_metadata', {}).get('generated_date', datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+        'methodology': recommendation_package.get('analysis_metadata', {}).get('methodology', 'Ethical Framework Analysis'),
+        'academic_sources': recommendation_package.get('analysis_metadata', {}).get('academic_sources', []),
+        'summary': recommendation_package.get('summary', {}),
+        'total_recommendations': len(recommendation_package.get('recommendations', []))
+    }
+
+def _store_recommendations_safe(analysis_id, recommendation_package):
+    """Store recommendations, logging but not failing flow on errors."""
+    try:
+        rec_id = db_operations.store_recommendations(
+            user_id=current_user.id,
+            analysis_id=analysis_id,
+            recs=recommendation_package.get('recommendations', [])
+        )
+        logger.info(f"Recommendations stored with ID: {rec_id}")
+    except Exception as e:
+        logger.warning(f"Could not store recommendations: {e}")
+
+def _fallback_recommendations_response(analysis_id, analysis):
+    """Construct fallback response identical to original error path."""
+    try:
+        basic_data = {
+            'analysis': {
+                'filename': (analysis or {}).get('filename', 'Unknown') if analysis else 'Unknown',
+                'classification': (analysis or {}).get('classification', {}).get('classification', 'Unknown') if analysis else 'Unknown',
+                'analysis_id': analysis_id
+            },
+            'recommendations': [
+                {
+                    'title': 'Policy Review Required',
+                    'description': 'Conduct comprehensive review of AI policy to ensure alignment with current best practices.',
+                    'priority': 'high',
+                    'source': 'Fallback System',
+                    'timeframe': '3-6 months',
+                    'implementation_steps': [
+                        'Review current policy framework',
+                        'Consult with stakeholders',
+                        'Implement evidence-based improvements'
+                    ]
+                }
+            ],
+            'generated_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'methodology': 'Basic Template (Fallback)',
+            'total_recommendations': 1,
+            'error_note': 'Advanced analysis temporarily unavailable'
+        }
+        flash('Using basic recommendations due to processing error.', 'warning')
+        return render_template('recommendations.html', data=basic_data)
+    except Exception as fallback_error:
+        logger.error(f"Fallback recommendation generation failed: {str(fallback_error)}")
+        flash('Error generating recommendations. Please try again.', 'error')
+        return redirect(url_for('dashboard'))
 """
 Main Flask application for PolicyCraft - AI Policy Analysis Framework.
 Clean version without onboarding features.
@@ -224,7 +352,14 @@ def create_app():
     @app.route('/about')
     def about():
         """Minimal about page used by tests/templates."""
-        return render_template("about.html") if os.path.exists(os.path.join(app.template_folder, 'about.html')) else "About PolicyCraft", 200, {"Content-Type": "text/plain; charset=utf-8"}
+        # Prefer the public/about.html if present, fallback to about.html, then plain text
+        public_about = os.path.join(app.template_folder, 'public', 'about.html')
+        root_about = os.path.join(app.template_folder, 'about.html')
+        if os.path.exists(public_about):
+            return render_template('public/about.html')
+        if os.path.exists(root_about):
+            return render_template('about.html')
+        return "About PolicyCraft", 200, {"Content-Type": "text/plain; charset=utf-8"}
 
     # Initialise database and create tables
     with app.app_context():
@@ -282,6 +417,91 @@ def _to_epoch(val):
     except Exception:
         pass
     return 0
+
+def _get_uploaded_files_from_request(req):
+    """Extract list of uploaded files from Flask request supporting multiple field names."""
+    files = []
+    try:
+        # Common patterns: 'file' single/multiple, or 'files[]'
+        if 'files[]' in req.files:
+            files = req.files.getlist('files[]')
+        elif 'file' in req.files:
+            files = req.files.getlist('file')
+    except Exception as e:
+        logger.error(f"Upload error: could not read files from request: {e}")
+        files = []
+    # Filter out empty filenames
+    return [f for f in files if getattr(f, 'filename', '')]
+
+def _process_uploaded_files(uploaded_files):
+    """Validate and save uploaded files. Returns (successful_uploads, failed_uploads)."""
+    create_upload_folder()
+    successful = []
+    failed = []
+    for f in uploaded_files:
+        original_name = f.filename
+        if not original_name:
+            failed.append({'filename': original_name or 'unknown', 'reason': 'Empty filename'})
+            continue
+        if not allowed_file(original_name):
+            failed.append({'filename': original_name, 'reason': 'Disallowed file type'})
+            continue
+        try:
+            safe_name = secure_filename(original_name)
+            timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')
+            unique_name = f"{current_user.id}_{timestamp}_{safe_name}"
+            dest_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
+            f.save(dest_path)
+            logger.info(f"Saved uploaded file: {dest_path}")
+            successful.append({'original': original_name, 'unique': unique_name})
+        except Exception as e:
+            logger.error(f"Failed to save uploaded file {original_name}: {e}")
+            failed.append({'filename': original_name, 'reason': 'Save failed'})
+    return successful, failed
+
+def _parse_batch_file_list(files_param: str):
+    """Parse comma-separated file list from URL path parameter."""
+    if not files_param:
+        return []
+    return [p for p in files_param.split(',') if p]
+
+def _authorize_batch_files(file_list):
+    """Ensure all files belong to current user."""
+    prefix = f"{current_user.id}_"
+    return all(name.startswith(prefix) for name in file_list)
+
+def _process_single_batch_file(filename: str):
+    """Process a single uploaded user file; returns (result_dict, ok_bool)."""
+    try:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(file_path):
+            logger.error(f"Batch: file not found: {file_path}")
+            return {'filename': filename, 'error': 'File not found'}, False
+
+        extracted_text, cleaned_text, themes, classification = _extract_and_analyse_text(file_path)
+        if not extracted_text:
+            return {'filename': filename, 'error': 'Text extraction failed'}, False
+
+        analysis_id = _store_analysis_results(filename, extracted_text, cleaned_text, themes, classification)
+        charts, text_stats, theme_summary, classification_details = _generate_analysis_derivatives(cleaned_text, themes, classification)
+        result_payload = _build_results_payload(filename, analysis_id, themes, classification, charts,
+                                                text_stats, theme_summary, classification_details,
+                                                extracted_text, cleaned_text)
+        # Add minimal flags for batch UI
+        result_payload['ok'] = True
+        return result_payload, True
+    except Exception as e:
+        logger.error(f"Batch: error processing {filename}: {e}")
+        return {'filename': filename, 'error': str(e)}, False
+
+def _summarize_batch_results(file_list, successful_analyses, failed_analyses):
+    """Create a summary dict for batch analysis template."""
+    return {
+        'requested': len(file_list),
+        'successful': successful_analyses,
+        'failed': failed_analyses,
+        'filenames': file_list,
+    }
 
 def _combine_stats(stats1, stats2):
     """Combine two sets of statistics with weighted averaging."""
@@ -1161,68 +1381,18 @@ def upload_file():
         return render_template('upload.html')
     
     # Handle file uploads
-    uploaded_files = request.files.getlist('files[]')
-    
-    # Fallback for single file upload
-    if not uploaded_files or all(f.filename == '' for f in uploaded_files):
-        single_file = request.files.get('file')
-        if single_file and single_file.filename != '':
-            uploaded_files = [single_file]
-    
-    if not uploaded_files or all(f.filename == '' for f in uploaded_files):
+    uploaded_files = _get_uploaded_files_from_request(request)
+    if not uploaded_files:
         flash('No files selected', 'error')
         return redirect(request.url)
-    
-    # Check file limit
-    if len(uploaded_files) > app.config.get('MAX_FILES_PER_UPLOAD', 10):
-        flash(f'Too many files. Maximum {app.config.get("MAX_FILES_PER_UPLOAD", 10)} files allowed.', 'error')
-        return redirect(request.url)
-    
-    successful_uploads = []
-    failed_uploads = []
-    
-    # Process each file
-    for file in uploaded_files:
-        if file.filename == '':
-            continue
-            
-        if file and allowed_file(file.filename):
-            try:
-                # Secure the filename and save file
-                filename = secure_filename(file.filename)
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_")
-                unique_filename = f"{current_user.id}_{timestamp}{filename}"
-                
-                create_upload_folder()
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-                file.save(file_path)
-                
-                # Process uploaded file
-                processing_result = process_new_upload(file_path, file.filename)
-                if processing_result['success']:
-                    logger.info(f"Auto-processed: {processing_result['standardized_name']}")
-                else:
-                    logger.warning(f"Processing failed: {processing_result['error']}")
 
-                successful_uploads.append({
-                    'original': file.filename,
-                    'unique': unique_filename,
-                    'size': os.path.getsize(file_path)
-                })
-                
-                logger.info(f"File uploaded successfully: {unique_filename}")
-                
-            except Exception as e:
-                failed_uploads.append({
-                    'filename': file.filename,
-                    'error': str(e)
-                })
-                logger.error(f"Error uploading file {file.filename}: {str(e)}")
-        else:
-            failed_uploads.append({
-                'filename': file.filename,
-                'error': 'Invalid file type'
-            })
+    # Check file limit
+    max_files = app.config.get('MAX_FILES_PER_UPLOAD', 10)
+    if len(uploaded_files) > max_files:
+        flash(f'Too many files. Maximum {max_files} files allowed.', 'error')
+        return redirect(request.url)
+
+    successful_uploads, failed_uploads = _process_uploaded_files(uploaded_files)
     
     # Provide feedback
     if successful_uploads:
@@ -1250,119 +1420,149 @@ def batch_analyse(files):
     pipeline and provides consolidated results and statistics.
     """
     try:
-        file_list = files.split(',')
-        
-        # Security check
-        for filename in file_list:
-            if not filename.startswith(f"{current_user.id}_"):
-                flash('Access denied. You can only analyse your own documents.', 'error')
-                return redirect(url_for('upload_file'))
-        
+        file_list = _parse_batch_file_list(files)
+        if not _authorize_batch_files(file_list):
+            flash('Access denied. You can only analyse your own documents.', 'error')
+            return redirect(url_for('upload_file'))
+
         logger.info(f"Starting batch analysis of {len(file_list)} files")
-        
+
         batch_results = []
         successful_analyses = 0
         failed_analyses = 0
-        
+
         for i, filename in enumerate(file_list, 1):
-            try:
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                
-                if not os.path.exists(file_path):
-                    failed_analyses += 1
-                    continue
-                
-                # Run AI pipeline
-                extracted_text = text_processor.extract_text_from_file(file_path)
-                if not extracted_text:
-                    failed_analyses += 1
-                    continue
-                
-                cleaned_text = text_processor.clean_text(extracted_text)
-                themes = theme_extractor.extract_themes(cleaned_text)
-                classification = policy_classifier.classify_policy(cleaned_text)
-                
-                # Store in database
-                analysis_id = db_operations.store_user_analysis_results(
-                    user_id=current_user.id,
-                    filename=filename,
-                    original_text=extracted_text,
-                    cleaned_text=cleaned_text,
-                    themes=themes,
-                    classification=classification
-                )
-                
-                # Generate charts
-                charts = chart_generator.generate_analysis_charts(themes, classification, cleaned_text)
-                
-                batch_results.append({
-                    'filename': filename,
-                    'original_filename': filename.split('_', 2)[-1],
-                    'analysis_id': analysis_id,
-                    'themes': themes[:5],
-                    'classification': classification,
-                    'charts': charts,
-                    'text_length': len(cleaned_text),
-                    'theme_count': len(themes),
-                    'status': 'success'
-                })
-                
+            result, ok = _process_single_batch_file(filename)
+            batch_results.append(result)
+            if ok:
                 successful_analyses += 1
-                
-            except Exception as e:
-                logger.error(f"Error analyzing {filename}: {str(e)}")
-                batch_results.append({
-                    'filename': filename,
-                    'original_filename': filename.split('_', 2)[-1],
-                    'status': 'failed',
-                    'error': str(e)
-                })
+            else:
                 failed_analyses += 1
-        
-        # Generate batch summary
-        if successful_analyses > 0:
-            all_classifications = [r['classification']['classification'] for r in batch_results if r['status'] == 'success']
-            classification_summary = {cls: all_classifications.count(cls) for cls in set(all_classifications)}
-            
-            all_themes = []
-            for result in batch_results:
-                if result['status'] == 'success':
-                    all_themes.extend([theme['name'] for theme in result['themes']])
-            
-            from collections import Counter
-            theme_summary = dict(Counter(all_themes).most_common(10))
-            
-            batch_summary = {
-                'total_files': len(file_list),
-                'successful': successful_analyses,
-                'failed': failed_analyses,
-                'classification_summary': classification_summary,
-                'theme_summary': theme_summary,
-                'avg_confidence': sum([r['classification']['confidence'] for r in batch_results if r['status'] == 'success']) / successful_analyses if successful_analyses > 0 else 0
-            }
-        else:
-            batch_summary = {
-                'total_files': len(file_list),
-                'successful': 0,
-                'failed': failed_analyses,
-                'classification_summary': {},
-                'theme_summary': {},
-                'avg_confidence': 0
-            }
-        
-        logger.info(f"Batch analysis completed: {successful_analyses}/{len(file_list)} successful")
-        
-        return render_template('batch_results.html', {
-            'results': batch_results,
-            'summary': batch_summary,
-            'user': current_user,
-            'analysis_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        })
+
+        batch_summary = _summarize_batch_results(file_list, successful_analyses, failed_analyses)
+
+        return render_template('batch_analysis.html',
+                               results=batch_results,
+                               summary=batch_summary)
         
     except Exception as e:
         logger.error(f"Error in batch analysis: {str(e)}")
         flash('Error during batch analysis. Please try again.', 'error')
         return redirect(url_for('upload_file'))
+
+def _is_authorised_for_filename(filename: str, is_baseline: bool) -> bool:
+    """Authorisation: allow baseline files to all, user files must be prefixed with user id."""
+    # Baseline files are accessible to all users for comparison purposes
+    return is_baseline or filename.startswith(f"{current_user.id}_")
+
+def _resolve_file_path_for_analysis(filename: str, is_baseline: bool):
+    """Resolve file path for user or baseline document and log details.
+
+    Returns a tuple: (file_path, original_display_name, mapped_filename)
+    """
+    if is_baseline:
+        # Map display name back to actual filename
+        original_filename = filename.split(' - ')[-1] if ' - ' in filename else filename.replace(BASELINE_PREFIX + ' ', '')
+        university_file_mapping = {
+            'University of Oxford': 'oxford-ai-policy.pdf',
+            'University of Cambridge': 'cambridge-ai-policy.pdf',
+            'Imperial College London': 'imperial-ai-policy.docx',
+            'University of Edinburgh': 'edinburgh university-ai-policy.pdf',
+            'Leeds Trinity University': 'leeds trinity university-ai-policy.pdf',
+            'MIT': 'mit-ai-policy.pdf',
+            'Harvard University': 'harvard-ai-policy.pdf',
+            'Stanford University': 'stanford-ai-policy.pdf',
+            'University of Tokyo': 'tokyo-ai-policy.docx',
+            'Jagiellonian University': 'jagiellonian university-ai-policy.pdf',
+            'Belfast University': 'belfast university-ai-policy.pdf',
+            'University of Chicago': 'chicago-ai-policy.docx',
+            'Columbia University': 'columbia-ai-policy.pdf',
+            'Cornell University': 'cornell-ai-policy.docx',
+            'University of Liverpool': 'liverpool policy-ai-policy.pdf'
+        }
+        actual_filename = university_file_mapping.get(original_filename, original_filename)
+        clean_dataset_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'policies', 'clean_dataset')
+        file_path = os.path.join(clean_dataset_dir, actual_filename)
+        logger.info(f"Baseline analysis - Display name: {original_filename}")
+        logger.info(f"Baseline analysis - Mapped filename: {actual_filename}")
+        logger.info(f"Baseline analysis - File path: {file_path}")
+        logger.info(f"Baseline analysis - File exists: {os.path.exists(file_path)}")
+        return file_path, original_filename, actual_filename
+    else:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        logger.info(f"User analysis - File path: {file_path}")
+        logger.info(f"User analysis - File exists: {os.path.exists(file_path)}")
+        return file_path, None, None
+
+def _get_existing_analysis_record(filename: str, is_baseline: bool):
+    """Fetch existing analysis by filename for user, with baseline fallback (-1)."""
+    existing = db_operations.get_analysis_by_filename(current_user.id, filename)
+    if not existing and is_baseline:
+        existing = db_operations.get_analysis_by_filename(-1, filename)
+    return existing
+
+def _unpack_existing_analysis(existing):
+    """Return tuple (themes, classification, cleaned_text, extracted_text, analysis_id)."""
+    themes = existing.get('themes', [])
+    classification = existing.get('classification', {})
+    cleaned_text = existing.get('text_data', {}).get('cleaned_text', '')
+    extracted_text = existing.get('text_data', {}).get('original_text', '')
+    analysis_id = str(existing.get('_id'))
+    return themes, classification, cleaned_text, extracted_text, analysis_id
+
+def _extract_and_analyse_text(file_path: str):
+    """Extract text from file, clean it, derive themes and classification."""
+    extracted_text = text_processor.extract_text_from_file(file_path)
+    if not extracted_text:
+        return None, None, None, None
+    cleaned_text = text_processor.clean_text(extracted_text)
+    themes = theme_extractor.extract_themes(cleaned_text)
+    classification = policy_classifier.classify_policy(cleaned_text)
+    return extracted_text, cleaned_text, themes, classification
+
+def _store_analysis_results(filename, extracted_text, cleaned_text, themes, classification):
+    """Store analysis results in DB and return analysis_id."""
+    return db_operations.store_user_analysis_results(
+        user_id=current_user.id,
+        filename=filename,
+        original_text=extracted_text,
+        cleaned_text=cleaned_text,
+        themes=themes,
+        classification=classification,
+        username=getattr(current_user, 'username', None)
+    )
+
+def _generate_analysis_derivatives(cleaned_text, themes, classification):
+    """Generate charts and summaries used by results view."""
+    charts = chart_generator.generate_analysis_charts(themes, classification, cleaned_text)
+    text_stats = text_processor.get_text_statistics(cleaned_text)
+    theme_summary = theme_extractor.get_theme_summary(themes)
+    classification_details = policy_classifier.get_classification_details(cleaned_text)
+    return charts, text_stats, theme_summary, classification_details
+
+def _build_results_payload(filename, analysis_id, themes, classification, charts,
+                           text_stats, theme_summary, classification_details,
+                           extracted_text, cleaned_text):
+    """Build the results dict passed to results.html, preserving original structure."""
+    return {
+        'filename': filename,
+        'analysis_id': analysis_id,
+        'themes': themes,
+        'classification': classification,
+        'charts': charts,
+        'text_stats': text_stats,
+        'theme_summary': theme_summary,
+        'classification_details': classification_details,
+        'analysis_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        'user': current_user,
+        'processing_summary': {
+            'original_length': len(extracted_text) if extracted_text else 0,
+            'cleaned_length': len(cleaned_text) if cleaned_text else 0,
+            'themes_found': len(themes) if themes else 0,
+            'classification_confidence': (classification or {}).get('confidence', 0),
+            'processing_method': (classification or {}).get('method', 'N/A')
+        }
+    }
 
 @app.route('/analyse/<filename>')
 @login_required
@@ -1375,129 +1575,39 @@ def analyse_document(filename):
     """
     try:
         is_baseline = filename.startswith(BASELINE_PREFIX)
-        
-        # Security check - allow baseline files or user's own files
-        # Baseline files are accessible to all users for comparison purposes
-        if not is_baseline and not filename.startswith(f"{current_user.id}_"):
+
+        if not _is_authorised_for_filename(filename, is_baseline):
             flash('Access denied. You can only analyse your own documents or baseline policies.', 'error')
             return redirect(url_for('upload_file'))
-        
-        # Determine the correct file path
-        if is_baseline:
-            # For baseline files, we need to map the display name back to the actual filename
-            # First check if it's already a proper filename with extension
-            original_filename = filename.split(' - ')[-1] if ' - ' in filename else filename.replace(BASELINE_PREFIX + ' ', '')
-            
-            # Create a mapping of display names to actual filenames
-            university_file_mapping = {
-                'University of Oxford': 'oxford-ai-policy.pdf',
-                'University of Cambridge': 'cambridge-ai-policy.pdf',
-                'Imperial College London': 'imperial-ai-policy.docx',
-                'University of Edinburgh': 'edinburgh university-ai-policy.pdf',
-                'Leeds Trinity University': 'leeds trinity university-ai-policy.pdf',
-                'MIT': 'mit-ai-policy.pdf',
-                'Harvard University': 'harvard-ai-policy.pdf',
-                'Stanford University': 'stanford-ai-policy.pdf',
-                'University of Tokyo': 'tokyo-ai-policy.docx',
-                'Jagiellonian University': 'jagiellonian university-ai-policy.pdf',
-                'Belfast University': 'belfast university-ai-policy.pdf',
-                'University of Chicago': 'chicago-ai-policy.docx',
-                'Columbia University': 'columbia-ai-policy.pdf',
-                'Cornell University': 'cornell-ai-policy.docx',
-                'University of Liverpool': 'liverpool policy-ai-policy.pdf'
-            }
-            
-            # Try to map the display name to actual filename
-            if original_filename in university_file_mapping:
-                actual_filename = university_file_mapping[original_filename]
-            else:
-                # If no mapping found, use the original filename as-is
-                actual_filename = original_filename
-            
-            # Use absolute path (consistent with dashboard listing) to avoid CWD issues
-            clean_dataset_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'policies', 'clean_dataset')
-            file_path = os.path.join(clean_dataset_dir, actual_filename)
-            logger.info(f"Baseline analysis - Display name: {original_filename}")
-            logger.info(f"Baseline analysis - Mapped filename: {actual_filename}")
-            logger.info(f"Baseline analysis - File path: {file_path}")
-            logger.info(f"Baseline analysis - File exists: {os.path.exists(file_path)}")
-        else:
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            logger.info(f"User analysis - File path: {file_path}")
-            logger.info(f"User analysis - File exists: {os.path.exists(file_path)}")
-        
+
+        file_path, _, _ = _resolve_file_path_for_analysis(filename, is_baseline)
         if not os.path.exists(file_path):
             logger.error(f"File not found: {file_path}")
             flash('File not found', 'error')
             return redirect(url_for('upload_file'))
-        
+
         logger.info(f"Starting analysis of file: {filename}")
-        
-        # Check if analysis already exists to avoid duplication
-        existing_analysis = db_operations.get_analysis_by_filename(current_user.id, filename)
-        if not existing_analysis and is_baseline:
-            # For baseline, check global baseline record (user_id = -1)
-            existing_analysis = db_operations.get_analysis_by_filename(-1, filename)
-        if existing_analysis:
-            themes = existing_analysis.get('themes', [])
-            classification = existing_analysis.get('classification', {})
-            cleaned_text = existing_analysis.get('text_data', {}).get('cleaned_text', '')
-            extracted_text = existing_analysis.get('text_data', {}).get('original_text', '')
-            analysis_id = str(existing_analysis['_id'])
+
+        existing = _get_existing_analysis_record(filename, is_baseline)
+        if existing:
+            themes, classification, cleaned_text, extracted_text, analysis_id = _unpack_existing_analysis(existing)
         else:
-            # Extract and process text
-            extracted_text = text_processor.extract_text_from_file(file_path)
+            extracted_text, cleaned_text, themes, classification = _extract_and_analyse_text(file_path)
             if not extracted_text:
                 flash('Could not extract text from file', 'error')
                 return redirect(url_for('upload_file'))
-            
-            cleaned_text = text_processor.clean_text(extracted_text)
-            themes = theme_extractor.extract_themes(cleaned_text)
-            classification = policy_classifier.classify_policy(cleaned_text)
-            
-            # Store results in database (handles update if exists)
-            analysis_id = db_operations.store_user_analysis_results(
-                user_id=current_user.id,
-                filename=filename,
-                original_text=extracted_text,
-                cleaned_text=cleaned_text,
-                themes=themes,
-                classification=classification,
-                username=getattr(current_user, 'username', None)
-            )
-        
-        # Generate visualizations
-        charts = chart_generator.generate_analysis_charts(themes, classification, cleaned_text)
-        
-        # Prepare comprehensive results
-        text_stats = text_processor.get_text_statistics(cleaned_text)
-        theme_summary = theme_extractor.get_theme_summary(themes)
-        classification_details = policy_classifier.get_classification_details(cleaned_text)
-        
+            analysis_id = _store_analysis_results(filename, extracted_text, cleaned_text, themes, classification)
+
+        charts, text_stats, theme_summary, classification_details = _generate_analysis_derivatives(cleaned_text, themes, classification)
+
         logger.info(f"Analysis completed successfully for: {filename}")
-        
-        results = {
-            'filename': filename,
-            'analysis_id': analysis_id,
-            'themes': themes,
-            'classification': classification,
-            'charts': charts,
-            'text_stats': text_stats,
-            'theme_summary': theme_summary,
-            'classification_details': classification_details,
-            'analysis_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'user': current_user,
-            'processing_summary': {
-                'original_length': len(extracted_text),
-                'cleaned_length': len(cleaned_text),
-                'themes_found': len(themes),
-                'classification_confidence': classification.get('confidence', 0),
-                'processing_method': classification.get('method', 'N/A')
-            }
-        }
-        
+
+        results = _build_results_payload(filename, analysis_id, themes, classification, charts,
+                                         text_stats, theme_summary, classification_details,
+                                         extracted_text, cleaned_text)
+
         return render_template('results.html', results=results)
-        
+
     except Exception as e:
         logger.error(f"Error during analysis of {filename}: {str(e)}")
         flash('Error analysing document. Please try again.', 'error')
@@ -1548,176 +1658,37 @@ def get_recommendations(analysis_id):
         logger.info("=== Starting recommendation generation ===")
         logger.info(f"User ID: {current_user.id}, Username: {getattr(current_user, 'username', 'N/A')}")
         logger.info(f"Analysis ID: {analysis_id}")
-        
-        # Get the analysis data (try by user id, fallback to global and verify ownership)
-        logger.info("Attempting to get user's analysis...")
-        analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
-        
-        if analysis:
-            logger.info("Found analysis in user's analyses")
-            logger.info(f"Analysis details - User ID: {analysis.get('user_id')}, Is Baseline: {analysis.get('is_baseline', False)}")
-        else:
-            logger.warning(f"{ANALYSIS_NOT_FOUND} in user's analyses, trying global lookup...")
-            analysis = db_operations.get_analysis_by_id(analysis_id)
-            
-            if analysis:
-                logger.info("Found analysis in global collection")
-                logger.info(f"Analysis details - ID: {analysis.get('_id')}")
-                logger.info(f"Analysis owner: User ID: {analysis.get('user_id')}, Username: {analysis.get('username')}")
-                logger.info(f"Is baseline: {analysis.get('is_baseline', False)}")
-                
-                # Tymczasowe wyłączenie sprawdzania uprawnień do testów
-                logger.warning("Temporary disabling permission checks for testing")
-                logger.info(f"Analysis user_id: {analysis.get('user_id')}, Current user ID: {current_user.id}")
-                logger.info(f"Analysis username: {analysis.get('username')}, Current username: {getattr(current_user, 'username', 'N/A')}")
-                
-                # Temporary disabling permission checks for testing
-                # Restore permission checks after testing
-                # is_baseline = analysis.get('is_baseline', False)
-                # is_owner = (
-                #     str(analysis.get('user_id')) in [str(current_user.id), 'None', ''] or 
-                #     str(analysis.get('username')) == str(getattr(current_user, 'username', ''))
-                # )
-                # 
-                # logger.info(f"Access check - is_baseline: {is_baseline}, is_owner: {is_owner}")
-                # 
-                # if not (is_baseline or is_owner):
-                #     logger.error(f"Access denied for user {current_user.id} to analysis {analysis_id}")
-                #     logger.error(f"User ID match: {str(analysis.get('user_id')) == str(current_user.id)}")
-                #     logger.error(f"Username match: {str(analysis.get('username')) == str(getattr(current_user, 'username', ''))}")
-                #     flash('You do not have permission to view this analysis.', 'error')
-                #     return redirect(url_for('dashboard'))
-            else:
-                logger.error(f"Analysis {analysis_id} not found in global lookup")
-                flash(f'{ANALYSIS_NOT_FOUND}.', 'error')
-                return redirect(url_for('dashboard'))
-        
-        logger.info(f"Found analysis data for ID: {analysis_id}")
-        
-        # Extract analysis components with logging
+
+        analysis = _fetch_analysis_for_recommendations(analysis_id)
+        if analysis is None:
+            logger.error(f"Analysis {analysis_id} not found in global lookup")
+            flash(f'{ANALYSIS_NOT_FOUND}.', 'error')
+            return redirect(url_for('dashboard'))
+
         themes = analysis.get('themes', [])
         classification = analysis.get('classification', {})
-        text_data = analysis.get('text_data', {})
-        cleaned_text = text_data.get('cleaned_text', text_data.get('original_text', ''))
-        
-        logger.info(f"Extracted data - Themes: {len(themes)}, Classification: {classification}")
-        logger.info(f"Text data length: {len(cleaned_text) if cleaned_text else 0} chars")
-        
+        cleaned_text = _extract_cleaned_text_with_logging(analysis)
+
         if not cleaned_text:
             logger.error("No text content found in analysis to generate recommendations")
             flash('Analysis text not found. Cannot generate recommendations.', 'warning')
             return redirect(url_for('dashboard'))
-        
-        if not cleaned_text:
-            flash('Analysis text not found. Cannot generate recommendations.', 'warning')
-            return redirect(url_for('dashboard'))
-        
-        # Try to load stored recommendations first
-        stored_recs = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
-        if stored_recs:
-            recommendation_package = {
-                'recommendations': stored_recs,
-                'analysis_metadata': {
-                    'generated_date': analysis.get('analysis_date', datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-                    'methodology': 'Previously generated'
-                }
-            }
-        else:
-            # Generate new recommendations
-            try:
-                print("\n===== GENERATING RECOMMENDATIONS WITH KNOWLEDGE BASE =====\n")
-                recommendations = recommendation_engine.generate_recommendations(
-                    policy_text=cleaned_text,
-                    institution_type="university",
-                analysis_id=analysis_id
-            )
-                print("\n===== RECOMMENDATIONS GENERATED =====\n")
-                
-                # Debug: Print sources for each recommendation
-                for i, rec in enumerate(recommendations.get("recommendations", [])):
-                    print(f"Recommendation {i+1}: {rec.get('title', 'Unknown')}")
-                    print(f"  Sources: {rec.get('sources', [])}")
-                    print(f"  References: {len(rec.get('references', []))} items")
-                print("\n===== END OF RECOMMENDATIONS DEBUG =====\n")
-                
-                recommendation_package = recommendations
-            except Exception as e:
-                logger.error(f"Error generating recommendations: {str(e)}")
-                flash('Error generating recommendations. Please try again.', 'error')
-                return redirect(url_for('dashboard'))
-        
-        # Prepare data for template
-        recommendation_data = {
-            'analysis': {
-                'filename': analysis.get('filename', 'Unknown'),
-                'classification': classification.get('classification', 'Unknown'),
-                'confidence': classification.get('confidence', 0),
-                'analysis_id': analysis_id,
-                'themes_count': len(themes)
-            },
-            'recommendations': recommendation_package.get('recommendations', []),
-            'coverage_analysis': recommendation_package.get('coverage_analysis', {}),
-            'gaps': recommendation_package.get('identified_gaps', []),
-            'generated_date': recommendation_package.get('analysis_metadata', {}).get('generated_date', datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-            'methodology': recommendation_package.get('analysis_metadata', {}).get('methodology', 'Ethical Framework Analysis'),
-            'academic_sources': recommendation_package.get('analysis_metadata', {}).get('academic_sources', []),
-            'summary': recommendation_package.get('summary', {}),
-            'total_recommendations': len(recommendation_package.get('recommendations', []))
-        }
-        
-        logger.info(f"Generated {recommendation_data['total_recommendations']} recommendations")
-        
-        # Store recommendations in database
-        try:
-            rec_id = db_operations.store_recommendations(
-                user_id=current_user.id,
-                analysis_id=analysis_id,
-                recs=recommendation_package.get('recommendations', [])
-            )
-            logger.info(f"Recommendations stored with ID: {rec_id}")
-        except Exception as e:
-            logger.warning(f"Could not store recommendations: {e}")
-        
-        return render_template('recommendations.html', data=recommendation_data)
-        
-    except Exception as e:
-        logger.error(f"Error generating recommendations: {str(e)}")
-        
-        # Fallback to basic recommendations
-        try:
-            basic_data = {
-                'analysis': {
-                    'filename': analysis.get('filename', 'Unknown'),
-                    'classification': analysis.get('classification', {}).get('classification', 'Unknown'),
-                    'analysis_id': analysis_id
-                },
-                'recommendations': [
-                    {
-                        'title': 'Policy Review Required',
-                        'description': 'Conduct comprehensive review of AI policy to ensure alignment with current best practices.',
-                        'priority': 'high',
-                        'source': 'Fallback System',
-                        'timeframe': '3-6 months',
-                        'implementation_steps': [
-                            'Review current policy framework',
-                            'Consult with stakeholders',
-                            'Implement evidence-based improvements'
-                        ]
-                    }
-                ],
-                'generated_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                'methodology': 'Basic Template (Fallback)',
-                'total_recommendations': 1,
-                'error_note': 'Advanced analysis temporarily unavailable'
-            }
-            
-            flash('Using basic recommendations due to processing error.', 'warning')
-            return render_template('recommendations.html', data=basic_data)
-            
-        except Exception as fallback_error:
-            logger.error(f"Fallback recommendation generation failed: {str(fallback_error)}")
+
+        recommendation_package = _load_or_generate_recommendations(analysis_id, cleaned_text)
+        if recommendation_package is None:
             flash('Error generating recommendations. Please try again.', 'error')
             return redirect(url_for('dashboard'))
+
+        recommendation_data = _build_recommendation_data(analysis_id, analysis, themes, classification, recommendation_package)
+        logger.info(f"Generated {recommendation_data['total_recommendations']} recommendations")
+
+        _store_recommendations_safe(analysis_id, recommendation_package)
+
+        return render_template('recommendations.html', data=recommendation_data)
+
+    except Exception as e:
+        logger.error(f"Error generating recommendations: {str(e)}")
+        return _fallback_recommendations_response(analysis_id, locals().get('analysis'))
 
 
 @app.route('/delete_analysis/<analysis_id>', methods=['POST'])
@@ -1801,19 +1772,22 @@ def api_explain_analysis(analysis_id):
     Provides key terms that influenced the AI policy classification
     decision for transparency and explainability purposes.
     """
-    db_ops = DatabaseOperations(uri="mongodb://localhost:27017", db_name="policycraft")
-    analysis = db_ops.get_analysis_by_id(analysis_id)
-    if not analysis or analysis.get('user_id') != current_user.id:
-        return jsonify({'error': ANALYSIS_NOT_FOUND}), 404
+    try:
+        analysis = db_operations.get_analysis_by_id(analysis_id)
+        if not analysis or analysis.get('user_id') != current_user.id:
+            return jsonify({'error': ANALYSIS_NOT_FOUND}), 404
 
-    cleaned_text = analysis.get('text_data', {}).get('cleaned_text', '')
-    if not cleaned_text:
-        return jsonify({'error': 'No cleaned text available'}), 400
+        cleaned_text = analysis.get('text_data', {}).get('cleaned_text', '')
+        if not cleaned_text:
+            return jsonify({'error': 'No cleaned text available'}), 400
 
-    classifier = PolicyClassifier()
-    keywords = classifier.explain_classification(cleaned_text, top_n=15)
-    result = [{"term": kw, "category": cat, "score": score} for kw, cat, score in keywords]
-    return jsonify({'analysis_id': analysis_id, 'keywords': result})
+        classifier = PolicyClassifier()
+        keywords = classifier.explain_classification(cleaned_text, top_n=15)
+        result = [{"term": kw, "category": cat, "score": score} for kw, cat, score in keywords]
+        return jsonify({'analysis_id': analysis_id, 'keywords': result})
+    except Exception as e:
+        logger.error(f"API explain error for analysis {analysis_id}: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/api/analysis/<analysis_id>')
 @login_required
@@ -1864,73 +1838,85 @@ def export_view(analysis_id):
     try:
         logger.info("=== Starting export view preparation ===")
         logger.info(f"User ID: {current_user.id}, Analysis ID: {analysis_id}")
-        
-        # Get the analysis data
-        logger.info("Attempting to get user's analysis...")
-        analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
-        
-        if analysis:
-            logger.info("Found analysis in user's analyses")
-            logger.info(f"Analysis details - Filename: {analysis.get('filename')}, ID: {analysis_id}")
-        else:
-            logger.info(f"{ANALYSIS_NOT_FOUND} in user's analyses, trying global lookup...")
-            analysis = db_operations.get_analysis_by_id(analysis_id)
-            
-            if analysis:
-                logger.info("Found analysis in global collection")
-                logger.info(f"Analysis details - Filename: {analysis.get('filename')}, ID: {analysis_id}")
-            else:
-                logger.error(f"Analysis {analysis_id} not found in global lookup")
-                flash(f'{ANALYSIS_NOT_FOUND}.', 'error')
-                return redirect(url_for('recommendations'))
-        
-        # Get recommendations
-        logger.info(f"Attempting to get recommendations for analysis {analysis_id}...")
-        recommendations = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
-        
-        if recommendations:
-            logger.info(f"Found {len(recommendations)} recommendations for analysis {analysis_id}")
-        else:
+
+        analysis = _get_export_analysis(analysis_id)
+        if analysis is None:
+            logger.error(f"Analysis {analysis_id} not found in global lookup")
+            flash(f'{ANALYSIS_NOT_FOUND}.', 'error')
+            return redirect(url_for('recommendations'))
+
+        recommendations = _get_export_recommendations(analysis_id)
+        if not recommendations:
             logger.warning(f"No recommendations found for analysis {analysis_id}")
             flash(f'{NO_RECOMMENDATIONS_FOUND}.', 'warning')
             return redirect(url_for('get_recommendations', analysis_id=analysis_id))
-        
-        # Generate charts for export view
-        logger.info("Generating charts for export view...")
-        themes = analysis.get('themes', [])
-        classification = analysis.get('classification', {})
-        cleaned_text = analysis.get('text_data', {}).get('cleaned_text', '')
-        
-        try:
-            charts = chart_generator.generate_analysis_charts(themes, classification, cleaned_text)
-            logger.info(f"Generated {len(charts)} charts for export view")
-        except Exception as chart_error:
-            logger.error(f"Error generating charts: {chart_error}")
-            charts = {}
-        
-        # Prepare data for template
-        export_data = {
-            'analysis': {
-                'filename': analysis.get('filename', 'Unknown'),
-                'classification': analysis.get('classification', {}).get('classification', 'Unknown'),
-                'confidence': analysis.get('classification', {}).get('confidence', 0),
-                'analysis_id': analysis_id,
-                'themes': analysis.get('themes', []),
-                'text_data': analysis.get('text_data', {})
-            },
-            'recommendations': recommendations,
-            'generated_date': datetime.now().isoformat(),
-            'total_recommendations': len(recommendations),
-            'charts': charts
-        }
-        
+
+        charts = _generate_export_charts(analysis)
+        export_data = _build_export_view_data(analysis_id, analysis, recommendations, charts)
+
         return render_template('export_recommendations.html', data=export_data)
-        
+
     except Exception as e:
         logger.error(f"Error preparing export view: {str(e)}")
         logger.exception("Full traceback for export view error:")
         flash('Error preparing export view. Please try again.', 'error')
         return redirect(url_for('dashboard'))
+
+def _get_export_analysis(analysis_id):
+    """Fetch analysis first from user's scope, then globally; return dict or None. Includes logging identical to original flow."""
+    logger.info("Attempting to get user's analysis...")
+    analysis = db_operations.get_user_analysis_by_id(current_user.id, analysis_id)
+    if analysis:
+        logger.info("Found analysis in user's analyses")
+        logger.info(f"Analysis details - Filename: {analysis.get('filename')}, ID: {analysis_id}")
+        return analysis
+
+    logger.info(f"{ANALYSIS_NOT_FOUND} in user's analyses, trying global lookup...")
+    analysis = db_operations.get_analysis_by_id(analysis_id)
+    if analysis:
+        logger.info("Found analysis in global collection")
+        logger.info(f"Analysis details - Filename: {analysis.get('filename')}, ID: {analysis_id}")
+        return analysis
+    return None
+
+def _get_export_recommendations(analysis_id):
+    """Fetch recommendations for the current user and given analysis; includes logging consistent with original code."""
+    logger.info(f"Attempting to get recommendations for analysis {analysis_id}...")
+    recommendations = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
+    if recommendations:
+        logger.info(f"Found {len(recommendations)} recommendations for analysis {analysis_id}")
+    return recommendations
+
+def _generate_export_charts(analysis):
+    """Generate charts for export view with error handling and logging."""
+    logger.info("Generating charts for export view...")
+    themes = analysis.get('themes', [])
+    classification = analysis.get('classification', {})
+    cleaned_text = analysis.get('text_data', {}).get('cleaned_text', '')
+    try:
+        charts = chart_generator.generate_analysis_charts(themes, classification, cleaned_text)
+        logger.info(f"Generated {len(charts)} charts for export view")
+        return charts
+    except Exception as chart_error:
+        logger.error(f"Error generating charts: {chart_error}")
+        return {}
+
+def _build_export_view_data(analysis_id, analysis, recommendations, charts):
+    """Build the data dict passed to the export template, mirroring original structure."""
+    return {
+        'analysis': {
+            'filename': analysis.get('filename', 'Unknown'),
+            'classification': analysis.get('classification', {}).get('classification', 'Unknown'),
+            'confidence': analysis.get('classification', {}).get('confidence', 0),
+            'analysis_id': analysis_id,
+            'themes': analysis.get('themes', []),
+            'text_data': analysis.get('text_data', {})
+        },
+        'recommendations': recommendations,
+        'generated_date': datetime.now().isoformat(),
+        'total_recommendations': len(recommendations),
+        'charts': charts
+    }
 
 @app.route('/export/<analysis_id>/pdf')
 @login_required

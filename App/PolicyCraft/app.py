@@ -86,6 +86,24 @@ def _build_basic_export_data(analysis_id, analysis, recommendations):
         'total_recommendations': len(recommendations)
     }
 
+def _require_analysis_or_redirect(analysis_id):
+    """Ensure analysis exists; otherwise flash and redirect."""
+    analysis = _get_export_analysis(analysis_id)
+    if analysis is None:
+        logger.error(f"Analysis {analysis_id} not found in global lookup")
+        flash(f'{ANALYSIS_NOT_FOUND}.', 'error')
+        return None, redirect(url_for('recommendations'))
+    return analysis, None
+
+def _require_recommendations_or_redirect(analysis_id):
+    """Ensure recommendations exist; otherwise flash and redirect to generator."""
+    recommendations = _get_export_recommendations(analysis_id)
+    if not recommendations:
+        logger.warning(f"No recommendations found for analysis {analysis_id}")
+        flash(f'{NO_RECOMMENDATIONS_FOUND}.', 'warning')
+        return None, redirect(url_for('get_recommendations', analysis_id=analysis_id))
+    return recommendations, None
+
 def _prepare_basic_export_data_or_error(analysis_id):
     """Pobierz analizę i rekomendacje; zwróć (export_data, None) albo (None, (json, code))."""
     analysis = _get_export_analysis(analysis_id)
@@ -1686,14 +1704,9 @@ def delete_analysis(analysis_id):
     """
     logger.info(f"Attempting deletion of analysis {analysis_id} by user {current_user.id}")
     try:
-        analysis = _get_analysis_for_deletion(current_user.id, analysis_id)
-        if not analysis:
-            flash(f'{ANALYSIS_NOT_FOUND} or access denied.', 'error')
-            return redirect(url_for('dashboard'))
-
-        if _is_protected_baseline(analysis.get('filename', '')):
-            flash('Baseline policies cannot be deleted.', 'warning')
-            return redirect(url_for('dashboard'))
+        analysis, redirect_resp = _fetch_analysis_or_redirect_for_delete(current_user.id, analysis_id)
+        if redirect_resp:
+            return redirect_resp
 
         if not _delete_analysis_record(current_user.id, analysis_id):
             flash('Failed to delete analysis. Please try again.', 'error')
@@ -1706,6 +1719,17 @@ def delete_analysis(analysis_id):
         logger.error(f"Error deleting analysis {analysis_id}: {str(e)}")
         flash('An error occurred while deleting the analysis.', 'error')
         return redirect(url_for('dashboard'))
+
+def _fetch_analysis_or_redirect_for_delete(user_id: int, analysis_id: str):
+    """Fetch analysis and enforce deletion guards; return (analysis, redirect_response_or_None)."""
+    analysis = _get_analysis_for_deletion(user_id, analysis_id)
+    if not analysis:
+        flash(f'{ANALYSIS_NOT_FOUND} or access denied.', 'error')
+        return None, redirect(url_for('dashboard'))
+    if _is_protected_baseline(analysis.get('filename', '')):
+        flash('Baseline policies cannot be deleted.', 'warning')
+        return None, redirect(url_for('dashboard'))
+    return analysis, None
 
 @login_required
 def api_explain_analysis(analysis_id):
@@ -1782,17 +1806,13 @@ def export_view(analysis_id):
         logger.info("=== Starting export view preparation ===")
         logger.info(f"User ID: {current_user.id}, Analysis ID: {analysis_id}")
 
-        analysis = _get_export_analysis(analysis_id)
-        if analysis is None:
-            logger.error(f"Analysis {analysis_id} not found in global lookup")
-            flash(f'{ANALYSIS_NOT_FOUND}.', 'error')
-            return redirect(url_for('recommendations'))
+        analysis, redirect_resp = _require_analysis_or_redirect(analysis_id)
+        if redirect_resp:
+            return redirect_resp
 
-        recommendations = _get_export_recommendations(analysis_id)
-        if not recommendations:
-            logger.warning(f"No recommendations found for analysis {analysis_id}")
-            flash(f'{NO_RECOMMENDATIONS_FOUND}.', 'warning')
-            return redirect(url_for('get_recommendations', analysis_id=analysis_id))
+        recommendations, redirect_resp = _require_recommendations_or_redirect(analysis_id)
+        if redirect_resp:
+            return redirect_resp
 
         charts = _generate_export_charts(analysis)
         export_data = _build_export_view_data(analysis_id, analysis, recommendations, charts)
@@ -1801,7 +1821,6 @@ def export_view(analysis_id):
 
     except Exception as e:
         logger.error(f"Error preparing export view: {str(e)}")
-        logger.exception("Full traceback for export view error:")
         flash('Error preparing export view. Please try again.', 'error')
         return redirect(url_for('dashboard'))
 

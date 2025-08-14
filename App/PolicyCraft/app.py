@@ -1094,52 +1094,15 @@ def dashboard():
     """
     try:
         logger.info(f"Dashboard accessed by user: {current_user.username}")
-        
-        # Get and prepare analyses
-        db_operations.deduplicate_baseline_analyses(current_user.id)
-        user_analyses = db_operations.get_user_analyses(current_user.id)
-        baseline_analyses = db_operations.get_user_analyses(-1)
-        
-        logger.info(f"Dashboard: Found {len(user_analyses)} user analyses and {len(baseline_analyses)} baseline analyses")
-        
-        # Load all clean_dataset policies without duplicates
-        # This ensures we show exactly 15 unique policies from clean_dataset
-        clean_dataset_dir = _get_clean_dataset_dir()
-        clean_dataset_files = _list_clean_dataset_files(clean_dataset_dir)
-        
-        # Merge user and baseline analyses
-        analyses_by_filename = _merge_user_and_baseline_analyses(user_analyses, baseline_analyses)
-        
-        # Identify missing clean_dataset files and ensure baselines exist
-        missing_files = _identify_missing_clean_files(clean_dataset_files, analyses_by_filename)
-        logger.info(f"Dashboard: Missing files from clean_dataset: {missing_files}")
-        
-        # Add missing files as proper baseline analyses via helper
-        _create_missing_baselines(clean_dataset_dir, missing_files, analyses_by_filename)
 
-        # Combine all analyses into a single list
-        combined_analyses = list(analyses_by_filename.values())
-        logger.info(f"Dashboard: Combined into {len(combined_analyses)} total analyses")
-        
-        # Log the filenames of all analyses being displayed
-        displayed_files = [analysis.get('filename', '') for analysis in combined_analyses]
-        logger.info(f"Dashboard: Displaying analyses for: {sorted(displayed_files)}")
-        
-        # Sort by date (newest first)
-        combined_analyses.sort(key=lambda a: _to_epoch(a.get('analysis_date')), reverse=True)
-        
-        # Load sample policies if needed
+        user_analyses, baseline_analyses = _get_user_and_baseline_analyses(current_user.id)
+        combined_analyses = _prepare_combined_analyses(user_analyses, baseline_analyses)
+
         _load_sample_policies_if_needed(user_analyses)
-        
-        # Generate dashboard data
-        dashboard_data = _prepare_dashboard_data(
-            current_user, 
-            user_analyses, 
-            combined_analyses
-        )
-        
+
+        dashboard_data = _prepare_dashboard_data(current_user, user_analyses, combined_analyses)
         return render_template('dashboard.html', data=dashboard_data)
-        
+
     except Exception as e:
         logger.error(f"Dashboard error: {str(e)}")
         flash('Dashboard loaded with limited data due to an error.', 'warning')
@@ -1159,6 +1122,31 @@ def _list_clean_dataset_files(clean_dataset_dir):
                 files.append(filename)
     logger.info(f"Dashboard: Found {len(files)} policy files in clean_dataset")
     return files
+
+def _get_user_and_baseline_analyses(user_id: int):
+    """Fetch and log user and baseline analyses after deduplication."""
+    db_operations.deduplicate_baseline_analyses(user_id)
+    user_analyses = db_operations.get_user_analyses(user_id)
+    baseline_analyses = db_operations.get_user_analyses(-1)
+    logger.info(f"Dashboard: Found {len(user_analyses)} user analyses and {len(baseline_analyses)} baseline analyses")
+    return user_analyses, baseline_analyses
+
+def _prepare_combined_analyses(user_analyses, baseline_analyses):
+    """Prepare merged, baseline-complete, sorted analyses list with logs preserved."""
+    clean_dataset_dir = _get_clean_dataset_dir()
+    clean_dataset_files = _list_clean_dataset_files(clean_dataset_dir)
+
+    analyses_by_filename = _merge_user_and_baseline_analyses(user_analyses, baseline_analyses)
+    missing_files = _identify_missing_clean_files(clean_dataset_files, analyses_by_filename)
+    logger.info(f"Dashboard: Missing files from clean_dataset: {missing_files}")
+    _create_missing_baselines(clean_dataset_dir, missing_files, analyses_by_filename)
+
+    combined_analyses = list(analyses_by_filename.values())
+    logger.info(f"Dashboard: Combined into {len(combined_analyses)} total analyses")
+    displayed_files = [analysis.get('filename', '') for analysis in combined_analyses]
+    logger.info(f"Dashboard: Displaying analyses for: {sorted(displayed_files)}")
+    combined_analyses.sort(key=lambda a: _to_epoch(a.get('analysis_date')), reverse=True)
+    return combined_analyses
 
 def _merge_user_and_baseline_analyses(user_analyses, baseline_analyses):
     """Merge analyses preferring user analyses over baseline ones."""

@@ -3,6 +3,7 @@ import json
 import os
 import logging
 import re
+import random
 from typing import Dict, List, Any, Optional, Union
 from enum import Enum, auto
 from dataclasses import dataclass, field
@@ -11,6 +12,22 @@ try:
     from src.literature.knowledge_manager import KnowledgeBaseManager
 except ImportError:
     KnowledgeBaseManager = None
+try:
+    from src.analysis_engine.literature.repository import LiteratureRepository
+except Exception:
+    LiteratureRepository = None  # type: ignore
+try:
+    from src.analysis_engine.metrics import (
+        compute_confidence,
+        assess_stakeholders_impact,
+        assess_risk_benefit,
+    )
+except Exception:
+    compute_confidence = assess_stakeholders_impact = assess_risk_benefit = None  # type: ignore
+try:
+    from src.analysis_engine.engine import PolicyAnalysisEngine
+except Exception:
+    PolicyAnalysisEngine = None  # type: ignore
     
 logger = logging.getLogger(__name__)
 
@@ -587,6 +604,14 @@ class RecommendationGenerator:
         # Initialize the ethical framework analyzer
         self.analyzer = EthicalFrameworkAnalyzer(self.knowledge_manager)
         
+        # Literature repository (for instant evidence access after uploads)
+        self.lit_repo = None
+        try:
+            if LiteratureRepository is not None:
+                self.lit_repo = LiteratureRepository.get()
+        except Exception:
+            self.lit_repo = None
+        
         logger.info("PolicyCraft Recommendation Engine loaded with the following capabilities:")
         logger.info("   • Ethical framework analysis with multi-dimensional scoring")
         logger.info("   • Evidence-based policy recommendations")
@@ -732,6 +757,79 @@ class RecommendationGenerator:
                 self._ensure_timeframe(rec)
                 recs.append(rec)
 
+            # Add additional evidence-based recommendations for the same dimension
+            # to avoid under-providing suggestions (ethically safer to provide
+            # a broader set for human review rather than an overly narrow set).
+            try:
+                from typing import cast
+                # Map gap dimension string to PolicyDimension enum safely
+                dim_key = (gap.get("dimension", "") or "").upper()
+                # Normalise potential keys
+                dim_map = {
+                    "ACCOUNTABILITY": "ACCOUNTABILITY",
+                    "TRANSPARENCY": "TRANSPARENCY",
+                    "HUMAN_AGENCY": "HUMAN_AGENCY",
+                    "HUMAN AGENCY": "HUMAN_AGENCY",
+                    "INCLUSIVENESS": "INCLUSIVENESS",
+                }
+                enum_key = dim_map.get(dim_key, "TRANSPARENCY")
+                # PolicyDimension is defined in this module; import locally to avoid cycles
+                from enum import Enum
+                PD = cast(Enum, PolicyDimension)
+                enum_dim = getattr(PD, enum_key)
+
+                extra = self.analyzer._generate_dimension_recommendations(enum_dim, policy_text)
+                # Take top 2 complementary suggestions per dimension to keep report concise
+                # Ensure each receives a distinct implementation_type so dedupe by (dimension, implementation_type)
+                # will retain them alongside the primary recommendation for that dimension.
+                extra_types = ["pilot_programme", "training_and_capacity", "governance_controls"]
+                for idx, extra_rec in enumerate(extra[:2] if isinstance(extra, list) else []):
+                    # Tag implementation type if missing or identical to primary
+                    if not extra_rec.get("implementation_type") or extra_rec.get("implementation_type") == impl_type:
+                        extra_rec["implementation_type"] = extra_types[idx % len(extra_types)]
+                    # Ensure timeframe field for template/UI
+                    self._ensure_timeframe(extra_rec)
+                    recs.append(extra_rec)
+            except Exception as _e:
+                logger.debug("Could not enrich recommendations for dimension '%s': %s", gap.get("dimension"), str(_e))
+
+        # Ensure a minimum number of strategic recommendations for a useful brief
+        try:
+            MIN_RECS = 8
+            if len(recs) < MIN_RECS:
+                from typing import cast
+                from enum import Enum
+                PD = cast(Enum, PolicyDimension)
+                extra_types_fill = [
+                    "pilot_programme",
+                    "training_and_capacity",
+                    "governance_controls",
+                    "documentation_transparency",
+                    "evaluation_and_monitoring",
+                ]
+                type_idx = 0
+                # Iterate all dimensions to top-up
+                for dim in PD:
+                    if len(recs) >= MIN_RECS:
+                        break
+                    try:
+                        extra = self.analyzer._generate_dimension_recommendations(dim, policy_text)
+                        for x in (extra if isinstance(extra, list) else []):
+                            if len(recs) >= MIN_RECS:
+                                break
+                            if not x.get("implementation_type"):
+                                x["implementation_type"] = extra_types_fill[type_idx % len(extra_types_fill)]
+                                type_idx += 1
+                            self._ensure_timeframe(x)
+                            recs.append(x)
+                    except Exception:
+                        continue
+        except Exception as _e:
+            logger.debug("Top-up recommendations skipped: %s", str(_e))
+
+        # First, de-duplicate by normalised (dimension, implementation_type)
+        recs = self._dedupe_by_dimension_impl(recs)
+        # Then, de-duplicate by title to maintain clarity and avoid repetition
         return self._dedupe_by_title(recs)
 
     def _dedupe_by_title(self, recs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -744,6 +842,55 @@ class RecommendationGenerator:
                 deduped.append(r)
         return deduped
 
+    def _norm_dim_name(self, n: str) -> str:
+        """Normalise dimension name to a canonical lower-case form.
+
+        Maps short/underscore variants to full names used in PolicyDimension values.
+        """
+        s = (n or "").strip().lower()
+        s = s.replace("&", "and").replace("_", " ")
+        s = " ".join(s.split())
+        # Known canonical full names (lower-case)
+        canonical = {
+            "accountability and governance": "accountability and governance",
+            "transparency and explainability": "transparency and explainability",
+            "human agency and oversight": "human agency and oversight",
+            "inclusiveness and fairness": "inclusiveness and fairness",
+        }
+        if s in canonical:
+            return s
+        # Map common short keys
+        short_map = {
+            "accountability": "accountability and governance",
+            "transparency": "transparency and explainability",
+            "human agency": "human agency and oversight",
+            "human_agency": "human agency and oversight",
+            "humanagency": "human agency and oversight",
+            "inclusiveness": "inclusiveness and fairness",
+            "fairness": "inclusiveness and fairness",
+        }
+        return short_map.get(s, s)
+
+    def _dedupe_by_dimension_impl(self, recs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Remove duplicates based on normalised (dimension, implementation_type).
+
+        Preserves first occurrence ordering. Also normalises the 'dimension' field
+        only for comparison; it does NOT overwrite the original display value to
+        preserve expected short labels in tests and API outputs.
+        """
+        seen: set[tuple[str, Optional[str]]] = set()
+        out: List[Dict[str, Any]] = []
+        for r in recs:
+            dim_raw = r.get("dimension", "") or ""
+            impl = r.get("implementation_type")
+            norm = self._norm_dim_name(dim_raw)
+            key = (norm, impl or None)
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(r)
+        return out
+
     def _ensure_timeframe(self, rec: Dict[str, Any]) -> None:
         if "implementation_time" in rec and "timeframe" not in rec:
             rec["timeframe"] = rec["implementation_time"]
@@ -755,8 +902,40 @@ class RecommendationGenerator:
             analysis["knowledge_base_integration"] = True
             analysis["kb_references"] = []
 
-            kb_documents = self.knowledge_manager.get_all_documents()
-            logger.info("Found %d documents in knowledge base", len(kb_documents))
+            # Prefer LiteratureRepository for up-to-date, incremental view
+            kb_documents: List[Dict[str, Any]] = []
+            used_backend = "repository"
+            try:
+                if self.lit_repo is None and LiteratureRepository is not None:
+                    self.lit_repo = LiteratureRepository.get()
+                if self.lit_repo is not None:
+                    records = self.lit_repo.find_sources()  # returns all when query empty
+                    for r in records:
+                        pub_date = None
+                        if getattr(r, "year", None):
+                            pub_date = f"{int(r.year)}-01-01"
+                        kb_documents.append({
+                            "id": r.document_id,
+                            "document_id": r.document_id,
+                            "title": r.title,
+                            "author": ", ".join(r.authors or []),
+                            "publication_date": pub_date,
+                            "quality_score": r.quality,
+                            "filename": r.filename,
+                        })
+                else:
+                    used_backend = "knowledge_manager"
+            except Exception:
+                used_backend = "knowledge_manager"
+
+            # Fallback to KnowledgeBaseManager if repository isn't available
+            if not kb_documents:
+                if self.knowledge_manager is None:
+                    raise RuntimeError("No literature backend available")
+                kb_documents = self.knowledge_manager.get_all_documents()
+                used_backend = "knowledge_manager"
+
+            logger.info("Found %d documents in knowledge base via %s", len(kb_documents), used_backend)
 
             for i, doc in enumerate(kb_documents):
                 logger.debug(
@@ -1198,6 +1377,20 @@ class RecommendationEngine:
             text=text,
         )
 
+        # Ensure default tags for I-U-F matrix if absent
+        for r in recs:
+            try:
+                if "impact" not in r:
+                    r["impact"] = "high" if (r.get("priority", "").lower() == "high") else "medium"
+                if "urgency" not in r:
+                    r["urgency"] = (r.get("priority") or "medium").lower()
+                if "feasibility" not in r:
+                    # Slightly easier for documentation/transparency items
+                    dim = (r.get("dimension") or "").lower()
+                    r["feasibility"] = "high" if any(k in dim for k in ["transparency", "documentation"]) else "medium"
+            except Exception:
+                pass
+
         # Build metadata and summary
         from datetime import datetime, timezone
 
@@ -1211,13 +1404,74 @@ class RecommendationEngine:
         except Exception:
             normalised_sources = raw_sources
 
+        # Build narrative (template-based, UK style, grounded in sources)
+        narrative_html, narrative_meta = self._generate_narrative(
+            recommendations=recs,
+            themes=themes,
+            classification=classification_str,
+            coverage=coverage,
+            sources=normalised_sources,
+            text=text,
+            analysis_id=analysis_id or "unknown",
+        )
+
+        # Compute extended metrics (confidence, stakeholders, risk-benefit)
+        extended = {}
+        try:
+            repo = getattr(self.generator, "lit_repo", None)
+            if compute_confidence is not None:
+                extended["confidence"] = compute_confidence(
+                    themes=themes,
+                    classification=classification if isinstance(classification, dict) else {"confidence": 0},
+                    text_length=len(text or ""),
+                    repo=repo,
+                )
+            if assess_stakeholders_impact is not None:
+                extended["stakeholders"] = assess_stakeholders_impact(themes=themes)
+            if assess_risk_benefit is not None:
+                extended["risk_benefit"] = assess_risk_benefit(themes=themes)
+
+            # Optional: augment via advanced analysis engine (feature-flagged)
+            use_advanced = os.environ.get("FEATURE_ADVANCED_ENGINE", "0").lower() in {"1", "true", "yes", "on"}
+            if use_advanced and PolicyAnalysisEngine is not None:
+                try:
+                    engine = PolicyAnalysisEngine()
+                    context_params = {
+                        "themes": themes,
+                        "classification": classification if isinstance(classification, dict) else {"classification": str(classification or "")},
+                        "organization_profile": {},
+                        "analysis_mode": os.environ.get("ANALYSIS_MODE", "default"),
+                    }
+                    adv = engine.analyze_policy(policy_text=text or "", context_params=context_params)
+                    # Merge where applicable without overwriting existing keys unless present
+                    if isinstance(adv, dict):
+                        # Confidence
+                        adv_conf = adv.get("confidence")
+                        if adv_conf and isinstance(adv_conf, dict):
+                            extended["confidence"] = adv_conf
+                        # Dimensions
+                        dims = adv.get("dimensions") or {}
+                        if isinstance(dims, dict):
+                            if dims.get("stakeholder_impact"):
+                                extended["stakeholders"] = dims.get("stakeholder_impact")
+                            if dims.get("risk_benefit"):
+                                extended["risk_benefit"] = dims.get("risk_benefit")
+                        # Context (surfaced for templates if needed)
+                        if adv.get("context"):
+                            extended["context"] = adv.get("context")
+                except Exception:
+                    # Do not fail the flow if advanced engine errors
+                    pass
+        except Exception:
+            pass
+
         result = {
             "analysis_metadata": {
                 "analysis_id": analysis_id or "unknown",
                 # Use timezone-aware UTC timestamp and keep 'Z' suffix for compatibility
                 "generated_date": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                 "framework_version": "1.0",
-                "methodology": "EthicalFrameworkAnalyzer + Contextual RecommendationGenerator",
+                "methodology": "EthicalFrameworkAnalyzer + Contextual RecommendationGenerator + LiteratureRepository-backed metrics",
                 "academic_sources": normalised_sources,
             },
             "coverage_analysis": coverage,
@@ -1226,6 +1480,347 @@ class RecommendationEngine:
                 "total_recommendations": len(recs) if isinstance(recs, list) else 0,
                 "overall_coverage": avg_coverage,
             },
+            "narrative": {
+                "html": narrative_html,
+                "style": narrative_meta.get("style"),
+                "seed": narrative_meta.get("seed"),
+                "sources_used": narrative_meta.get("sources_used", []),
+            },
+            # Extended metrics surfaced for templates
+            "analysis": {
+                "analysis_id": analysis_id or "unknown",
+                "classification": classification_str,
+                "confidence_pct": extended.get("confidence", {}).get("overall_pct") if extended else None,
+                "confidence_factors": extended.get("confidence", {}).get("factors") if extended else None,
+                "stakeholders": extended.get("stakeholders") if extended else None,
+                "risk_benefit": extended.get("risk_benefit") if extended else None,
+            },
         }
 
         return result
+
+    def _generate_narrative(
+        self,
+        recommendations: List[Dict[str, Any]] | None,
+        themes: List[Dict[str, Any]] | None,
+        classification: str,
+        coverage: Dict[str, Any] | None,
+        sources: List[str] | None,
+        text: str,
+        analysis_id: str,
+    ) -> tuple[str, Dict[str, Any]]:
+        """Generate a UK-style narrative explaining the recommendations.
+
+        Template-based (no LLM). Ensures variability using a deterministic seed from analysis_id.
+        Uses British English spelling and cites knowledge base sources inline.
+        Returns HTML and metadata.
+        """
+        recommendations = recommendations or []
+        themes = themes or []
+        sources = sources or []
+
+        # Derive seed for variability (stable per analysis, varied across analyses)
+        seed = sum(ord(c) for c in (analysis_id or "")) % 10_000
+        rng = random.Random(seed)
+
+        # Pick style variant
+        tones = [
+            ("Formal", "measured", "considered"),
+            ("Warm", "supportive", "collaborative"),
+            ("Pragmatic", "practical", "implementable"),
+        ]
+        tone = rng.choice(tones)
+        tone_name, tone_adj1, tone_adj2 = tone
+
+        # Headline and openers
+        openings = [
+            "This analysis suggests a coherent programme of work, balancing ambition with due diligence.",
+            "The findings point towards a thoughtfully sequenced programme that is both credible and proportionate.",
+            "Our review indicates a balanced programme of improvement, attentive to institutional realities.",
+        ]
+        opening = rng.choice(openings)
+
+        # Executive overview (2–3 sentences)
+        class_map = {
+            "Restrictive": "a cautious baseline that would benefit from carefully broadened provisions",
+            "Moderate": "a well-balanced baseline that invites clearer operational guidance",
+            "Permissive": "an enabling baseline that warrants stronger safeguards and documentation",
+        }
+        class_phrase = class_map.get(classification, "a balanced baseline that warrants clearer articulation")
+
+        # Extract top themes
+        top_themes = [t.get("name", "") for t in themes[:3] if isinstance(t, dict)]
+        theme_str = ", ".join([t for t in top_themes if t]) or "governance, transparency and inclusion"
+
+        # Select 3–5 sources to cite inline (more variety), keep deterministic order (British English throughout)
+        rng.shuffle(sources)
+        cite_used = sources[:5]
+        cite_inline = "; ".join(cite_used)
+
+        # Build key actions prioritising lowest coverage dimensions (British spelling)
+        key_actions: list[str] = []
+        # Normalise dimension names and provide polished labels + tailored actions
+        def _norm_dim_name(n: str) -> str:
+            n = (n or "").strip()
+            low = n.lower().replace(" ", "_")
+            mapping = {
+                "accountability": "Accountability",
+                "transparency": "Transparency",
+                "inclusiveness": "Inclusiveness",
+                "inclusion": "Inclusiveness",
+                "human_agency": "Human Agency",
+                "agency": "Human Agency",
+                "data_governance": "Data Governance",
+                "governance": "Data Governance",
+                "assessment": "Assessment",
+            }
+            return mapping.get(low, n.title())
+
+        dim_actions = {
+            "Accountability": "Define clear ownership and decision rights; publish a RACI and escalation routes.",
+            "Transparency": "Publish a concise disclosure template and exemplar for staff/students; record disclosures centrally.",
+            "Inclusiveness": "Co‑design guidance with student reps and accessibility leads; include reasonable adjustments.",
+            "Human Agency": "Require meaningful human oversight sign‑off for high‑impact uses; document interventions.",
+            "Data Governance": "Introduce a register of datasets, provenance and retention schedules; assign data stewards.",
+            "Assessment": "Document permitted/forbidden AI uses per assessment; align with briefs and integrity policy.",
+        }
+
+        # KPIs per dimension (micro-metrics)
+        dim_kpis = {
+            "Accountability": [
+                "RACI published and owned (Yes/No)",
+                "% decisions with documented owner",
+                "# escalations resolved within 10 working days",
+            ],
+            "Transparency": [
+                "% modules/assessments with disclosure requirements",
+                "% staff/student disclosures submitted",
+                "Median time to update public-facing guidance (days)",
+            ],
+            "Inclusiveness": [
+                "% guidance with accessibility check passed",
+                "# consultations with SU/EDI completed",
+                "% reasonable adjustments incorporated",
+            ],
+            "Human Agency": [
+                "% high‑impact uses with sign‑off recorded",
+                "# interventions documented per term",
+                "% exceptions reviewed at governance group",
+            ],
+            "Data Governance": [
+                "% active datasets registered",
+                "% datasets with retention schedule",
+                "# data stewards assigned",
+            ],
+            "Assessment": [
+                "% briefs linked to AI use matrix",
+                "% suspected cases handled under integrity policy",
+                "Median appeal turnaround (days)",
+            ],
+        }
+
+        def _target_for(score: float) -> tuple[int, str]:
+            # Return (target percentage, timeframe)
+            if score < 20:
+                return 60, "90 days"
+            if score < 40:
+                return 70, "120 days"
+            if score < 60:
+                return 80, "180 days"
+            return 85, "180 days"
+
+        # Deliverables library per dimension (artefacts, owners, acceptance)
+        dim_deliverables = {
+            "Accountability": {
+                "deliverable": "RACI for AI uses and exception path",
+                "owner": "PVC Education / Registry",
+                "artefact": "1‑page RACI + escalation workflow",
+                "acceptance": "Published on policy site; owners acknowledged",
+            },
+            "Transparency": {
+                "deliverable": "AI use disclosure template + exemplars",
+                "owner": "Quality Office / Programme Leads",
+                "artefact": "Template (docx) + 2 exemplars",
+                "acceptance": ">=70% assessments include disclosure requirements",
+            },
+            "Inclusiveness": {
+                "deliverable": "Inclusive guidance with reasonable adjustments",
+                "owner": "EDI / Students’ Union",
+                "artefact": "Accessible PDF guidance (WCAG 2.1 AA)",
+                "acceptance": "Consulted with SU; accessibility check passed",
+            },
+            "Human Agency": {
+                "deliverable": "Oversight sign‑off form for high‑impact uses",
+                "owner": "Module Leaders / Ethics Committee",
+                "artefact": "1‑page sign‑off form + register",
+                "acceptance": ">=90% of high‑impact uses recorded with sign‑off",
+            },
+            "Data Governance": {
+                "deliverable": "Register of datasets and retention schedules",
+                "owner": "Information Governance / Library",
+                "artefact": "Dataset register (sheet) + retention table",
+                "acceptance": ">=80% active datasets registered",
+            },
+            "Assessment": {
+                "deliverable": "Matrix of permitted/forbidden AI uses per assessment",
+                "owner": "Programme Leads / Quality",
+                "artefact": "1‑page matrix linked to briefs",
+                "acceptance": ">=80% briefs linked to matrix",
+            },
+        }
+
+        # Derive gaps from coverage (if available)
+        gap_items: list[tuple[str, float]] = []
+        if isinstance(coverage, dict):
+            for dim, info in coverage.items():
+                try:
+                    score = float(info.get("score", 0))
+                except Exception:
+                    score = 0.0
+                gap_items.append((str(dim), score))
+            gap_items.sort(key=lambda x: x[1])
+
+        # Use either gaps from coverage or fall back to existing recs
+        if gap_items:
+            # Show up to 8 weakest dimensions in key actions to avoid artificial limit of 4
+            for dim_raw, score in gap_items[:8]:
+                dim = _norm_dim_name(dim_raw)
+                action_text = dim_actions.get(dim, "Establish lightweight controls and documentation appropriate to risk.")
+                target, timeframe = _target_for(score)
+                key_actions.append(
+                    f"<li><strong>{dim}.</strong> Raise coverage from {score:.0f}% to {target}% in {timeframe}: {action_text}</li>"
+                )
+        else:
+            rng.shuffle(recommendations)
+            # Show up to 8 recommendations when coverage gaps are not available
+            for rec in recommendations[:8]:
+                title = rec.get("title") or rec.get("dimension") or "Recommendation"
+                rationale = rec.get("rationale") or ""
+                impl = rec.get("implementation_steps", [])
+                first_step = impl[0] if impl else "Define scope and success measures"
+                key_actions.append(f"<li><strong>{title}.</strong> {first_step}. <em>{rationale}</em></li>")
+            if not key_actions:
+                key_actions.append("<li><strong>Establish an AI governance committee.</strong> Define remit, membership and reporting lines.</li>")
+
+        # Build deliverables list for top 2 weakest dimensions
+        deliverables_html = ""
+        top2 = gap_items[:2] if gap_items else []
+        if top2:
+            items = []
+            for dim_raw, score in top2:
+                dim = _norm_dim_name(dim_raw)
+                d = dim_deliverables.get(dim, {
+                    "deliverable": "Lightweight controls and guidance",
+                    "owner": "Policy Owner",
+                    "artefact": "1‑page guidance",
+                    "acceptance": "Published and communicated",
+                })
+                # Example filenames to make it actionable
+                example_file = {
+                    "Accountability": "AI_Governance_RACI_v1.pdf",
+                    "Transparency": "Disclosure_Template_v1.docx",
+                    "Inclusiveness": "Inclusive_Guidance_v1.pdf",
+                    "Human Agency": "Human_Oversight_Signoff_v1.docx",
+                    "Data Governance": "Dataset_Register_v1.xlsx",
+                    "Assessment": "Assessment_AI_Use_Matrix_v1.xlsx",
+                }.get(dim, "Policy_Artefact_v1.docx")
+                items.append(
+                    f"<li><strong>{dim}.</strong> <em>{d['deliverable']}</em> — Owner: {d['owner']}; Artefact: {d['artefact']} (<code>{example_file}</code>); Acceptance: {d['acceptance']}.</li>"
+                )
+            deliverables_html = "<ul>" + "".join(items) + "</ul>"
+
+        # KPI list for top three weakest dimensions
+        kpis_html = ""
+        top3 = gap_items[:3] if gap_items else []
+        if top3:
+            kpi_items = []
+            for dim_raw, _ in top3:
+                dim = _norm_dim_name(dim_raw)
+                kpis = dim_kpis.get(dim, ["% policy tasks completed", "# issues resolved", "SLA adherence (%)"])
+                bullets = "".join([f"<li>{k}</li>" for k in kpis])
+                kpi_items.append(f"<li><strong>{dim}.</strong><ul>{bullets}</ul></li>")
+            kpis_html = "<ul>" + "".join(kpi_items) + "</ul>"
+
+        # Quick wins (30 days)
+        quick_wins = [
+            "Publish disclosure template and 2 exemplars; add link to all new briefs.",
+            "Stand‑up dataset register skeleton; capture at least the top 10 active datasets.",
+            "Introduce human oversight sign‑off for one high‑impact pilot and review outcomes.",
+        ]
+        quick_wins_html = "<ul>" + "".join([f"<li>{q}</li>" for q in quick_wins]) + "</ul>"
+
+        # Risks and mitigations (templated)
+        risks = [
+            ("Scope creep", "Use phased milestones with entry/exit criteria to maintain discipline."),
+            ("Stakeholder fatigue", "Adopt lightweight consultations and clear communication points."),
+            ("Documentation burden", "Provide concise templates and exemplars to cut overheads."),
+        ]
+        rng.shuffle(risks)
+        risks_html = "".join([f"<li><strong>{r}.</strong> {m}</li>" for r, m in risks[:2]])
+
+        # Implementation framing
+        impl_phrases = [
+            "pilot in one faculty before institution-wide scaling",
+            "sequence work over two terms with a formal mid-point review",
+            "adopt a light-touch governance cadence (monthly) with quarterly deep-dives",
+        ]
+        impl_choice = rng.choice(impl_phrases)
+
+        # Compose HTML (British spelling: organisation, programme)
+        html = f"""
+        <div class=\"narrative-card\">
+          <h2>📝 Policy Implementation Brief</h2>
+          <p><strong>Executive overview.</strong> The policy reflects {class_phrase}. {opening} The brief below sets out a {tone_adj1}, {tone_adj2} path grounded in current evidence ({cite_inline}).</p>
+          <hr class=\"narrative-sep\" />
+
+          <h3>What we recommend</h3>
+          <ul>
+            {''.join(key_actions)}
+          </ul>
+          <hr class=\"narrative-sep\" />
+
+          <h3>Why it matters</h3>
+          <p>Across the themes of {theme_str}, international guidance emphasises clear accountability, transparent documentation and meaningful human oversight. Addressing the lowest‑scoring areas first delivers the greatest risk reduction and improves staff and student confidence. The approach aligns with sector guidance cited above and the institution’s overall classification.</p>
+          <hr class=\"narrative-sep\" />
+
+          <h3>How to implement</h3>
+          <p>Start small and build confidence: {impl_choice}. Assign ownership within the organisation, publish concise documentation, and track measurable outcomes. Suggested metrics: policy disclosure coverage (%), audit completion rate (%), training completion rate (%), number of appeals resolved within target. Report progress monthly and conduct a formal mid‑point review.</p>
+
+          <h3>Key metrics</h3>
+          {kpis_html if kpis_html else '<p>Key metrics will be confirmed during the baseline audit.</p>'}
+
+          <h3>Phased plan</h3>
+          <ul>
+            <li><strong>Phase 0 (2 weeks).</strong> Appoint owners; publish disclosure template and RACI; agree metrics and targets.</li>
+            <li><strong>Phase 1 (0–3 months).</strong> Baseline audit; fix critical gaps in {', '.join([_norm_dim_name(d) for d, _ in gap_items[:2]]) if gap_items else 'priority areas'}; launch training pilots.</li>
+            <li><strong>Phase 2 (3–6 months).</strong> Scale disclosures and oversight; embed data register; integrate with assessment briefs.</li>
+            <li><strong>Phase 3 (6–9 months).</strong> Evaluate outcomes; refine guidance; publish transparency report.</li>
+          </ul>
+
+          <h3>Quick wins (30 days)</h3>
+          {quick_wins_html}
+
+          <h3>Deliverables and owners</h3>
+          {deliverables_html if deliverables_html else '<p>Deliverables will be confirmed following the baseline audit in Phase 1.</p>'}
+
+          <h3>Ownership and governance</h3>
+          <p>Establish an AI governance group (Chair: PVC Education; Members: Registry, Quality, Library, IT, Students’ Union). Use a monthly light‑touch cadence with quarterly deep‑dives. Document decisions and exceptions.</p>
+
+          <h3>Risks and mitigations</h3>
+          <ul>
+            {risks_html}
+          </ul>
+          <p><em>Notes on evidence and compliance mapping.</em> Human oversight aligns with EU AI Act Art. 14; transparency obligations align with Art. 52. UNESCO (2021/2023) emphasises governance and inclusion; BERA (2018) frames ethical practice in assessment. Citations: {cite_inline}.</p>
+
+          <div class=\"narrative-footnote\">
+            <strong>Notes on evidence.</strong> The pathway above is informed by sector guidance and recent reviews ({cite_inline}). Where appropriate, adapt language to local practice and ensure staff development is resourced.
+          </div>
+        </div>
+        """
+
+        meta = {
+            "style": f"UK/{tone_name}",
+            "seed": seed,
+            "sources_used": cite_used,
+        }
+        return html, meta

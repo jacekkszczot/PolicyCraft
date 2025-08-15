@@ -20,6 +20,61 @@
 
 {% block title %}Upload Literature - PolicyCraft Admin{% endblock %}
 
+{% block extra_scripts %}
+{{ super() }}
+<script>
+(function() {
+  const area = document.getElementById('kbUploadArea');
+  const input = document.getElementById('file');
+  const info = document.getElementById('selectedFileInfo');
+  const nameEl = document.getElementById('selectedFileName');
+  const sizeEl = document.getElementById('selectedFileSize');
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  const allowed = ['pdf','txt','md','docx'];
+
+  function formatSize(bytes){
+    const k = 1024; const units = ['B','KB','MB','GB'];
+    let i = Math.floor(Math.log(bytes)/Math.log(k));
+    return (bytes/Math.pow(k,i)).toFixed(2)+' '+units[i];
+  }
+
+  function showFile(file){
+    if(!file) return;
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if(!allowed.includes(ext)) { alert('Unsupported format. Use PDF, TXT, MD, or DOCX.'); input.value=''; info.style.display='none'; return; }
+    if(file.size > maxSize) { alert('File too large. Max 10MB.'); input.value=''; info.style.display='none'; return; }
+    nameEl.textContent = file.name;
+    sizeEl.textContent = `(${formatSize(file.size)})`;
+    info.style.display = 'block';
+  }
+
+  input.addEventListener('change', (e)=>{
+    const file = e.target.files && e.target.files[0];
+    showFile(file);
+  });
+
+  // Drag & drop events
+  ['dragenter','dragover'].forEach(evt=>{
+    area.addEventListener(evt, (e)=>{ e.preventDefault(); e.stopPropagation(); area.classList.add('drag-over'); });
+  });
+  ;['dragleave','dragend'].forEach(evt=>{
+    area.addEventListener(evt, (e)=>{ e.preventDefault(); e.stopPropagation(); area.classList.remove('drag-over'); });
+  });
+  area.addEventListener('drop', (e)=>{
+    e.preventDefault(); e.stopPropagation(); area.classList.remove('drag-over');
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if(files && files.length){
+      // Assign to input via DataTransfer for form submission
+      const dt = new DataTransfer();
+      dt.items.add(files[0]);
+      input.files = dt.files;
+      showFile(files[0]);
+    }
+  });
+})();
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="admin-container">
     <div class="admin-content">
@@ -58,7 +113,7 @@
                 <!-- File Upload Section -->
                 <div class="form-group">
                     <label for="file" class="form-label">📁 Select Document</label>
-                    <div class="file-upload-area">
+                    <div class="file-upload-area" id="kbUploadArea">
                         <input type="file" 
                                id="file" 
                                name="file" 
@@ -70,6 +125,10 @@
                             <p>Click to select or drag & drop your document</p>
                             <small>Supported formats: PDF, TXT, MD, DOCX (Max: 10MB)</small>
                         </div>
+                    </div>
+                    <div id="selectedFileInfo" style="display:none; margin-top:0.75rem; color:#333;">
+                        <strong>Selected:</strong> <span id="selectedFileName"></span>
+                        <span id="selectedFileSize" style="color:#6c757d; margin-left:0.5rem;"></span>
                     </div>
                 </div>
 
@@ -372,6 +431,11 @@
     border-color: #0056b3;
     background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
     transform: translateY(-2px);
+}
+
+.file-upload-area.drag-over {
+    border-color: #4caf50;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
 }
 
 .file-input {

@@ -171,45 +171,72 @@
         <div class="activity-section">
             <h3 class="section-title">⏱️ Recent Processing Activity</h3>
             {% if recent_activity %}
-                <div class="activity-grid">
-                    {% for activity in recent_activity[:6] %}
-                    <div class="activity-card">
-                        <div class="activity-header">
-                            <div class="activity-icon">
-                                {% if activity.status == 'completed' %}🟢
-                                {% elif activity.status == 'processing' %}🟡
-                                {% elif activity.status == 'failed' %}🔴
-                                {% else %}⚪{% endif %}
-                            </div>
-                            <div class="activity-meta">
-                                <div class="activity-title">{{ activity.filename|clean_literature_name }}</div>
-                                <div class="activity-time">{{ activity.timestamp.strftime('%d/%m/%Y %H:%M') if activity.timestamp else "Unknown" }}</div>
-                            </div>
-                        </div>
-                        <div class="activity-body">
-                            <div class="activity-status-row">
-                                <span class="activity-status status-{{ activity.status }}">{{ activity.status|title }}</span>
-                                {% if activity.quality %}
-                                <span class="activity-quality">{{ "%.0f%%"|format(activity.quality * 100) }} quality</span>
+            <div class="table-container">
+                <table class="pc-table">
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>Timestamp</th>
+                            <th>Processing</th>
+                            <th>Completed</th>
+                            <th>Failed</th>
+                            <th>Deleted</th>
+                            <th>Quality</th>
+                            <th>Insights</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in recent_activity[:12] %}
+                        <tr>
+                            <td>
+                                <span class="doc-name">{{ activity.filename|clean_literature_name }}</span>
+                            </td>
+                            <td>
+                                {% if activity.timestamp %}
+                                    {% if activity.timestamp is string %}
+                                        {{ activity.timestamp }}
+                                    {% else %}
+                                        {{ activity.timestamp.strftime('%d/%m/%Y %H:%M') }}
+                                    {% endif %}
+                                {% else %}
+                                    —
                                 {% endif %}
-                            </div>
-                            {% if activity.insights_count %}
-                            <div class="activity-insights">
-                                <small>{{ activity.insights_count }} insights extracted</small>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-        {% else %}
-                <div class="empty-state">
-                    <div class="empty-icon">📊</div>
-                    <h4 class="empty-title">No Recent Activity</h4>
-                    <p class="empty-description">No recent processing activity found. Use the Upload Literature section above to start processing documents</p>
-                </div>
-        {% endif %}
-    </div>
+                            </td>
+                            <td class="status-col">
+                                {% if activity.status == 'processing' %}<span class="badge badge-processing">Processing</span>{% endif %}
+                            </td>
+                            <td class="status-col">
+                                {% if activity.status == 'completed' %}<span class="badge badge-completed">Completed</span>{% endif %}
+                            </td>
+                            <td class="status-col">
+                                {% if activity.status == 'failed' %}<span class="badge badge-failed">Failed</span>{% endif %}
+                            </td>
+                            <td class="status-col">
+                                {% if activity.status == 'deleted' %}<span class="badge badge-deleted">Deleted</span>{% endif %}
+                            </td>
+                            <td>
+                                {% if activity.quality is not none %}
+                                    {{ "%.0f%%"|format(activity.quality * 100) }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ activity.insights_count or 0 }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📊</div>
+                <h4 class="empty-title">No Recent Activity</h4>
+                <p class="empty-description">No recent processing activity found. Use the Upload Literature section above to start processing documents</p>
+            </div>
+            {% endif %}
+        </div>
 
     <!-- System Information Section -->
     <div class="info-section">
@@ -247,6 +274,47 @@
 
 <style>
 /* Literature Dashboard Styles */
+/* Activity table styling */
+.table-container {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.pc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.pc-table thead th {
+  background: #f8f9fa;
+  color: #495057;
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+.pc-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f3f5;
+  vertical-align: middle;
+}
+.pc-table tbody tr:nth-child(odd) {
+  background: #fcfcfd;
+}
+.pc-table .doc-name {
+  font-weight: 600;
+  color: #212529;
+}
+.status-col { text-align: center; white-space: nowrap; }
+
+/* Status badges */
+.badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-weight: 600; font-size: 12px; }
+.badge-processing { background: #fff3cd; color: #b35400; border: 1px solid #ffe69c; }
+.badge-completed { background: #d3f9d8; color: #0f7a2a; border: 1px solid #b2f2bb; }
+.badge-failed { background: #ffe3e3; color: #c92a2a; border: 1px solid #ffa8a8; }
+.badge-deleted { background: #ffd6d9; color: #a1000f; border: 1px solid #ff9aa2; }
 .admin-container {
     max-width: 1200px;
     margin: 2rem auto;

@@ -34,8 +34,18 @@
 
 <div class="results-container">
 
+    {% if results %}{% endif %}
+
     {% if results %}
     <div class="results-content">
+
+        <!-- Quick access to brief/recommendations -->
+        <div class="cta-reco" style="display:flex; justify-content:flex-end; margin-bottom: 1rem; gap: .5rem;">
+            <a href="{{ url_for('get_recommendations', analysis_id=results.analysis_id) }}" class="btn btn-primary">
+                <span class="btn-icon">📝</span>
+                View recommendation
+            </a>
+        </div>
         
         <!-- Document Information Card -->
         <div class="info-card">
@@ -68,11 +78,14 @@
                     <span class="classification-badge classification-{{ results.classification.classification.lower() }}">
                         {{ results.classification.classification }}
                     </span>
+                    {% set _raw = results.classification.confidence if results.classification and results.classification.confidence is not none else 0 %}
+                    {% set _val = (_raw * 100) if _raw <= 1 else _raw %}
+                    {% set conf_pct = 100 if _val > 100 else (0 if _val < 0 else _val) %}
                     <div class="confidence-score">
                         <div class="confidence-bar">
-                            <div class="confidence-fill" style="width: {{ results.classification.confidence }}%"></div>
+                            <div class="confidence-fill" style="width: {{ conf_pct }}%"></div>
                         </div>
-                        <span class="confidence-text">{{ results.classification.confidence }}% confidence</span>
+                        <span class="confidence-text">{{ conf_pct|round(0) }}% confidence</span>
                     </div>
                 </div>
                 <div class="classification-details">
@@ -194,10 +207,10 @@
                     <span class="btn-icon">💾</span>
                     Export Results
                 </button>
-                <!-- NAPRAWIONY przycisk recommendations -->
+                <!-- Fixed recommendations button -->
                 <a href="{{ url_for('get_recommendations', analysis_id=results.analysis_id) }}" class="btn btn-outline">
                     <span class="btn-icon">🎯</span>
-                    Get Recommendations
+                    View recommendation
                 </a>
             </div>
         </div>
@@ -536,7 +549,8 @@ function exportResults() {
         filename: "{{ results.filename }}",
         analysis_date: "{{ results.analysis_date }}",
         classification: "{{ results.classification.classification }}",
-        confidence: {{ results.classification.confidence }},
+        // normalised 0–100
+        confidence: {{ conf_pct|round(0)|int if conf_pct is defined else 0 }},
         themes: [
             {% for theme in results.themes %}
             {

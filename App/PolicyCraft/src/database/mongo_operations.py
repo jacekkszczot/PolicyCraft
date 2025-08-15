@@ -586,6 +586,8 @@ class MongoOperations:
             from src.database.models import SAMPLE_UNIVERSITIES
             from pathlib import Path
             from src.nlp.text_processor import TextProcessor
+            from src.nlp.theme_extractor import ThemeExtractor
+            from src.nlp.policy_classifier import PolicyClassifier
 
             dataset_path = Path("/Users/jaai/Desktop/PROJECT MASTER/App and Report/PolicyCraft/App/PolicyCraft/data/policies/clean_dataset")
             if not dataset_path.exists():
@@ -593,6 +595,8 @@ class MongoOperations:
                 return False
 
             text_processor = TextProcessor()
+            theme_extractor = ThemeExtractor()
+            policy_classifier = PolicyClassifier()
             inserted = 0
             failed = 0
 
@@ -610,6 +614,10 @@ class MongoOperations:
                             cleaned_text = text_processor.clean_text(extracted_text)
                             text_length = len(cleaned_text) if cleaned_text else 0
 
+                            # Derive real themes and classification from content (no constants)
+                            derived_themes = theme_extractor.extract_themes(cleaned_text)
+                            derived_classification = policy_classifier.classify_policy(cleaned_text)
+
                             global_payload = {
                                 "user_id": -1,
                                 "document_id": uni["file"],
@@ -620,12 +628,8 @@ class MongoOperations:
                                     "cleaned_text": cleaned_text,
                                     "text_length": text_length,
                                 },
-                                "themes": [{"name": t, "score": 0.8, "confidence": 85} for t in uni.get("themes", [])],
-                                "classification": {
-                                    "classification": uni.get("classification", "Unknown"),
-                                    "confidence": 85,
-                                    "source": "Sample Dataset",
-                                },
+                                "themes": derived_themes,
+                                "classification": derived_classification,
                                 "summary": {},
                                 "is_baseline": True,
                             }

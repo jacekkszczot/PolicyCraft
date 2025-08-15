@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Document Details - PolicyCraft Admin{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+/* Shared admin container styles to match Literature Dashboard */
+.admin-container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+.admin-content { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
+.admin-content::before { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.95); z-index: 1; }
+.admin-content > * { position: relative; z-index: 2; }
+
+/* Hero section */
+.hero-section { padding: 2.5rem 2rem 1.5rem 2rem; background: transparent; }
+.hero-title { margin: 0; font-size: 2.2rem; font-weight: 700; color: #1f2937; }
+.hero-subtitle { margin: 0.25rem 0 0 0; color: #6c757d; }
+
+/* Breadcrumb */
+.breadcrumb-nav { padding: 0 2rem; margin-bottom: 0.75rem; }
+.breadcrumb-link { color: #0077cc; text-decoration: none; }
+.breadcrumb-link:hover { text-decoration: underline; }
+.breadcrumb-separator { margin: 0 0.5rem; color: #6c757d; }
+.breadcrumb-current { color: #6c757d; }
+
+/* Page header and sections */
+.page-header { padding: 0 2rem 0.5rem 2rem; }
+.page-title { margin: 0 0 0.25rem 0; font-weight: 600; color: #111827; }
+.page-meta { margin: 0; color: #6c757d; }
+.section-title { padding: 0 2rem; margin: 1rem 0 0.25rem 0; font-weight: 600; color: #333; }
+
+/* Cards tweaks */
+.card { border-radius: 12px; }
+
+/* Dashboard-like boxes for details */
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; padding: 0 2rem 2rem 2rem; margin-bottom: 0.5rem; }
+.detail-card { background: #fff; border-radius: 15px; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #e9ecef; }
+.detail-card.border-green { border-left: 4px solid #28a745; }
+.detail-card.border-purple { border-left: 4px solid #6f42c1; }
+.detail-card.border-orange { border-left: 4px solid #fd7e14; }
+.detail-card h4 { margin: 0 0 0.5rem 0; font-weight: 600; color: #333; }
+.detail-kpi { text-align:center; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-container { margin: 1rem auto; padding: 0 0.5rem; }
+  .hero-title { font-size: 1.8rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+  <div class="admin-content">
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="hero-content">
+        <h1 class="hero-title">📄 Document Details</h1>
+        <p class="hero-subtitle">View metadata, quality and files</p>
+      </div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb-nav">
+      <a href="{{ url_for('admin.dashboard') }}" class="breadcrumb-link">Admin Dashboard</a>
+      <span class="breadcrumb-separator">→</span>
+      <a href="{{ url_for('admin.literature_knowledge_base') }}" class="breadcrumb-link">Knowledge Base</a>
+      <span class="breadcrumb-separator">→</span>
+      <span class="breadcrumb-current">Document Details</span>
+    </nav>
+
+    <!-- Header -->
+    <div class="page-header">
+      <h2 class="page-title">{{ doc.metadata.title if doc.metadata and doc.metadata.title else (doc.filename or doc.document_id) }}</h2>
+      <p class="page-meta">
+        {% if doc.metadata and doc.metadata.author %}{{ doc.metadata.author }}{% endif %}
+        {% if doc.metadata and (doc.metadata.university or doc.metadata.institution or doc.metadata.affiliation) %}
+          • {{ doc.metadata.university or doc.metadata.institution or doc.metadata.affiliation }}
+        {% endif %}
+        {% if doc.metadata and (doc.metadata.publication_year or doc.metadata.publication_date) %}
+          • {{ (doc.metadata.publication_year or doc.metadata.publication_date)[:4] }}
+        {% endif %}
+      </p>
+    </div>
+
+  <!-- KPI Boxes -->
+  <div class="detail-grid">
+    <div class="detail-card border-green detail-kpi">
+      <div class="text-uppercase text-muted small">Quality Score</div>
+      {% set quality = doc.quality_score or doc.metadata.total_quality_score or doc.metadata.total_score %}
+      <div class="display-6 fw-bold text-primary">
+        {% if quality is not none %}{{ '%.1f%%'|format(quality) }}{% else %}N/A{% endif %}
+      </div>
+      {% if quality is not none %}
+      <div class="progress mt-2" style="height:6px;">
+        <div class="progress-bar bg-success" role="progressbar" style="width: {{ quality }}%;" aria-valuenow="{{ quality }}" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="detail-card border-purple detail-kpi">
+      <div class="text-uppercase text-muted small">Insights Extracted</div>
+      <div class="display-6 fw-bold text-primary">{{ (doc.insights_count or doc.metadata.insights_count or 0) }}</div>
+    </div>
+
+    <div class="detail-card border-orange detail-kpi">
+      <div class="text-uppercase text-muted small">Confidence Level</div>
+      {% set conf = doc.confidence_level or (doc.metadata.confidence_level if doc.metadata else None) %}
+      <div class="display-6 fw-bold text-primary">{{ conf|default('N/A')|title }}</div>
+    </div>
+  </div>
+
+  <!-- Files Section -->
+  <h3 class="section-title">📎 Document Files</h3>
+  <div class="detail-grid">
+    <div class="detail-card border-purple">
+      <div>
+        <div class="d-flex align-items-center mb-2">
+          <span class="text-uppercase text-muted small me-2">Original File</span>
+          {% if doc.original_path %}
+            <span class="badge bg-success ms-auto">Available</span>
+          {% else %}
+            <span class="badge bg-danger ms-auto">Not Found</span>
+          {% endif %}
+        </div>
+        {% if doc.original_path %}
+          <code class="text-break d-inline-block">{{ doc.original_path }}</code>
+        {% else %}
+          <span class="text-danger small">Not Found</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="detail-card border-orange">
+      <div>
+        <div class="d-flex align-items-center mb-2">
+          <span class="text-uppercase text-muted small me-2">Generated Markdown</span>
+          {% if md_filename %}
+            <span class="badge bg-success ms-auto">Available</span>
+          {% else %}
+            <span class="badge bg-danger ms-auto">Not Found</span>
+          {% endif %}
+        </div>
+        {% if md_filename %}
+          <code class="text-break d-inline-block">{{ md_filename }}</code>
+          <div class="mt-2 d-flex gap-2">
+            <a href="{{ url_for('admin.literature_raw_file', filename=md_filename) }}" target="_blank" class="btn btn-sm btn-primary">
+              View Raw
+            </a>
+          </div>
+        {% else %}
+          <span class="text-danger small">Not Found</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Metadata -->
+  <h3 class="section-title">🧾 Metadata</h3>
+  <div class="detail-grid" style="grid-template-columns: 1fr;">
+    <div class="detail-card">
+      <pre class="mb-0 small" style="white-space: pre-wrap;">{{ doc.metadata | tojson(indent=2) }}</pre>
+    </div>
+  </div>
+
+  <!-- Back button -->
+  <div class="d-flex px-4 pb-4">
+    <a href="{{ url_for('admin.literature_knowledge_base') }}" class="btn btn-secondary">
+      ← Back to Knowledge Base
+    </a>
+  </div>
+</div>
+</div>
+{% endblock %}

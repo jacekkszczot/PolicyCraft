@@ -844,15 +844,25 @@ class ThemeExtractor:
         """
         # Sort themes by score
         sorted_themes = sorted(theme_scores.items(), key=lambda x: x[1], reverse=True)
-        
+
+        # Compute document-specific scaling to prevent flat 10/100 values
+        raw_values = [float(s) for _, s in sorted_themes] or [0.0]
+        max_raw = max(raw_values) if raw_values else 0.0
+        if max_raw <= 0:
+            return []
+
         # Format output
         themes = []
         for theme_name, score in sorted_themes[:max_themes]:
             details = theme_details[theme_name]
-            
-            # Normalise score to [0,10] as per test expectations
+
             raw_score = float(score)
-            normalised_score = min(10.0, round(raw_score, 2))
+            # Scale relative to the strongest theme in this document
+            rel = raw_score / max_raw
+            normalised_score = round(rel * 10.0, 2)
+
+            # Confidence mirrors relative strength in [0,100]
+            confidence = max(0, min(100, int(rel * 100)))
 
             theme_data = {
                 'name': theme_name,
@@ -860,7 +870,7 @@ class ThemeExtractor:
                 'frequency': int(raw_score),
                 'keywords': [kw[0] for kw in details['keywords'][:5]],  # Top 5 keywords
                 'matches': [match[0] if isinstance(match, tuple) else match for match in details['matches'][:3]],  # Top 3 matches
-                'confidence': min(100, int(raw_score * 10))  # Convert to confidence percentage
+                'confidence': confidence
             }
             
             # Add entities if available

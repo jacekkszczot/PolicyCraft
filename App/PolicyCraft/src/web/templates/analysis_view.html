@@ -7,21 +7,17 @@
     PolicyCraft - Analysis Results Page
     
     This page displays the detailed results of a policy document analysis, including
-    document information, key findings, and visualizations.
+    document information, key findings, and visualisations.
     
     Key Components:
     1. Document Information - Metadata and basic info
     2. Key Findings - Summary of analysis results
     3. Text Analysis Statistics - Word counts, readability scores
-    4. Visualizations - Interactive charts and graphs
+    4. Visualisations - Interactive charts and graphs
     
     Features:
     - Responsive design for all device sizes
     - Interactive data visualizations
-    
-    Author: Jacek Robert Kszczot
-    Project: MSc Data Science & AI - COM7016
-    University: Leeds Trinity University
     - Export functionality for analysis results
     - Clear presentation of complex data
     
@@ -43,6 +39,14 @@
 
     {% if analysis %}
     <div class="results-content">
+
+        <!-- Quick access to narrative/recommendations -->
+        <div class="cta-reco" style="display:flex; justify-content:flex-end; margin-bottom: 1rem; gap: .5rem;">
+            <a href="{{ url_for('get_recommendations', analysis_id=analysis.analysis_id) }}" class="btn btn-primary">
+                <span class="btn-icon">📝</span>
+                View recommendation
+            </a>
+        </div>
         
         <!-- Document Information Card -->
         <div class="info-card">
@@ -75,11 +79,14 @@
                     <span class="classification-badge classification-{{ analysis.classification.classification.lower() }}">
                         {{ analysis.classification.classification }}
                     </span>
+                    {% set _raw = analysis.classification.confidence if analysis.classification and analysis.classification.confidence is not none else 0 %}
+                    {% set _val = (_raw * 100) if _raw <= 1 else _raw %}
+                    {% set conf_pct = 100 if _val > 100 else (0 if _val < 0 else _val) %}
                     <div class="confidence-score">
                         <div class="confidence-bar">
-                            <div class="confidence-fill" style="width: {{ analysis.classification.confidence }}%"></div>
+                            <div class="confidence-fill" style="width: {{ conf_pct }}%"></div>
                         </div>
-                        <span class="confidence-text">{{ analysis.classification.confidence }}% confidence</span>
+                        <span class="confidence-text">{{ conf_pct|round(0) }}% confidence</span>
                     </div>
                 </div>
                 <div class="classification-details">
@@ -127,25 +134,22 @@
         <!-- Charts Section -->
         {% if analysis.charts %}
         <div class="charts-card">
-            <h2>📈 Visualizations</h2>
+            <h2>📈 Visualisations</h2>
             <div class="charts-grid">
                 {% if analysis.charts.themes_bar %}
                 <div class="chart-container">
-                    <h4>Theme Scores</h4>
                     <div id="themesChart"></div>
                 </div>
                 {% endif %}
                 
                 {% if analysis.charts.classification_gauge %}
                 <div class="chart-container">
-                    <h4>Classification Confidence</h4>
                     <div id="classificationGauge"></div>
                 </div>
                 {% endif %}
                 
                 {% if analysis.charts.themes_pie %}
                 <div class="chart-container">
-                    <h4>Theme Distribution</h4>
                     <div id="themePieChart"></div>
                 </div>
                 {% endif %}
@@ -177,7 +181,70 @@
             </div>
         </div>
         {% endif %}
-        
+
+        <!-- Methodology & Confidence (always present) -->
+        <div class="info-card">
+            <h2>🧭 Methodology & Confidence</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <strong>Methodology:</strong>
+                    <span>PolicyCraft local pipeline (extraction → classification → theme detection → rules‑based + ML heuristics).</span>
+                </div>
+                <div class="info-item">
+                    {% set cls_raw = analysis.classification.confidence if analysis.classification and analysis.classification.confidence is not none else 0 %}
+                    {% set cls_val = (cls_raw * 100) if cls_raw <= 1 else cls_raw %}
+                    {% set cls_pct = 100 if cls_val > 100 else (0 if cls_val < 0 else cls_val) %}
+                    <strong>Classification Confidence:</strong>
+                    <span>{{ cls_pct|round(0) }}%</span>
+                </div>
+                {% if analysis.theme_summary %}
+                <div class="info-item">
+                    <strong>Average Theme Confidence:</strong>
+                    <span>{{ analysis.theme_summary.avg_confidence }}%</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Stakeholder Perspectives (always present) -->
+        <div class="info-card">
+            <h2>👥 Stakeholder Perspectives</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <strong>Students</strong>
+                    <span>Transparency of AI usage rules; clear appeal processes; guidance on permitted vs non‑permitted use.</span>
+                </div>
+                <div class="info-item">
+                    <strong>Faculty</strong>
+                    <span>Checklists/rubrics to reduce workload; training on interpretability and good practice.</span>
+                </div>
+                <div class="info-item">
+                    <strong>Administration / IT</strong>
+                    <span>Compliance monitoring and maintenance; data security and event logging.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pilot & Evaluation Plan (always present) -->
+        <div class="info-card">
+            <h2>🧪 Pilot & Evaluation Plan</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <strong>30 days</strong>
+                    <span>Pilot in selected courses; metrics: compliance, incident rate, satisfaction.</span>
+                </div>
+                <div class="info-item">
+                    <strong>60 days</strong>
+                    <span>Scale‑up, refine guidelines, follow‑up training.</span>
+                </div>
+                <div class="info-item">
+                    <strong>90 days</strong>
+                    <span>Evaluate results; go/no‑go decision for full roll‑out.</span>
+                </div>
+            </div>
+            <p class="note" style="color:#6c757d;margin-top:.5rem;">90‑day targets are pilot goals; full institutionalisation after results review.</p>
+        </div>
+
         <!-- Action Buttons -->
         <div class="actions-card">
             <h2>⚡ Next Steps</h2>
@@ -194,7 +261,7 @@
                     <span class="btn-icon">💾</span>
                     Export Results
                 </button>
-                <!-- NAPRAWIONY przycisk recommendations -->
+                <!-- Fixed recommendations button -->
                 <a href="{{ url_for('get_recommendations', analysis_id=analysis.analysis_id) }}" class="btn btn-outline">
                     <span class="btn-icon">🎯</span>
                     Get Recommendations
@@ -208,7 +275,7 @@
     <div class="no-results">
         <div class="no-results-icon">📄</div>
         <h2>No Analysis Results</h2>
-        <p>We couldn't find any analysis analysis. Please try uploading a document again.</p>
+        <p>We couldn't find any analysis result. Please try uploading a document again.</p>
         <a href="{{ url_for('upload_file') }}" class="btn btn-primary">Upload New Document</a>
     </div>
     {% endif %}
@@ -397,6 +464,12 @@
     text-align: center;
 }
 
+/* Ensure Plotly canvases have enough room and don't overlap headings */
+#themesChart, #classificationGauge, #themePieChart {
+    min-height: 420px;
+    width: 100%;
+}
+
 .chart-container h4 {
     color: #2c3e50;
     margin-bottom: 1rem;
@@ -525,6 +598,11 @@
 }
 </style>
 
+{# Normalise classification confidence to 0–100 for exports (global scope) #}
+{% set _raw_export = analysis.classification.confidence if analysis.classification and analysis.classification.confidence is not none else 0 %}
+{% set _val_export = (_raw_export * 100) if _raw_export <= 1 else _raw_export %}
+{% set export_conf = 100 if _val_export > 100 else (0 if _val_export < 0 else _val_export) %}
+
 <script>
 // Export results function
 function exportResults() {
@@ -532,7 +610,8 @@ function exportResults() {
         filename: "{{ analysis.filename }}",
         analysis_date: "{{ analysis.analysis_date }}",
         classification: "{{ analysis.classification.classification }}",
-        confidence: {{ analysis.classification.confidence }},
+        // normalised 0–100 (global)
+        confidence: {{ export_conf|round(0)|int }},
         themes: [
             {% for theme in analysis.themes %}
             {
@@ -543,18 +622,18 @@ function exportResults() {
             {% endfor %}
         ]
     };
-    
+
     let csvContent = "data:text/csv;charset=utf-8,";
     csvContent += "Analysis Results Export\n\n";
     csvContent += "Filename,Classification,Confidence,Analysis Date\n";
-    csvContent += `"${analysis.filename}","${analysis.classification}",${analysis.confidence},"${analysis.analysis_date}"\n\n`;
+    csvContent += `"${results.filename}","${results.classification}",${results.confidence},"${results.analysis_date}"\n\n`;
     csvContent += "Themes\n";
     csvContent += "Theme Name,Score,Confidence\n";
-    
-    analysis.themes.forEach(theme => {
+
+    results.themes.forEach(theme => {
         csvContent += `"${theme.name}",${theme.score},${theme.confidence}\n`;
     });
-    
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -564,51 +643,49 @@ function exportResults() {
     document.body.removeChild(link);
 }
 
-// Initialize charts if available
+// Initialise charts if available, load Plotly dynamically if needed
 document.addEventListener('DOMContentLoaded', function() {
-    {% if analysis.charts %}
-    // Load Plotly charts
-    {% if analysis.charts.themes_bar %}
-    try {
-        const themesData = {{ analysis.charts.themes_bar|safe }};
-        Plotly.newPlot('themesChart', themesData.data, themesData.layout);
-    } catch(e) {
-        console.log('Themes chart error:', e);
+    function renderCharts() {
+        {% if analysis.charts %}
+        {% if analysis.charts.themes_bar %}
+        try {
+            const themesData = {{ analysis.charts.themes_bar|tojson|safe }};
+            Plotly.newPlot('themesChart', themesData.data, themesData.layout, {responsive: true});
+        } catch(e) { console.log('Themes chart error:', e); }
+        {% endif %}
+
+        {% if analysis.charts.classification_gauge %}
+        try {
+            const gaugeData = {{ analysis.charts.classification_gauge|tojson|safe }};
+            Plotly.newPlot('classificationGauge', gaugeData.data, gaugeData.layout, {responsive: true});
+        } catch(e) { console.log('Gauge chart error:', e); }
+        {% endif %}
+
+        {% if analysis.charts.themes_pie %}
+        try {
+            const pieData = {{ analysis.charts.themes_pie|tojson|safe }};
+            Plotly.newPlot('themePieChart', pieData.data, pieData.layout, {responsive: true});
+        } catch(e) { console.log('Pie chart error:', e); }
+        {% endif %}
+        {% endif %}
+
+        // Animate confidence bars
+        setTimeout(() => {
+            const bars = document.querySelectorAll('.confidence-fill');
+            bars.forEach(bar => { bar.style.width = bar.style.width; });
+        }, 500);
     }
-    {% endif %}
-    
-    {% if analysis.charts.classification_gauge %}
-    try {
-        const gaugeData = {{ analysis.charts.classification_gauge|safe }};
-        Plotly.newPlot('classificationGauge', gaugeData.data, gaugeData.layout);
-    } catch(e) {
-        console.log('Gauge chart error:', e);
+
+    if (typeof Plotly === 'undefined') {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.plot.ly/plotly-latest.min.js';
+        s.onload = renderCharts;
+        s.onerror = () => console.warn('Failed to load Plotly');
+        document.head.appendChild(s);
+    } else {
+        renderCharts();
     }
-    {% endif %}
-    
-    {% if analysis.charts.themes_pie %}
-    try {
-        const pieData = {{ analysis.charts.themes_pie|safe }};
-        Plotly.newPlot('themePieChart', pieData.data, pieData.layout);
-    } catch(e) {
-        console.log('Pie chart error:', e);
-    }
-    {% endif %}
-    {% endif %}
-    
-    // Animate confidence bars
-    setTimeout(() => {
-        const bars = document.querySelectorAll('.confidence-fill');
-        bars.forEach(bar => {
-            bar.style.width = bar.style.width;
-        });
-    }, 500);
 });
 </script>
-
-<!-- Load Plotly if charts are available -->
-{% if analysis.charts %}
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-{% endif %}
 
 {% endblock %}

@@ -56,13 +56,14 @@ from typing import Dict
 
 from flask import (
     Blueprint, current_app, flash, redirect, render_template,
-    request, session, url_for, Response, json, jsonify
+    request, session, url_for, Response, json, jsonify, send_from_directory, abort
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from src.database.models import User, db as sqlalchemy_db
 from src.database.mongo_operations import MongoOperations
 from src.literature.literature_engine import LiteratureEngine
+from src.analysis_engine.literature.repository import LiteratureRepository
 from datetime import datetime
 
 # Initialize logger
@@ -295,11 +296,13 @@ def literature_dashboard():
         literature_engine = LiteratureEngine()
         system_status = literature_engine.get_processing_status()
         recent_history = literature_engine.get_recent_processing_history(limit=10)
+        recent_activity = literature_engine.get_recent_processing_activity(limit=6)
         
         return render_template(
             "admin/literature_dashboard.html",
             system_status=system_status,
             recent_history=recent_history,
+            recent_activity=recent_activity,
             page_title="Literature Management"
         )
         
@@ -338,6 +341,12 @@ def literature_upload():
             'upload_date': datetime.now().isoformat()
         }
         
+        # Log start of processing
+        try:
+            literature_engine.log_activity(status='processing', filename=file.filename)
+        except Exception:
+            pass
+
         # Process the uploaded file
         processing_results = literature_engine.process_uploaded_file(file, metadata)
         
@@ -356,6 +365,21 @@ def literature_upload():
                     success_msg += " Auto-scan completed (no new documents found)."
                     
                 flash(success_msg, "success")
+                # Refresh repository indices after potential batch changes (debounced)
+                try:
+                    LiteratureRepository.get().refresh_indices_if_needed()
+                except Exception:
+                    pass
+                try:
+                    literature_engine.log_activity(
+                        status='completed',
+                        filename=processing_results.get('details', {}).get('filename') or file.filename,
+                        document_id=processing_results.get('document_id'),
+                        quality=processing_results.get('quality_assessment', {}).get('total_score'),
+                        insights_count=len(processing_results.get('extracted_insights', []) or [])
+                    )
+                except Exception:
+                    pass
                 logger.info(f"Auto-scan after upload completed: {scan_results}")
                 
             except Exception as scan_error:
@@ -364,8 +388,22 @@ def literature_upload():
                 
         elif status == 'requires_review':
             flash("Document processed but requires manual review", "warning")
+            try:
+                literature_engine.log_activity(
+                    status='completed',
+                    filename=processing_results.get('details', {}).get('filename') or file.filename,
+                    document_id=processing_results.get('document_id'),
+                    quality=processing_results.get('quality_assessment', {}).get('total_score'),
+                    insights_count=len(processing_results.get('extracted_insights', []) or [])
+                )
+            except Exception:
+                pass
         else:
             flash(f"Processing failed: {processing_results.get('message', 'Unknown error')}", "error")
+            try:
+                literature_engine.log_activity(status='failed', filename=file.filename)
+            except Exception:
+                pass
         
         return render_template(
             "admin/literature_results.html",
@@ -405,6 +443,97 @@ def literature_knowledge_base():
     except Exception as e:
         flash(f"Error loading knowledge base: {str(e)}", "error")
         return redirect(url_for("admin.dashboard"))
+
+# ---------------------------------------------------------------------------
+# Literature document details (dedicated page)
+# ---------------------------------------------------------------------------
+@admin_bp.route("/literature/document/<doc_id>")
+@admin_required
+def literature_document_detail(doc_id: str):
+    """Show details for a single literature document on a dedicated page."""
+    try:
+        engine = LiteratureEngine()
+        docs = engine.get_unified_document_data(include_version_history=True)
+        # Find matching document by document_id
+        selected = None
+        for d in docs:
+            if d.get('document_id') == doc_id:
+                selected = d
+                break
+        if not selected:
+            flash("Document not found in knowledge base", "error")
+            return redirect(url_for("admin.literature_knowledge_base"))
+
+        # Best-effort: locate markdown file path by filename or doc_id fragment
+        kb_path = getattr(engine.knowledge_manager, 'knowledge_base_path', 'docs/knowledge_base')
+        md_filename = selected.get('filename')
+        md_path = None
+        try:
+            import os
+            if md_filename:
+                fpath = os.path.join(kb_path, md_filename)
+                if os.path.exists(fpath):
+                    md_path = md_filename
+            if not md_path:
+                for f in os.listdir(kb_path):
+                    if f.endswith('.md') and (doc_id in f):
+                        md_path = f
+                        break
+        except Exception:
+            md_path = None
+
+        # Enrich with additional details (including confidence_level)
+        try:
+            kb_manager = engine.knowledge_manager
+            doc_details = kb_manager.get_document_by_id(doc_id)
+            if doc_details:
+                selected.update({
+                    'insights': doc_details.get('insights', []),
+                    'content': doc_details.get('content', ''),
+                    'original_filename': doc_details.get('metadata', {}).get('original_filename'),
+                    'file_size': doc_details.get('metadata', {}).get('file_size'),
+                    'processing_date': doc_details.get('metadata', {}).get('processing_date'),
+                    'confidence_level': doc_details.get('confidence_level'),
+                    'auto_approved': doc_details.get('auto_approved', False),
+                    'original_file_exists': doc_details.get('original_file_exists', False),
+                    'is_preloaded': doc_details.get('is_preloaded', False)
+                })
+        except Exception as e:
+            logger.warning(f"Could not enrich document {doc_id} with details: {str(e)}")
+
+        return render_template(
+            "admin/literature_document_detail.html",
+            doc=selected,
+            md_filename=md_path,
+            page_title=f"Document: {doc_id}"
+        )
+    except Exception as e:
+        flash(f"Error loading document details: {str(e)}", "error")
+        return redirect(url_for("admin.literature_knowledge_base"))
+
+# ---------------------------------------------------------------------------
+# Serve raw knowledge base file (read-only)
+# ---------------------------------------------------------------------------
+@admin_bp.route("/literature/raw/<path:filename>")
+@admin_required
+def literature_raw_file(filename: str):
+    """Serve a raw Markdown file from the knowledge base directory.
+
+    Security: restrict to basename to prevent directory traversal.
+    """
+    try:
+        engine = LiteratureEngine()
+        kb_path = getattr(engine.knowledge_manager, 'knowledge_base_path', 'docs/knowledge_base')
+        import os
+        safe_name = os.path.basename(filename)
+        full_path = os.path.join(kb_path, safe_name)
+        if not os.path.exists(full_path):
+            abort(404)
+        # Let Flask infer mime; default to text/markdown
+        return send_from_directory(kb_path, safe_name, as_attachment=False, mimetype='text/markdown')
+    except Exception as e:
+        current_app.logger.error(f"Error serving raw file {filename}: {e}")
+        abort(500)
 @admin_bp.route("/literature/cleanup", methods=["GET", "POST"])
 @admin_required
 def literature_cleanup():
@@ -449,14 +578,37 @@ def literature_cleanup():
                 deleted_count = 0
                 kb_path = kb_manager.knowledge_base_path
                 
+                import re
                 for doc_id in selected_docs:
-                    for filename in os.listdir(kb_path):
-                        if filename.endswith(".md") and doc_id in filename:
-                            file_path = os.path.join(kb_path, filename)
-                            os.remove(file_path)
-                            kb_manager.remove_document_from_history(doc_id)
-                            deleted_count += 1
-                            break
+                    # Extract possible 8-char content hash to catch related variants
+                    m = re.search(r"[a-f0-9]{8}$", doc_id)
+                    short_hash = m.group(0) if m else ""
+
+                    # Remove files whose stem matches doc_id or contains the same short hash
+                    for filename in list(os.listdir(kb_path)):
+                        if filename.endswith(".md"):
+                            stem = os.path.splitext(filename)[0]
+                            if stem == doc_id or (short_hash and short_hash in stem):
+                                file_path = os.path.join(kb_path, filename)
+                                try:
+                                    os.remove(file_path)
+                                    deleted_count += 1
+                                except Exception as e:
+                                    logger.error(f"Failed to delete {file_path}: {e}")
+
+                    # Purge logs/history/backups for this doc_id (and variants)
+                    try:
+                        kb_manager.remove_document_from_history(doc_id)
+                        if short_hash:
+                            kb_manager.remove_document_from_history(short_hash)
+                        kb_manager.purge_activity_log(doc_id)
+                        if short_hash:
+                            kb_manager.purge_activity_log(short_hash)
+                        kb_manager.remove_backups(doc_id)
+                        if short_hash:
+                            kb_manager.remove_backups(short_hash)
+                    except Exception as e:
+                        logger.error(f"Cleanup metadata purge failed for {doc_id}: {e}")
                 
                 flash(f"Successfully deleted {deleted_count} document(s). Backup created: {backup_id}", "success")
             elif action == "archive":

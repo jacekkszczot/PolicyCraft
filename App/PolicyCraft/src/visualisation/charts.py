@@ -132,7 +132,12 @@ class ChartGenerator:
             return ""
         
         top_themes = themes[:8]
-        
+
+        # Compute frequency-based shares for clearer differentiation
+        total_freq = sum(max(0, int(t.get('frequency', 0))) for t in top_themes) or 1
+        def _share(t):
+            return round(100 * max(0, int(t.get('frequency', 0))) / total_freq)
+
         fig = go.Figure()
         
         fig.add_trace(go.Bar(
@@ -143,17 +148,22 @@ class ChartGenerator:
                 'color': self.color_schemes['themes'][:len(top_themes)],
                 'line': {'color': 'rgba(50, 50, 50, 0.2)', 'width': 1}
             },
-            text=[f"{theme.get('confidence', '')}%" if theme.get('confidence') is not None else '' for theme in reversed(top_themes)],
+            # Label bars by contribution share rather than absolute confidence
+            text=[f"{_share(theme)}%" for theme in reversed(top_themes)],
             textposition='inside',
             textfont={'color': 'white', 'size': 10}
         ))
         
         fig.update_layout(
-            title='Key Policy Themes',
+            # No inner title to avoid duplication with template headings
             xaxis_title='Theme Score',
             yaxis_title='Themes',
-            height=400,
-            **self.default_layout
+            height=420,
+            showlegend=False,
+            margin={'l': 100, 'r': 40, 't': 10, 'b': 40},
+            yaxis={'automargin': True, 'ticklabelposition': 'outside', 'ticklabelstandoff': 8},
+            xaxis={'automargin': True},
+            **{k: v for k, v in self.default_layout.items() if k not in ('margin', 'showlegend')}
         )
         
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
@@ -169,7 +179,8 @@ class ChartGenerator:
             mode = "gauge+number",
             value = confidence,
             domain = {'x': [0, 1], 'y': [0, 1]},
-            title = {'text': f"Classification: {class_type}"},
+            # Remove inner title to prevent duplication; the card heading labels the chart
+            title = {'text': ''},
             gauge = {
                 'axis': {'range': [None, 100]},
                 'bar': {'color': color},
@@ -185,7 +196,8 @@ class ChartGenerator:
             }
         ))
         
-        fig.update_layout(height=300, **self.default_layout)
+        fig.update_layout(height=320, showlegend=False, margin={'l': 20, 'r': 20, 't': 10, 'b': 20},
+                          **{k: v for k, v in self.default_layout.items() if k not in ('margin', 'showlegend')})
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     def _create_themes_pie_chart(self, themes: List[Dict]) -> str:
@@ -193,21 +205,23 @@ class ChartGenerator:
         if not themes:
             return ""
         
+        # Use raw frequency to calculate distribution for a more faithful share
         if len(themes) > 6:
             top_themes = themes[:5]
-            others_score = sum(theme['score'] for theme in themes[5:])
-            display_themes = top_themes + [{'name': 'Others', 'score': others_score}]
+            others_freq = sum(int(theme.get('frequency', 0)) for theme in themes[5:])
+            display_themes = top_themes + [{'name': 'Others', 'frequency': others_freq}]
         else:
             display_themes = themes
         
         fig = go.Figure(data=[go.Pie(
             labels=[theme['name'] for theme in display_themes],
-            values=[theme['score'] for theme in display_themes],
+            values=[int(theme.get('frequency', 0)) for theme in display_themes],
             hole=.3,
             marker={'colors': self.color_schemes['themes'][:len(display_themes)]}
         )])
         
-        fig.update_layout(title='Theme Distribution', height=400, **self.default_layout)
+        fig.update_layout(height=420, margin={'l': 20, 'r': 20, 't': 10, 'b': 20},
+                          **{k: v for k, v in self.default_layout.items() if k != 'margin'})
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     def _create_classification_distribution(self, analyses: List[Dict]) -> str:
@@ -272,11 +286,13 @@ class ChartGenerator:
         )])
         
         fig.update_layout(
-            title='Most Frequent Themes Across All Analyses',
+            # No title to avoid duplication
             xaxis_title='Frequency',
             yaxis_title='Themes',
             height=400,
-            **self.default_layout
+            showlegend=False,
+            margin={'l': 20, 'r': 20, 't': 10, 'b': 20},
+            **{k: v for k, v in self.default_layout.items() if k not in ('margin', 'showlegend')}
         )
         
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
@@ -306,7 +322,17 @@ class ChartGenerator:
         categories.append(categories[0])
         fig = go.Figure()
         fig.add_trace(go.Scatterpolar(r=values, theta=categories, fill='toself', name='Ethical Coverage', marker_color='#2ecc71'))
-        fig.update_layout(title='Ethical Dimension Coverage', polar={'radialaxis': {'visible': True, 'range': [0, 100]}}, height=400, **self.default_layout)
+        fig.update_layout(
+                          polar={
+                              'radialaxis': {'visible': True, 'range': [0, 100]},
+                              # Balance: a bit more left padding, and some space on the right for labels
+                              'domain': {'x': [0.14, 0.94], 'y': [0.12, 0.98]},
+                              'angularaxis': {'rotation': 20, 'tickfont': {'size': 12}}
+                          },
+                          height=420,
+                          margin={'l': 120, 'r': 90, 't': 10, 'b': 70},
+                          legend={'orientation': 'h', 'x': 0.5, 'xanchor': 'center', 'y': -0.05},
+                          **{k: v for k, v in self.default_layout.items() if k not in ('margin',)})
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     def _generate_fallback_charts(self, themes: List[Dict], classification: Dict) -> Dict:

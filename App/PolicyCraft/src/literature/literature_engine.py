@@ -30,6 +30,7 @@ from werkzeug.utils import secure_filename
 from .literature_processor import LiteratureProcessor
 from .quality_validator import LiteratureQualityValidator
 from .knowledge_manager import KnowledgeBaseManager
+from src.analysis_engine.literature.repository import LiteratureRepository
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +63,13 @@ class LiteratureEngine:
         self.processor = LiteratureProcessor(knowledge_base_path)
         self.quality_validator = LiteratureQualityValidator()
         self.knowledge_manager = KnowledgeBaseManager(knowledge_base_path)
+        
+        # Activity log stored alongside knowledge base for simplicity
+        try:
+            kb_path = getattr(self.knowledge_manager, 'knowledge_base_path', 'docs/knowledge_base')
+        except Exception:
+            kb_path = 'docs/knowledge_base'
+        self.activity_log_file = os.path.join(kb_path, 'activity_log.json')
         
         # Supported file types
         self.supported_extensions = {'.pdf', '.txt', '.md'}
@@ -112,6 +120,11 @@ class LiteratureEngine:
             
             # Step 4: Attempt integration if quality is sufficient
             integration_results = self.knowledge_manager.integrate_new_document(processing_results)
+            # Incrementally update literature repository index (no-op on failure)
+            try:
+                LiteratureRepository.get().on_document_integrated(processing_results)
+            except Exception:
+                pass
             
             # Step 5: Save analysis data before cleanup
             analysis_data = self._save_analysis_data(processing_results, file.filename)
@@ -146,10 +159,13 @@ class LiteratureEngine:
         """Get current status of literature processing system."""
         try:
             kb_status = self.knowledge_manager.get_knowledge_base_status()
+            # Flatten structure: KnowledgeBaseManager returns {'knowledge_base': {...}}
+            # For templates expecting system_status.knowledge_base.total_documents, expose the inner dict directly.
+            kb_stats = kb_status.get('knowledge_base', kb_status)
             
             return {
                 'system_status': 'operational',
-                'knowledge_base': kb_status,
+                'knowledge_base': kb_stats,
                 'supported_formats': list(self.supported_extensions),
                 'max_file_size_mb': self.max_file_size // (1024 * 1024),
                 'last_check': datetime.now().isoformat()
@@ -162,6 +178,93 @@ class LiteratureEngine:
                 'error_message': str(e),
                 'last_check': datetime.now().isoformat()
             }
+
+    # ------------------------------------------------------------------
+    # Activity logging API
+    # ------------------------------------------------------------------
+    def _read_activity_log(self) -> List[Dict]:
+        try:
+            if os.path.exists(self.activity_log_file):
+                with open(self.activity_log_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        return data
+        except Exception as e:
+            logger.warning(f"Failed to read activity log: {e}")
+        return []
+
+    def _write_activity_log(self, entries: List[Dict]) -> None:
+        try:
+            os.makedirs(os.path.dirname(self.activity_log_file), exist_ok=True)
+            with open(self.activity_log_file, 'w', encoding='utf-8') as f:
+                json.dump(entries, f, indent=2)
+        except Exception as e:
+            logger.error(f"Failed to write activity log: {e}")
+
+    def log_activity(self, status: str, filename: str = None, document_id: str = None,
+                     quality: Optional[float] = None, insights_count: Optional[int] = None) -> None:
+        """Append an activity entry.
+
+        Args:
+            status: 'processing' | 'completed' | 'failed'
+            filename: Optional filename shown in UI
+            document_id: Optional document ID if known
+            quality: Optional quality score (0-100)
+            insights_count: Optional number of insights
+        """
+        entry = {
+            'timestamp': datetime.now().isoformat(),
+            'status': status,
+            'filename': filename,
+            'document_id': document_id,
+            'quality': quality,
+            'insights_count': insights_count,
+        }
+        entries = self._read_activity_log()
+        entries.append(entry)
+        # Keep log bounded (latest 200)
+        entries = entries[-200:]
+        self._write_activity_log(entries)
+
+    def get_recent_processing_activity(self, limit: int = 6) -> List[Dict]:
+        """Return recent processing activity entries for the admin dashboard.
+
+        Entries referencing documents that no longer exist in the KB are shown
+        with status 'deleted' so the UI can present them distinctly.
+        """
+        entries = self._read_activity_log()
+
+        # Build set of current KB stems (without extension)
+        kb_stems: set = set()
+        try:
+            if os.path.isdir(self.knowledge_manager.knowledge_base_path):
+                for fn in os.listdir(self.knowledge_manager.knowledge_base_path):
+                    if fn.endswith('.md'):
+                        kb_stems.add(os.path.splitext(fn)[0])
+        except Exception:
+            pass
+
+        def is_in_kb(entry: Dict) -> bool:
+            filename = str(entry.get('filename') or '')
+            stem = os.path.splitext(os.path.basename(filename))[0] if filename else ''
+            doc_id = str(entry.get('document_id') or '')
+            if not kb_stems:
+                return True
+            return (stem in kb_stems) or (doc_id in kb_stems) or any(doc_id and doc_id in s for s in kb_stems)
+
+        # Map missing docs to deleted status
+        normalized: List[Dict] = []
+        for e in entries:
+            e2 = dict(e)
+            if not is_in_kb(e2):
+                e2['status'] = 'deleted'
+            normalized.append(e2)
+
+        try:
+            normalized.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        except Exception:
+            pass
+        return normalized[:limit]
 
     def get_recent_processing_history(self, limit: int = 10) -> List[Dict]:
         """Get recent processing history for admin interface with document metadata."""
@@ -721,3 +824,4 @@ class LiteratureEngine:
                 logger.info(f"Temporary file cleaned up: {file_path}")
         except Exception as e:
             logger.warning(f"Could not clean up temporary file {file_path}: {str(e)}")
+

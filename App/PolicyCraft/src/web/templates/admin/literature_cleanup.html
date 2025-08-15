@@ -120,7 +120,7 @@
                             data-date="{{ update.timestamp[:10] if update.timestamp }}" 
                             data-quality="{{ update.quality_score or 0 }}">
                             <td class="table-cell">
-                                <input type="checkbox" name="selected_documents" value="{{ update.document_id|clean_literature_name }}" 
+                                <input type="checkbox" name="selected_documents" value="{{ update.document_id }}" 
                                        onchange="updateSelectedCount()" class="doc-checkbox">
                             </td>
                             <td class="table-cell">{{ update.timestamp[:10] if update.timestamp }}</td>
@@ -229,63 +229,77 @@ function clearSelection() {
   updateSelectedCount();
 }
 
-function filterByDate(value) {
+// Apply both filters together (date AND quality)
+function applyFilters() {
   const rows = document.querySelectorAll('.document-row');
   const today = new Date();
-  
+  const dateValue = document.getElementById('date-filter')?.value || 'all';
+  const qualityValue = document.getElementById('quality-filter')?.value || 'all';
+
   rows.forEach(row => {
+    // Date filter
     const dateStr = row.dataset.date;
-    const docDate = new Date(dateStr);
-    let show = true;
-    
-    switch(value) {
+    const hasDate = !!dateStr;
+    const docDate = hasDate ? new Date(dateStr) : null;
+    let showDate = true;
+
+    switch (dateValue) {
       case 'older_than_1_year':
-        show = (today - docDate) > (365 * 24 * 60 * 60 * 1000);
+        showDate = hasDate && (today - docDate) > (365 * 24 * 60 * 60 * 1000);
         break;
       case 'older_than_2_years':
-        show = (today - docDate) > (730 * 24 * 60 * 60 * 1000);
+        showDate = hasDate && (today - docDate) > (730 * 24 * 60 * 60 * 1000);
         break;
-      case 'last_30_days':
-        show = (today - docDate) <= (30 * 24 * 60 * 60 * 1000);
+      case 'older_than_6_months':
+        showDate = hasDate && (today - docDate) > (182 * 24 * 60 * 60 * 1000);
         break;
+      case 'all':
       default:
-        show = true;
+        showDate = true;
+        break;
     }
-    
+
+    // Quality filter (0–100 scale)
+    const q = parseFloat(row.dataset.quality);
+    const quality = isNaN(q) ? 0 : q;
+    let showQuality = true;
+    switch (qualityValue) {
+      case 'low':
+        showQuality = quality < 40;
+        break;
+      case 'medium':
+        showQuality = quality >= 40 && quality <= 70;
+        break;
+      case 'high':
+        showQuality = quality > 70;
+        break;
+      case 'all':
+      default:
+        showQuality = true;
+        break;
+    }
+
+    const show = showDate && showQuality;
     row.style.display = show ? '' : 'none';
-    if (!show) row.querySelector('.doc-checkbox').checked = false;
+    if (!show) {
+      const cb = row.querySelector('.doc-checkbox');
+      if (cb) cb.checked = false;
+    }
   });
-  
+
+  // Reset Select All checkbox if any row hidden
+  const visibleRows = Array.from(document.querySelectorAll('.document-row')).filter(r => r.style.display !== 'none');
+  if (visibleRows.length === 0) {
+    const selectAll = document.getElementById('selectAllCheckbox');
+    if (selectAll) selectAll.checked = false;
+  }
+
   updateSelectedCount();
 }
 
-function filterByQuality(value) {
-  const rows = document.querySelectorAll('.document-row');
-  
-  rows.forEach(row => {
-    const quality = parseFloat(row.dataset.quality) || 0;
-    let show = true;
-    
-    switch(value) {
-      case 'below_40':
-        show = quality < 0.4;
-        break;
-      case 'below_60':
-        show = quality < 0.6;
-        break;
-      case 'above_80':
-        show = quality > 0.8;
-        break;
-      default:
-        show = true;
-    }
-    
-    row.style.display = show ? '' : 'none';
-    if (!show) row.querySelector('.doc-checkbox').checked = false;
-  });
-  
-  updateSelectedCount();
-}
+function filterByDate() { applyFilters(); }
+
+function filterByQuality() { applyFilters(); }
 
 function confirmAction() {
   if (selectedCount === 0) {
@@ -306,6 +320,7 @@ function confirmAction() {
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
   updateSelectedCount();
+  applyFilters();
   document.querySelectorAll('.quality-fill[data-width]')
     .forEach(el => {
       const w = parseInt(el.getAttribute('data-width'), 10);

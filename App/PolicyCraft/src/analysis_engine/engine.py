@@ -1,0 +1,50 @@
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional
+
+try:
+    from src.analysis_engine.literature.repository import LiteratureRepository
+except Exception:
+    LiteratureRepository = None  # type: ignore
+
+from src.analysis_engine.confidence import AdvancedConfidenceCalculator
+from src.analysis_engine.stakeholder import StakeholderImpactAnalyzer
+from src.analysis_engine.risk_benefit import RiskBenefitAnalyzer
+from src.analysis_engine.readiness import ImplementationReadinessAnalyzer
+from src.analysis_engine.context import ContextSensitivityEngine, AlternativeAnalysisModes
+
+
+class PolicyAnalysisEngine:
+    def __init__(self) -> None:
+        self.analysis_dimensions = {
+            "stakeholder_impact": StakeholderImpactAnalyzer(),
+            "risk_benefit": RiskBenefitAnalyzer(),
+        }
+        self.confidence_calc = AdvancedConfidenceCalculator()
+        self.readiness = ImplementationReadinessAnalyzer()
+        self.context_engine = ContextSensitivityEngine()
+
+    def analyze_policy(self, policy_text: str, context_params: Dict[str, Any]) -> Dict[str, Any]:
+        themes: List[Dict[str, Any]] = context_params.get("themes") or []
+        classification = context_params.get("classification")
+        repo = LiteratureRepository.instance() if LiteratureRepository else None
+
+        confidence = self.confidence_calc.calculate_confidence(
+            themes=themes,
+            classification=classification,
+            text_length=len(policy_text or ""),
+            repo=repo,
+        )
+        analyses: Dict[str, Any] = {}
+        for dim, analyzer in self.analysis_dimensions.items():
+            analyses[dim] = analyzer.analyze(themes=themes)
+
+        result = {
+            "confidence": confidence,
+            "dimensions": analyses,
+            "context": {
+                "profile": context_params.get("organization_profile", {}),
+                "mode": context_params.get("analysis_mode", "default"),
+            },
+        }
+        return result

@@ -58,6 +58,114 @@ class KnowledgeBaseManager:
         
         logger.info("Knowledge Base Manager initialised successfully")
 
+    def remove_document_from_history(self, document_id: str) -> int:
+        """Remove all version history entries related to a given document.
+
+        Args:
+            document_id: Stem of the markdown filename (without extension)
+
+        Returns:
+            int: Number of removed history entries
+        """
+        try:
+            if not self.version_history:
+                return 0
+
+            def _matches(entry: dict) -> bool:
+                try:
+                    details = entry.get('details', {})
+                    filename = details.get('filename') or entry.get('filename') or ''
+                    stem = os.path.splitext(filename)[0] if filename else ''
+                    # Also check for explicit document_id field if present
+                    entry_doc_id = details.get('document_id') or entry.get('document_id') or ''
+                    if not document_id:
+                        return False
+                    # Match exact or substring occurrences (covers timestamped IDs)
+                    return (
+                        stem == document_id
+                        or entry_doc_id == document_id
+                        or document_id in stem
+                        or document_id in entry_doc_id
+                    )
+                except Exception:
+                    return False
+
+            before = len(self.version_history)
+            self.version_history = [e for e in self.version_history if not _matches(e)]
+
+            # Persist
+            try:
+                with open(self.version_file, 'w', encoding='utf-8') as f:
+                    json.dump(self.version_history, f, indent=2)
+            except Exception as e:
+                logger.error("Error saving version history after removal: %s", str(e))
+
+            removed = before - len(self.version_history)
+            if removed:
+                logger.info("Removed %d version history entrie(s) for %s", removed, document_id)
+            return removed
+        except Exception as e:
+            logger.error("Error removing document from history (%s): %s", document_id, str(e))
+            return 0
+
+    def purge_activity_log(self, document_id: str) -> int:
+        """Remove activity log entries related to a given document_id.
+
+        Returns number of removed entries.
+        """
+        try:
+            activity_file = os.path.join(self.knowledge_base_path, 'activity_log.json')
+            if not os.path.exists(activity_file):
+                return 0
+            with open(activity_file, 'r', encoding='utf-8') as f:
+                try:
+                    data = json.load(f)
+                except Exception:
+                    return 0
+            if not isinstance(data, list):
+                return 0
+            before = len(data)
+            def _match(entry: dict) -> bool:
+                doc_id = str(entry.get('document_id', ''))
+                filename = str(entry.get('filename', ''))
+                stem = os.path.splitext(filename)[0] if filename else ''
+                return document_id and (doc_id == document_id or document_id in doc_id or document_id in stem)
+            data = [e for e in data if not _match(e)]
+            with open(activity_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2)
+            removed = before - len(data)
+            if removed:
+                logger.info("Removed %d activity log entrie(s) for %s", removed, document_id)
+            return removed
+        except Exception as e:
+            logger.error("Error purging activity log for %s: %s", document_id, str(e))
+            return 0
+
+    def remove_backups(self, document_id: str) -> int:
+        """Remove backup files related to given document_id from backups/ directory."""
+        backups_dir = os.path.join(self.knowledge_base_path, 'backups')
+        removed = 0
+        try:
+            if not os.path.isdir(backups_dir):
+                return 0
+            for root, _, files in os.walk(backups_dir):
+                for fn in files:
+                    if not fn.endswith('.md'):
+                        continue
+                    stem = os.path.splitext(fn)[0]
+                    if document_id and (stem == document_id or document_id in stem):
+                        try:
+                            os.remove(os.path.join(root, fn))
+                            removed += 1
+                        except Exception as e:
+                            logger.error("Error removing backup %s: %s", fn, str(e))
+            if removed:
+                logger.info("Removed %d backup file(s) for %s", removed, document_id)
+            return removed
+        except Exception as e:
+            logger.error("Error cleaning backups for %s: %s", document_id, str(e))
+            return removed
+
     def integrate_new_document(self, processing_results: Dict) -> Dict:
         """
         Integrate new document into knowledge base based on processing results.

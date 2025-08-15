@@ -24,6 +24,9 @@ from pathlib import Path
 # Configuration constants
 PYTEST_SHORT_TRACEBACK = "--tb=short"
 
+# Reduce noise and prevent external package DeprecationWarnings from breaking test runs
+os.environ.setdefault("PYTHONWARNINGS", "ignore::DeprecationWarning")
+
 def run_command(cmd, description):
     """Run a shell command with error handling."""
     print(f"\n🚀 {description}")
@@ -83,12 +86,12 @@ def run_critical_tests():
         "tests/test_integration/test_analysis_pipeline.py::TestAnalysisPipeline::test_full_analysis_workflow"
     ]
     
-    cmd = ["python", "-m", "pytest"] + critical_test_files + ["-v", PYTEST_SHORT_TRACEBACK]
+    cmd = [sys.executable, "-m", "pytest"] + critical_test_files + ["-v", PYTEST_SHORT_TRACEBACK]
     return run_command(cmd, "Critical Tests")
 
 def run_all_tests(verbose=False, coverage=False):
     """Run complete test suite."""
-    cmd = ["python", "-m", "pytest", "tests/"]
+    cmd = [sys.executable, "-m", "pytest", "tests/"]
     
     if verbose:
         cmd.append("-v")
@@ -112,7 +115,7 @@ def run_specific_module(module_name):
         print(f"❌ Test path not found: {test_path}")
         return False
     
-    cmd = ["python", "-m", "pytest", test_path, "-v", PYTEST_SHORT_TRACEBACK]
+    cmd = [sys.executable, "-m", "pytest", test_path, "-v", PYTEST_SHORT_TRACEBACK]
     return run_command(cmd, f"Module Tests: {module_name}")
 
 def generate_test_report():
@@ -121,7 +124,7 @@ def generate_test_report():
     
     # Run tests with coverage and JUnit XML output
     cmd = [
-        "python", "-m", "pytest", "tests/",
+        sys.executable, "-m", "pytest", "tests/",
         "--cov=src",
         "--cov-report=html:test_reports/coverage",
         "--cov-report=xml:test_reports/coverage.xml",

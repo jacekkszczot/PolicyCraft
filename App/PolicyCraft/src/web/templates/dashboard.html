@@ -162,17 +162,23 @@
                                 <span class="classification-badge classification-{{ analysis.classification.lower() }}">
                                     {{ analysis.classification }}
                                 </span>
+                                {% set _raws = analysis.score if analysis.score is not none else 0 %}
+                                {% set _vals = (_raws * 100) if _raws <= 1 else _raws %}
+                                {% set conf_pcts = 100 if _vals > 100 else (0 if _vals < 0 else _vals) %}
                                 <div class="confidence-bar">
-                                    <div class="confidence-fill" style="--w: {{ analysis.score if analysis.score else 0 }}%;"></div>
-                                    <span class="confidence-text">{{ analysis.score if analysis.score else 0 }}%</span>
+                                    <div class="confidence-fill" style="--w: {{ conf_pcts }}%;"></div>
+                                    <span class="confidence-text">{{ conf_pcts|round(0) }}%</span>
                                 </div>
                                 {% else %}
                                 <span class="classification-badge classification-{{ analysis.classification.classification.lower() if analysis.classification else 'unknown' }}">
                                     {{ analysis.classification.classification if analysis.classification else 'Unknown' }}
                                 </span>
+                                {% set _rawo = analysis.classification.confidence if analysis.classification and analysis.classification.confidence is not none else 0 %}
+                                {% set _valo = (_rawo * 100) if _rawo <= 1 else _rawo %}
+                                {% set conf_pcto = 100 if _valo > 100 else (0 if _valo < 0 else _valo) %}
                                 <div class="confidence-bar">
-                                    <div class="confidence-fill" style="--w: {{ analysis.classification.confidence if analysis.classification else 0 }}%;"></div>
-                                    <span class="confidence-text">{{ analysis.classification.confidence if analysis.classification else 0 }}%</span>
+                                    <div class="confidence-fill" style="--w: {{ conf_pcto }}%;"></div>
+                                    <span class="confidence-text">{{ conf_pcto|round(0) }}%</span>
                                 </div>
                                 {% endif %}
                             </div>

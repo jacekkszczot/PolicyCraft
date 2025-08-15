@@ -504,9 +504,12 @@ class PolicyClassifier:
         ml_class = ml_result['classification']
 
         if rule_class == ml_class == final_classification:
-            final_confidence = min(95, int((rule_result['confidence'] + ml_result['confidence']) / 2 * 1.2))
+            raw_conf = int((rule_result['confidence'] + ml_result['confidence']) / 2 * 1.2)
         else:
-            final_confidence = min(85, int((rule_result['confidence'] + ml_result['confidence']) / 2 * 0.8))
+            raw_conf = int((rule_result['confidence'] + ml_result['confidence']) / 2 * 0.8)
+
+        # Clamp only to [0, 100] to avoid unrealistic values, no artificial 85/95 caps
+        final_confidence = max(0, min(100, raw_conf))
 
         return final_classification, final_confidence
 

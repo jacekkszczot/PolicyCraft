@@ -28,29 +28,106 @@ def _extract_cleaned_text_with_logging(analysis):
     logger.info(f"Text data length: {len(cleaned_text) if cleaned_text else 0} chars")
     return cleaned_text
 
-def _load_or_generate_recommendations(analysis_id, cleaned_text):
-    """Load stored recommendations or generate new ones with debug prints; return package or None on error."""
-    stored_recs = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
-    if stored_recs:
-        return {
-            'recommendations': stored_recs,
-            'analysis_metadata': {
-                'generated_date': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                'methodology': 'Previously generated'
-            }
-        }
-    # No stored recommendations – generate new ones
+def _load_or_generate_recommendations(analysis_id, cleaned_text, themes=None, classification=None):
+    """Load stored recommendations; always (re)build narrative and metadata.
+
+    Zwraca pełny pakiet zgodny z RecommendationEngine, tak aby szablon miał
+    dostęp do 'narrative', 'analysis_metadata', itp. Gdy istnieją zapisane recs,
+    podmieniamy je w wygenerowanym pakiecie, by zachować treść rekomendacji.
+    """
     try:
-        logger.info("Generating new recommendations with knowledge base")
-        recommendations = recommendation_engine.generate_recommendations(
-            policy_text=cleaned_text,
-            institution_type="university",
-            analysis_id=analysis_id
+        stored_recs = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
+
+        # Uruchom silnik, by zbudować coverage, sources i narrację
+        engine_package = recommendation_engine.generate_recommendations(
+            themes=themes or [],
+            classification=classification or {},
+            text=cleaned_text,
+            analysis_id=analysis_id,
         )
-        # Optional debug print kept as in original implementation
-        for i, rec in enumerate(recommendations.get("recommendations", [])):
+
+        if stored_recs:
+            # Scal rekomendacje: zachowaj bogate pola z silnika (np. sources, implementation_steps),
+            # ale uwzględnij treść/edycje użytkownika ze storage. Łączymy po tytule; brak tytułu → po indeksie.
+            engine_recs = engine_package.get('recommendations', []) or []
+
+            def norm_title(rec):
+                t = (rec or {}).get('title')
+                return (t or '').strip().lower()
+
+            engine_by_title = {norm_title(r): r for r in engine_recs if norm_title(r)}
+            used_engine_titles = set()
+            merged = []
+
+            for idx, s in enumerate(stored_recs):
+                base = None
+                key = norm_title(s)
+                if key and key in engine_by_title:
+                    base = engine_by_title[key]
+                    used_engine_titles.add(key)
+                elif idx < len(engine_recs):
+                    base = engine_recs[idx]
+                else:
+                    base = {}
+
+                # Merge fields: prefer stored when present, otherwise engine
+                m = {}
+                m['title'] = s.get('title') or base.get('title')
+                m['description'] = s.get('description') or base.get('description')
+                m['priority'] = (s.get('priority') or base.get('priority'))
+                m['timeframe'] = (s.get('timeframe') or base.get('timeframe'))
+
+                # Implementation steps: prefer stored, else engine
+                steps = s.get('implementation_steps') or base.get('implementation_steps') or []
+                m['implementation_steps'] = steps
+
+                # Sources: normalise to list and preserve richest available
+                def to_list(srcs, single):
+                    if srcs:
+                        return list(srcs)
+                    if single:
+                        return [single]
+                    return []
+
+                s_sources = to_list(s.get('sources'), s.get('source'))
+                e_sources = to_list(base.get('sources'), base.get('source'))
+                m['sources'] = s_sources or e_sources
+                # Keep backward compatibility: also set single 'source' if only one
+                m['source'] = m['sources'][0] if isinstance(m.get('sources'), list) and len(m['sources']) == 1 else s.get('source') or base.get('source')
+
+                # Include any additional engine fields not explicitly handled
+                for k, v in (base or {}).items():
+                    if k not in m and v is not None:
+                        m[k] = v
+                # Overlay any additional stored fields
+                for k, v in (s or {}).items():
+                    if v is not None:
+                        m[k] = v
+
+                merged.append(m)
+
+            # Append engine-only recommendations not matched by title
+            for e in engine_recs:
+                key = norm_title(e)
+                if key and key in used_engine_titles:
+                    continue
+                # avoid duplicates by simple title check against merged
+                if any(norm_title(x) and norm_title(x) == key for x in merged):
+                    continue
+                merged.append(e)
+
+            engine_package['recommendations'] = merged
+            # Oznacz metadane, że rekomendacje pochodzą z bazy i silnika
+            meta = engine_package.get('analysis_metadata', {})
+            meta['methodology'] = (meta.get('methodology') or 'Engine') + ' + Stored Recommendations (merged)'
+            engine_package['analysis_metadata'] = meta
+            return engine_package
+
+        # Brak zapisanych – używamy pełnego pakietu z silnika
+        for i, rec in enumerate(engine_package.get("recommendations", [])):
             logger.debug(f"Recommendation {i+1}: {rec.get('title', 'Unknown')}")
-        return recommendations
+        return engine_package
+
     except Exception as e:
         logger.error(f"Error generating recommendations: {str(e)}")
         return None
@@ -65,9 +142,32 @@ def _get_or_create_analysis_record(filename: str, is_baseline: bool, file_path: 
         themes, classification, cleaned_text, extracted_text, analysis_id = _unpack_existing_analysis(existing)
         return extracted_text, cleaned_text, themes, classification, analysis_id
 
-    extracted_text, cleaned_text, themes, classification = _extract_and_analyse_text(file_path)
-    if not extracted_text:
-        raise ValueError('no_text')
+    # Robust path: always attempt fallback extraction and safe downstream steps.
+    # Derive a human-friendly university/institution name for placeholder messaging.
+    uni_guess = filename.split('-')[0].replace('university', '').strip().title() or 'User Institution'
+    try:
+        extracted_text = _extract_text_with_fallback(file_path, uni_guess)
+        cleaned_text = _clean_text_safe(extracted_text, filename)
+        themes = _extract_themes_safe(cleaned_text, filename)
+        classification = _classify_policy_safe(cleaned_text, filename)
+    except Exception as e:
+        logger.error(f"Dashboard: Robust analysis pipeline failed for {filename}: {e}")
+        # Absolute fallback to minimal safe values (should rarely happen)
+        extracted_text = (
+            f"AI Policy document from {uni_guess}. This is a placeholder text as the original document "
+            f"could not be processed due to: {e}"
+        )
+        cleaned_text = extracted_text
+        themes = [
+            {"name": "Policy", "score": 0.8, "confidence": 75},
+            {"name": THEME_AI_ETHICS, "score": 0.7, "confidence": 70},
+        ]
+        classification = {
+            "classification": "Moderate",
+            "confidence": 75,
+            "source": SOURCE_BASELINE_DEFAULT,
+        }
+
     analysis_id = _store_analysis_results(filename, extracted_text, cleaned_text, themes, classification)
     return extracted_text, cleaned_text, themes, classification, analysis_id
 
@@ -109,10 +209,33 @@ def _prepare_basic_export_data_or_error(analysis_id):
     analysis = _get_export_analysis(analysis_id)
     if not analysis:
         return None, (jsonify({'error': ANALYSIS_NOT_FOUND}), 404)
-    recommendations = _get_export_recommendations(analysis_id)
-    if not recommendations:
-        return None, (jsonify({'error': NO_RECOMMENDATIONS_FOUND}), 404)
-    return _build_basic_export_data(analysis_id, analysis, recommendations), None
+
+    # Ensure we get full package including narrative for binary exports
+    try:
+        prep, err = _prepare_recommendation_inputs(analysis_id)
+        if err:
+            return None, err
+        _, themes, classification, cleaned_text = prep
+        package = _load_or_generate_recommendations(
+            analysis_id,
+            cleaned_text,
+            themes=themes,
+            classification=classification,
+        )
+        if not package:
+            return None, (jsonify({'error': NO_RECOMMENDATIONS_FOUND}), 404)
+        recommendations = package.get('recommendations', [])
+        narrative = package.get('narrative', {})
+    except Exception:
+        # Fallback to existing recommendations only
+        recommendations = _get_export_recommendations(analysis_id) or []
+        narrative = {}
+        if not recommendations:
+            return None, (jsonify({'error': NO_RECOMMENDATIONS_FOUND}), 404)
+
+    base = _build_basic_export_data(analysis_id, analysis, recommendations)
+    base['narrative'] = narrative
+    return base, None
 
 def _make_binary_response(binary_data: bytes, content_type: str, filename: str):
     """Utwórz binarną odpowiedź HTTP z odpowiednimi nagłówkami."""
@@ -143,11 +266,30 @@ def _export_binary_via_engine(export_data: dict, analysis_id: str, fmt: str):
 
 def _build_recommendation_data(analysis_id, analysis, themes, classification, recommendation_package):
     """Build the data dict for recommendations template, matching original keys."""
+    # Normalise confidence to 0-100%
+    raw_conf = (classification or {}).get('confidence', 0)
+    try:
+        conf_val = float(raw_conf if raw_conf is not None else 0)
+    except Exception:
+        conf_val = 0.0
+    if conf_val <= 1.0:
+        conf_pct = round(conf_val * 100.0, 1)
+    else:
+        conf_pct = round(conf_val, 1)
+    # Clamp to [0, 100]
+    conf_pct = max(0.0, min(100.0, conf_pct))
+
+    extended = recommendation_package.get('analysis', {}) if isinstance(recommendation_package, dict) else {}
+
     return {
         'analysis': {
             'filename': analysis.get('filename', 'Unknown'),
             'classification': classification.get('classification', 'Unknown'),
             'confidence': classification.get('confidence', 0),
+            'confidence_pct': conf_pct,
+            'confidence_factors': extended.get('confidence_factors'),
+            'stakeholders': extended.get('stakeholders'),
+            'risk_benefit': extended.get('risk_benefit'),
             'analysis_id': analysis_id,
             'themes_count': len(themes)
         },
@@ -158,7 +300,8 @@ def _build_recommendation_data(analysis_id, analysis, themes, classification, re
         'methodology': recommendation_package.get('analysis_metadata', {}).get('methodology', 'Ethical Framework Analysis'),
         'academic_sources': recommendation_package.get('analysis_metadata', {}).get('academic_sources', []),
         'summary': recommendation_package.get('summary', {}),
-        'total_recommendations': len(recommendation_package.get('recommendations', []))
+        'total_recommendations': len(recommendation_package.get('recommendations', [])),
+        'narrative': recommendation_package.get('narrative', {})
     }
 
 def _store_recommendations_safe(analysis_id, recommendation_package):
@@ -176,11 +319,29 @@ def _store_recommendations_safe(analysis_id, recommendation_package):
 def _fallback_recommendations_response(analysis_id, analysis):
     """Construct fallback response identical to original error path."""
     try:
+        # Compute normalised confidence percentage (0–100) for template safety
+        raw_conf = 0
+        try:
+            if analysis and isinstance(analysis.get('classification'), dict):
+                raw_conf = analysis.get('classification', {}).get('confidence', 0) or 0
+        except Exception:
+            raw_conf = 0
+        try:
+            conf_val = float(raw_conf)
+        except Exception:
+            conf_val = 0.0
+        if conf_val <= 1.0:
+            conf_pct = round(conf_val * 100.0, 1)
+        else:
+            conf_pct = round(conf_val, 1)
+        conf_pct = max(0.0, min(100.0, conf_pct))
+
         basic_data = {
             'analysis': {
                 'filename': (analysis or {}).get('filename', 'Unknown') if analysis else 'Unknown',
                 'classification': (analysis or {}).get('classification', {}).get('classification', 'Unknown') if analysis else 'Unknown',
-                'analysis_id': analysis_id
+                'analysis_id': analysis_id,
+                'confidence_pct': conf_pct,
             },
             'recommendations': [
                 {
@@ -251,7 +412,7 @@ from src.nlp.text_processor import TextProcessor
 from src.nlp.theme_extractor import ThemeExtractor
 from src.nlp.policy_classifier import PolicyClassifier
 from src.database.mongo_operations import MongoOperations as DatabaseOperations
-from src.recommendation.engine import RecommendationGenerator as RecommendationEngine
+from src.recommendation.engine import RecommendationEngine
 from src.export.export_engine import ExportEngine
 from src.literature.literature_engine import LiteratureEngine
 from src.literature.knowledge_manager import KnowledgeBaseManager as KnowledgeManager
@@ -461,15 +622,33 @@ def create_app():
 app = create_app()
 
  
+# Lazy initialisation wrappers to avoid heavy startup costs
+class _LazyObject:
+    """Defers creation of the underlying object until first attribute access."""
+    def __init__(self, factory, name: str):
+        self._factory = factory
+        self._obj = None
+        self._name = name
 
-text_processor = TextProcessor()
-theme_extractor = ThemeExtractor()
-policy_classifier = PolicyClassifier()
-db_operations = DatabaseOperations(uri="mongodb://localhost:27017", db_name="policycraft")
-chart_generator = ChartGenerator()
-# Initialise recommendation engine with knowledge base path (unified with admin panel)
+    def _get(self):
+        if self._obj is None:
+            import time as _time
+            start = _time.time()
+            self._obj = self._factory()
+            logger.info(f"Initialised {self._name} in {_time.time()-start:.3f}s")
+        return self._obj
+
+    def __getattr__(self, item):
+        return getattr(self._get(), item)
+
+# Lazy instances replacing eager globals
 knowledge_base_path = "docs/knowledge_base"  # Use same path as LiteratureEngine
-recommendation_engine = RecommendationEngine(knowledge_base_path=knowledge_base_path)
+text_processor = _LazyObject(lambda: TextProcessor(), "TextProcessor")
+theme_extractor = _LazyObject(lambda: ThemeExtractor(), "ThemeExtractor")
+policy_classifier = _LazyObject(lambda: PolicyClassifier(), "PolicyClassifier")
+db_operations = _LazyObject(lambda: DatabaseOperations(uri="mongodb://localhost:27017", db_name="policycraft"), "DatabaseOperations")
+chart_generator = _LazyObject(lambda: ChartGenerator(), "ChartGenerator")
+recommendation_engine = _LazyObject(lambda: RecommendationEngine(knowledge_base_path=knowledge_base_path), "RecommendationEngine")
 
 
 def allowed_file(filename):
@@ -568,9 +747,29 @@ def _process_single_batch_file(filename: str):
             logger.error(f"Batch: file not found: {file_path}")
             return {'filename': filename, 'error': 'File not found'}, False
 
-        extracted_text, cleaned_text, themes, classification = _extract_and_analyse_text(file_path)
-        if not extracted_text:
-            return {'filename': filename, 'error': 'Text extraction failed'}, False
+        # Robust extraction path (mirrors single-analysis behaviour)
+        uni_guess = filename.split('-')[0].replace('university', '').strip().title() or 'User Institution'
+        try:
+            extracted_text = _extract_text_with_fallback(file_path, uni_guess)
+            cleaned_text = _clean_text_safe(extracted_text, filename)
+            themes = _extract_themes_safe(cleaned_text, filename)
+            classification = _classify_policy_safe(cleaned_text, filename)
+        except Exception as e:
+            logger.error(f"Batch: robust extraction failed for {filename}: {e}")
+            extracted_text = (
+                f"AI Policy document from {uni_guess}. This is a placeholder text as the original document "
+                f"could not be processed due to: {e}"
+            )
+            cleaned_text = extracted_text
+            themes = [
+                {"name": "Policy", "score": 0.8, "confidence": 75},
+                {"name": THEME_AI_ETHICS, "score": 0.7, "confidence": 70},
+            ]
+            classification = {
+                "classification": "Moderate",
+                "confidence": 75,
+                "source": SOURCE_BASELINE_DEFAULT,
+            }
 
         analysis_id = _store_analysis_results(filename, extracted_text, cleaned_text, themes, classification)
         charts, text_stats, theme_summary, classification_details = _generate_analysis_derivatives(cleaned_text, themes, classification)
@@ -1502,12 +1701,9 @@ def analyse_document(filename):
 
         logger.info(f"Starting analysis of file: {filename}")
 
-        try:
-            extracted_text, cleaned_text, themes, classification, analysis_id = _get_or_create_analysis_record(
-                filename, is_baseline, file_path
-            )
-        except ValueError:
-            return _flash_and_redirect('upload_file', 'Could not extract text from file', 'error')
+        extracted_text, cleaned_text, themes, classification, analysis_id = _get_or_create_analysis_record(
+            filename, is_baseline, file_path
+        )
 
         charts, text_stats, theme_summary, classification_details = _generate_analysis_derivatives(cleaned_text, themes, classification)
 
@@ -1561,8 +1757,10 @@ def validate_analysis(analysis_id):
             text_data = analysis.get('text_data', {})
             cleaned_text = text_data.get('cleaned_text', text_data.get('original_text', ''))
             rec_package = recommendation_engine.generate_recommendations(
-                policy_text=cleaned_text,
-                analysis_id=analysis_id
+                themes=analysis.get('themes', []),
+                classification=analysis.get('classification', {}),
+                text=cleaned_text,
+                analysis_id=analysis_id,
             )
             recs = rec_package.get('recommendations', [])
     from src.utils.validation import validate_recommendation_sources
@@ -1611,13 +1809,23 @@ def get_recommendations(analysis_id):
             return error
         analysis, themes, classification, cleaned_text = prep
 
-        recommendation_package = _load_or_generate_recommendations(analysis_id, cleaned_text)
+        recommendation_package = _load_or_generate_recommendations(
+            analysis_id,
+            cleaned_text,
+            themes=themes,
+            classification=classification,
+        )
         if recommendation_package is None:
             flash('Error generating recommendations. Please try again.', 'error')
             return redirect(url_for('dashboard'))
 
         recommendation_data = _build_recommendation_data(analysis_id, analysis, themes, classification, recommendation_package)
         logger.info(f"Generated {recommendation_data['total_recommendations']} recommendations")
+        try:
+            has_narr = bool(recommendation_data.get('narrative', {}).get('html'))
+            logger.info(f"Narrative present: {has_narr}")
+        except Exception as _e:
+            logger.warning(f"Could not determine narrative presence: {_e}")
 
         _store_recommendations_safe(analysis_id, recommendation_package)
 
@@ -1802,19 +2010,59 @@ def export_view(analysis_id):
         if redirect_resp:
             return redirect_resp
 
-        recommendations, redirect_resp = _require_recommendations_or_redirect(analysis_id)
-        if redirect_resp:
-            return redirect_resp
+        # Ensure we have a full recommendation package including narrative
+        try:
+            prep, err = _prepare_recommendation_inputs(analysis_id)
+            if err:
+                logger.warning(f"Prep inputs returned error for export view: {err}")
+                raise RuntimeError("prepare_recommendation_inputs failed")
+            _, themes, classification, cleaned_text = prep
+
+            recommendation_package = _load_or_generate_recommendations(
+                analysis_id,
+                cleaned_text,
+                themes=themes,
+                classification=classification,
+            )
+            if not recommendation_package:
+                raise RuntimeError("Empty recommendation package")
+
+            recommendations = recommendation_package.get('recommendations', [])
+            narrative = recommendation_package.get('narrative', {})
+            logger.info(f"Export view: got {len(recommendations)} recommendations; narrative present: {bool(narrative)}")
+        except Exception as pkg_err:
+            logger.error(f"Falling back in export_view due to package error: {pkg_err}")
+            # Fallback to existing recommendations to keep export view working
+            recommendations = _get_export_recommendations(analysis_id) or []
+            narrative = {}
 
         charts = _generate_export_charts(analysis)
         export_data = _build_export_view_data(analysis_id, analysis, recommendations, charts)
+        # Attach narrative for template consumption
+        export_data['narrative'] = narrative
 
         return render_template('export_recommendations.html', data=export_data)
 
     except Exception as e:
-        logger.error(f"Error preparing export view: {str(e)}")
-        flash('Error preparing export view. Please try again.', 'error')
-        return redirect(url_for('dashboard'))
+        logger.error(f"Error preparing export view: {str(e)}", exc_info=True)
+        # Render a minimal export view instead of redirect to aid debugging in UI
+        safe_data = {
+            'analysis': {
+                'filename': 'Unknown',
+                'classification': 'Unknown',
+                'confidence': 0,
+                'analysis_id': analysis_id,
+                'themes': [],
+                'text_data': {}
+            },
+            'recommendations': [],
+            'generated_date': datetime.now().isoformat(),
+            'total_recommendations': 0,
+            'charts': {},
+            'narrative': {}
+        }
+        flash('Error preparing export view. Showing minimal view.', 'warning')
+        return render_template('export_recommendations.html', data=safe_data)
 
 def _get_export_analysis(analysis_id):
     """Fetch analysis first from user's scope, then globally; return dict or None. Includes logging identical to original flow."""
@@ -2004,4 +2252,6 @@ if __name__ == '__main__':
     
     print("PolicyCraft starting at: http://localhost:5001")
     
-    app.run(debug=True, host='localhost', port=5001)
+    # Disable the auto-reloader to avoid infinite restart loops caused by
+    # file change notifications in venv/site-packages (macOS fsevents).
+    app.run(debug=True, host='localhost', port=5001, use_reloader=False)

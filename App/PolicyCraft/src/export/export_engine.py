@@ -12,6 +12,8 @@ import io
 import json
 import base64
 import logging
+import re
+import unicodedata
 from datetime import datetime
 from typing import Dict, Any, List, Optional, Union, Tuple
 
@@ -20,6 +22,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, ListFlowable, ListItem
+from reportlab.lib.units import inch
 
 # Word document generation
 from docx import Document
@@ -72,6 +75,24 @@ class ExportEngine:
             return date_str
         except Exception:
             return date_str
+
+    def _clean_text(self, txt: str) -> str:
+        """Normalise and replace problematic unicode characters across exports."""
+        if not isinstance(txt, str):
+            return txt
+        t = unicodedata.normalize('NFKC', txt)
+        # Non-breaking spaces and variations -> regular space
+        t = t.replace('\u00A0', ' ').replace('\u202F', ' ').replace('\u2007', ' ').replace('\u2009', ' ')
+        # Soft hyphen & non-breaking hyphen -> '-'
+        t = t.replace('\u00AD', '').replace('\u2011', '-').replace('\u2010', '-')
+        # En/em dashes -> '-'
+        t = t.replace('\u2013', '-').replace('\u2014', '-')
+        # Bullet/black square -> '- '
+        t = t.replace('•', '- ').replace('■', '')
+        # Collapse whitespace
+        t = re.sub(r"[\t\x0b\x0c\r]+", " ", t)
+        t = re.sub(r"\s{2,}", " ", t)
+        return t.strip()
             
     def _convert_chart_to_image(self, chart_data: Dict) -> Optional[bytes]:
         """
@@ -84,6 +105,15 @@ class ExportEngine:
             Image as bytes or None if conversion fails
         """
         try:
+            # Ensure static image engine is available
+            try:
+                import kaleido  # noqa: F401  # required for plotly static image export
+            except Exception:
+                logger.warning(
+                    "Plotly static image export requires 'kaleido'. "
+                    "Charts will be skipped. Install with: pip install -U kaleido"
+                )
+                return None
             # Import plotly here to avoid circular imports
             import plotly.graph_objects as go
             import plotly.io as pio
@@ -201,6 +231,32 @@ class ExportEngine:
         content.append(Paragraph("PolicyCraft Analysis Report", title_style))
         content.append(Spacer(1, 12))
         
+        # Narrative (if available)
+        if data.get('narrative') and data['narrative'].get('html'):
+            narr_html = data['narrative']['html']
+            content.append(Paragraph("Recommendation", heading1_style))
+            # Very light HTML to paragraphs conversion
+            try:
+                # Split by block tags to keep some structure
+                blocks = re.split(r"</?(h[1-4]|p|ul|ol|li|hr)[^>]*>", narr_html, flags=re.IGNORECASE)
+                # Fallback: if split failed, just strip tags
+                if len(blocks) <= 1:
+                    text = re.sub(r"<[^>]+>", "", narr_html)
+                    content.append(Paragraph(self._clean_text(text), normal_style))
+                else:
+                    # Remove tags and add as paragraphs; simple handling for list items
+                    # Replace <li> with bullets by prefixing •
+                    cleaned = re.sub(r"<li[^>]*>", "• ", narr_html, flags=re.IGNORECASE)
+                    cleaned = re.sub(r"</li>", "\n", cleaned, flags=re.IGNORECASE)
+                    cleaned = re.sub(r"<br\s*/?>", "\n", cleaned, flags=re.IGNORECASE)
+                    # Strip remaining tags
+                    cleaned = re.sub(r"<[^>]+>", "", cleaned)
+                    for line in [l.strip() for l in cleaned.splitlines() if l.strip()]:
+                        content.append(Paragraph(self._clean_text(line), normal_style))
+            except Exception as _e:
+                logger.warning(f"Failed to parse narrative HTML for PDF: {_e}")
+            content.append(Spacer(1, 12))
+
         # Document information
         if data and data.get('analysis'):
             analysis = data['analysis']
@@ -259,7 +315,7 @@ class ExportEngine:
                 content.append(Spacer(1, 12))
                 
                 # Add charts if available
-                if chart_images:
+                if chart_images and any(v for v in chart_images.values()):
                     content.append(Paragraph("Visualisations", heading2_style))
                     
                     # Themes bar chart
@@ -300,6 +356,16 @@ class ExportEngine:
                         img.drawWidth = 5 * inch
                         content.append(img)
                         content.append(Spacer(1, 6))
+
+                else:
+                    # Explicit notice when charts cannot be embedded
+                    content.append(Paragraph("Visualisations", heading2_style))
+                    content.append(Paragraph(
+                        self._clean_text(
+                            "Charts could not be embedded in this PDF. To enable chart export, install the 'kaleido' package (pip install -U kaleido) and regenerate the report."
+                        ),
+                        normal_style,
+                    ))
                     
                     # Ethics radar chart
                     if chart_images.get('ethics_radar'):
@@ -324,7 +390,7 @@ class ExportEngine:
                     content.append(Paragraph(f"{i}. {title}", heading2_style))
                     
                     # Description
-                    description = rec.get('description', '')
+                    description = self._clean_text(rec.get('description', ''))
                     content.append(Paragraph(description, normal_style))
                     content.append(Spacer(1, 6))
                     
@@ -338,7 +404,7 @@ class ExportEngine:
                         
                         steps = []
                         for step in rec.get('implementation_steps', []):
-                            steps.append(ListItem(Paragraph(step, normal_style)))
+                            steps.append(ListItem(Paragraph(self._clean_text(step), normal_style)))
                         
                         content.append(ListFlowable(
                             steps,
@@ -360,11 +426,22 @@ class ExportEngine:
                         
                         sources = []
                         for source in rec.get('sources', []):
-                            sources.append(ListItem(Paragraph(source, ParagraphStyle(
+                            sources.append(ListItem(Paragraph(self._clean_text(source), ParagraphStyle(
                                 'SourceItem',
                                 parent=normal_style,
                                 fontName='Helvetica-Oblique'
                             ))))
+                    elif rec.get('source'):
+                        content.append(Paragraph("Sources:", ParagraphStyle(
+                            'Sources',
+                            parent=normal_style,
+                            fontName='Helvetica-Bold'
+                        )))
+                        content.append(ListFlowable(
+                            [ListItem(Paragraph(self._clean_text(rec.get('source')), ParagraphStyle('SourceItem', parent=normal_style, fontName='Helvetica-Oblique')))],
+                            bulletType='bullet',
+                            leftIndent=20
+                        ))
                         
                         content.append(ListFlowable(
                             sources,
@@ -440,6 +517,22 @@ class ExportEngine:
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
         title.style.font.color.rgb = RGBColor.from_string(self.title_color.replace('#', ''))
         
+        # Narrative (if available)
+        if data.get('narrative') and data['narrative'].get('html'):
+            doc.add_heading("Recommendation", level=1)
+            narr_html = data['narrative']['html']
+            try:
+                # Replace list items and breaks to preserve structure
+                cleaned = re.sub(r"<li[^>]*>", "- ", narr_html, flags=re.IGNORECASE)
+                cleaned = re.sub(r"</li>", "\n", cleaned, flags=re.IGNORECASE)
+                cleaned = re.sub(r"<br\s*/?>", "\n", cleaned, flags=re.IGNORECASE)
+                cleaned = re.sub(r"<[^>]+>", "", cleaned)
+                for line in [l.strip() for l in cleaned.splitlines() if l.strip()]:
+                    doc.add_paragraph(self._clean_text(line))
+            except Exception as _e:
+                logger.warning(f"Failed to parse narrative HTML for Word: {_e}")
+            doc.add_paragraph()
+        
         # Document information
         if data and data.get('analysis'):
             analysis = data['analysis']
@@ -509,7 +602,7 @@ class ExportEngine:
                     doc.add_heading(f"{i}. {title}", level=2)
                     
                     # Description
-                    doc.add_paragraph(rec.get('description', ''))
+                    doc.add_paragraph(self._clean_text(rec.get('description', '')))
                     
                     # Implementation steps
                     if rec.get('implementation_steps'):
@@ -517,7 +610,7 @@ class ExportEngine:
                         p.add_run("Implementation Steps:").bold = True
                         
                         for j, step in enumerate(rec.get('implementation_steps', []), 1):
-                            doc.add_paragraph(f"{j}. {step}", style='List Number')
+                            doc.add_paragraph(self._clean_text(f"{j}. {step}"), style='List Number')
                     
                     # Sources
                     if rec.get('sources'):
@@ -525,8 +618,13 @@ class ExportEngine:
                         p.add_run("Sources:").bold = True
                         
                         for source in rec.get('sources', []):
-                            p = doc.add_paragraph(source, style='List Bullet')
+                            p = doc.add_paragraph(self._clean_text(source), style='List Bullet')
                             p.style.font.italic = True
+                    elif rec.get('source'):
+                        p = doc.add_paragraph()
+                        p.add_run("Sources:").bold = True
+                        q = doc.add_paragraph(self._clean_text(rec.get('source')), style='List Bullet')
+                        q.style.font.italic = True
                     
                     # Timeframe
                     if rec.get('timeframe'):
@@ -668,18 +766,21 @@ class ExportEngine:
             for i, rec in enumerate(data.get('recommendations', []), 1):
                 recs_sheet.write(row, 0, i, cell_format)
                 recs_sheet.write(row, 1, rec.get('title', f'Recommendation {i}'), cell_format)
-                recs_sheet.write(row, 2, rec.get('description', ''), cell_format)
+                recs_sheet.write(row, 2, self._clean_text(rec.get('description', '')), cell_format)
                 
                 # Implementation steps
                 steps_text = ""
                 for j, step in enumerate(rec.get('implementation_steps', []), 1):
-                    steps_text += f"{j}. {step}\n"
+                    steps_text += self._clean_text(f"{j}. {step}") + "\n"
                 recs_sheet.write(row, 3, steps_text, cell_format)
                 
                 # Sources
                 sources_text = ""
-                for source in rec.get('sources', []):
-                    sources_text += f"• {source}\n"
+                if rec.get('sources'):
+                    for source in rec.get('sources', []):
+                        sources_text += "• " + self._clean_text(source) + "\n"
+                elif rec.get('source'):
+                    sources_text = "• " + self._clean_text(rec.get('source'))
                 recs_sheet.write(row, 4, sources_text, cell_format)
                 
                 # Timeframe

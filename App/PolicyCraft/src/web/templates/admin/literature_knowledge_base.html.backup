@@ -1,0 +1,588 @@
+<!--
+    PolicyCraft - Knowledge Base Management Interface
+    
+    This administrative interface provides comprehensive management of the academic
+    literature knowledge repository including statistics, version control, and
+    system health monitoring for the PolicyCraft knowledge base.
+    
+    Key Features:
+    - Knowledge base statistics and document tracking
+    - Version history and backup management
+    - Recent updates monitoring with quality metrics
+    - System health indicators and processing capabilities
+    - Export and backup functionality for data management
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
+{% extends 'base.html' %}
+
+{% block title %}Knowledge Base Management - PolicyCraft Admin{% endblock %}
+
+{% block content %}
+<div style="max-width:900px;margin:2rem auto;">
+  <div style="background:#ffffffcc; padding:1.5rem 2rem; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.2);">
+    
+    <!-- Navigation -->
+    <div style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid #eee;">
+      <a href="{{ url_for('admin.dashboard') }}" style="color:#0077cc; text-decoration:none;">Admin Dashboard</a> 
+      → <a href="{{ url_for('admin.literature_dashboard') }}" style="color:#0077cc; text-decoration:none;">Literature Management</a>
+      → <span style="color:#666;">Knowledge Base</span>
+    </div>
+
+    <h2 style="text-align:center; margin-bottom:1rem;">Knowledge Base Management</h2>
+    <p style="text-align:center; color:#666; margin-bottom:2rem;">Monitor and manage the academic literature knowledge repository</p>
+
+    <!-- Statistics Cards -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin-bottom:2rem;">
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">📄</div>
+        <div style="font-size:1.5rem; font-weight:bold; color:#0077cc;">{{ kb_status.knowledge_base.total_documents }}</div>
+        <small style="color:#666;">Total Documents</small>
+      </div>
+      
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">🔄</div>
+        <div style="font-size:1.5rem; font-weight:bold; color:#28a745;">{{ kb_status.knowledge_base.version_count }}</div>
+        <small style="color:#666;">Version History</small>
+      </div>
+      
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">💾</div>
+        <div style="font-size:1.5rem; font-weight:bold; color:#6f42c1;">{{ kb_status.knowledge_base.backup_count }}</div>
+        <small style="color:#666;">Backups Available</small>
+      </div>
+      
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">⏰</div>
+        <div style="font-size:1rem; font-weight:bold; color:#ffc107;">
+          {% if kb_status.knowledge_base.last_update != 'Never' %}
+            {{ kb_status.knowledge_base.last_update[:10] }}
+          {% else %}
+            Never
+          {% endif %}
+        </div>
+        <small style="color:#666;">Last Update</small>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="text-align:center; margin-bottom:2rem;">
+      <a href="{{ url_for('admin.literature_upload') }}" class="btn btn-primary" style="margin:0 0.5rem;">Add Document</a>
+      <button onclick="createBackup()" class="btn btn-secondary" style="margin:0 0.5rem;">Create Backup</button>
+      <a href="{{ url_for('admin.literature_cleanup') }}" class="btn btn-danger" style="margin:0 0.5rem;">Cleanup Documents</a>
+      <a href="{{ url_for('admin.literature_dashboard') }}" class="btn btn-secondary" style="margin:0 0.5rem;">Back</a>
+    </div>
+
+    <!-- Recent Updates -->
+    <h3 style="margin-bottom:1rem;">Recent Knowledge Base Updates</h3>
+    {% if recent_updates %}
+    <table style="width:100%; border-collapse:collapse; margin-bottom:2rem;">
+      <thead>
+        <tr style="background:#f8f9fa;">
+          <th style="padding:0.75rem; text-align:left; border-bottom:1px solid #ddd;">Timestamp</th>
+          <th style="padding:0.75rem; text-align:left; border-bottom:1px solid #ddd;">Document</th>
+          <th style="padding:0.75rem; text-align:left; border-bottom:1px solid #ddd;">Action</th>
+          <th style="padding:0.75rem; text-align:left; border-bottom:1px solid #ddd;">Quality</th>
+          <th style="padding:0.75rem; text-align:left; border-bottom:1px solid #ddd;">Insights</th>
+          <th style="padding:0.75rem; text-align:left; border-bottom:1px solid #ddd;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for update in recent_updates %}
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:0.75rem;">{{ update.timestamp[:19] if update.timestamp }}</td>
+          <td style="padding:0.75rem;">
+            <div style="font-weight:500; margin-bottom:0.25rem;">
+              {{ update.metadata|clean_literature_name(update.filename) }}
+            </div>
+            <div style="font-size:0.85rem; color:#666;">
+              {{ update.metadata.author|default:"Author not specified" }}
+              {# University/Institution #}
+              {% if update.metadata and (update.metadata.university or update.metadata.institution or update.metadata.affiliation) %}
+                {% if update.metadata and update.metadata.author %}
+                  <span style="color:#a0aec0;"> • </span>
+                {% endif %}
+                <span>{{ update.metadata.university or update.metadata.institution or update.metadata.affiliation }}</span>
+              {% endif %}
+              
+              {# Publication year #}
+              {% if update.metadata and (update.metadata.publication_year or update.metadata.publication_date) %}
+                {% if (update.metadata and update.metadata.author) or (update.metadata and (update.metadata.university or update.metadata.institution or update.metadata.affiliation)) %}
+                  <span style="color:#a0aec0;"> • </span>
+                {% endif %}
+                <span>{{ (update.metadata.publication_year or update.metadata.publication_date)[:4] }}</span>
+              {% endif %}
+              
+              {# Fallback to document ID if no other metadata #}
+              {% if not (update.metadata and (update.metadata.author or update.metadata.university or update.metadata.institution or update.metadata.affiliation or update.metadata.publication_year or update.metadata.publication_date)) %}
+                <span>Document ID: {{ update.document_id }}</span>
+              {% endif %}
+            </div>
+            
+            {# Show document type if available #}
+            {% if update.metadata is defined and update.metadata is mapping and update.metadata.document_type %}
+              <div style="font-size:0.8em; margin-top:0.25rem;">
+                <span style="background:#e9ecef; color:#495057; padding:0.1rem 0.4rem; border-radius:3px;">
+                  {{ update.metadata.document_type|title }}
+                </span>
+              </div>
+            {% endif %}
+          </td>
+          <td style="padding:0.75rem;">
+            <span style="display:inline-block; min-width:80px; text-align:center; background:{% if update.action == 'document_merged' %}#0077cc{% elif update.action == 'new_document_created' %}#28a745{% elif update.action == 'flagged_for_review' %}#ffc107{% else %}#666{% endif %}; color:white; padding:0.25rem 0.5rem; border-radius:3px; font-size:0.8rem; font-weight:500; text-transform:capitalize;">
+              {% if update.action == 'document_merged' %}
+                Merged
+              {% elif update.action == 'new_document_created' %}
+                New
+              {% elif update.action == 'flagged_for_review' %}
+                Review
+              {% elif update.action %}
+                {{ update.action|replace('_', ' ')|title }}
+              {% else %}
+                Processed
+              {% endif %}
+            </span>
+          </td>
+          <td style="padding:0.75rem;">
+            {% if update.quality_score %}
+            <div style="display:flex; align-items:center;">
+              <div style="width:40px; height:8px; background:#e9ecef; border-radius:4px; margin-right:0.5rem;">
+                <div style="height:8px; background:#0077cc; border-radius:4px; width:{{ (update.quality_score * 100)|round }}%;"></div>
+              </div>
+              <small>{{ "%.0f%%"|format(update.quality_score * 100) }}</small>
+            </div>
+            {% else %}
+            <span style="color:#999;">N/A</span>
+            {% endif %}
+          </td>
+          <td style="padding:0.75rem;">{{ update.insights_count if update.insights_count else 0 }}</td>
+          <td style="padding:0.5rem; white-space:nowrap;">
+            <a href="{{ url_for('admin.view_document_details', document_id=update.document_id) }}" class="btn btn-sm btn-outline-secondary" style="width:100%; text-align:center; margin:0;">
+              Details
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="text-align:center; padding:3rem; color:#666;">
+      <div style="font-size:4rem; margin-bottom:1rem;">🗂️</div>
+      <h4 style="margin-bottom:0.5rem;">No Updates Found</h4>
+      <p style="margin-bottom:1.5rem;">The knowledge base hasn't been updated yet.</p>
+      <a href="{{ url_for('admin.literature_upload') }}" class="btn btn-primary">Upload First Document</a>
+    </div>
+    {% endif %}
+
+    <!-- System Health -->
+    <div style="background:#f8f9fa; padding:1.5rem; border-radius:6px;">
+      <h4 style="margin-bottom:1rem;">System Health & Information</h4>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
+        <div>
+          <h5 style="color:#0077cc; margin-bottom:0.5rem;">Processing Capabilities</h5>
+          <ul style="margin:0; padding-left:1.5rem; color:#666;">
+            <li>✅ PDF text extraction</li>
+            <li>✅ NLP insight extraction</li>
+            <li>✅ Quality assessment</li>
+            <li>{% if kb_status.knowledge_base.total_documents > 0 %}✅{% else %}⚠️{% endif %} Similarity analysis</li>
+            <li>✅ Version control</li>
+          </ul>
+        </div>
+        <div>
+          <h5 style="color:#0077cc; margin-bottom:0.5rem;">System Status</h5>
+          <table style="width:100%; font-size:0.9rem;">
+            <tr>
+              <td style="padding:0.25rem 0;">Overall Status:</td>
+              <td style="padding:0.25rem 0;"><span style="color:#28a745; font-weight:bold;">{{ kb_status.system_status|title }}</span></td>
+            </tr>
+            <tr>
+              <td style="padding:0.25rem 0;">Max Upload Size:</td>
+              <td style="padding:0.25rem 0;">{{ kb_status.max_file_size_mb }}MB</td>
+            </tr>
+            <tr>
+              <td style="padding:0.25rem 0;">Supported Formats:</td>
+              <td style="padding:0.25rem 0;">
+                {% for format in kb_status.supported_formats %}{{ format }}{% if not loop.last %}, {% endif %}{% endfor %}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0.25rem 0;">Last Health Check:</td>
+              <td style="padding:0.25rem 0;">{{ kb_status.last_check[:19] }}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function createBackup() {
+    alert('Backup creation functionality will be implemented in future version.');
+}
+
+
+function showDocumentDetails(documentId) {
+  try {
+    console.log('showDocumentDetails called with ID:', documentId);
+    
+    // Ensure the modal exists
+    let modal = document.getElementById('documentDetailsModal');
+    if (!modal) {
+      console.log('Modal not found, creating new one...');
+      modal = createDocumentModal();
+      if (!modal) {
+        console.error('Failed to create document details modal');
+        alert('Error: Could not create details view. Please try again.');
+        return;
+      }
+    }
+    
+    // Show loading state
+    const contentDiv = document.getElementById('documentDetailsContent');
+    if (contentDiv) {
+      contentDiv.innerHTML = '<div style="text-align: center; padding: 20px;">' +
+                           '<div class="spinner-border text-primary" role="status">' +
+                           '<span class="visually-hidden">Loading...</span></div>' +
+                           '<p class="mt-2">Loading document details...</p></div>';
+    }
+    
+    // Show the modal
+    console.log('Showing modal...');
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+    
+    // Fetch document details
+    fetch('/admin/literature/document-details/' + encodeURIComponent(documentId))
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success) {
+          displayDocumentDetails(data.details);
+        } else {
+          const errorMsg = data && data.error ? data.error : 'Unknown error occurred';
+          if (contentDiv) {
+            contentDiv.innerHTML = '<p style="color:#dc3545;">Error: ' + errorMsg + '</p>';
+          }
+          console.error('Error fetching document details:', errorMsg);
+        }
+      })
+      .catch(error => {
+        console.error('Error in showDocumentDetails:', error);
+        if (contentDiv) {
+          contentDiv.innerHTML = '<p style="color:#dc3545;">Error loading document details. Please try again.</p>';
+        }
+      });
+  } catch (error) {
+    console.error('Error in showDocumentDetails:', error);
+    const contentDiv = document.getElementById('documentDetailsContent');
+    if (contentDiv) {
+      contentDiv.innerHTML = '<p style="color:#dc3545;">An unexpected error occurred. Please check the console for details.</p>';
+    }
+  }
+}
+
+function displayDocumentDetails(details) {
+  // Helper function to format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString();
+    } catch (e) {
+      return dateString;
+    }
+  };
+
+  // Helper to create quality score bar
+  const createQualityBar = (score) => {
+    const percentage = Math.round(score * 100);
+    return `
+      <div style="width:100%; background:#e9ecef; border-radius:4px; height:6px; margin-top:4px;">
+        <div style="width:${percentage}%; height:100%; background:#28a745; border-radius:4px;"></div>
+      </div>
+      <small style="color:#666;">${percentage}%</small>
+    `;
+  };
+
+  // Create quality dimensions HTML
+  let qualityDimensionsHtml = '';
+  if (details.quality_dimensions && Array.isArray(details.quality_dimensions)) {
+    qualityDimensionsHtml = details.quality_dimensions.map(dim => `
+      <div style="margin-bottom:0.5rem;">
+        <div style="display:flex; justify-content:space-between;">
+          <span>${dim.name}</span>
+          <span>${Math.round(dim.score * 100)}%</span>
+        </div>
+        <div style="width:100%; background:#e9ecef; border-radius:4px; height:4px; margin-top:2px;">
+          <div style="width:${Math.round(dim.score * 100)}%; height:100%; background:#0077cc; border-radius:4px;"></div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Create insights HTML
+  let insightsHtml = '';
+  if (details.insights && Array.isArray(details.insights)) {
+    insightsHtml = details.insights.map((insight, index) => {
+      const content = typeof insight === 'string' ? insight : (insight.content || 'No content');
+      const type = insight.type || 'insight';
+      const relevance = insight.relevance ? Math.round(insight.relevance * 100) + '%' : 'N/A';
+      
+      return `
+        <div style="padding:0.75rem; margin-bottom:0.75rem; background:#f8f9fa; border-radius:6px; border-left:3px solid #0077cc;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+            <span style="font-size:0.8rem; color:#6c757d;">${type}</span>
+            <span style="font-size:0.8rem; color:#28a745;">Relevance: ${relevance}</span>
+          </div>
+          <div>${content}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Create metadata HTML
+  let metadataHtml = '';
+  if (details.metadata && typeof details.metadata === 'object') {
+    metadataHtml = Object.entries(details.metadata)
+      .filter(([key]) => !['document_id', 'filename', 'timestamp'].includes(key))
+      .map(([key, value]) => {
+        const displayValue = typeof value === 'object' ? JSON.stringify(value, null, 2) : value;
+        return `<tr><td style="width:30%;"><strong>${key.replace(/_/g, ' ').replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())}:</strong></td><td>${displayValue || 'N/A'}</td></tr>`;
+      })
+      .join('');
+  }
+
+  // Main content
+  const content = `
+    <div style="margin-bottom:1.5rem;">
+      <h4 style="margin-bottom:1rem; color:#333;">${details.original_filename || details.filename || 'Document Details'}</h4>
+      
+      <!-- Stats Cards -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+        <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:bold; color:#0077cc;">${(details.quality_score * 100).toFixed(1)}%</div>
+          <small style="color:#666;">Quality Score</small>
+          ${createQualityBar(details.quality_score || 0)}
+        </div>
+        <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:bold; color:#28a745;">${details.insights_extracted || details.insights_count || 0}</div>
+          <small style="color:#666;">Insights Extracted</small>
+        </div>
+        <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+          <div style="font-size:1.2rem; font-weight:bold; color:#6f42c1;">${details.confidence_level || 'N/A'}</div>
+          <small style="color:#666;">Confidence Level</small>
+          <div style="margin-top:4px; font-size:0.8rem; color:${details.auto_approved ? '#28a745' : '#dc3545'};">
+            ${details.auto_approved ? 'Auto-Approved' : 'Needs Review'}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Document Files -->
+      <div style="margin-bottom:1.5rem; background:#f8f9fa; padding:1rem; border-radius:6px;">
+        <h5 style="margin-bottom:1rem; color:#495057;">Document Files</h5>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <!-- Original File -->
+          <div style="border: 1px solid #dee2e6; border-radius: 6px; padding: 1rem; background: white;">
+            <h6 style="margin-top:0; color:#495057; display:flex; align-items:center; gap:0.5rem;">
+              <i class="fas fa-file-upload" style="color:#6c757d;"></i>
+              <span>Original File</span>
+              ${details.original_file_exists ? 
+                '<span style="font-size:0.8em; background:#28a745; color:white; padding:0.2em 0.5em; border-radius:10px; margin-left:auto;">Available</span>' : 
+                details.is_preloaded ? 
+                  '<span style="font-size:0.8em; background:#6c757d; color:white; padding:0.2em 0.5em; border-radius:10px; margin-left:auto;">Pre-loaded Document</span>' :
+                  '<span style="font-size:0.8em; background:#dc3545; color:white; padding:0.2em 0.5em; border-radius:10px; margin-left:auto;">Not Found</span>'
+              }
+            </h6>
+            ${details.original_filename ? `
+              <div style="margin:0.5rem 0;">
+                <div><strong>Filename:</strong> ${details.original_filename}</div>
+                ${details.original_file_exists ? `
+                  <div style="margin-top:0.5rem;">
+                    <button onclick="window.open('/static/uploads/${details.original_filename}', '_blank')" class="btn btn-sm btn-outline-primary">
+                      <i class="fas fa-download"></i> Download
+                    </button>
+                  </div>
+                ` : ''}
+              </div>
+            ` : ''}
+            ${!details.original_file_exists && !details.is_preloaded ? 
+              '<div style="color:#dc3545; font-size:0.9em; margin-top:0.5rem;">' +
+                '<i class="fas fa-exclamation-triangle"></i> Original file not found in the system.' +
+              '</div>' : 
+              !details.original_file_exists && details.is_preloaded ?
+              '<div style="color:#6c757d; font-size:0.9em; margin-top:0.5rem;">' +
+                '<i class="fas fa-info-circle"></i> This is a pre-loaded document. The original file is not available for download.' +
+              '</div>' : ''}
+          </div>
+          
+          <!-- Generated Markdown -->
+          <div style="border: 1px solid #dee2e6; border-radius: 6px; padding: 1rem; background: white;">
+            <h6 style="margin-top:0; color:#495057; display:flex; align-items:center; gap:0.5rem;">
+              <i class="fas fa-file-alt" style="color:#6c757d;"></i>
+              <span>Generated Markdown</span>
+              ${details.generated_file_exists ? 
+                '<span style="font-size:0.8em; background:#28a745; color:white; padding:0.2em 0.5em; border-radius:10px; margin-left:auto;">Available</span>' : 
+                '<span style="font-size:0.8em; background:#dc3545; color:white; padding:0.2em 0.5em; border-radius:10px; margin-left:auto;">Not Found</span>'
+              }
+            </h6>
+            ${details.generated_filename ? `
+              <div style="margin:0.5rem 0;">
+                <div><strong>Filename:</strong> ${details.generated_filename}</div>
+                ${details.generated_file_exists ? `
+                  <div style="margin-top:0.5rem;">
+                    <button onclick="window.open('/static/knowledge_base/${details.generated_filename}', '_blank')" class="btn btn-sm btn-outline-primary">
+                      <i class="fas fa-download"></i> Download
+                    </button>
+                  </div>
+                ` : ''}
+              </div>
+            ` : ''}
+            ${!details.generated_file_exists ? 
+              '<div style="color:#dc3545; font-size:0.9em; margin-top:0.5rem;">' +
+                '<i class="fas fa-exclamation-triangle"></i> Generated markdown file not found.' +
+              '</div>' : ''}
+          ${metadataHtml}
+        </table>
+      </div>
+      
+      <!-- Document Statistics -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+        <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:bold; color:#17a2b8;">${details.word_count ? details.word_count.toLocaleString() : '0'}</div>
+          <small style="color:#666;">Words</small>
+        </div>
+        <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:bold; color:#6f42c1;">${details.character_count ? details.character_count.toLocaleString() : '0'}</div>
+          <small style="color:#666;">Characters</small>
+        </div>
+        <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:bold; color:#20c997;">${details.insights_extracted || details.insights_count || '0'}</div>
+          <small style="color:#666;">Insights</small>
+        </div>
+      </div>
+      
+      <!-- Quality Dimensions -->
+      ${qualityDimensionsHtml ? `
+      <div style="margin-bottom:1.5rem; background:#f8f9fa; padding:1rem; border-radius:6px;">
+        <h5 style="margin-bottom:1rem; color:#495057;">Quality Assessment</h5>
+        ${qualityDimensionsHtml}
+      </div>
+      ` : ''}
+      
+      <!-- Insights -->
+      ${insightsHtml ? `
+      <div style="margin-bottom:1.5rem;">
+        <h5 style="margin-bottom:1rem; color:#495057;">Extracted Insights (${details.insights_extracted || details.insights_count || 0})</h5>
+        <div style="max-height:300px; overflow-y:auto; padding-right:0.5rem;">
+          ${insightsHtml}
+        </div>
+      </div>
+      ` : ''}
+      
+      <!-- Raw Data (for debugging) -->
+      <div style="margin-top:1.5rem; font-size:0.8rem; color:#6c757d;">
+        <details>
+          <summary>View Raw Data</summary>
+          <pre style="background:#f8f9fa; padding:0.75rem; border-radius:4px; max-height:200px; overflow:auto; margin-top:0.5rem;">
+${JSON.stringify(details, null, 2)}
+          </pre>
+        </details>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('documentDetailsContent').innerHTML = content;
+  
+  // Scroll to top of the content
+  const contentDiv = document.getElementById('documentDetailsContent');
+  if (contentDiv) {
+    contentDiv.scrollTop = 0;
+  }
+}
+
+function closeDocumentDetails() {
+  const modal = document.getElementById('documentDetailsModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = ''; // Re-enable scrolling
+  } else {
+    console.warn('closeDocumentDetails: Modal not found');
+  }
+}
+
+function createDocumentModal() {
+  try {
+    // Check if modal already exists
+    let modal = document.getElementById('documentDetailsModal');
+    if (modal) {
+      return modal;
+    }
+    
+    // Create the modal element
+    modal = document.createElement('div');
+    modal.id = 'documentDetailsModal';
+    modal.style.cssText = 'display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;';
+    
+    // Create modal content
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = 'position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:2rem; border-radius:8px; max-width:600px; width:90%; max-height:80%; overflow-y:auto;';
+    
+    // Add modal header
+    const header = document.createElement('h3');
+    header.textContent = 'Document Details';
+    header.style.marginBottom = '1rem';
+    
+    // Add content container
+    const contentDiv = document.createElement('div');
+    contentDiv.id = 'documentDetailsContent';
+    contentDiv.textContent = 'Loading...';
+    
+    // Add close button
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.textAlign = 'center';
+    buttonContainer.style.marginTop = '1.5rem';
+    
+    const closeButton = document.createElement('button');
+    closeButton.className = 'btn btn-secondary';
+    closeButton.textContent = 'Close';
+    closeButton.onclick = closeDocumentDetails;
+    
+    // Assemble the modal
+    buttonContainer.appendChild(closeButton);
+    modalContent.appendChild(header);
+    modalContent.appendChild(contentDiv);
+    modalContent.appendChild(buttonContainer);
+    modal.appendChild(modalContent);
+    
+    // Add to document
+    document.body.appendChild(modal);
+    
+    // Close when clicking outside
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeDocumentDetails();
+      }
+    });
+    
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeDocumentDetails();
+      }
+    });
+    
+    return modal;
+  } catch (error) {
+    console.error('Error creating document modal:', error);
+    return null;
+  }
+}
+</script>
+{% endblock %}

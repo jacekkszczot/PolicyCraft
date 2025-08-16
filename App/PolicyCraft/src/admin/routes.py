@@ -676,3 +676,59 @@ def document_details(document_id):
             'error': f'Internal server error: {str(e)}'
         }), 500
 
+@admin_bp.route('/get-available-backups', methods=['GET'])
+@admin_required
+def get_available_backups():
+    """Get list of available knowledge base backups."""
+    try:
+        from src.literature.literature_engine import LiteratureEngine
+        literature_engine = LiteratureEngine()
+        kb_manager = literature_engine.knowledge_manager
+        
+        backups = kb_manager.get_available_backups()
+        
+        return jsonify({
+            'success': True,
+            'backups': backups
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting available backups: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'Error getting backups: {str(e)}'
+        }), 500
+
+@admin_bp.route('/restore-backup', methods=['POST'])
+@admin_required
+def restore_backup():
+    """Restore knowledge base from a backup."""
+    try:
+        data = request.get_json()
+        backup_id = data.get('backup_id')
+        
+        if not backup_id:
+            return jsonify({
+                'success': False,
+                'error': 'Backup ID is required'
+            }), 400
+        
+        from src.literature.literature_engine import LiteratureEngine
+        literature_engine = LiteratureEngine()
+        kb_manager = literature_engine.knowledge_manager
+        
+        result = kb_manager.restore_backup(backup_id)
+        
+        if result['success']:
+            logger.info(f"Admin {session.get('admin_username', 'unknown')} restored backup {backup_id}")
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+        
+    except Exception as e:
+        logger.error(f"Error restoring backup: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'Error restoring backup: {str(e)}'
+        }), 500
+

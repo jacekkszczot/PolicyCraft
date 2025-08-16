@@ -8,6 +8,7 @@ __pycache__/
 
 # Logs
 logs/
+
 # Deprecated JSON storage
 src/database/operations.py
 data/database_storage.json
@@ -32,21 +33,11 @@ ENV/
 instance/
 instance/uploads/
 
-# macOS files
-.DS_Store
-.AppleDouble
-.LSOverride
-
 # Test cache
 .pytest_cache/
 .coverage
 
-# R files
-.Rhistory
-.RData
-*.db
-/App/PolicyCraft-Databases/development/*.db
-PolicyCraft-Databases/development/*.db
+# Database files
 *.db
 PolicyCraft-Databases/
 App/PolicyCraft-Databases/development/policycraft_dev.db

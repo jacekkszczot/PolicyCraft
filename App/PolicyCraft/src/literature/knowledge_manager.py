@@ -39,6 +39,9 @@ class KnowledgeBaseManager:
     resolution, and data integrity throughout the update process.
     """
     
+    # Configuration constants
+    MAX_BACKUPS = 2  # Maximum number of backups to keep
+    
     def __init__(self, knowledge_base_path: str = "docs/knowledge_base"):
         """
         Initialise the knowledge base manager with configuration and paths.
@@ -544,7 +547,7 @@ class KnowledgeBaseManager:
             logger.error(f"Error checking backup criteria: {e}")
             return False  # Don't create backup on error
     
-    def _cleanup_old_backups(self, max_backups: int = 10) -> None:
+    def _cleanup_old_backups(self) -> None:
         """Remove old backups, keeping only the most recent ones."""
         try:
             if not os.path.exists(self.backup_path):
@@ -554,14 +557,14 @@ class KnowledgeBaseManager:
             backups = [d for d in os.listdir(self.backup_path) 
                       if os.path.isdir(os.path.join(self.backup_path, d))]
             
-            if len(backups) <= max_backups:
+            if len(backups) <= self.MAX_BACKUPS:
                 return  # No cleanup needed
             
             # Sort backups by timestamp (newest first)
             backups.sort(reverse=True)
             
             # Remove old backups
-            backups_to_remove = backups[max_backups:]
+            backups_to_remove = backups[self.MAX_BACKUPS:]
             removed_count = 0
             
             for backup_dir in backups_to_remove:
@@ -573,7 +576,7 @@ class KnowledgeBaseManager:
                     logger.error(f"Failed to remove backup {backup_dir}: {e}")
             
             if removed_count > 0:
-                logger.info(f"Cleaned up {removed_count} old backups, keeping {max_backups} most recent")
+                logger.info(f"Cleaned up {removed_count} old backups, keeping {self.MAX_BACKUPS} most recent")
                 
         except Exception as e:
             logger.error(f"Error during backup cleanup: {e}")
@@ -612,7 +615,7 @@ class KnowledgeBaseManager:
             logger.info("Knowledge base backup created: %s", backup_id)
             
             # Cleanup old backups after creating new one
-            self._cleanup_old_backups(max_backups=5)
+            self._cleanup_old_backups()
             
             return backup_id
             
@@ -1058,3 +1061,138 @@ class KnowledgeBaseManager:
         except Exception as e:
             logger.warning(f"Error counting insights: {str(e)}")
             return 10  # Default fallback
+
+    def restore_backup(self, backup_id: str) -> Dict:
+        """
+        Restore knowledge base from a specific backup.
+        
+        Args:
+            backup_id: The backup directory name to restore from
+            
+        Returns:
+            Dict: Result with success status and details
+        """
+        try:
+            backup_full_path = os.path.join(self.backup_path, backup_id)
+            
+            if not os.path.exists(backup_full_path):
+                return {
+                    'success': False,
+                    'error': f'Backup {backup_id} not found'
+                }
+            
+            # Create a backup of current state before restoring
+            current_backup_id = self._create_backup(force=True)
+            
+            # Get list of markdown files in backup
+            backup_files = [f for f in os.listdir(backup_full_path) 
+                          if f.endswith('.md')]
+            
+            restored_files = []
+            errors = []
+            
+            for filename in backup_files:
+                try:
+                    src_path = os.path.join(backup_full_path, filename)
+                    dst_path = os.path.join(self.knowledge_base_path, filename)
+                    
+                    # Copy file from backup to knowledge base
+                    shutil.copy2(src_path, dst_path)
+                    restored_files.append(filename)
+                    
+                except Exception as e:
+                    errors.append(f"Failed to restore {filename}: {str(e)}")
+            
+            # Update version history
+            try:
+                self.version_history.append({
+                    'timestamp': datetime.now().isoformat(),
+                    'action': 'backup_restore',
+                    'backup_id': backup_id,
+                    'current_backup_id': current_backup_id,
+                    'restored_files': restored_files,
+                    'errors': errors
+                })
+                
+                with open(self.version_file, 'w', encoding='utf-8') as f:
+                    json.dump(self.version_history, f, indent=2)
+                    
+            except Exception as e:
+                logger.error(f"Failed to update version history: {e}")
+            
+            logger.info(f"Restored {len(restored_files)} files from backup {backup_id}")
+            
+            return {
+                'success': True,
+                'backup_id': backup_id,
+                'current_backup_id': current_backup_id,
+                'restored_files': restored_files,
+                'errors': errors,
+                'message': f'Successfully restored {len(restored_files)} files from backup {backup_id}'
+            }
+            
+        except Exception as e:
+            logger.error(f"Error restoring backup {backup_id}: {e}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+
+    def get_available_backups(self) -> List[Dict]:
+        """
+        Get list of available backups with metadata.
+        
+        Returns:
+            List[Dict]: List of backup information
+        """
+        try:
+            if not os.path.exists(self.backup_path):
+                return []
+            
+            backups = []
+            backup_dirs = [d for d in os.listdir(self.backup_path) 
+                          if os.path.isdir(os.path.join(self.backup_path, d))]
+            
+            # Sort by timestamp (newest first)
+            backup_dirs.sort(reverse=True)
+            
+            for backup_dir in backup_dirs:
+                backup_full_path = os.path.join(self.backup_path, backup_dir)
+                
+                # Count files in backup
+                files = [f for f in os.listdir(backup_full_path) 
+                        if f.endswith('.md')]
+                
+                # Get creation time
+                try:
+                    creation_time = datetime.fromtimestamp(
+                        os.path.getctime(backup_full_path)
+                    ).isoformat()
+                except:
+                    creation_time = backup_dir  # Fallback to directory name
+                
+                backups.append({
+                    'id': backup_dir,
+                    'creation_time': creation_time,
+                    'file_count': len(files),
+                    'size_mb': round(self._get_directory_size(backup_full_path) / (1024*1024), 2)
+                })
+            
+            return backups
+            
+        except Exception as e:
+            logger.error(f"Error getting available backups: {e}")
+            return []
+
+    def _get_directory_size(self, path: str) -> int:
+        """Calculate total size of directory in bytes."""
+        try:
+            total_size = 0
+            for dirpath, dirnames, filenames in os.walk(path):
+                for filename in filenames:
+                    filepath = os.path.join(dirpath, filename)
+                    if os.path.exists(filepath):
+                        total_size += os.path.getsize(filepath)
+            return total_size
+        except:
+            return 0

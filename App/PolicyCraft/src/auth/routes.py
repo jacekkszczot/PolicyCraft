@@ -84,7 +84,7 @@ def _process_login(form: LoginForm):
 
         # Redirect to intended page or dashboard
         next_page = request.args.get('next')
-        return redirect(next_page) if next_page else redirect(url_for('dashboard'))
+        return redirect(next_page) if next_page else redirect(url_for('admin.dashboard'))
 
     flash('Invalid username/email or password. Please try again.', 'error')
     return render_template(LOGIN_TEMPLATE, form=form)
@@ -133,7 +133,7 @@ def login():
         - Session cookies are marked as secure and httpOnly
     """
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('admin.dashboard'))
     
     form = LoginForm()
     if form.validate_on_submit():
@@ -189,7 +189,7 @@ def register():
         - Database transactions ensure data consistency
     """
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('admin.dashboard'))
     
     form = RegistrationForm()
     
@@ -521,13 +521,14 @@ def delete_account():
 
         # SECURITY FIX: Delete associated analyses, recommendations AND files from disk
         try:
-            from app import db_operations  # late import to avoid circular deps
-            if hasattr(db_operations, "purge_user_data"):
-                purge_result = db_operations.purge_user_data(user_id)
+            from src.database.mongo_operations import MongoOperations
+            mongo_ops = MongoOperations()
+            if hasattr(mongo_ops, "purge_user_data"):
+                purge_result = mongo_ops.purge_user_data(user_id)
                 if purge_result and purge_result.get('files_deleted', 0) > 0:
                     logger.info("SECURITY FIX: Deleted %d files for user %s", purge_result['files_deleted'], user_id)
         except Exception as purge_err:
-            logger.warning("Could not purge Mongo data for user %s: %s", user_id, str(purge_err))
+            logger.warning("Could not purge Mongo data for user %s: %s", user_id, str(purge_err), exc_info=True)
 
         # Delete user record (and potentially cascade related data)
         User.query.filter_by(id=user_id).delete()

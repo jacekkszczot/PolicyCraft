@@ -73,7 +73,7 @@ class LiteratureEngine:
         
         # Supported file types
         self.supported_extensions = {'.pdf', '.txt', '.md'}
-        self.max_file_size = 50 * 1024 * 1024  # 50MB
+        self.max_file_size = 30 * 1024 * 1024  # 30MB
         
         logger.info("Literature Engine initialised successfully")
         
@@ -824,4 +824,248 @@ class LiteratureEngine:
                 logger.info(f"Temporary file cleaned up: {file_path}")
         except Exception as e:
             logger.warning(f"Could not clean up temporary file {file_path}: {str(e)}")
+
+    def reprocess_existing_documents(self, enhanced_processing: bool = True) -> Dict:
+        """
+        Reprocess existing documents in knowledge base with enhanced capabilities.
+        
+        Args:
+            enhanced_processing: Use enhanced metadata and theme extraction
+            
+        Returns:
+            Dict: Results of reprocessing operation
+        """
+        try:
+            logger.info("Starting reprocessing of existing documents")
+            
+            # Get all existing markdown files
+            knowledge_base_files = []
+            if os.path.exists(self.knowledge_manager.knowledge_base_path):
+                for filename in os.listdir(self.knowledge_manager.knowledge_base_path):
+                    if filename.endswith('.md'):
+                        file_path = os.path.join(self.knowledge_manager.knowledge_base_path, filename)
+                        knowledge_base_files.append((filename, file_path))
+            
+            if not knowledge_base_files:
+                return {
+                    'status': 'no_documents',
+                    'message': 'No documents found in knowledge base',
+                    'processed': 0,
+                    'errors': 0
+                }
+            
+            logger.info(f"Found {len(knowledge_base_files)} documents to reprocess")
+            
+            # Create backup before reprocessing
+            backup_id = self.knowledge_manager._create_backup()
+            logger.info(f"Created backup: {backup_id}")
+            
+            results = {
+                'status': 'success',
+                'backup_id': backup_id,
+                'processed': 0,
+                'errors': 0,
+                'enhanced_documents': [],
+                'error_documents': []
+            }
+            
+            for filename, file_path in knowledge_base_files:
+                try:
+                    logger.info(f"Reprocessing: {filename}")
+                    
+                    # Extract document ID from filename for tracking
+                    doc_id_match = re.search(r'([a-f0-9]{8})\.md$', filename)
+                    doc_id = doc_id_match.group(1) if doc_id_match else 'unknown'
+                    
+                    # Try to find original PDF file in data/literature for reprocessing
+                    original_pdf = self._find_original_pdf(doc_id)
+                    
+                    if original_pdf and os.path.exists(original_pdf):
+                        # Reprocess from original PDF with enhanced capabilities
+                        enhanced_doc = self._reprocess_from_pdf(original_pdf, filename, enhanced_processing)
+                        if enhanced_doc:
+                            results['enhanced_documents'].append({
+                                'filename': filename,
+                                'document_id': doc_id,
+                                'enhancements': enhanced_doc.get('enhancements', [])
+                            })
+                            results['processed'] += 1
+                        else:
+                            results['error_documents'].append(filename)
+                            results['errors'] += 1
+                    else:
+                        # Enhance existing markdown content with available data
+                        enhanced_doc = self._enhance_existing_markdown(file_path, enhanced_processing)
+                        if enhanced_doc:
+                            results['enhanced_documents'].append({
+                                'filename': filename,
+                                'document_id': doc_id,
+                                'enhancements': enhanced_doc.get('enhancements', [])
+                            })
+                            results['processed'] += 1
+                        else:
+                            results['error_documents'].append(filename)
+                            results['errors'] += 1
+                            
+                except Exception as e:
+                    logger.error(f"Error reprocessing {filename}: {str(e)}")
+                    results['error_documents'].append(filename)
+                    results['errors'] += 1
+            
+            results['message'] = f"Reprocessed {results['processed']} documents with {results['errors']} errors"
+            logger.info(results['message'])
+            
+            return results
+            
+        except Exception as e:
+            error_msg = f"Error during document reprocessing: {str(e)}"
+            logger.error(error_msg)
+            return {
+                'status': 'error',
+                'message': error_msg,
+                'processed': 0,
+                'errors': 1
+            }
+    
+    def _find_original_pdf(self, doc_id: str) -> Optional[str]:
+        """Find original PDF file for a given document ID."""
+        data_dir = "data/literature"
+        if not os.path.exists(data_dir):
+            return None
+            
+        # Look for PDF files containing the document ID
+        for filename in os.listdir(data_dir):
+            if filename.endswith('.pdf') and doc_id in filename:
+                return os.path.join(data_dir, filename)
+        
+        return None
+    
+    def _reprocess_from_pdf(self, pdf_path: str, original_filename: str, enhanced: bool) -> Optional[Dict]:
+        """Reprocess document from original PDF with enhanced capabilities."""
+        try:
+            # Process the PDF using enhanced processor
+            processing_results = self.processor.process_document(pdf_path)
+            
+            if processing_results.get('status') != 'processed_successfully':
+                return None
+            
+            # Generate new enhanced markdown content
+            enhanced_content = self.knowledge_manager._generate_markdown_content(processing_results)
+            
+            # Write back to the same file
+            kb_file_path = os.path.join(self.knowledge_manager.knowledge_base_path, original_filename)
+            with open(kb_file_path, 'w', encoding='utf-8') as f:
+                f.write(enhanced_content)
+            
+            # Determine what enhancements were added
+            enhancements = []
+            metadata = processing_results.get('metadata', {})
+            
+            if metadata.get('author'):
+                enhancements.append('Author extraction')
+            if metadata.get('abstract'):
+                enhancements.append('Abstract extraction')
+            if metadata.get('keywords'):
+                enhancements.append('Keywords extraction')
+            if processing_results.get('extracted_themes'):
+                enhancements.append('Theme analysis')
+            if processing_results.get('content_recommendations'):
+                enhancements.append('Content recommendations')
+            
+            return {'enhancements': enhancements}
+            
+        except Exception as e:
+            logger.error(f"Error reprocessing PDF {pdf_path}: {str(e)}")
+            return None
+    
+    def _enhance_existing_markdown(self, file_path: str, enhanced: bool) -> Optional[Dict]:
+        """Enhance existing markdown file with new capabilities where possible."""
+        try:
+            # Read existing content
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Extract any text content for re-analysis
+            text_content = self._extract_text_from_markdown(content)
+            if not text_content:
+                return None
+            
+            enhancements = []
+            new_sections = []
+            
+            # Try to extract enhanced metadata from text
+            enhanced_metadata = self.processor._extract_enhanced_metadata(text_content)
+            
+            # Add new sections if data is available
+            if enhanced_metadata.get('abstract') and '## Abstract' not in content:
+                new_sections.append(f"\n## Abstract\n{enhanced_metadata['abstract']}\n")
+                enhancements.append('Abstract extraction')
+            
+            if enhanced_metadata.get('keywords') and '## Keywords' not in content:
+                keywords_str = ', '.join(enhanced_metadata['keywords'])
+                new_sections.append(f"\n## Keywords\n{keywords_str}\n")
+                enhancements.append('Keywords extraction')
+            
+            # Try theme extraction if ThemeExtractor is available
+            if enhanced and self.processor.theme_extractor and '## Key Themes' not in content:
+                themes = self.processor._extract_themes(text_content)
+                if themes:
+                    theme_section = "\n## Key Themes\n"
+                    for i, theme in enumerate(themes, 1):
+                        if isinstance(theme, dict):
+                            theme_name = theme.get('name', f'Theme {i}')
+                            theme_score = theme.get('score', 0)
+                            theme_section += f"### {theme_name}\n"
+                            if 'description' in theme:
+                                theme_section += f"{theme['description']}\n"
+                            theme_section += f"*Relevance Score: {theme_score:.2f}*\n\n"
+                        else:
+                            theme_section += f"### Theme {i}\n{theme}\n\n"
+                    new_sections.append(theme_section)
+                    enhancements.append('Theme analysis')
+            
+            # Try content recommendations extraction
+            if '## Content-Based Recommendations' not in content:
+                recommendations = self.processor._extract_content_recommendations(text_content)
+                if recommendations:
+                    rec_section = "\n## Content-Based Recommendations\n"
+                    for i, rec in enumerate(recommendations, 1):
+                        rec_section += f"{i}. {rec.strip()}\n"
+                    new_sections.append(rec_section)
+                    enhancements.append('Content recommendations')
+            
+            # If we have enhancements, add them before Integration Details
+            if new_sections:
+                if "## Integration Details" in content:
+                    parts = content.split("## Integration Details")
+                    enhanced_content = parts[0] + ''.join(new_sections) + "\n## Integration Details" + parts[1]
+                else:
+                    enhanced_content = content + ''.join(new_sections)
+                
+                # Write enhanced content back
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(enhanced_content)
+                
+                return {'enhancements': enhancements}
+            
+            return {'enhancements': []} if not enhancements else None
+            
+        except Exception as e:
+            logger.error(f"Error enhancing markdown {file_path}: {str(e)}")
+            return None
+    
+    def _extract_text_from_markdown(self, markdown_content: str) -> str:
+        """Extract plain text content from markdown for re-analysis."""
+        # Remove markdown headers
+        text = re.sub(r'^#+\s+', '', markdown_content, flags=re.MULTILINE)
+        # Remove markdown formatting
+        text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)  # Bold
+        text = re.sub(r'\*(.*?)\*', r'\1', text)      # Italic
+        text = re.sub(r'`(.*?)`', r'\1', text)        # Code
+        # Remove links
+        text = re.sub(r'\[([^\]]+)\]\([^\)]+\)', r'\1', text)
+        # Clean up extra whitespace
+        text = re.sub(r'\n\s*\n', '\n\n', text)
+        
+        return text.strip()
 

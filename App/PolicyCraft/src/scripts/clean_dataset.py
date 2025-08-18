@@ -2,14 +2,14 @@
 Dataset Cleaning and Preprocessing for PolicyCraft AI Policy Analysis Platform.
 
 This module provides automated preprocessing and cleaning functionality for policy documents
-uploaded to the PolicyCraft platform. It handles file organization, basic text extraction,
+uploaded to the PolicyCraft platform. It handles file organisation, basic text extraction,
 and metadata enrichment to prepare documents for further analysis.
 
 Key Features:
-- Automatic file organization and naming
+- Automatic file organisation and naming
 - Basic text extraction from various document formats
 - Metadata extraction and enrichment
-- University name normalization and mapping
+- University name normalisation and mapping
 - Duplicate detection and handling
 
 Author: Jacek Robert Kszczot
@@ -25,7 +25,7 @@ class SimpleAutoProcessor:
     """Lightweight auto-processor for new policy uploads."""
     
     def __init__(self):
-        """Initialize with basic university mappings."""
+        """Initialise with basic university mappings."""
         self.university_mappings = {
             # Existing universities
             'oxford': 'University of Oxford',
@@ -142,7 +142,7 @@ class SimpleAutoProcessor:
         with open(info_file, 'w') as f:
             f.write(content)
 
-# Initialize global processor instance
+# Initialise global processor instance
 auto_processor = SimpleAutoProcessor()
 
 def process_new_upload(uploaded_file_path: str, original_filename: str) -> dict:

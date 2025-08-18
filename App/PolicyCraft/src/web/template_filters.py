@@ -1,5 +1,19 @@
 """
-Template filters for the PolicyCraft Flask application.
+Template Filters for PolicyCraft AI Policy Analysis Platform.
+
+This module provides custom Jinja2 template filters for the Flask web application,
+enhancing the presentation layer with domain-specific formatting functions for
+document titles, literature metadata, and other UI elements.
+
+Key Features:
+- Document name formatting and cleaning
+- Literature metadata display formatting
+- Consistent text processing for UI presentation
+- Integration with Flask's template system
+
+Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
 """
 import re
 

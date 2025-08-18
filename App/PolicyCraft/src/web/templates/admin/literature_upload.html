@@ -29,7 +29,7 @@
   const info = document.getElementById('selectedFileInfo');
   const nameEl = document.getElementById('selectedFileName');
   const sizeEl = document.getElementById('selectedFileSize');
-  const maxSize = 10 * 1024 * 1024; // 10MB
+  const maxSize = 30 * 1024 * 1024; // 30MB
   const allowed = ['pdf','txt','md','docx'];
 
   function formatSize(bytes){
@@ -42,7 +42,7 @@
     if(!file) return;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     if(!allowed.includes(ext)) { alert('Unsupported format. Use PDF, TXT, MD, or DOCX.'); input.value=''; info.style.display='none'; return; }
-    if(file.size > maxSize) { alert('File too large. Max 10MB.'); input.value=''; info.style.display='none'; return; }
+    if(file.size > maxSize) { alert('File too large. Max 30MB.'); input.value=''; info.style.display='none'; return; }
     nameEl.textContent = file.name;
     sizeEl.textContent = `(${formatSize(file.size)})`;
     info.style.display = 'block';
@@ -123,7 +123,7 @@
                         <div class="file-upload-text">
                             <div class="upload-icon">📄</div>
                             <p>Click to select or drag & drop your document</p>
-                            <small>Supported formats: PDF, TXT, MD, DOCX (Max: 10MB)</small>
+                            <small>Supported formats: PDF, TXT, MD, DOCX (Max: 30MB)</small>
                         </div>
                     </div>
                     <div id="selectedFileInfo" style="display:none; margin-top:0.75rem; color:#333;">

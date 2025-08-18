@@ -5,18 +5,18 @@
  *
  * This file contains styles specific to the policy analysis pages of the
  * PolicyCraft application. It includes styling for the analysis dashboard,
- * results visualization, and interactive components used in the analysis workflow.
+ * results visualisation, and interactive components used in the analysis workflow.
  *
  * Table of Contents:
  * 1. Hero Section
  * 2. Analysis Results
- * 3. Visualization Components
+ * 3. Visualisation Components
  * 4. Interactive Elements
  * 5. Responsive Adjustments
  *
  * Key Features:
  * - Responsive hero section with gradient overlay
- * - Interactive data visualizations (charts, graphs, etc.)
+ * - Interactive data visualisations (charts, graphs, etc.)
  * - Tabbed interface for different analysis views
  * - Downloadable reports and exports
  * - Responsive tables for data display
@@ -25,16 +25,16 @@
  * Best Practices:
  * - Use semantic HTML5 elements for better accessibility
  * - Implement proper focus states for keyboard navigation
- * - Ensure sufficient color contrast for readability
- * - Optimize performance for data-heavy visualizations
+ * - Ensure sufficient colour contrast for readability
+ * - Optimise performance for data-heavy visualisations
  * - Use CSS transitions for smooth interactions
  *
  * Dependencies:
- * - variables.css for consistent colors and spacing
+ * - variables.css for consistent colours and spacing
  * - layout.css for base layout structures
  * - buttons.css for button styles
  * - responsive.css for media query breakpoints
- * - Chart.js for interactive visualizations
+ * - Chart.js for interactive visualisations
  *
  * Author: Jacek Robert Kszczot
  * Project: MSc Data Science & AI - COM7016

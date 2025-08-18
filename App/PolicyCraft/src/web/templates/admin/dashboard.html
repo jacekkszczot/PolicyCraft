@@ -58,7 +58,7 @@
         </div>
         
         <div class="admin-actions-grid">
-            <a href="{{ url_for('admin.users') }}" class="admin-action-card">
+            <a href="{{ url_for('admin.users') }}" class="admin-action-card primary">
                 <div class="action-icon">👥</div>
                 <h3>Manage Users</h3>
                 <p>View, edit, and manage user accounts</p>
@@ -70,7 +70,7 @@
                 <p>Reset system baseline policies</p>
             </a>
             
-            <a href="{{ url_for('admin.change_password') }}" class="admin-action-card">
+            <a href="{{ url_for('admin.change_password') }}" class="admin-action-card primary">
                 <div class="action-icon">🔐</div>
                 <h3>Change Password</h3>
                 <p>Update admin account credentials</p>
@@ -81,6 +81,14 @@
                 <h3>Manage Literature</h3>
                 <p>Knowledge base and academic sources</p>
             </a>
+            
+            <form action="{{ url_for('admin.reset_recommendations') }}" method="POST" onsubmit="return confirm('Are you sure you want to reset ALL recommendations? This action cannot be undone.');" class="admin-action-card danger" style="display: block; text-decoration: none; cursor: pointer;">
+                <button type="submit" style="background: none; border: none; cursor: pointer; width: 100%; padding: 0; text-align: left;">
+                    <div class="action-icon">🔄</div>
+                    <h3>Reset Recommendations</h3>
+                    <p>Remove all recommendations from the database</p>
+                </button>
+            </form>
             
 
         </div>

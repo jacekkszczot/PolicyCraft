@@ -171,9 +171,38 @@ class TestEthicalFrameworkAnalyzer:
 class TestRecommendationGenerator:
     """Test the recommendation generation functionality."""
     
-    def test_generate_recommendations_with_context(self, sample_themes, sample_coverage_analysis):
+    def test_generate_recommendations_with_context(self, sample_themes, sample_coverage_analysis, tmp_path):
         """Test contextual recommendation generation."""
-        generator = RecommendationGenerator()
+        # Create a temporary knowledge base for testing
+        kb_path = tmp_path / "test_kb"
+        kb_path.mkdir()
+        
+        # Create a sample knowledge base markdown file with YAML frontmatter
+        sample_doc = kb_path / "sample_guidelines.md"
+        sample_doc.write_text("""---
+title: Sample AI Ethics Guidelines
+date: 2023-01-01
+author: Test Author
+quality_score: 85
+---
+
+# Sample AI Ethics Guidelines (2023)
+
+This is a sample document containing AI ethics guidelines for testing purposes.
+It includes key principles such as transparency, accountability, and fairness.
+
+## Key Principles
+- AI systems should be transparent in their operations
+- Human oversight is essential for critical decisions
+- Fairness must be ensured in AI applications
+
+## Recommendations
+1. Implement clear documentation for all AI systems
+2. Establish review processes for AI-assisted work
+3. Provide training on ethical AI use
+""")
+        
+        generator = RecommendationGenerator(knowledge_base_path=str(kb_path))
         
         # Create sample gaps
         gaps = [
@@ -278,9 +307,59 @@ class TestRecommendationGenerator:
 class TestRecommendationEngine:
     """Test the main recommendation engine integration."""
     
+    @pytest.fixture(autouse=True)
+    def setup_method(self, tmp_path):
+        """Setup test environment with a temporary knowledge base path and sample files."""
+        self.kb_path = tmp_path / "knowledge_base"
+        self.kb_path.mkdir()
+        
+        # Create a sample knowledge base markdown file with YAML frontmatter
+        sample_doc = self.kb_path / "sample_guidelines.md"
+        sample_doc.write_text("""---
+title: Sample AI Ethics Guidelines
+date: 2023-01-01
+author: Test Author
+quality_score: 85
+---
+
+# Sample AI Ethics Guidelines (2023)
+
+This is a sample document containing AI ethics guidelines for testing purposes.
+It includes key principles such as transparency, accountability, and fairness.
+
+## Key Principles
+- AI systems should be transparent in their operations
+- Human oversight is essential for critical decisions
+- Fairness must be ensured in AI applications
+
+## Recommendations
+1. Implement clear documentation for all AI systems
+2. Establish review processes for AI-assisted work
+3. Provide training on ethical AI use
+""")
+        
+        # Create a second sample document
+        sample_doc2 = self.kb_path / "ai_governance.md"
+        sample_doc2.write_text("""---
+title: AI Governance Framework
+date: 2023-06-15
+author: Test Author 2
+quality_score: 90
+---
+
+# AI Governance Framework
+
+Comprehensive guidelines for implementing AI governance in educational institutions.
+
+## Core Components
+- Policy development
+- Risk management
+- Compliance monitoring
+""")
+    
     def test_full_recommendation_generation_workflow(self, sample_themes, sample_classification, sample_policy_text):
         """Test the complete recommendation generation workflow."""
-        engine = RecommendationEngine()
+        engine = RecommendationEngine(str(self.kb_path))
         
         result = engine.generate_recommendations(
             themes=sample_themes,
@@ -322,7 +401,7 @@ class TestRecommendationEngine:
 
     def test_enhanced_scoring_validation(self, sample_policy_text):
         """Test that the enhanced scoring system produces realistic results."""
-        engine = RecommendationEngine()
+        engine = RecommendationEngine(str(self.kb_path))
         
         # Policy with strong disclosure language
         strong_disclosure_text = """
@@ -344,18 +423,27 @@ class TestRecommendationEngine:
         assert transparency_score < 80, f"Transparency score should be realistic, got {transparency_score}%"
 
     def test_fallback_behavior(self):
-        """Test that the engine provides useful fallback when main analysis fails."""
-        engine = RecommendationEngine()
+        """Test that the engine raises ValueError when empty text is provided."""
+        engine = RecommendationEngine(str(self.kb_path))
         
-        # Test with invalid inputs that might cause errors
+        # Test with empty text should raise ValueError
+        with pytest.raises(ValueError, match="Policy text cannot be empty"):
+            engine.generate_recommendations(
+                themes=None,
+                classification={},
+                text="",  # Empty text should raise ValueError
+                analysis_id="test_fallback"
+            )
+            
+        # Test with invalid inputs but non-empty text should still work
         result = engine.generate_recommendations(
-            themes=None,  # Invalid input
-            classification={},  # Invalid input
-            text="",  # Empty text
+            themes=None,  # Will be normalized to []
+            classification={},  # Will use default 'Moderate' classification
+            text="Sample policy text",  # Non-empty text
             analysis_id="test_fallback"
         )
         
-        # Should still return a structured result
+        # Should return a structured result
         assert isinstance(result, dict)
         assert 'recommendations' in result
         
@@ -367,7 +455,7 @@ class TestRecommendationEngine:
 
     def test_recommendation_deduplication(self, sample_themes, sample_classification, sample_policy_text):
         """Test that duplicate recommendations are not generated."""
-        engine = RecommendationEngine()
+        engine = RecommendationEngine(str(self.kb_path))
         
         result = engine.generate_recommendations(
             themes=sample_themes,
@@ -390,7 +478,7 @@ class TestRecommendationEngine:
 
     def test_academic_source_attribution(self, sample_themes, sample_classification, sample_policy_text):
         """Test that recommendations properly attribute academic sources."""
-        engine = RecommendationEngine()
+        engine = RecommendationEngine(str(self.kb_path))
         
         result = engine.generate_recommendations(
             themes=sample_themes,
@@ -403,12 +491,39 @@ class TestRecommendationEngine:
         metadata = result['analysis_metadata']
         assert 'academic_sources' in metadata
         
-        expected_sources = ['UNESCO 2023', 'JISC 2023', 'BERA 2018']
-        assert any(source in metadata['academic_sources'] for source in expected_sources)
-        
         # Check individual recommendations have source attribution
         recommendations = result['recommendations']
         for rec in recommendations:
             if 'source' in rec:
                 assert isinstance(rec['source'], str)
                 assert len(rec['source']) > 0
+    
+    def test_no_recommendations_with_empty_knowledge_base(self, sample_themes, sample_classification, sample_policy_text, tmp_path):
+        """Test that no recommendations are generated when knowledge base is empty."""
+        # Create an empty knowledge base directory
+        empty_kb_path = tmp_path / "empty_knowledge_base"
+        empty_kb_path.mkdir()
+        
+        # This should raise a ValueError about knowledge base being empty
+        with pytest.raises(ValueError, match="knowledge base is not available"):
+            engine = RecommendationEngine(str(empty_kb_path))
+            
+            # This line should not be reached, but just in case
+            engine.generate_recommendations(
+                themes=sample_themes,
+                classification=sample_classification,
+                text=sample_policy_text
+            )
+    
+    def test_no_recommendations_with_missing_knowledge_base(self, sample_themes, sample_classification, sample_policy_text):
+        """Test that no recommendations are generated when knowledge base directory doesn't exist."""
+        # This should raise a ValueError about knowledge base not existing
+        with pytest.raises(ValueError, match="knowledge base is not available"):
+            engine = RecommendationEngine("/non/existent/path")
+            
+            # This line should not be reached, but just in case
+            engine.generate_recommendations(
+                themes=sample_themes,
+                classification=sample_classification,
+                text=sample_policy_text
+            )

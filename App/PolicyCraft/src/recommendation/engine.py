@@ -1,3 +1,27 @@
+"""
+PolicyCraft Recommendation Engine - Core Analysis and Generation Components.
+
+This module implements the core recommendation engine for PolicyCraft, providing
+comprehensive analysis of AI policy documents and generating evidence-based
+recommendations for higher education institutions. The engine combines ethical
+framework analysis with contextual recommendation generation.
+
+Key Components:
+- PolicyDimension: Enumeration of ethical AI policy dimensions
+- PolicyRecommendation: Data structure for recommendations
+- EthicalFrameworkAnalyser: Analysis engine for policy evaluation
+- RecommendationGenerator: Generates contextual policy recommendations
+
+The engine analyses policies across multiple dimensions including transparency,
+accountability, human oversight, and bias mitigation, providing structured
+feedback and actionable recommendations based on academic literature and
+established frameworks.
+
+Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
+"""
+
 import sys
 import json
 import os
@@ -28,6 +52,16 @@ try:
     from src.analysis_engine.engine import PolicyAnalysisEngine
 except Exception:
     PolicyAnalysisEngine = None  # type: ignore
+
+# Semantic embeddings for enhanced relevance scoring
+EMBEDDINGS_AVAILABLE = False
+try:
+    from sentence_transformers import SentenceTransformer
+    import numpy as np
+    EMBEDDINGS_AVAILABLE = True
+except ImportError:
+    SentenceTransformer = None
+    np = None
     
 logger = logging.getLogger(__name__)
 
@@ -90,20 +124,20 @@ class PolicyRecommendation:
 
 class EthicalFrameworkAnalyzer:
     """
-    Analyzes policy text against ethical AI frameworks and provides structured feedback.
+    Analyses policy text against ethical AI frameworks and provides structured feedback.
     """
     
     def __init__(self, knowledge_manager: Optional[KnowledgeBaseManager] = None):
-        """Initialize with an optional knowledge manager for reference lookups."""
+        """Initialise with an optional knowledge manager for reference lookups."""
         self.knowledge_manager = knowledge_manager
         self.dimensions = list(PolicyDimension)
         
-    def analyze_policy(self, policy_text: str, institution_type: str = "university") -> Dict[str, Any]:
+    def analyse_policy(self, policy_text: str, institution_type: str = "university") -> Dict[str, Any]:
         """
-        Analyze a policy text and return a structured analysis.
+        Analyse a policy text and return a structured analysis.
         
         Args:
-            policy_text: The text of the policy to analyze
+            policy_text: The text of the policy to analyse
             institution_type: Type of institution (university, college, etc.)
             
         Returns:
@@ -559,77 +593,92 @@ class RecommendationGenerator:
     Integrates with knowledge base for evidence-based recommendations.
     """
     
-    # Default sources when knowledge base is not available or fails
-    DEFAULT_SOURCES = [
-        "BERA (2018)",
-        "UNESCO (2021)",
-        "JISC (2023)",
-        "Selwyn et al. (2020)",
-        "Chan & Hu (2023)",
-        "Li et al. (2024)",
-        "EU AI Act (2024)",
-        "UNESCO (2023)"
-    ]
-    
     def __init__(self, knowledge_base_path: Optional[str] = None):
         """
-        Initialize the recommendation generator.
+        Initialise the recommendation generator.
         
         Args:
-            knowledge_base_path: Optional path to the knowledge base directory
+            knowledge_base_path: Path to the knowledge base directory (required)
         """  
-        logger.info("Initializing RecommendationGenerator...")
+        logger.info("Initialising RecommendationGenerator...")
         
-        # Initialize knowledge manager if available
+        # Initialise knowledge base manager
         self.knowledge_manager = None
+        self.knowledge_base_available = False
+        
         if KnowledgeBaseManager is not None and knowledge_base_path:
             try:
-                logger.info("Initializing KnowledgeBaseManager with path: %s", knowledge_base_path)
+                logger.info(f"Initialising KnowledgeBaseManager with path: {knowledge_base_path}")
                 self.knowledge_manager = KnowledgeBaseManager(knowledge_base_path)
-                logger.info("KnowledgeBaseManager initialized successfully")
                 
-                # Test knowledge base access
+                # Verify if the knowledge base contains any documents
                 try:
-                    doc_count = len(self.knowledge_manager.get_all_documents())
-                    logger.info("Knowledge base contains %d documents", doc_count)
+                    documents = self.knowledge_manager.get_all_documents()
+                    if documents and len(documents) > 0:
+                        self.knowledge_base_available = True
+                        logger.info(f"Found {len(documents)} documents in knowledge base")
+                    else:
+                        logger.error("Knowledge base is empty - cannot generate recommendations")
                 except Exception as e:
-                    logger.warning("Could not access knowledge base documents: %s", str(e))
+                    logger.error(f"Error while checking knowledge base contents: {str(e)}")
                     
             except Exception as e:
-                logger.warning("Could not initialize KnowledgeBaseManager: %s", str(e))
-                logger.warning("Knowledge base integration will be disabled")
+                logger.error(f"Failed to initialise knowledge base: {str(e)}")
         else:
-            logger.info("Knowledge base integration disabled: No path provided or KnowledgeBaseManager not available")
+            logger.error("No knowledge base path provided or KnowledgeBaseManager not available")
         
-        # Initialize the ethical framework analyzer
-        self.analyzer = EthicalFrameworkAnalyzer(self.knowledge_manager)
-        
-        # Literature repository (for instant evidence access after uploads)
-        self.lit_repo = None
-        try:
-            if LiteratureRepository is not None:
-                self.lit_repo = LiteratureRepository.get()
-        except Exception:
+        # Initialise analyser only if we have access to knowledge base
+        if self.knowledge_base_available:
+            self.analyzer = EthicalFrameworkAnalyzer(self.knowledge_manager)
+            
+            # Initialise literature repository if available
             self.lit_repo = None
-        
-        logger.info("PolicyCraft Recommendation Engine loaded with the following capabilities:")
-        logger.info("   • Ethical framework analysis with multi-dimensional scoring")
-        logger.info("   • Evidence-based policy recommendations")
-        logger.info("   • Knowledge base integration for academic references")
-        logger.info("   • Context-aware prioritization of recommendations")
+            try:
+                if LiteratureRepository is not None:
+                    self.lit_repo = LiteratureRepository.get()
+            except Exception as e:
+                logger.error(f"Failed to initialise literature repository: {str(e)}")
+                self.lit_repo = None
+            
+            # Initialise semantic embedder if available
+            self.embedder = None
+            if EMBEDDINGS_AVAILABLE:
+                try:
+                    self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
+                    logger.info("Semantic embedder loaded successfully")
+                except Exception as e:
+                    logger.error(f"Failed to load semantic embedder: {str(e)}")
+                    self.embedder = None
+            
+            logger.info("PolicyCraft Recommendation Engine initialised with knowledge base access")
+        else:
+            self.analyzer = None
+            self.lit_repo = None
+            self.embedder = None
+            logger.error("Cannot initialise analyser - no access to knowledge base")
         
     def generate_recommendations(self, policy_text: str = "", institution_type: str = "university", **kwargs) -> Dict[str, Any]:
         """
         Generate recommendations for improving a policy.
         
         Args:
-            policy_text: The text of the policy to analyze
+            policy_text: The text of the policy to analyse
             institution_type: Type of institution (university, college, etc.)
             **kwargs: Additional parameters (e.g., analysis_id for tracking)
             
         Returns:
             Dict containing analysis and recommendations
+            
+        Raises:
+            ValueError: If knowledge base is not available or policy text is empty
         """
+        # Check if knowledge base is available
+        if not self.knowledge_base_available or not self.analyzer:
+            raise ValueError(
+                "Cannot generate recommendations - knowledge base is unavailable. "
+                "Please try again later or contact the system administrator."
+            )
+
         # Compatibility: allow tests to pass text via 'text' kwarg
         if not policy_text and "text" in kwargs:
             policy_text = kwargs.get("text", "")
@@ -645,8 +694,8 @@ class RecommendationGenerator:
             
         logger.info("Generating recommendations for %s policy (%d characters)", institution_type, len(policy_text))
         
-        # Analyze the policy using the ethical framework
-        analysis = self.analyzer.analyze_policy(policy_text, institution_type)
+        # Analyse policy using ethical framework
+        analysis = self.analyzer.analyse_policy(policy_text, institution_type)
         
         # Track the analysis ID if provided
         analysis_id = kwargs.get('analysis_id', None)
@@ -661,12 +710,13 @@ class RecommendationGenerator:
             # Ensure timeframe is set for template display
             self._ensure_timeframe(rec)
         
-        # Enhance with knowledge base if available
-        if self.knowledge_manager:
-            self._enhance_with_kb(analysis)
-        else:
-            analysis["knowledge_base_integration"] = False
-            self._assign_diverse_sources(analysis["recommendations"], self.DEFAULT_SOURCES)
+        # Enhance with knowledge base - required
+        if not self.knowledge_manager:
+            raise ValueError(
+                "Knowledge base manager is not available. "
+                "Cannot generate recommendations without a valid knowledge base."
+            )
+        self._enhance_with_kb(analysis)
         
         return analysis
         
@@ -1056,7 +1106,7 @@ class RecommendationGenerator:
         supporting_evidence = []
         min_evidence_count = 4  # Ensure at least 4 citations per recommendation for better diversity
         
-        # Initialize used_citations if not provided
+        # Initialise used_citations if not provided
         if used_citations is None:
             used_citations = []
         
@@ -1148,13 +1198,17 @@ class RecommendationGenerator:
             # Give strong preference to citations not already used elsewhere
             diversity_bonus = 5.0 if citation not in used_citations else 0.0
                 
-            # Calculate relevance score
+            # Calculate relevance score using both keyword matching and semantic similarity
             relevance_score = 0
+            confidence_score = 0.0
+            
+            # Keyword-based scoring (traditional method)
+            keyword_score = 0
             
             # Title match bonus
             for keyword in keywords:
                 if keyword in doc_title:
-                    relevance_score += 2  # Higher weight for title matches
+                    keyword_score += 2  # Higher weight for title matches
             
             # Content match
             content_matches = 0
@@ -1164,7 +1218,48 @@ class RecommendationGenerator:
             
             # Add score based on content matches (with diminishing returns)
             if content_matches > 0:
-                relevance_score += min(3, content_matches)
+                keyword_score += min(3, content_matches)
+            
+            relevance_score += keyword_score
+            
+            # Semantic similarity scoring (enhanced method)
+            semantic_score = 0
+            if self.embedder and doc_content:
+                try:
+                    # Create recommendation context for semantic comparison
+                    rec_context = f"{rec_title}. {rec_desc}. {rec_rationale}"
+                    
+                    # Extract meaningful content from document (first 1000 chars to avoid token limits)
+                    doc_excerpt = doc_content[:1000]
+                    
+                    # Calculate semantic similarity
+                    rec_embedding = self.embedder.encode([rec_context])
+                    doc_embedding = self.embedder.encode([doc_excerpt])
+                    
+                    # Cosine similarity
+                    similarity = np.dot(rec_embedding[0], doc_embedding[0]) / (
+                        np.linalg.norm(rec_embedding[0]) * np.linalg.norm(doc_embedding[0])
+                    )
+                    
+                    # Convert similarity to relevance score (0-10 scale)
+                    semantic_score = max(0, similarity * 10)
+                    
+                    # Confidence score based on semantic similarity
+                    confidence_score = min(1.0, max(0.0, similarity))
+                    
+                    logger.debug(f"Semantic similarity for {doc.get('title', 'Unknown')}: {similarity:.3f}")
+                    
+                except Exception as e:
+                    logger.debug(f"Semantic scoring failed for document {doc_id}: {e}")
+                    semantic_score = 0
+                    confidence_score = 0.0
+            
+            # Combine keyword and semantic scores (weighted average)
+            if semantic_score > 0:
+                relevance_score = (keyword_score * 0.4) + (semantic_score * 0.6)  # Favor semantic similarity
+            else:
+                relevance_score = keyword_score  # Fallback to keyword-only
+                confidence_score = min(1.0, keyword_score / 10.0)  # Estimate confidence from keywords
                 
             # Add diversity bonus to promote citation diversity
             relevance_score += diversity_bonus
@@ -1178,18 +1273,31 @@ class RecommendationGenerator:
                     "source": doc.get("filename", ""),
                     "year": doc_year,
                     "quality_score": doc.get("quality_score", 0),
-                    "match_score": relevance_score
+                    "match_score": relevance_score,
+                    "confidence_score": confidence_score,
+                    "has_semantic_score": semantic_score > 0
                 })
         
-        # Sort by relevance score (high to low) and then by diversity (unused citations first)
-        scored_documents.sort(key=lambda x: (-x.get("match_score", 0), 0 if x.get("citation") in used_citations else 1))
+        # Sort by relevance score, confidence, and diversity (prioritise high confidence, unused citations)
+        scored_documents.sort(key=lambda x: (
+            -x.get("match_score", 0),        # Higher relevance first
+            -x.get("confidence_score", 0),   # Higher confidence first
+            0 if x.get("citation") in used_citations else 1,  # Unused citations first
+            -x.get("quality_score", 0)       # Higher quality first
+        ))
         
-        # Debug: Print scored documents
+        # Debug: Print scored documents with enhanced metrics
         logger.debug("Found %d potentially relevant documents for recommendation", len(scored_documents))
         for i, doc in enumerate(scored_documents[:5]):
-            logger.debug("  Document %d: %s - Score: %s - Citation: %s", i+1, doc.get('title', 'Unknown'), doc.get('match_score', 0), doc.get('citation', 'Unknown'))
+            logger.debug("  Document %d: %s - Score: %.2f - Confidence: %.2f - Semantic: %s - Citation: %s", 
+                        i+1, 
+                        doc.get('title', 'Unknown')[:50] + '...' if len(doc.get('title', '')) > 50 else doc.get('title', 'Unknown'),
+                        doc.get('match_score', 0), 
+                        doc.get('confidence_score', 0),
+                        'Yes' if doc.get('has_semantic_score', False) else 'No',
+                        doc.get('citation', 'Unknown'))
         
-        # Select diverse sources - prioritize different authors and unused citations
+        # Select diverse sources - prioritise different authors and unused citations
         authors_selected = set()
         for doc in scored_documents:
             citation = doc.get("citation", "")
@@ -1198,15 +1306,24 @@ class RecommendationGenerator:
             # Track if this citation is already used in other recommendations
             citation_used_elsewhere = citation in used_citations
             
+            # Apply confidence threshold - only include sources with reasonable confidence
+            confidence_score = doc.get("confidence_score", 0)
+            if confidence_score < 0.15:  # Minimum confidence threshold
+                continue
+                
             # Prioritize diverse authors (max 1 citation per author if already used elsewhere)
             max_per_author = 1 if citation_used_elsewhere else 2
             if len([e for e in supporting_evidence if e.get("citation", "").startswith(author)]) < max_per_author:
-                # Determine relevance level
+                # Determine relevance level using both match score and confidence
                 relevance_score = doc.get("match_score", 0)
-                relevance = "medium"
-                if relevance_score >= 5:
+                confidence_score = doc.get("confidence_score", 0)
+                
+                # Enhanced relevance classification
+                if relevance_score >= 5 and confidence_score >= 0.4:
                     relevance = "high"
-                elif relevance_score <= 2:
+                elif relevance_score >= 3 and confidence_score >= 0.25:
+                    relevance = "medium"
+                else:
                     relevance = "low"
                 
                 doc["relevance"] = relevance
@@ -1341,8 +1458,28 @@ class RecommendationEngine:
     """
 
     def __init__(self, knowledge_base_path: Optional[str] = None):
-        self.analyzer = EthicalFrameworkAnalyzer()
+        """Initialise the recommendation engine.
+        
+        Args:
+            knowledge_base_path: Path to the knowledge base directory (required)
+        """
+        if not knowledge_base_path:
+            logger.error("No knowledge base path provided to RecommendationEngine")
+            raise ValueError("Knowledge base path is required")
+            
+        self.knowledge_base_path = knowledge_base_path
         self.generator = RecommendationGenerator(knowledge_base_path=knowledge_base_path)
+        
+        # Verify knowledge base is available
+        if not hasattr(self.generator, 'knowledge_base_available') or not self.generator.knowledge_base_available:
+            logger.error("Failed to initialise with knowledge base at: %s", knowledge_base_path)
+            raise ValueError(
+                "Cannot initialise recommendation engine - knowledge base is not available. "
+                "Please check the knowledge base configuration and try again."
+            )
+            
+        # Initialize analyzer for coverage analysis
+        self.analyzer = EthicalFrameworkAnalyzer()
 
     def generate_recommendations(
         self,
@@ -1353,8 +1490,28 @@ class RecommendationEngine:
     ) -> Dict[str, Any]:
         """Run coverage analysis and produce contextual recommendations.
 
-        Returns a dict with keys: analysis_metadata, coverage_analysis, recommendations, summary.
+        Returns:
+            Dict containing analysis results with keys: analysis_metadata, coverage_analysis, 
+            recommendations, summary.
+            
+        Raises:
+            ValueError: If knowledge base is not available or text is empty
         """
+        if not text.strip():
+            raise ValueError("Policy text cannot be empty")
+            
+        if not hasattr(self, 'generator') or not hasattr(self.generator, 'knowledge_base_available') or not self.generator.knowledge_base_available:
+            raise ValueError(
+                "Cannot generate recommendations - knowledge base is not available. "
+                "Please try again later or contact the system administrator."
+            )
+        # Verify knowledge base is available before proceeding
+        if not hasattr(self, 'generator') or not hasattr(self.generator, 'knowledge_base_available') or not self.generator.knowledge_base_available:
+            raise ValueError(
+                "Cannot generate recommendations - knowledge base is not available. "
+                "Please try again later or contact the system administrator."
+            )
+            
         # Normalise inputs
         themes = themes or []
         classification_str = (
@@ -1363,19 +1520,27 @@ class RecommendationEngine:
             else str(classification or "")
         ) or "Moderate"
 
-        # Coverage analysis
-        coverage = self.analyzer.analyze_coverage(themes, text)
+        try:
+            # Coverage analysis
+            coverage = self.analyzer.analyze_coverage(themes, text)
 
-        # Identify gaps based on coverage and classification
-        gaps = self.analyzer.identify_gaps(coverage, classification_str)
+            # Identify gaps based on coverage and classification
+            gaps = self.analyzer.identify_gaps(coverage, classification_str)
 
-        # Generate recommendations
-        recs = self.generator.generate_recommendations(
-            gaps=gaps,
-            classification=classification_str,
-            themes=themes,
-            text=text,
-        )
+            # Generate recommendations - this will raise ValueError if knowledge base is unavailable
+            recs = self.generator.generate_recommendations(
+                gaps=gaps,
+                classification=classification_str,
+                themes=themes,
+                text=text,
+            )
+        except ValueError as e:
+            if "knowledge base" in str(e).lower():
+                raise ValueError(
+                    "Cannot generate recommendations - knowledge base is not available. "
+                    "Please try again later or contact the system administrator."
+                ) from e
+            raise
 
         # Ensure default tags for I-U-F matrix if absent
         for r in recs:

@@ -1,3 +1,31 @@
+"""
+Main Flask Application for PolicyCraft AI Policy Analysis Platform.
+
+This is the main Flask application file that orchestrates the PolicyCraft platform,
+providing comprehensive AI policy analysis capabilities for higher education institutions.
+The application integrates multiple analysis engines, literature processing, and 
+recommendation systems to deliver actionable insights for AI policy development.
+
+Key Features:
+- Multi-file policy document upload and batch processing
+- Comprehensive policy analysis using NLP and machine learning
+- Intelligent recommendation generation with academic literature integration
+- Interactive dashboard with visualisations and export capabilities
+- Administrative interface for literature and user management
+- Secure user authentication and session management
+
+Architecture:
+- Flask web framework with Blueprint-based modular routing
+- MongoDB for persistent data storage with lazy-loaded operations
+- Integrated NLP pipeline using spaCy and custom classification models
+- Literature processing engine with knowledge base management
+- Export capabilities supporting PDF, Word, Excel, and JSON formats
+
+Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
+"""
+
 def _fetch_analysis_for_recommendations(analysis_id):
     """Fetch analysis by user first, then globally, mirroring logs and test-temporary permission notes."""
     logger.info("Attempting to get user's analysis...")
@@ -31,14 +59,14 @@ def _extract_cleaned_text_with_logging(analysis):
 def _load_or_generate_recommendations(analysis_id, cleaned_text, themes=None, classification=None):
     """Load stored recommendations; always (re)build narrative and metadata.
 
-    Zwraca pełny pakiet zgodny z RecommendationEngine, tak aby szablon miał
-    dostęp do 'narrative', 'analysis_metadata', itp. Gdy istnieją zapisane recs,
-    podmieniamy je w wygenerowanym pakiecie, by zachować treść rekomendacji.
+    Returns a complete package compatible with RecommendationEngine, so that the template has
+    access to 'narrative', 'analysis_metadata', etc. When stored recommendations exist,
+    we replace them in the generated package to preserve recommendation content.
     """
     try:
         stored_recs = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
 
-        # Uruchom silnik, by zbudować coverage, sources i narrację
+        # Run engine to build coverage, sources and narrative
         engine_package = recommendation_engine.generate_recommendations(
             themes=themes or [],
             classification=classification or {},
@@ -47,8 +75,8 @@ def _load_or_generate_recommendations(analysis_id, cleaned_text, themes=None, cl
         )
 
         if stored_recs:
-            # Scal rekomendacje: zachowaj bogate pola z silnika (np. sources, implementation_steps),
-            # ale uwzględnij treść/edycje użytkownika ze storage. Łączymy po tytule; brak tytułu → po indeksie.
+            # Merge recommendations: keep rich fields from engine (e.g. sources, implementation_steps),
+            # but include user content/edits from storage. Link by title; no title → by index.
             engine_recs = engine_package.get('recommendations', []) or []
 
             def norm_title(rec):
@@ -117,13 +145,13 @@ def _load_or_generate_recommendations(analysis_id, cleaned_text, themes=None, cl
                 merged.append(e)
 
             engine_package['recommendations'] = merged
-            # Oznacz metadane, że rekomendacje pochodzą z bazy i silnika
+            # Mark metadata that recommendations come from database and engine
             meta = engine_package.get('analysis_metadata', {})
             meta['methodology'] = (meta.get('methodology') or 'Engine') + ' + Stored Recommendations (merged)'
             engine_package['analysis_metadata'] = meta
             return engine_package
 
-        # Brak zapisanych – używamy pełnego pakietu z silnika
+        # No stored recommendations - use full package from engine
         for i, rec in enumerate(engine_package.get("recommendations", [])):
             logger.debug(f"Recommendation {i+1}: {rec.get('title', 'Unknown')}")
         return engine_package
@@ -133,9 +161,9 @@ def _load_or_generate_recommendations(analysis_id, cleaned_text, themes=None, cl
         return None
 
 def _get_or_create_analysis_record(filename: str, is_baseline: bool, file_path: str):
-    """Pobierz istniejącą analizę lub uruchom nową i zwróć komplet danych.
-    Zwraca: extracted_text, cleaned_text, themes, classification, analysis_id
-    Rzuca ValueError('no_text'), jeśli nie udało się wydobyć tekstu (zachowanie jak dotychczas).
+    """Get existing analysis or run new one and return complete data.
+    Returns: extracted_text, cleaned_text, themes, classification, analysis_id
+    Raises ValueError('no_text') if text extraction failed (maintains existing behaviour).
     """
     existing = _get_existing_analysis_record(filename, is_baseline)
     if existing:
@@ -172,18 +200,26 @@ def _get_or_create_analysis_record(filename: str, is_baseline: bool, file_path: 
     return extracted_text, cleaned_text, themes, classification, analysis_id
 
 def _build_basic_export_data(analysis_id, analysis, recommendations):
-    """Zbuduj bazowy pakiet danych exportu używany przez PDF/Word/Excel (bez wykresów)."""
+    """Build the base export data package used by PDF/Word/Excel (without charts)."""
+    # Extract confidence factors and calculate confidence percentage
+    confidence_factors = analysis.get('confidence_factors', {})
+    confidence_raw = analysis.get('classification', {}).get('confidence', 0)
+    confidence_pct = confidence_raw * 100 if confidence_raw <= 1 else confidence_raw
+    
     return {
         'analysis': {
             'filename': analysis.get('filename', 'Unknown'),
             'classification': analysis.get('classification', {}).get('classification', 'Unknown'),
-            'confidence': analysis.get('classification', {}).get('confidence', 0),
+            'confidence': confidence_raw,
+            'confidence_pct': confidence_pct,
+            'confidence_factors': confidence_factors,
             'analysis_id': analysis_id,
             'themes': analysis.get('themes', [])
         },
         'recommendations': recommendations,
         'generated_date': datetime.now().isoformat(),
-        'total_recommendations': len(recommendations)
+        'total_recommendations': len(recommendations),
+        'methodology': 'PolicyCraft local analysis pipeline (text extraction → classification → theme detection → rules‑based + ML heuristics).'
     }
 
 def _require_analysis_or_redirect(analysis_id):
@@ -205,7 +241,7 @@ def _require_recommendations_or_redirect(analysis_id):
     return recommendations, None
 
 def _prepare_basic_export_data_or_error(analysis_id):
-    """Pobierz analizę i rekomendacje; zwróć (export_data, None) albo (None, (json, code))."""
+    """Fetch analysis and recommendations; return (export_data, None) or (None, (json, code))."""
     analysis = _get_export_analysis(analysis_id)
     if not analysis:
         return None, (jsonify({'error': ANALYSIS_NOT_FOUND}), 404)
@@ -235,10 +271,12 @@ def _prepare_basic_export_data_or_error(analysis_id):
 
     base = _build_basic_export_data(analysis_id, analysis, recommendations)
     base['narrative'] = narrative
+    # Add charts for binary exports
+    base['charts'] = _generate_export_charts(analysis)
     return base, None
 
 def _make_binary_response(binary_data: bytes, content_type: str, filename: str):
-    """Utwórz binarną odpowiedź HTTP z odpowiednimi nagłówkami."""
+    """Create a binary HTTP response with appropriate headers."""
     response = make_response(binary_data)
     response.headers['Content-Type'] = content_type
     response.headers['Content-Disposition'] = f'attachment; filename={filename}'
@@ -368,14 +406,6 @@ def _fallback_recommendations_response(analysis_id, analysis):
         logger.error(f"Fallback recommendation generation failed: {str(fallback_error)}")
         flash('Error generating recommendations. Please try again.', 'error')
         return redirect(url_for('dashboard'))
-"""
-Main Flask application for PolicyCraft - AI Policy Analysis Framework.
-Clean version without onboarding features.
-
-Author: Jacek Robert Kszczot
-Project: MSc Data Science & AI - COM7016
-University: Leeds Trinity University
-"""
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, make_response
 from flask_login import LoginManager, login_required, current_user
@@ -384,6 +414,204 @@ import os
 from werkzeug.utils import secure_filename
 import logging
 from datetime import datetime
+
+def validate_dependencies():
+    """
+    Comprehensive dependency validation before application startup.
+    Validates all critical libraries and models required for full functionality.
+    """
+    import sys
+    validation_results = []
+    critical_failures = []
+    warnings = []
+    
+    print("🔍 PolicyCraft Dependency Validation")
+    print("=" * 50)
+    
+    # Core Python packages
+    core_packages = [
+        ('flask', 'Flask web framework'),
+        ('pymongo', 'MongoDB driver'),
+        ('pandas', 'Data processing'),
+        ('numpy', 'Numerical computing'),
+        ('requests', 'HTTP client'),
+        ('dotenv', 'Environment variables (python-dotenv)')
+    ]
+    
+    for package, description in core_packages:
+        try:
+            __import__(package.replace('-', '_'))
+            validation_results.append(f"✅ {description}: {package}")
+        except ImportError as e:
+            critical_failures.append(f"❌ {description}: {package} - {str(e)}")
+    
+    # NLP and ML packages
+    nlp_packages = [
+        ('spacy', 'Natural Language Processing'),
+        ('sklearn', 'Machine Learning (scikit-learn)'),
+        ('nltk', 'Natural Language Toolkit'),
+        ('sentence_transformers', 'Sentence embeddings'),
+        ('contractions', 'Text preprocessing')
+    ]
+    
+    for package, description in nlp_packages:
+        try:
+            __import__(package.replace('-', '_'))
+            validation_results.append(f"✅ {description}: {package}")
+        except ImportError as e:
+            critical_failures.append(f"❌ {description}: {package} - {str(e)}")
+    
+    # Document processing packages
+    doc_packages = [
+        ('pypdf', 'PDF processing'),
+        ('docx', 'Word document processing (python-docx)'),
+        ('fitz', 'Advanced PDF processing (PyMuPDF)'),
+        ('pdfplumber', 'PDF text extraction')
+    ]
+    
+    for package, description in doc_packages:
+        try:
+            __import__(package)
+            validation_results.append(f"✅ {description}: {package}")
+        except ImportError as e:
+            warnings.append(f"⚠️  {description}: {package} - {str(e)}")
+    
+    # Visualization packages
+    viz_packages = [
+        ('plotly', 'Interactive visualisations'),
+        ('kaleido', 'Static image export'),
+        ('reportlab', 'PDF generation'),
+        ('xlsxwriter', 'Excel export')
+    ]
+    
+    for package, description in viz_packages:
+        try:
+            __import__(package)
+            validation_results.append(f"✅ {description}: {package}")
+        except ImportError as e:
+            warnings.append(f"⚠️  {description}: {package} - {str(e)}")
+    
+    # Critical NLP models and data
+    print("\n🧠 NLP Models and Data Validation")
+    print("-" * 30)
+    
+    # spaCy model validation
+    try:
+        import spacy
+        nlp = spacy.load('en_core_web_sm')
+        validation_results.append("✅ spaCy English model: en_core_web_sm")
+        print("✅ spaCy en_core_web_sm model loaded successfully")
+    except Exception as e:
+        critical_failures.append(f"❌ spaCy English model: en_core_web_sm - {str(e)}")
+        print(f"❌ spaCy model error: {str(e)}")
+    
+    # SentenceTransformer model validation
+    try:
+        from sentence_transformers import SentenceTransformer
+        embedder = SentenceTransformer('all-MiniLM-L6-v2')
+        validation_results.append("✅ SentenceTransformer model: all-MiniLM-L6-v2")
+        print("✅ SentenceTransformer all-MiniLM-L6-v2 model loaded successfully")
+    except Exception as e:
+        critical_failures.append(f"❌ SentenceTransformer model: all-MiniLM-L6-v2 - {str(e)}")
+        print(f"❌ SentenceTransformer error: {str(e)}")
+    
+    # NLTK data validation
+    try:
+        import nltk
+        nltk_resources = ['punkt', 'stopwords', 'wordnet', 'averaged_perceptron_tagger']
+        for resource in nltk_resources:
+            try:
+                nltk.data.find(f'tokenizers/{resource}' if resource == 'punkt' else 
+                              f'corpora/{resource}' if resource in ['stopwords', 'wordnet'] else 
+                              f'taggers/{resource}')
+                validation_results.append(f"✅ NLTK resource: {resource}")
+            except LookupError:
+                warnings.append(f"⚠️  NLTK resource missing: {resource}")
+    except ImportError as e:
+        warnings.append(f"⚠️  NLTK validation failed: {str(e)}")
+    
+    # Recommendation Engine validation
+    print("\n🎯 Recommendation Engine Validation")
+    print("-" * 30)
+    
+    try:
+        from src.recommendation.engine import RecommendationEngine
+        from src.analysis_engine.engine import PolicyAnalysisEngine
+        
+        # Test knowledge base integration
+        kb_path = 'docs/knowledge_base'
+        if os.path.exists(kb_path):
+            try:
+                engine = RecommendationEngine(knowledge_base_path=kb_path)
+                validation_results.append("✅ RecommendationEngine: Initialized successfully")
+                print("✅ RecommendationEngine initialized with knowledge base")
+            except Exception as e:
+                if "knowledge base is not available" in str(e):
+                    warnings.append("⚠️  RecommendationEngine: Knowledge base empty (will be populated on document upload)")
+                    print("⚠️  Knowledge base empty - recommendations available after document upload")
+                else:
+                    critical_failures.append(f"❌ RecommendationEngine: {str(e)}")
+        else:
+            warnings.append("⚠️  Knowledge base directory missing (will be created on first use)")
+            print("⚠️  Knowledge base directory will be created on first use")
+        
+        # Test advanced analysis engine
+        try:
+            analysis_engine = PolicyAnalysisEngine()
+            validation_results.append("✅ Advanced PolicyAnalysisEngine: Available")
+            print("✅ Advanced analysis engine loaded successfully")
+        except Exception as e:
+            warnings.append(f"⚠️  Advanced analysis engine: {str(e)}")
+            print(f"⚠️  Advanced analysis engine error: {str(e)}")
+            
+    except ImportError as e:
+        critical_failures.append(f"❌ Recommendation engine components: {str(e)}")
+        print(f"❌ Recommendation engine import error: {str(e)}")
+
+    # Environment variables validation
+    print("\n⚙️  Environment Configuration")
+    print("-" * 30)
+    
+    env_vars = [
+        ('FEATURE_ADVANCED_ENGINE', 'Advanced analysis engine'),
+        ('MONGODB_URI', 'MongoDB connection (optional)'),
+        ('SECRET_KEY', 'Flask secret key (optional)')
+    ]
+    
+    for var, description in env_vars:
+        value = os.environ.get(var)
+        if value:
+            validation_results.append(f"✅ {description}: {var} = {value}")
+            print(f"✅ {description}: {var} = {value}")
+        else:
+            warnings.append(f"⚠️  {description}: {var} not set")
+            print(f"⚠️  {description}: {var} not set")
+    
+    # Summary
+    print("\n📊 Validation Summary")
+    print("=" * 50)
+    print(f"✅ Successful validations: {len(validation_results)}")
+    print(f"⚠️  Warnings: {len(warnings)}")
+    print(f"❌ Critical failures: {len(critical_failures)}")
+    
+    if critical_failures:
+        print("\n❌ CRITICAL FAILURES:")
+        for failure in critical_failures:
+            print(f"   {failure}")
+        print("\n💡 To fix critical failures:")
+        print("   pip install -r requirements.txt")
+        print("   python -m spacy download en_core_web_sm")
+        print("\nApplication startup ABORTED due to missing critical dependencies.")
+        sys.exit(1)
+    
+    if warnings:
+        print("\n⚠️  WARNINGS (non-critical):")
+        for warning in warnings:
+            print(f"   {warning}")
+        print("\nApplication will start with reduced functionality.")
+    
+    print("\n🚀 All critical dependencies validated. Starting application...")
+    print("=" * 50)
 
 # Import configuration
 from config import get_config, create_secure_directories
@@ -541,6 +769,9 @@ def create_app():
     Initialises and configures the Flask application with all necessary
     extensions, blueprints, and database connections.
     """
+    # CRITICAL: Validate all dependencies before creating app (production)
+    validate_dependencies()
+    
     # Create secure directories first
     create_secure_directories()
     
@@ -794,7 +1025,7 @@ def _summarize_batch_results(file_list, successful_analyses, failed_analyses):
     }
 
 def _process_batch_files(file_list):
-    """Przetwórz listę plików w trybie wsadowym i zwróć (results, ok_count, fail_count)."""
+    """Process the list of files in batch mode and return (results, ok_count, fail_count)."""
     batch_results = []
     successful_analyses = 0
     failed_analyses = 0
@@ -869,7 +1100,7 @@ def _extract_text_with_fallback(file_path: str, university_name: str) -> str:
         )
 
 def _fallback_extract_pdf(file_path: str, current_text: str) -> str:
-    """Fallback ekstrakcji dla PDF przy użyciu pdfplumber (bez twardych zależności globalnych)."""
+    """Fallback extraction for PDF using pdfplumber (without hard global dependencies)."""
     try:
         import pdfplumber
         with pdfplumber.open(file_path) as pdf:
@@ -882,7 +1113,7 @@ def _fallback_extract_pdf(file_path: str, current_text: str) -> str:
     return current_text
 
 def _fallback_extract_docx(file_path: str, current_text: str) -> str:
-    """Fallback ekstrakcji dla DOCX/DOC przy użyciu python-docx (Document)."""
+    """Fallback extraction for DOCX/DOC using python-docx (Document)."""
     lower = file_path.lower()
     doc_exts = (DOCX_EXTENSION, '.doc') if 'DOCX_EXTENSION' in globals() else ('.docx', '.doc')
     if not lower.endswith(doc_exts):
@@ -899,7 +1130,7 @@ def _fallback_extract_docx(file_path: str, current_text: str) -> str:
     return current_text
 
 def _ensure_minimal_text(extracted_text: str, file_path: str, university_name: str) -> str:
-    """Zapewnij minimalny tekst zastępczy jeśli ekstrakcja nieudana lub zbyt krótka."""
+    """Ensure minimal placeholder text if extraction fails or is too short."""
     if not extracted_text or len(extracted_text) < 20:
         logger.warning(f"Dashboard: Using minimal placeholder text for {file_path}")
         return (
@@ -961,7 +1192,7 @@ def _classify_policy_safe(cleaned_text: str, missing_file: str) -> dict:
     }
 
 def _ensure_defaults_for_storage(extracted_text: str, cleaned_text: str, themes, classification: dict, university_name: str):
-    """Zapewnij domyślne wartości do zapisu analizy bazowej (bez zmiany zachowania)."""
+    """Ensure default values for storing the baseline analysis (without changing behaviour)."""
     if not extracted_text:
         extracted_text = f"AI Policy document from {university_name}. This is a placeholder text."
     if not cleaned_text:
@@ -977,7 +1208,7 @@ def _ensure_defaults_for_storage(extracted_text: str, cleaned_text: str, themes,
     return extracted_text, cleaned_text, themes, classification
 
 def _prepare_storage_metadata(missing_file: str, extracted_text: str) -> dict:
-    """Zbuduj metadane zapisu zgodnie z dotychczasowym formatem."""
+    """Build storage metadata consistent with the existing format."""
     return {
         "source_file": missing_file,
         "extraction_method": "dashboard_baseline_creation",
@@ -994,7 +1225,7 @@ def _build_placeholder_analysis(missing_file: str,
                                 extracted_text: str,
                                 cleaned_text: str,
                                 store_error: Exception) -> dict:
-    """Zbuduj placeholder analizy w przypadku błędu zapisu, zgodnie z aktualnym formatem."""
+    """Build an analysis placeholder in case of a storage error, consistent with the current format."""
     return {
         '_id': f"placeholder_{missing_file.replace('.', '_')}",
         'filename': baseline_filename,
@@ -1070,9 +1301,9 @@ def _store_baseline_or_placeholder(analyses_by_filename: dict,
         analyses_by_filename[missing_file] = placeholder_analysis
         logger.info(f"Dashboard: Added placeholder analysis for {missing_file} due to storage error")
 def _create_missing_baselines(clean_dataset_dir, missing_files, analyses_by_filename):
-    """Utwórz analizy bazowe dla brakujących plików używając bezpiecznych helperów."""
+    """Create baseline analyses for missing files using safe helpers."""
     for missing_file in missing_files:
-        # Pomiń pliki pomocnicze
+        # Skip auxiliary/helper files
         if 'guidance' in missing_file.lower() or missing_file == 'dataset_info.md':
             continue
 
@@ -1513,7 +1744,7 @@ def upload_file():
     return redirect(request.url)
 
 def _validate_upload_request(uploaded_files, max_files):
-    """Walidacja wejścia dla uploadu. Zwraca Response lub None jeśli OK."""
+    """Validate upload input. Returns a Response or None if OK."""
     if not uploaded_files:
         flash('No files selected', 'error')
         return redirect(request.url)
@@ -1523,7 +1754,7 @@ def _validate_upload_request(uploaded_files, max_files):
     return None
 
 def _handle_upload_outcome(successful_uploads, failed_uploads):
-    """Zbuduj odpowiedni redirect i komunikaty flash po uploadzie, albo zwróć None."""
+    """Build the appropriate redirect and flash messages after upload, or return None."""
     if successful_uploads:
         if len(successful_uploads) == 1:
             flash('File uploaded successfully! Starting analysis...', 'success')
@@ -1534,7 +1765,7 @@ def _handle_upload_outcome(successful_uploads, failed_uploads):
     if failed_uploads:
         error_msg = f"{len(failed_uploads)} files failed to upload: " + ", ".join([f['filename'] for f in failed_uploads])
         flash(error_msg, 'error')
-        # brak redirectu tutaj – pozwól wywołującemu zdecydować (upload_file -> request.url)
+        # no redirect here – let the caller decide (upload_file -> request.url)
     return None
 
 @app.route('/batch-analyse/<path:files>')
@@ -1720,7 +1951,7 @@ def analyse_document(filename):
         return _flash_and_redirect('upload_file', 'Error analysing document. Please try again.', 'error')
 
 def _authorize_analysis_or_redirect(filename: str, is_baseline: bool):
-    """Authorize analysis request or return a redirect Response if not allowed."""
+    """Authorise analysis request or return a redirect Response if not allowed."""
     if not _is_authorised_for_filename(filename, is_baseline):
         return _flash_and_redirect('upload_file', 'Access denied. You can only analyse your own documents or baseline policies.', 'error')
     return None
@@ -1769,9 +2000,9 @@ def validate_analysis(analysis_id):
 
 def _prepare_recommendation_inputs(analysis_id):
     """
-    Pobiera i waliduje dane wejściowe dla rekomendacji.
-    Zwraca krotkę: ((analysis, themes, classification, cleaned_text), None) lub (None, response)
-    gdzie 'response' to redirect/response do zwrócenia w przypadku błędu.
+    Fetches and validates input for recommendations.
+    Returns a tuple: ((analysis, themes, classification, cleaned_text), None) or (None, response)
+    where 'response' is the redirect/response to return in case of an error.
     """
     analysis = _fetch_analysis_for_recommendations(analysis_id)
     if analysis is None:
@@ -1816,7 +2047,7 @@ def get_recommendations(analysis_id):
             classification=classification,
         )
         if recommendation_package is None:
-            flash('Error generating recommendations. Please try again.', 'error')
+            flash('Unable to generate recommendation, please contact with administrator. This will be sorted soon.', 'error')
             return redirect(url_for('dashboard'))
 
         recommendation_data = _build_recommendation_data(analysis_id, analysis, themes, classification, recommendation_package)
@@ -1837,15 +2068,15 @@ def get_recommendations(analysis_id):
 
 
 def _get_analysis_for_deletion(user_id: int, analysis_id: str):
-    """Pobierz analizę użytkownika do usunięcia lub zwróć None."""
+    """Fetch the user's analysis to delete or return None."""
     return db_operations.get_user_analysis_by_id(user_id, analysis_id)
 
 def _is_protected_baseline(filename: str) -> bool:
-    """Sprawdź, czy plik jest polityką bazową chronioną przed usunięciem."""
+    """Check whether the file is a baseline policy protected from deletion."""
     return bool(filename and filename.startswith(BASELINE_PREFIX))
 
 def _build_possible_filenames(filename: str, user_id: int, document_id: str) -> list:
-    """Zbuduj listę możliwych nazw plików do posprzątania po usunięciu analizy."""
+    """Build a list of possible filenames to clean up after deleting the analysis."""
     names = [filename]
     if user_id is not None:
         names.append(f"{user_id}_{filename}")
@@ -1855,7 +2086,7 @@ def _build_possible_filenames(filename: str, user_id: int, document_id: str) -> 
         names.append(f"{filename}.pdf")
         if user_id is not None:
             names.append(f"{user_id}_{filename}.pdf")
-    # Filtruj puste/duplikaty, zachowując kolejność
+    # Filter out empty/duplicate entries, preserving order
     seen = set()
     ordered = []
     for n in names:
@@ -1865,23 +2096,23 @@ def _build_possible_filenames(filename: str, user_id: int, document_id: str) -> 
     return ordered
 
 def _cleanup_analysis_files(upload_folder: str, possible_filenames: list) -> None:
-    """Spróbuj usunąć fizyczne pliki powiązane z analizą; nie podnoś wyjątków."""
+    """Attempt to delete physical files linked to the analysis; do not raise exceptions."""
     for fname in possible_filenames:
         file_path = os.path.join(upload_folder, fname)
         if os.path.exists(file_path):
             try:
                 os.remove(file_path)
                 logger.info(f"Successfully deleted file: {file_path}")
-                break  # zatrzymaj po pierwszym skutecznym usunięciu
+                break  # stop after the first successful deletion
             except Exception as e:
                 logger.warning(f"Could not delete file {file_path}: {e}")
 
 def _delete_analysis_record(user_id: int, analysis_id: str) -> bool:
-    """Usuń wpis analizy użytkownika; zwróć True/False zgodnie z wynikiem DB."""
+    """Delete the user's analysis record; return True/False according to the DB outcome."""
     return db_operations.delete_user_analysis(user_id, analysis_id)
 
 def _cleanup_analysis_files_after_deletion(analysis: dict, upload_folder: str) -> None:
-    """Wykonaj sprzątanie plików powiązanych z analizą po jej usunięciu (bez podnoszenia wyjątków)."""
+    """Perform cleanup of files linked to the analysis after it is removed (without raising exceptions)."""
     try:
         filename = analysis.get('filename', '')
         possible_filenames = _build_possible_filenames(
@@ -1892,33 +2123,6 @@ def _cleanup_analysis_files_after_deletion(analysis: dict, upload_folder: str) -
         _cleanup_analysis_files(upload_folder, possible_filenames)
     except Exception as e:
         logger.error(f"Error during file cleanup for analysis {analysis.get('_id', 'unknown')}: {str(e)}")
-
-@app.route('/delete_analysis/<analysis_id>', methods=['POST'])
-@login_required
-def delete_analysis(analysis_id):
-    """
-    Delete user analysis with appropriate security checks.
-    
-    Removes analysis records from database while protecting baseline
-    policies from accidental deletion.
-    """
-    logger.info(f"Attempting deletion of analysis {analysis_id} by user {current_user.id}")
-    try:
-        analysis, redirect_resp = _fetch_analysis_or_redirect_for_delete(current_user.id, analysis_id)
-        if redirect_resp:
-            return redirect_resp
-
-        if not _delete_analysis_record(current_user.id, analysis_id):
-            flash('Failed to delete analysis. Please try again.', 'error')
-            return redirect(url_for('dashboard'))
-
-        _cleanup_analysis_files_after_deletion(analysis, app.config['UPLOAD_FOLDER'])
-        flash('Analysis and related data deleted successfully.', 'success')
-        return redirect(url_for('dashboard'))
-    except Exception as e:
-        logger.error(f"Error deleting analysis {analysis_id}: {str(e)}")
-        flash('An error occurred while deleting the analysis.', 'error')
-        return redirect(url_for('dashboard'))
 
 def _fetch_analysis_or_redirect_for_delete(user_id: int, analysis_id: str):
     """Fetch analysis and enforce deletion guards; return (analysis, redirect_response_or_None)."""
@@ -2241,6 +2445,10 @@ def _complete_onboarding_with_message(user, message: str, category: str) -> bool
 
 if __name__ == '__main__':
     """Run the PolicyCraft application in development mode."""
+    
+    # CRITICAL: Validate all dependencies before starting application
+    validate_dependencies()
+    
     os.makedirs('logs', exist_ok=True)
     create_upload_folder()
     

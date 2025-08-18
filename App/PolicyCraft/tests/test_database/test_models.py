@@ -7,7 +7,7 @@ ensuring that data structures and relationships work correctly.
 
 import pytest
 from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime
+from datetime import datetime, timezone
 
 from src.database.models import *
 
@@ -31,7 +31,7 @@ class TestDatabaseModels:
             'email': 'test@example.com',
             'password_hash': 'hashed_password_123',
             'is_active': True,
-            'created_at': datetime.utcnow()
+            'created_at': datetime.now(timezone.utc)
         }
     
     @pytest.fixture
@@ -42,7 +42,7 @@ class TestDatabaseModels:
             'classification': 'Restrictive',
             'confidence_score': 0.85,
             'themes': ['education', 'social policy'],
-            'created_at': datetime.utcnow(),
+            'created_at': datetime.now(timezone.utc),
             'user_id': 'test_user_id'
         }
     
@@ -124,14 +124,15 @@ class TestDatabaseModels:
         except NameError:
             pytest.skip("Analysis model not defined")
     
-    def test_model_timestamps(self):
+    def test_model_timestamps(self, mock_analysis_data):
         """Test that models handle timestamps correctly."""
         try:
-            current_time = datetime.utcnow()
-            
-            # Test timestamp functionality exists
-            assert current_time is not None
-            assert isinstance(current_time, datetime)
+            if 'Analysis' in globals():
+                analysis = Analysis(**mock_analysis_data)
+                current_time = datetime.now(timezone.utc)
+                assert abs((analysis.updated_at - current_time).total_seconds()) < 1
+                assert current_time is not None
+                assert isinstance(current_time, datetime)
         except Exception as e:
             pytest.fail(f"Timestamp handling failed: {e}")
     

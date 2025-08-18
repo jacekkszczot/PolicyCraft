@@ -17,7 +17,7 @@
     
     Features:
     - Responsive design for all device sizes
-    - Interactive data visualizations
+    - Interactive data visualisations
     - Export functionality for analysis results
     - Clear presentation of complex data
     
@@ -31,6 +31,32 @@
 <section class="hero">
     <div class="hero-content">
         <h1 class="hero-title">Analysis Results</h1>
+        {% if analysis.error %}
+        <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">
+                {% if analysis.error.code == 'knowledge_base_unavailable' %}
+                    Knowledge Base Unavailable
+                {% else %}
+                    Analysis Error
+                {% endif %}
+            </h4>
+            <p>
+                {% if analysis.error.code == 'knowledge_base_unavailable' %}
+                    We're sorry, but we cannot generate recommendations at this time because the knowledge base is not available.
+                {% else %}
+                    {{ analysis.error.message if analysis.error.message else analysis.error }}
+                {% endif %}
+            </p>
+            <hr>
+            <p class="mb-0">
+                {% if analysis.error.code == 'knowledge_base_unavailable' %}
+                    Please try again later or contact the system administrator if the problem persists.
+                {% else %}
+                    Please check your input and try again.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
         <h2 class="hero-subtitle">Comprehensive AI policy analysis completed</h2>
     </div>
 </section>

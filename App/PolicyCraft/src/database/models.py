@@ -1,7 +1,7 @@
 """
 Database models for PolicyCraft AI Policy Analysis Platform.
 
-This module defines all database models and provides database initialization.
+This module defines all database models and provides database initialisation.
 It uses SQLAlchemy ORM for database operations.
 
 Author: Jacek Robert Kszczot
@@ -131,7 +131,7 @@ SAMPLE_UNIVERSITIES = {
     }
 }
 
-# Initialize SQLAlchemy
+# Initialise SQLAlchemy
 db = SQLAlchemy()
 
 class User(UserMixin, db.Model):
@@ -174,7 +174,7 @@ class User(UserMixin, db.Model):
     onboarding = db.relationship('UserOnboarding', backref='user', uselist=False)
     
     def __init__(self, username, email, password=None, **kwargs):
-        """Initialize a new user and persist the password hash securely.
+        """Initialise a new user and persist the password hash securely.
         Accepts either a plain-text password or an existing password_hash in kwargs.
         """
         self.username = username
@@ -291,7 +291,7 @@ class UserOnboarding(db.Model):
 
 
 def init_db(app):
-    """Initialize the database connection and create tables.
+    """Initialise the database connection and create tables.
     
     This function creates all required tables and sets up the initial admin user.
     It should be called during application startup after db.init_app(app).

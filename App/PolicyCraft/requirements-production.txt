@@ -1,49 +1,69 @@
-# PolicyCraft - Essential Dependencies Only
+# PolicyCraft - Production Dependencies
+# ====================================
+# Essential dependencies required to run PolicyCraft in production
 
-# Flask Web Framework & Core
+# ===== Web Framework & Core =====
 Flask==3.0.0
 Werkzeug==3.0.1
 Jinja2>=3.1.0
 
-# Authentication & Security
+# ===== Authentication & Security =====
 Flask-Login>=0.6.3
 Flask-WTF>=1.2.0
 WTForms>=3.1.0
+email_validator>=2.2.0
 
-# Database
+# ===== Database =====
+pymongo>=4.6.0
+python-dotenv>=1.0.0
+Flask-SQLAlchemy>=3.1.0
 
-# Utilities
-tqdm>=4.66.0
-
-# Natural Language Processing (Essential only)
-spacy>=3.7.0
-scikit-learn>=1.3.0
-
-# Document Processing
-pypdf>=3.17.0
-python-docx>=1.1.0
-
-# Data Processing (Core only)
+# ===== Data Processing =====
 pandas>=2.1.0
 numpy>=1.24.0
+python-dateutil>=2.8.2
+pytz>=2023.3
 
-# Visualization
-plotly>=5.17.0
-
-# Text Processing
+# ===== Natural Language Processing =====
+spacy>=3.7.0
+scikit-learn>=1.3.0
+nltk>=3.8.1
 contractions>=0.1.73
 
-# Environment
-python-dotenv>=1.0.0
-# Database
-pymongo>=4.6.0
+# ===== Document Processing =====
+pypdf>=6.0.0
+python-docx>=1.1.0
+PyMuPDF>=1.23.0
+pdfplumber>=0.11.7
 
-# Production server
+# ===== Export & Reporting =====
+reportlab>=4.0.0
+XlsxWriter>=3.2.0
+
+# ===== Data Visualisation =====
+plotly>=5.17.0
+kaleido>=0.2.1
+
+# ===== Advanced NLP (Optional) =====
+sentence-transformers>=2.2.0
+
+# ===== Utilities =====
+tqdm>=4.66.0
+python-slugify>=8.0.1
+requests>=2.31.0
+
+# ===== Logging =====
+python-json-logger>=2.0.7
+
+# ===== Production Server =====
 gunicorn>=21.2.0
 
-# Testing (Development only)
-pytest>=7.4.0
-pytest-flask>=1.3.0
-
-# Note: Install spaCy model after installation:
-# python -m spacy download en_core_web_sm
+# IMPORTANT: POST-INSTALLATION STEPS
+# ===================================
+# After installing requirements, run these commands:
+#
+# 1. Download spaCy English model:
+#    python -m spacy download en_core_web_sm
+#
+# 2. Download NLTK data:
+#    python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('averaged_perceptron_tagger')"

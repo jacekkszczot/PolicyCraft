@@ -1,3 +1,26 @@
+"""
+PolicyCraft Advanced Analysis Engine.
+
+This module implements the advanced multi-dimensional analysis engine for PolicyCraft,
+providing sophisticated policy evaluation capabilities with integrated literature
+repository support and confidence calculation. The engine serves as the core
+analytical component for processing policy documents with enhanced accuracy.
+
+Key Features:
+- Multi-dimensional policy analysis framework
+- Literature repository integration for evidence-based insights
+- Advanced confidence calculation algorithms
+- Contextual analysis with stakeholder considerations
+
+The engine processes policy texts through multiple analytical layers, incorporating
+academic literature insights and generating comprehensive analysis results with
+confidence metrics and contextual recommendations.
+
+Author: Jacek Robert Kszczot
+Project: MSc Data Science & AI - COM7016
+University: Leeds Trinity University
+"""
+
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
@@ -27,7 +50,7 @@ class PolicyAnalysisEngine:
     def analyze_policy(self, policy_text: str, context_params: Dict[str, Any]) -> Dict[str, Any]:
         themes: List[Dict[str, Any]] = context_params.get("themes") or []
         classification = context_params.get("classification")
-        repo = LiteratureRepository.instance() if LiteratureRepository else None
+        repo = LiteratureRepository.get() if LiteratureRepository else None
 
         confidence = self.confidence_calc.calculate_confidence(
             themes=themes,

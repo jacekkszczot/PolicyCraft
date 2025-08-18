@@ -421,6 +421,16 @@ class MongoOperations:
 
     # User data cleanup helpers
 
+    def clear_all_recommendations(self) -> int:
+        """
+        Remove all recommendations from the database.
+        
+        Returns:
+            int: Number of recommendations deleted
+        """
+        result = self.recommendations.delete_many({})
+        return result.deleted_count
+
     def purge_user_data(self, user_id: int):
         """
         Delete all analyses, recommendations, and associated files for a user.

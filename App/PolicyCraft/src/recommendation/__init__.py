@@ -1,7 +1,7 @@
 """
 PolicyCraft Recommendation Engine Module.
 
-This package contains the core components for generating AI policy recommendations
+This package contains the core components for developing evidence-based AI policy recommendations
 and analyses within the PolicyCraft platform. It includes the ethical framework
 analyser, recommendation generator, and supporting utilities for evaluating and
 improving AI usage policies in higher education.

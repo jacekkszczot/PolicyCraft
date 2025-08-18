@@ -47,6 +47,7 @@ Project: MSc Data Science & AI - COM7016
 University: Leeds Trinity University
 """
 from __future__ import annotations
+from flask_login import current_user
 
 import json
 import logging
@@ -58,7 +59,7 @@ from flask import (
     Blueprint, current_app, flash, redirect, render_template,
     request, session, url_for, Response, json, jsonify, send_from_directory, abort
 )
-from werkzeug.security import check_password_hash, generate_password_hash
+# Removed old admin config authentication system - now using unified Flask-Login
 
 from src.database.models import User, db as sqlalchemy_db
 from src.database.mongo_operations import MongoOperations
@@ -66,18 +67,14 @@ from src.literature.literature_engine import LiteratureEngine
 from src.analysis_engine.literature.repository import LiteratureRepository
 from datetime import datetime
 
-# Initialize logger
+# Initialise logger
 logger = logging.getLogger(__name__)
 
 admin_bp = Blueprint("admin", __name__, template_folder="../web/templates/admin", url_prefix="/admin")
 
 # ---------------------------------------------------------------------------
-# Simple password storage (hashed) – for single-admin scenario
+# Admin routes configuration
 # ---------------------------------------------------------------------------
-CONFIG_DIR = os.path.join(os.getcwd(), "data")
-CONFIG_PATH = os.path.join(CONFIG_DIR, "admin_config.json")
-DEFAULT_PASSWORD = os.getenv("ADMIN_PASSWORD", "change_me_immediately")  # Set ADMIN_PASSWORD in production
-
 mongo_db = MongoOperations()
 
 # ---------------------------------------------------------------------------
@@ -87,28 +84,30 @@ ADMIN_DASHBOARD_ENDPOINT = "admin.dashboard"
 ADMIN_USERS_ENDPOINT = "admin.users"
 SSE_DATA_PREFIX = "data: "
 
-
-def _load_config() -> Dict:
-    if not os.path.exists(CONFIG_PATH):
-        os.makedirs(CONFIG_DIR, exist_ok=True)
-        _save_config({"password_hash": generate_password_hash(DEFAULT_PASSWORD)})
-    with open(CONFIG_PATH, "r") as f:
-        return json.load(f)
-
-def _save_config(cfg: Dict):
-    os.makedirs(CONFIG_DIR, exist_ok=True)
-    with open(CONFIG_PATH, "w") as f:
-        json.dump(cfg, f, indent=2)
-
 # ---------------------------------------------------------------------------
 # Decorator for protected routes
 # ---------------------------------------------------------------------------
 
 def admin_required(func):
+    """
+    Decorator to require admin authentication for route access.
+    
+    Uses Flask-Login to check if the current user is authenticated and has admin role.
+    Redirects to the main login page if not authenticated or not an admin.
+    
+    Args:
+        func: The route function to protect
+        
+    Returns:
+        Wrapped function with admin authentication check
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if not session.get("is_admin"):
-            return redirect(url_for("admin.login", next=request.path))
+        from flask_login import current_user
+        
+        # Check if user is authenticated and has admin role
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            return redirect(url_for("auth.login", next=request.path))
         return func(*args, **kwargs)
     return wrapper
 
@@ -118,22 +117,59 @@ def admin_required(func):
 
 @admin_bp.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":
-        password = request.form.get("password", "")
-        cfg = _load_config()
-        if check_password_hash(cfg["password_hash"], password):
-            session["is_admin"] = True
-            flash("Logged in as admin", "success")
-            return redirect(request.args.get("next") or url_for(ADMIN_DASHBOARD_ENDPOINT))
-        flash("Invalid admin password", "error")
-    return render_template("admin/login.html")
+    """
+    Admin authentication endpoint using the main user authentication system.
+    
+    This route redirects admin login to the main authentication system for consistency.
+    Admin users should log in through the main /login route using their database credentials.
+    This ensures a single, unified authentication system throughout the application.
+    
+    Returns:
+        Redirect to main login with admin dashboard as next page
+    """
+    # Redirect to main login system with admin dashboard as the target
+    next_url = request.args.get("next") or url_for(ADMIN_DASHBOARD_ENDPOINT)
+    return redirect(url_for("auth.login", next=next_url))
 
 @admin_bp.route("/logout")
-@admin_required
 def logout():
-    session.pop("is_admin", None)
-    flash("Logged out of admin", "info")
-    return redirect(url_for("index"))
+    """
+    Admin logout that clears both admin session and Flask-Login session.
+    This ensures complete logout without requiring double logout.
+    """
+    from flask_login import logout_user
+    from flask import make_response
+    
+    if session.get("is_admin"):
+        # Clear admin session
+        session.pop("is_admin", None)
+        
+        # Also logout the Flask-Login user session to prevent double logout
+        logout_user()
+        
+        # Clear entire session for complete cleanup
+        session.clear()
+        
+        flash("Logged out successfully", "info")
+        logger.info("Admin logged out completely (both admin and user sessions cleared)")
+    else:
+        flash("Already logged out", "info")
+    
+    # Create response with cache headers to prevent browser caching
+    resp = make_response(redirect(url_for("index")))
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    return resp
+
+@admin_bp.route("/session-status")
+def session_status():
+    """Debug route to check current session status."""
+    return {
+        "is_admin": session.get("is_admin", False),
+        "session_keys": list(session.keys()),
+        "user_agent": request.headers.get("User-Agent", ""),
+    }
 
 # ---------------------------------------------------------------------------
 # Dashboard
@@ -157,12 +193,30 @@ def dashboard():
 @admin_bp.route("/users")
 @admin_required
 def users():
+    """
+    Display all users in the system for administrative management.
+    
+    Returns:
+        Rendered users template with list of all registered users
+    """
     users = User.query.all()
     return render_template("admin/users.html", users=users)
 
 @admin_bp.route("/users/delete/<int:user_id>")
 @admin_required
 def delete_user(user_id):
+    """
+    Delete a user account with security safeguards.
+    
+    Prevents deletion of admin users and handles cascading deletion
+    of associated user data including analyses and onboarding records.
+    
+    Args:
+        user_id: Integer ID of the user to delete
+        
+    Returns:
+        Redirect to users page with success or error message
+    """
     user = User.query.get(user_id)
     if not user:
         flash("User not found", "error")
@@ -262,6 +316,37 @@ def reset_baselines():
     """Show the baseline reset page with progress tracking."""
     return render_template("admin/reset_baselines.html")
 
+
+@admin_bp.route("/reset-recommendations", methods=["POST"])
+@admin_required
+def reset_recommendations():
+    """
+    Remove all recommendations from the database.
+    
+    This is an administrative action that will delete all recommendation data
+    across all users. Use with caution as this action cannot be undone.
+    """
+    try:
+        from src.database.mongo_operations import MongoOperations
+        from flask import flash, redirect, url_for
+        
+        # Initialize MongoOperations and clear all recommendations
+        mongo_ops = MongoOperations()
+        deleted_count = mongo_ops.clear_all_recommendations()
+        
+        if deleted_count > 0:
+            flash(f"Successfully removed {deleted_count} recommendations from the database.", "success")
+        else:
+            flash("No recommendations found in the database to remove. The recommendations collection is already empty.", "info")
+        logger.info(f"Admin {current_user.id if current_user.is_authenticated else 'unknown'} reset all recommendations. Removed {deleted_count} entries.")
+        
+    except Exception as e:
+        error_msg = f"Failed to reset recommendations: {str(e)}"
+        logger.error(error_msg, exc_info=True)  # Dodajemy pełny stack trace do logów
+        flash(error_msg, "error")
+    
+    return redirect(url_for('admin.dashboard'))
+
 # ---------------------------------------------------------------------------
 # Change admin password
 # ---------------------------------------------------------------------------
@@ -269,22 +354,14 @@ def reset_baselines():
 @admin_bp.route("/change_password", methods=["GET", "POST"])
 @admin_required
 def change_password():
-    if request.method == "POST":
-        current_pw = request.form.get("current_password", "")
-        new_pw = request.form.get("new_password", "")
-        confirm_pw = request.form.get("confirm_password", "")
-        cfg = _load_config()
-        if not check_password_hash(cfg["password_hash"], current_pw):
-            flash("Current password incorrect", "error")
-            return redirect(url_for("admin.change_password"))
-        if new_pw != confirm_pw or len(new_pw) < 6:
-            flash("New passwords do not match or too short", "error")
-            return redirect(url_for("admin.change_password"))
-        cfg["password_hash"] = generate_password_hash(new_pw)
-        _save_config(cfg)
-        flash("Password updated", "success")
-        return redirect(url_for("admin.dashboard"))
-    return render_template("admin/change_password.html")
+    """
+    Admin password change - redirects to user profile for consistency.
+    
+    Since we now use unified authentication, admin users should change
+    their password through the main user profile interface.
+    """
+    flash("Please use your user profile to change your password", "info")
+    return redirect(url_for("auth.profile"))
 
 
 # Literature Management Routes
@@ -679,7 +756,17 @@ def document_details(document_id):
 @admin_bp.route('/get-available-backups', methods=['GET'])
 @admin_required
 def get_available_backups():
-    """Get list of available knowledge base backups."""
+    """
+    Retrieve a comprehensive list of available knowledge base backups.
+    
+    This endpoint provides administrators with detailed information about all
+    available backup snapshots of the knowledge base, including creation dates,
+    file counts, and storage sizes. Used by the backup management interface
+    to display restore options to users.
+    
+    Returns:
+        JSON response containing backup metadata and success status
+    """
     try:
         from src.literature.literature_engine import LiteratureEngine
         literature_engine = LiteratureEngine()
@@ -702,7 +789,21 @@ def get_available_backups():
 @admin_bp.route('/restore-backup', methods=['POST'])
 @admin_required
 def restore_backup():
-    """Restore knowledge base from a backup."""
+    """
+    Restore the knowledge base from a selected backup snapshot.
+    
+    This administrative endpoint enables the restoration of the knowledge base
+    to a previous state using backup snapshots. The function automatically creates
+    a safety backup of the current state before proceeding with the restoration
+    to prevent data loss. Comprehensive logging tracks all restoration activities
+    for audit purposes.
+    
+    Expected JSON payload:
+        backup_id (str): The identifier of the backup to restore from
+        
+    Returns:
+        JSON response with restoration results and affected file details
+    """
     try:
         data = request.get_json()
         backup_id = data.get('backup_id')
@@ -730,5 +831,351 @@ def restore_backup():
         return jsonify({
             'success': False,
             'error': f'Error restoring backup: {str(e)}'
+        }), 500
+
+
+@admin_bp.route('/literature/complete-cleanup', methods=['POST'])
+@admin_required  
+def complete_literature_cleanup():
+    """
+    Complete literature cleanup - removes ALL literature traces from the system.
+    This includes markdown files, activity logs, version history, and backups.
+    """
+    try:
+        from src.literature.literature_engine import LiteratureEngine
+        import shutil
+        
+        literature_engine = LiteratureEngine()
+        kb_manager = literature_engine.knowledge_manager
+        kb_path = kb_manager.knowledge_base_path
+        
+        cleanup_stats = {
+            'files_removed': 0,
+            'activity_cleared': False,
+            'history_cleared': False,
+            'backups_cleared': False
+        }
+        
+        # 1. Remove all markdown files
+        for filename in os.listdir(kb_path):
+            if filename.endswith('.md'):
+                file_path = os.path.join(kb_path, filename)
+                try:
+                    os.remove(file_path)
+                    cleanup_stats['files_removed'] += 1
+                except Exception as e:
+                    logger.error(f"Failed to remove {file_path}: {e}")
+        
+        # 2. Clear activity log
+        activity_log_path = os.path.join(kb_path, 'activity_log.json')
+        try:
+            with open(activity_log_path, 'w') as f:
+                json.dump([], f)
+            cleanup_stats['activity_cleared'] = True
+        except Exception as e:
+            logger.error(f"Failed to clear activity log: {e}")
+        
+        # 3. Clear version history
+        version_history_path = os.path.join(kb_path, 'version_history.json')
+        try:
+            with open(version_history_path, 'w') as f:
+                json.dump([], f)
+            cleanup_stats['history_cleared'] = True
+        except Exception as e:
+            logger.error(f"Failed to clear version history: {e}")
+        
+        # 4. Remove all backups
+        backups_path = os.path.join(kb_path, 'backups')
+        try:
+            if os.path.exists(backups_path):
+                shutil.rmtree(backups_path)
+                os.makedirs(backups_path, exist_ok=True)
+            cleanup_stats['backups_cleared'] = True
+        except Exception as e:
+            logger.error(f"Failed to clear backups: {e}")
+        
+        # 5. Clear any cached data in literature engine
+        try:
+            # Force refresh of literature engine data
+            literature_engine._document_cache = {}
+            kb_manager.activity_log = []
+            kb_manager.version_history = []
+        except Exception as e:
+            logger.warning(f"Failed to clear cache: {e}")
+        
+        flash(f"Complete cleanup successful! Removed {cleanup_stats['files_removed']} files, cleared activity log, history, and backups.", "success")
+        return jsonify({
+            'success': True,
+            'message': 'Complete literature cleanup completed successfully',
+            'stats': cleanup_stats
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in complete literature cleanup: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'Cleanup failed: {str(e)}'
+        }), 500
+
+
+@admin_bp.route('/literature/reprocess', methods=['POST'])
+@admin_required
+def reprocess_existing_documents():
+    """Reprocess existing documents with enhanced capabilities."""
+    try:
+        enhanced_processing = request.json.get('enhanced', True) if request.is_json else True
+        
+        logger.info("Starting reprocessing of existing documents")
+        
+        # Get the literature engine instance
+        from src.literature.literature_engine import LiteratureEngine
+        literature_engine = LiteratureEngine()
+        
+        # Start reprocessing
+        results = literature_engine.reprocess_existing_documents(enhanced_processing)
+        
+        if results.get('status') == 'success':
+            message = f"Successfully reprocessed {results['processed']} documents"
+            if results['errors'] > 0:
+                message += f" with {results['errors']} errors"
+            
+            flash(message, "success")
+            
+            return jsonify({
+                'success': True,
+                'message': message,
+                'results': results
+            })
+        
+        elif results.get('status') == 'no_documents':
+            flash("No documents found in knowledge base to reprocess", "info")
+            return jsonify({
+                'success': True,
+                'message': 'No documents found to reprocess',
+                'results': results
+            })
+        
+        else:
+            flash(f"Reprocessing failed: {results.get('message', 'Unknown error')}", "error")
+            return jsonify({
+                'success': False,
+                'error': results.get('message', 'Unknown error'),
+                'results': results
+            }), 500
+        
+    except Exception as e:
+        error_msg = f"Error during document reprocessing: {str(e)}"
+        logger.error(error_msg)
+        flash(error_msg, "error")
+        return jsonify({
+            'success': False,
+            'error': error_msg
+        }), 500
+
+
+@admin_bp.route('/literature/reprocess-status')
+@admin_required  
+def get_reprocessing_status():
+    """Get current status of document reprocessing capabilities."""
+    try:
+        from src.literature.literature_engine import LiteratureEngine
+        literature_engine = LiteratureEngine()
+        
+        # Count existing documents
+        kb_path = literature_engine.knowledge_manager.knowledge_base_path
+        document_count = 0
+        
+        if os.path.exists(kb_path):
+            document_count = len([f for f in os.listdir(kb_path) if f.endswith('.md')])
+        
+        # Check if original PDFs are available for reprocessing
+        data_dir = "data/literature"
+        pdf_count = 0
+        if os.path.exists(data_dir):
+            pdf_count = len([f for f in os.listdir(data_dir) if f.endswith('.pdf')])
+        
+        # Check available enhancement capabilities
+        capabilities = {
+            'theme_extraction': literature_engine.processor.theme_extractor is not None,
+            'enhanced_metadata': True,  # Always available
+            'content_recommendations': True,  # Always available
+            'spacy_available': literature_engine.processor.nlp is not None,
+            'embeddings_available': literature_engine.processor.embedder is not None
+        }
+        
+        return jsonify({
+            'document_count': document_count,
+            'pdf_count': pdf_count,
+            'capabilities': capabilities,
+            'ready_for_reprocessing': document_count > 0
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting reprocessing status: {str(e)}")
+        return jsonify({
+            'error': str(e)
+        }), 500
+
+
+
+@admin_bp.route('/literature/pending-reviews')
+@admin_required
+def get_pending_reviews():
+    """Get documents pending manual review."""
+    logger.info("📋 get_pending_reviews endpoint called")
+    try:
+        pending_documents = []
+        analysis_dir = "data/analysis"
+        
+        if os.path.exists(analysis_dir):
+            for filename in os.listdir(analysis_dir):
+                if filename.endswith('.json'):
+                    file_path = os.path.join(analysis_dir, filename)
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            doc_data = json.load(f)
+                        
+                        # Check if document is not in knowledge base yet
+                        doc_id = doc_data.get('document_id', '')
+                        kb_path = "docs/knowledge_base"
+                        
+                        # Look for corresponding MD file in knowledge base
+                        found_in_kb = False
+                        if os.path.exists(kb_path):
+                            hash_part = doc_id.split('_')[-1] if doc_id else ''
+                            
+                            for kb_file in os.listdir(kb_path):
+                                if kb_file.endswith('.md') and hash_part in kb_file:
+                                    found_in_kb = True
+                                    break
+                        
+                        if not found_in_kb:
+                            # This document is pending review
+                            pending_documents.append({
+                                'document_id': doc_id,
+                                'original_filename': doc_data.get('original_filename', 'Unknown'),
+                                'processing_date': doc_data.get('processing_date', ''),
+                                'quality_score': doc_data.get('analysis_summary', {}).get('quality_score', 0),
+                                'insights_count': doc_data.get('analysis_summary', {}).get('insights_count', 0),
+                                'metadata': doc_data.get('full_analysis', {}).get('metadata', {})
+                            })
+                    except Exception as e:
+                        logger.warning(f"Error reading analysis file {filename}: {str(e)}")
+        
+        logger.info(f"📋 Found {len(pending_documents)} pending documents")
+        return jsonify({
+            'success': True,
+            'pending_documents': pending_documents,
+            'count': len(pending_documents)
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting pending reviews: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@admin_bp.route('/literature/approve-document', methods=['POST'])
+@admin_required
+def approve_document():
+    """Approve a document for integration into knowledge base."""
+    try:
+        data = request.get_json()
+        document_id = data.get('document_id')
+        
+        if not document_id:
+            return jsonify({
+                'success': False,
+                'error': 'Document ID required'
+            }), 400
+        
+        # Find the analysis file
+        analysis_file = f"data/analysis/{document_id}.json"
+        if not os.path.exists(analysis_file):
+            return jsonify({
+                'success': False,
+                'error': 'Document analysis not found'
+            }), 404
+        
+        # Load the analysis data
+        with open(analysis_file, 'r', encoding='utf-8') as f:
+            analysis_data = json.load(f)
+        
+        # Get processing results from analysis
+        processing_results = analysis_data.get('full_analysis', {})
+        
+        # Force integration into knowledge base
+        from src.literature.literature_engine import LiteratureEngine
+        literature_engine = LiteratureEngine()
+        
+        # Bypass all checks and force direct integration
+        backup_id = literature_engine.knowledge_manager._create_backup()
+        integration_results = literature_engine.knowledge_manager._integrate_new_document(processing_results, backup_id)
+        
+        # Update version history if successful
+        if integration_results.get('status') == 'success':
+            literature_engine.knowledge_manager._update_version_history(integration_results, processing_results)
+        
+        if integration_results.get('status') == 'success':
+            flash("Document approved and integrated into knowledge base", "success")
+            return jsonify({
+                'success': True,
+                'message': 'Document approved successfully',
+                'integration_results': integration_results
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f"Integration failed: {integration_results.get('message', 'Unknown error')}"
+            }), 500
+        
+    except Exception as e:
+        error_msg = f"Error approving document: {str(e)}"
+        logger.error(error_msg)
+        return jsonify({
+            'success': False,
+            'error': error_msg
+        }), 500
+
+
+@admin_bp.route('/literature/reject-document', methods=['POST'])
+@admin_required
+def reject_document():
+    """Reject a document and remove from pending review."""
+    try:
+        data = request.get_json()
+        document_id = data.get('document_id')
+        reason = data.get('reason', 'No reason provided')
+        
+        if not document_id:
+            return jsonify({
+                'success': False,
+                'error': 'Document ID required'
+            }), 400
+        
+        # Find and remove the analysis file
+        analysis_file = f"data/analysis/{document_id}.json"
+        if os.path.exists(analysis_file):
+            os.remove(analysis_file)
+        
+        # Remove PDF file if exists
+        pdf_file = f"data/literature/{document_id[:-8]}.pdf"  # Remove ID suffix
+        if os.path.exists(pdf_file):
+            os.remove(pdf_file)
+        
+        flash(f"Document rejected and removed. Reason: {reason}", "info")
+        return jsonify({
+            'success': True,
+            'message': 'Document rejected successfully'
+        })
+        
+    except Exception as e:
+        error_msg = f"Error rejecting document: {str(e)}"
+        logger.error(error_msg)
+        return jsonify({
+            'success': False,
+            'error': error_msg
         }), 500
 

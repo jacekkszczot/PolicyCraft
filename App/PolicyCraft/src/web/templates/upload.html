@@ -20,7 +20,7 @@
     - Maximum 10 files per upload
     - Client-side file validation
     - Real-time upload progress
-    - 128MB maximum file size per file
+    - 30MB maximum file size per file
     - Client-side file type validation
     - Progress tracking for uploads
     
@@ -33,7 +33,7 @@
 <section class="hero">
     <div class="hero-content">
         <h1 class="hero-title">Upload Policy Documents</h1>
-        <h2 class="hero-subtitle">Drag and drop files or click to select. Support for multiple files (up to 10 files, 128MB each).</h2>
+        <h2 class="hero-subtitle">Drag and drop files or click to select. Support for multiple files (up to 10 files, 30MB each).</h2>
     </div>
 </section>
 
@@ -47,7 +47,7 @@
                 <div class="drag-drop-icon">📄</div>
                 <h3>Drag & Drop Policy Documents Here</h3>
                 <p>or <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">Browse Files</button></p>
-                <small>Supports: PDF, DOCX, TXT • Max: 10 files • 128MB each</small>
+                <small>Supports: PDF, DOCX, TXT • Max: 10 files • 30MB each</small>
             </div>
             
             <!-- Hidden File Input -->
@@ -330,7 +330,7 @@
 <script>
 let selectedFiles = [];
 const maxFiles = 10;
-const maxSize = 128 * 1024 * 1024; // 128MB
+const maxSize = 30 * 1024 * 1024; // 30MB
 
 // Drag and drop functionality
 const dragDropZone = document.getElementById('dragDropZone');
@@ -386,7 +386,7 @@ function handleFiles(files) {
 function validateFile(file) {
     // Check file size
     if (file.size > maxSize) {
-        alert(`File "${file.name}" is too large. Maximum size is 128MB.`);
+        alert(`File "${file.name}" is too large. Maximum size is 30MB.`);
         return false;
     }
     

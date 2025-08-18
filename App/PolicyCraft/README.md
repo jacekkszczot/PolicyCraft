@@ -144,7 +144,7 @@ graph LR
    python -m spacy download en_core_web_sm
    ```
 
-6. **Initialize Application**
+6. **Initialise Application**
    ```bash
    python config.py  # Creates secure directories
    ```
@@ -165,7 +165,7 @@ graph LR
 
 1. **Register Account**: Create user account for personalized analysis tracking
 2. **Upload Policy**: Select AI policy document (PDF/DOCX/TXT format)
-3. **View Analysis**: Review extracted themes, classification, and visualizations
+3. **View Analysis**: Review extracted themes, classification, and visualisations
 4. **Generate Recommendations**: Access detailed, academic-grade improvement suggestions
 5. **Export Results**: Download analysis results in multiple formats
 

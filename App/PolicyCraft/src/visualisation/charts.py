@@ -31,7 +31,7 @@ import re
 
 logger = logging.getLogger(__name__)
 
-# Visualization libraries
+# Visualisation libraries
 try:
     import plotly.graph_objects as go
     import plotly.utils
@@ -42,13 +42,13 @@ except ImportError:
 
 class ChartGenerator:
     """
-    Generate interactive charts and visualizations for policy analysis results.
+    Generate interactive charts and visualisations for policy analysis results.
     """
     
     def __init__(self):
-        """Initialize chart generator with default settings."""
+        """Initialise chart generator with default settings."""
         
-        # Color schemes for different chart types
+        # Colour schemes for different chart types
         self.color_schemes = {
             'themes': ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', 
                       '#1abc9c', '#34495e', '#e67e22', '#95a5a6', '#16a085'],

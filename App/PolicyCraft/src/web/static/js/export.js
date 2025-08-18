@@ -1,7 +1,25 @@
-// Funkcja do eksportu analiz do pliku CSV
+/**
+ * PolicyCraft - Export Functionality
+ *
+ * This module provides data export capabilities for policy analysis results,
+ * enabling users to download analysis data in CSV format for further processing
+ * and reporting purposes.
+ *
+ * Key Features:
+ * - CSV export of analysis results
+ * - Data formatting and sanitisation
+ * - Browser-compatible file downloads
+ * - Integration with PapaParse library
+ *
+ * Author: Jacek Robert Kszczot
+ * Project: MSc Data Science & AI - COM7016
+ * University: Leeds Trinity University
+ */
+
+// Function to export analyses to CSV file
 function exportAnalysesTable(analysesData) {
     try {
-        // Przygotuj dane do eksportu
+        // Prepare data for export
         const exportData = analysesData.map(analysis => ({
             'University': analysis.university,
             'Classification': analysis.classification,
@@ -14,7 +32,7 @@ function exportAnalysesTable(analysesData) {
             'Analysis ID': analysis.analysis_id
         }));
 
-        // Konwersja do CSV z użyciem PapaParse
+        // Convert to CSV using PapaParse
         const csv = Papa.unparse(exportData, {
             quotes: true,
             header: true,
@@ -23,7 +41,7 @@ function exportAnalysesTable(analysesData) {
             skipEmptyLines: true
         });
 
-        // Utwórz plik do pobrania
+        // Create downloadable file
         const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -70,12 +88,12 @@ function prepareExportData() {
         const filename = row.getAttribute('data-filename') || '';
         const analysisId = row.getAttribute('data-analysis-id') || '';
         
-        // Pobieramy tematy (jeśli są dostępne w danych)
+        // Extract themes (if available in data)
         let themes = [];
         const themeElements = row.querySelectorAll('.theme-tag');
         themeElements.forEach(el => themes.push(el.textContent.trim()));
         
-        // Dodajemy dane do eksportu
+        // Add data to export
         exportData.push({
             university,
             classification,
@@ -92,7 +110,7 @@ function prepareExportData() {
     return exportData;
 }
 
-// Inicjalizacja nasłuchiwania zdarzeń
+// Initialise event listeners
 document.addEventListener('DOMContentLoaded', function() {
     const exportBtn = document.getElementById('exportAnalysesBtn');
     if (exportBtn) {

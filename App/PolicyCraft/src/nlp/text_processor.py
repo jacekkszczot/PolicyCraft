@@ -83,7 +83,7 @@ class TextProcessor:
     """
     
     def __init__(self):
-        """Initialize text processor with configuration."""
+        """Initialise text processor with configuration."""
         self.supported_formats = {'.pdf', '.docx', '.txt', '.doc'}
         
         # Common English stopwords (simplified list)

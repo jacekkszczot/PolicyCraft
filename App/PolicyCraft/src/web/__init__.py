@@ -26,7 +26,7 @@ from flask import Blueprint
 web_bp = Blueprint('web', __name__)
 
 def init_app(app):
-    """Initialize the web application with the Flask app instance.
+    """Initialise the web application with the Flask app instance.
     
     Args:
         app: The Flask application instance

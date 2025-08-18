@@ -41,7 +41,7 @@ class ExportEngine:
     
     def __init__(self, export_dir: str = "exports"):
         """
-        Initialize the export engine.
+        Initialise the export engine.
         
         Args:
             export_dir: Directory to store exported files
@@ -50,10 +50,10 @@ class ExportEngine:
         os.makedirs(export_dir, exist_ok=True)
         
         # Define common styles
-        self.title_color = "#3498db"  # Blue
-        self.heading_color = "#2c3e50"  # Dark blue
-        self.accent_color = "#e74c3c"  # Red
-        self.text_color = "#34495e"  # Dark gray
+        self.title_colour = "#3498db"  # Blue
+        self.heading_colour = "#2c3e50"  # Dark blue
+        self.accent_colour = "#e74c3c"  # Red
+        self.text_colour = "#34495e"  # Dark grey
         
         # Chart image settings
         self.chart_width = 600
@@ -196,14 +196,14 @@ class ExportEngine:
             'Title',
             parent=styles['Title'],
             fontSize=24,
-            textColor=colors.HexColor(self.title_color),
+            textColor=colors.HexColor(self.title_colour),
             spaceAfter=12
         )
         heading1_style = ParagraphStyle(
             'Heading1',
             parent=styles['Heading1'],
             fontSize=18,
-            textColor=colors.HexColor(self.heading_color),
+            textColor=colors.HexColor(self.heading_colour),
             spaceBefore=12,
             spaceAfter=6
         )
@@ -211,7 +211,7 @@ class ExportEngine:
             'Heading2',
             parent=styles['Heading2'],
             fontSize=14,
-            textColor=colors.HexColor(self.heading_color),
+            textColor=colors.HexColor(self.heading_colour),
             spaceBefore=10,
             spaceAfter=6
         )
@@ -219,7 +219,7 @@ class ExportEngine:
             'Normal',
             parent=styles['Normal'],
             fontSize=10,
-            textColor=colors.HexColor(self.text_color),
+            textColor=colors.HexColor(self.text_colour),
             spaceBefore=6,
             spaceAfter=6
         )
@@ -273,7 +273,7 @@ class ExportEngine:
             doc_table = Table(doc_info, colWidths=[100, 350])
             doc_table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (0, -1), colors.HexColor("#f8f9fa")),
-                ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor(self.heading_color)),
+                ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor(self.heading_colour)),
                 ('ALIGN', (0, 0), (0, -1), 'LEFT'),
                 ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, -1), 10),
@@ -302,7 +302,7 @@ class ExportEngine:
                 themes_table = Table(themes_data, colWidths=[250, 100, 100])
                 themes_table.setStyle(TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#f8f9fa")),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor(self.heading_color)),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor(self.heading_colour)),
                     ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
                     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                     ('FONTSIZE', (0, 0), (-1, -1), 10),
@@ -456,21 +456,131 @@ class ExportEngine:
                             'Timeframe',
                             parent=normal_style,
                             fontName='Helvetica-Bold',
-                            textColor=colors.HexColor(self.accent_color)
+                            textColor=colors.HexColor(self.accent_colour)
                         )))
                     
                     content.append(Spacer(1, 12))
             else:
                 content.append(Paragraph("No specific recommendations are available for this policy document.", normal_style))
             
+            # Add missing sections from recommendations template
+            
+            # Methodology & Confidence
+            content.append(Paragraph("Methodology & Confidence", heading1_style))
+            content.append(Paragraph("Methodology", heading2_style))
+            methodology_text = data.get('methodology', 'PolicyCraft local analysis pipeline (text extraction → classification → theme detection → rules‑based + ML heuristics).')
+            content.append(Paragraph(self._clean_text(methodology_text), normal_style))
+            content.append(Paragraph("Note: This report relies solely on locally available data (no external benchmarks).", ParagraphStyle(
+                'Note',
+                parent=normal_style,
+                fontName='Helvetica-Oblique'
+            )))
+            
+            content.append(Paragraph("Confidence", heading2_style))
+            confidence_pct = data.get('analysis', {}).get('confidence_pct', 0)
+            content.append(Paragraph(f"Overall confidence: {confidence_pct:.0f}%", normal_style))
+            content.append(Paragraph("• Number of independent evidence snippets in the document", normal_style))
+            content.append(Paragraph("• Length and quality of extracted text", normal_style))
+            content.append(Paragraph("• Presence of formal policy structure", normal_style))
+            content.append(Spacer(1, 12))
+            
+            # Benchmarks
+            content.append(Paragraph("Benchmarks", heading1_style))
+            cf = data.get('analysis', {}).get('confidence_factors', {})
+            
+            benchmarks_data = [["Metric", "Value"]]
+            benchmarks_data.append(["Unique sources", str(cf.get('unique_sources', '—'))])
+            benchmarks_data.append(["Evidence diversity", f"{cf.get('evidence_diversity', 0)}%"])
+            benchmarks_data.append(["Text quality score", f"{cf.get('text_quality', 0)}%"])
+            benchmarks_data.append(["Coverage of target length", f"{cf.get('text_quality', 0)}%"])
+            
+            benchmarks_table = Table(benchmarks_data, colWidths=[200, 200])
+            benchmarks_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#f8f9fa")),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor(self.heading_colour)),
+                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#e1e8ed")),
+            ]))
+            content.append(benchmarks_table)
+            content.append(Spacer(1, 12))
+            
+            # Stakeholder Perspectives
+            content.append(Paragraph("Stakeholder Perspectives", heading1_style))
+            
+            content.append(Paragraph("Students", heading2_style))
+            content.append(Paragraph("• Transparency of AI usage rules and appeal processes", normal_style))
+            content.append(Paragraph("• Clear guides on permitted vs non‑permitted use", normal_style))
+            
+            content.append(Paragraph("Faculty", heading2_style))
+            content.append(Paragraph("• Training on AI detection and assessment methods", normal_style))
+            content.append(Paragraph("• Clear protocols for handling suspected violations", normal_style))
+            
+            content.append(Paragraph("Administration", heading2_style))
+            content.append(Paragraph("• Streamlined investigation procedures", normal_style))
+            content.append(Paragraph("• Regular review and updates of AI usage policies", normal_style))
+            content.append(Spacer(1, 12))
+            
+            # Pilot & Evaluation Plan
+            content.append(Paragraph("Pilot & Evaluation Plan", heading1_style))
+            content.append(Paragraph("• 30 days: pilot in selected courses; metrics: compliance, incident rate, satisfaction", normal_style))
+            content.append(Paragraph("• 60 days: scale‑up, refine guidelines, follow‑up training", normal_style))
+            content.append(Paragraph("• 90 days: evaluate results; go/no‑go decision for full roll‑out", normal_style))
+            content.append(Paragraph("90‑day targets are treated as pilot goals – full institutionalisation after results review.", ParagraphStyle(
+                'Note',
+                parent=normal_style,
+                fontName='Helvetica-Oblique'
+            )))
+            content.append(Spacer(1, 12))
+            
+            # Impact–Urgency–Feasibility Matrix
+            content.append(Paragraph("Impact–Urgency–Feasibility", heading1_style))
+            
+            # Create IUF table for recommendations
+            if data.get('recommendations'):
+                iuf_data = [["Recommendation", "Impact", "Urgency", "Feasibility"]]
+                for i, rec in enumerate(data.get('recommendations', [])[:5], 1):  # Top 5
+                    title = rec.get('title', f'Recommendation {i}')
+                    # Use priority to determine values, or use defaults
+                    priority = rec.get('priority', 'medium').lower()
+                    if priority == 'high':
+                        impact, urgency, feasibility = "High", "High", "Medium"
+                    elif priority == 'low':
+                        impact, urgency, feasibility = "Medium", "Low", "High"
+                    else:
+                        impact, urgency, feasibility = "Medium", "Medium", "Medium"
+                    
+                    iuf_data.append([title[:40] + "..." if len(title) > 40 else title, impact, urgency, feasibility])
+                
+                iuf_table = Table(iuf_data, colWidths=[200, 80, 80, 80])
+                iuf_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#f8f9fa")),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor(self.heading_colour)),
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                    ('TOPPADDING', (0, 0), (-1, -1), 6),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#e1e8ed")),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ]))
+                content.append(iuf_table)
+            else:
+                content.append(Paragraph("No recommendations available for impact-urgency-feasibility analysis.", normal_style))
+            
+            content.append(Spacer(1, 12))
+            
             # Footer
             content.append(Spacer(1, 24))
-            content.append(Paragraph(f"Generated by PolicyCraft on {self._format_date(data.get('generated_date', datetime.now().isoformat()))}", ParagraphStyle(
+            content.append(Paragraph(f"PolicyCraft Analysis Report - {self._format_date(data.get('generated_date', datetime.now().isoformat()))}", ParagraphStyle(
                 'Footer',
                 parent=normal_style,
                 fontSize=8,
                 textColor=colors.HexColor("#7f8c8d"),
-                alignment=1  # Center alignment
+                alignment=1  # Centre alignment
             )))
         else:
             content.append(Paragraph("No data available for export.", normal_style))
@@ -515,7 +625,7 @@ class ExportEngine:
         # Title
         title = doc.add_heading("PolicyCraft Analysis Report", level=0)
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        title.style.font.color.rgb = RGBColor.from_string(self.title_color.replace('#', ''))
+        title.style.font.color.rgb = RGBColor.from_string(self.title_colour.replace('#', ''))
         
         # Narrative (if available)
         if data.get('narrative') and data['narrative'].get('html'):
@@ -631,16 +741,108 @@ class ExportEngine:
                         p = doc.add_paragraph()
                         run = p.add_run(f"Timeframe: {rec.get('timeframe')}")
                         run.bold = True
-                        run.font.color.rgb = RGBColor.from_string(self.accent_color.replace('#', ''))
+                        run.font.color.rgb = RGBColor.from_string(self.accent_colour.replace('#', ''))
                     
                     doc.add_paragraph()
             else:
                 doc.add_paragraph("No specific recommendations are available for this policy document.")
             
+            # Add missing sections from recommendations template
+            
+            # Methodology & Confidence
+            doc.add_heading("Methodology & Confidence", level=1)
+            doc.add_heading("Methodology", level=2)
+            methodology_text = data.get('methodology', 'PolicyCraft local analysis pipeline (text extraction → classification → theme detection → rules‑based + ML heuristics).')
+            doc.add_paragraph(methodology_text)
+            note_para = doc.add_paragraph("Note: This report relies solely on locally available data (no external benchmarks).")
+            note_para.italic = True
+            
+            doc.add_heading("Confidence", level=2)
+            confidence_pct = data.get('analysis', {}).get('confidence_pct', 0)
+            doc.add_paragraph(f"Overall confidence: {confidence_pct:.0f}%")
+            doc.add_paragraph("• Number of independent evidence snippets in the document")
+            doc.add_paragraph("• Length and quality of extracted text")
+            doc.add_paragraph("• Presence of formal policy structure")
+            
+            # Benchmarks
+            doc.add_heading("Benchmarks", level=1)
+            cf = data.get('analysis', {}).get('confidence_factors', {})
+            
+            # Create benchmarks table
+            table = doc.add_table(rows=5, cols=2)
+            table.style = 'Light Grid Accent 1'
+            table.cell(0, 0).text = "Metric"
+            table.cell(0, 1).text = "Value"
+            table.cell(1, 0).text = "Unique sources"
+            table.cell(1, 1).text = str(cf.get('unique_sources', '—'))
+            table.cell(2, 0).text = "Evidence diversity"
+            table.cell(2, 1).text = f"{cf.get('evidence_diversity', 0)}%"
+            table.cell(3, 0).text = "Text quality score"
+            table.cell(3, 1).text = f"{cf.get('text_quality', 0)}%"
+            table.cell(4, 0).text = "Coverage of target length"
+            table.cell(4, 1).text = f"{cf.get('text_quality', 0)}%"
+            
+            # Stakeholder Perspectives
+            doc.add_heading("Stakeholder Perspectives", level=1)
+            
+            doc.add_heading("Students", level=2)
+            doc.add_paragraph("• Transparency of AI usage rules and appeal processes")
+            doc.add_paragraph("• Clear guides on permitted vs non‑permitted use")
+            
+            doc.add_heading("Faculty", level=2)
+            doc.add_paragraph("• Training on AI detection and assessment methods")
+            doc.add_paragraph("• Clear protocols for handling suspected violations")
+            
+            doc.add_heading("Administration", level=2)
+            doc.add_paragraph("• Streamlined investigation procedures")
+            doc.add_paragraph("• Regular review and updates of AI usage policies")
+            
+            # Pilot & Evaluation Plan
+            doc.add_heading("Pilot & Evaluation Plan", level=1)
+            doc.add_paragraph("• 30 days: pilot in selected courses; metrics: compliance, incident rate, satisfaction")
+            doc.add_paragraph("• 60 days: scale‑up, refine guidelines, follow‑up training")
+            doc.add_paragraph("• 90 days: evaluate results; go/no‑go decision for full roll‑out")
+            note_para = doc.add_paragraph("90‑day targets are treated as pilot goals – full institutionalisation after results review.")
+            note_para.italic = True
+            
+            # Impact–Urgency–Feasibility Matrix
+            doc.add_heading("Impact–Urgency–Feasibility", level=1)
+            
+            # Create IUF table for recommendations
+            if data.get('recommendations'):
+                num_recs = min(len(data.get('recommendations', [])), 5)  # Top 5
+                iuf_table = doc.add_table(rows=num_recs + 1, cols=4)
+                iuf_table.style = 'Light Grid Accent 1'
+                
+                # Header row
+                iuf_table.cell(0, 0).text = "Recommendation"
+                iuf_table.cell(0, 1).text = "Impact"
+                iuf_table.cell(0, 2).text = "Urgency"
+                iuf_table.cell(0, 3).text = "Feasibility"
+                
+                # Data rows
+                for i, rec in enumerate(data.get('recommendations', [])[:5], 1):
+                    title = rec.get('title', f'Recommendation {i}')
+                    # Use priority to determine values, or use defaults
+                    priority = rec.get('priority', 'medium').lower()
+                    if priority == 'high':
+                        impact, urgency, feasibility = "High", "High", "Medium"
+                    elif priority == 'low':
+                        impact, urgency, feasibility = "Medium", "Low", "High"
+                    else:
+                        impact, urgency, feasibility = "Medium", "Medium", "Medium"
+                    
+                    iuf_table.cell(i, 0).text = title[:60] + "..." if len(title) > 60 else title
+                    iuf_table.cell(i, 1).text = impact
+                    iuf_table.cell(i, 2).text = urgency
+                    iuf_table.cell(i, 3).text = feasibility
+            else:
+                doc.add_paragraph("No recommendations available for impact-urgency-feasibility analysis.")
+            
             # Footer
             footer = doc.sections[0].footer
             footer_para = footer.paragraphs[0]
-            footer_para.text = f"Generated by PolicyCraft on {self._format_date(data.get('generated_date', datetime.now().isoformat()))}"
+            footer_para.text = f"PolicyCraft Analysis Report - {self._format_date(data.get('generated_date', datetime.now().isoformat()))}"
             footer_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
         else:
             doc.add_paragraph("No data available for export.")
@@ -670,8 +872,8 @@ class ExportEngine:
         title_format = workbook.add_format({
             'bold': True,
             'font_size': 16,
-            'font_color': self.title_color,
-            'align': 'center',
+            'font_color': self.title_colour,
+            'align': 'centre',
             'valign': 'vcenter'
         })
         
@@ -680,15 +882,15 @@ class ExportEngine:
             'bg_color': '#f8f9fa',
             'border': 1,
             'border_color': '#e1e8ed',
-            'font_color': self.heading_color,
-            'align': 'center',
+            'font_color': self.heading_colour,
+            'align': 'centre',
             'valign': 'vcenter'
         })
         
         cell_format = workbook.add_format({
             'border': 1,
             'border_color': '#e1e8ed',
-            'font_color': self.text_color,
+            'font_color': self.text_colour,
             'align': 'left',
             'valign': 'vcenter',
             'text_wrap': True
@@ -789,6 +991,131 @@ class ExportEngine:
                 row += 1
         else:
             info_sheet.write('A3', 'No data available for export.', cell_format)
+        
+        # Add missing sections as new worksheets
+        
+        # Methodology & Confidence sheet
+        methodology_sheet = workbook.add_worksheet('Methodology & Confidence')
+        methodology_sheet.set_column('A:A', 30)
+        methodology_sheet.set_column('B:B', 60)
+        
+        methodology_sheet.write('A1', 'Methodology & Confidence', title_format)
+        methodology_sheet.write('A3', 'Methodology', header_format)
+        methodology_text = data.get('methodology', 'PolicyCraft local analysis pipeline (text extraction → classification → theme detection → rules‑based + ML heuristics).')
+        methodology_sheet.write('B3', methodology_text, cell_format)
+        methodology_sheet.write('B4', 'Note: This report relies solely on locally available data (no external benchmarks).', cell_format)
+        
+        methodology_sheet.write('A6', 'Confidence', header_format)
+        confidence_pct = data.get('analysis', {}).get('confidence_pct', 0)
+        methodology_sheet.write('B6', f'Overall confidence: {confidence_pct:.0f}%', cell_format)
+        methodology_sheet.write('B7', '• Number of independent evidence snippets in the document', cell_format)
+        methodology_sheet.write('B8', '• Length and quality of extracted text', cell_format)
+        methodology_sheet.write('B9', '• Presence of formal policy structure', cell_format)
+        
+        # Benchmarks sheet
+        benchmarks_sheet = workbook.add_worksheet('Benchmarks')
+        benchmarks_sheet.set_column('A:A', 30)
+        benchmarks_sheet.set_column('B:B', 20)
+        
+        benchmarks_sheet.write('A1', 'Benchmarks', title_format)
+        benchmarks_sheet.write('A3', 'Metric', header_format)
+        benchmarks_sheet.write('B3', 'Value', header_format)
+        
+        cf = data.get('analysis', {}).get('confidence_factors', {})
+        benchmarks_sheet.write('A4', 'Unique sources', cell_format)
+        benchmarks_sheet.write('B4', str(cf.get('unique_sources', '—')), cell_format)
+        benchmarks_sheet.write('A5', 'Evidence diversity', cell_format)
+        benchmarks_sheet.write('B5', f"{cf.get('evidence_diversity', 0)}%", cell_format)
+        benchmarks_sheet.write('A6', 'Text quality score', cell_format)
+        benchmarks_sheet.write('B6', f"{cf.get('text_quality', 0)}%", cell_format)
+        benchmarks_sheet.write('A7', 'Coverage of target length', cell_format)
+        benchmarks_sheet.write('B7', f"{cf.get('text_quality', 0)}%", cell_format)
+        
+        # Stakeholder Perspectives sheet
+        stakeholders_sheet = workbook.add_worksheet('Stakeholder Perspectives')
+        stakeholders_sheet.set_column('A:A', 20)
+        stakeholders_sheet.set_column('B:B', 80)
+        
+        stakeholders_sheet.write('A1', 'Stakeholder Perspectives', title_format)
+        stakeholders_sheet.write('A3', 'Students', header_format)
+        stakeholders_sheet.write('B3', '• Transparency of AI usage rules and appeal processes', cell_format)
+        stakeholders_sheet.write('B4', '• Clear guides on permitted vs non‑permitted use', cell_format)
+        
+        stakeholders_sheet.write('A6', 'Faculty', header_format)
+        stakeholders_sheet.write('B6', '• Training on AI detection and assessment methods', cell_format)
+        stakeholders_sheet.write('B7', '• Clear protocols for handling suspected violations', cell_format)
+        
+        stakeholders_sheet.write('A9', 'Administration', header_format)
+        stakeholders_sheet.write('B9', '• Streamlined investigation procedures', cell_format)
+        stakeholders_sheet.write('B10', '• Regular review and updates of AI usage policies', cell_format)
+        
+        # Pilot & Evaluation Plan sheet
+        pilot_sheet = workbook.add_worksheet('Pilot & Evaluation Plan')
+        pilot_sheet.set_column('A:A', 100)
+        
+        pilot_sheet.write('A1', 'Pilot & Evaluation Plan', title_format)
+        pilot_sheet.write('A3', '• 30 days: pilot in selected courses; metrics: compliance, incident rate, satisfaction', cell_format)
+        pilot_sheet.write('A4', '• 60 days: scale‑up, refine guidelines, follow‑up training', cell_format)
+        pilot_sheet.write('A5', '• 90 days: evaluate results; go/no‑go decision for full roll‑out', cell_format)
+        pilot_sheet.write('A7', '90‑day targets are treated as pilot goals – full institutionalisation after results review.', cell_format)
+        
+        # Impact–Urgency–Feasibility Matrix sheet
+        iuf_sheet = workbook.add_worksheet('Impact-Urgency-Feasibility')
+        iuf_sheet.set_column('A:A', 40)
+        iuf_sheet.set_column('B:D', 15)
+        
+        iuf_sheet.write('A1', 'Impact–Urgency–Feasibility Matrix', title_format)
+        iuf_sheet.write('A3', 'Recommendation', header_format)
+        iuf_sheet.write('B3', 'Impact', header_format)
+        iuf_sheet.write('C3', 'Urgency', header_format)
+        iuf_sheet.write('D3', 'Feasibility', header_format)
+        
+        if data.get('recommendations'):
+            row = 4
+            for i, rec in enumerate(data.get('recommendations', [])[:10], 1):  # Top 10 for Excel
+                title = rec.get('title', f'Recommendation {i}')
+                # Use priority to determine values, or use defaults
+                priority = rec.get('priority', 'medium').lower()
+                if priority == 'high':
+                    impact, urgency, feasibility = "High", "High", "Medium"
+                elif priority == 'low':
+                    impact, urgency, feasibility = "Medium", "Low", "High"
+                else:
+                    impact, urgency, feasibility = "Medium", "Medium", "Medium"
+                
+                iuf_sheet.write(row, 0, title, cell_format)
+                iuf_sheet.write(row, 1, impact, cell_format)
+                iuf_sheet.write(row, 2, urgency, cell_format)
+                iuf_sheet.write(row, 3, feasibility, cell_format)
+                row += 1
+        else:
+            iuf_sheet.write('A4', 'No recommendations available for impact-urgency-feasibility analysis.', cell_format)
+        
+        # Charts Information sheet (since Excel can't easily embed Plotly charts)
+        charts_sheet = workbook.add_worksheet('Charts Information')
+        charts_sheet.set_column('A:A', 100)
+        
+        charts_sheet.write('A1', 'Charts Information', title_format)
+        if data.get('charts'):
+            charts_sheet.write('A3', 'Available charts in the PolicyCraft analysis (not embedded in Excel):', cell_format)
+            row = 4
+            if data['charts'].get('themes_bar'):
+                charts_sheet.write(row, 0, '• Theme Distribution Bar Chart - shows relative importance of policy themes', cell_format)
+                row += 1
+            if data['charts'].get('classification_gauge'):
+                charts_sheet.write(row, 0, '• Policy Classification Gauge - indicates policy type and confidence level', cell_format)
+                row += 1
+            if data['charts'].get('themes_pie'):
+                charts_sheet.write(row, 0, '• Theme Proportions Pie Chart - displays theme distribution as percentages', cell_format)
+                row += 1
+            if data['charts'].get('ethics_radar'):
+                charts_sheet.write(row, 0, '• Ethical Dimensions Radar Chart - shows coverage of ethical considerations', cell_format)
+                row += 1
+            
+            row += 1
+            charts_sheet.write(row, 0, 'Note: To view interactive charts, please use the PDF or Word export, or access the web interface.', cell_format)
+        else:
+            charts_sheet.write('A3', 'No charts are available for this analysis.', cell_format)
         
         workbook.close()
         excel_data = buffer.getvalue()

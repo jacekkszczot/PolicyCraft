@@ -8,18 +8,18 @@
  * throughout the application to maintain consistency and enable theming.
  *
  * Table of Contents:
- * 1. Color System
+ * 1. Colour System
  * 2. Typography
  * 3. Spacing & Sizing
  * 4. Borders & Shadows
  * 5. Transitions & Animations
  * 6. Z-index Layers
  *
- * Color System:
- * - Primary Colors: Main brand colors and their variations
- * - Secondary Colors: Supporting colors for UI elements
- * - Semantic Colors: Colors for different states and feedback
- * - Neutral Colors: Grayscale palette for text and backgrounds
+ * Colour System:
+ * - Primary Colours: Main brand colours and their variations
+ * - Secondary Colours: Supporting colours for UI elements
+ * - Semantic Colours: Colours for different states and feedback
+ * - Neutral Colours: Greyscale palette for text and backgrounds
  * - Gradients: Reusable gradient definitions
  *
  * Typography:
@@ -33,7 +33,7 @@
  * - Group related variables together with clear section headers
  * - Document the intended use case for each variable
  * - Keep the scale consistent (e.g., spacing-100, spacing-200, etc.)
- * - Use HSL color format for better manipulation and theming
+ * - Use HSL colour format for better manipulation and theming
  *
  * Usage Example:
  *   .element {
@@ -56,17 +56,17 @@
  */
 
 /* ===========================================================================
-   1. Color System
+   1. Colour System
    =========================================================================== */
 
-/* Primary Colors ------------------------------- */
+/* Primary Colours ------------------------------- */
 :root {
-  /* Base HSL values for primary color (Deep Blue) */
+  /* Base HSL values for primary colour (Deep Blue) */
   --color-primary-h: 217;
   --color-primary-s: 30%;
   --color-primary-l: 23%;
   
-  /* Primary color variations */
+  /* Primary colour variations */
   --color-primary-50: hsl(var(--color-primary-h), 30%, 95%);
   --color-primary-100: hsl(var(--color-primary-h), 30%, 90%);
   --color-primary-200: hsl(var(--color-primary-h), 30%, 80%);
@@ -78,7 +78,7 @@
   --color-primary-800: hsl(var(--color-primary-h), 55%, 20%);
   --color-primary-900: hsl(var(--color-primary-h), 60%, 10%);
   
-  /* Secondary color (Warm Orange) */
+  /* Secondary colour (Warm Orange) */
   --color-secondary-100: #fef3c7;
   --color-secondary-200: #fde68a;
   --color-secondary-300: #fcd34d;
@@ -88,13 +88,13 @@
   --color-secondary-700: #92400e;
   --color-secondary-800: #78350f;
   
-  /* Semantic Colors */
+  /* Semantic Colours */
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
   --color-info: #3b82f6;
   
-  /* Neutral Colors */
+  /* Neutral Colours */
   --color-white: #ffffff;
   --color-gray-50: #f9fafb;
   --color-gray-100: #f3f4f6;
@@ -108,23 +108,23 @@
   --color-gray-900: #111827;
   --color-black: #000000;
   
-  /* Background Colors */
+  /* Background Colours */
   --color-bg-primary: var(--color-white);
   --color-bg-secondary: var(--color-gray-50);
   --color-bg-tertiary: var(--color-gray-100);
   
-  /* Text Colors */
+  /* Text Colours */
   --color-text-primary: var(--color-gray-900);
   --color-text-secondary: var(--color-gray-600);
   --color-text-tertiary: var(--color-gray-500);
   --color-text-inverse: var(--color-white);
   
-  /* Border Colors */
+  /* Border Colours */
   --color-border-light: var(--color-gray-200);
   --color-border-medium: var(--color-gray-300);
   --color-border-dark: var(--color-gray-400);
   
-  /* Shadow Colors */
+  /* Shadow Colours */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);

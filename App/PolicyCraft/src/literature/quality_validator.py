@@ -43,24 +43,11 @@ class LiteratureQualityValidator:
         vs manual review decisions.
         """
         
-        # Quality assessment thresholds for different confidence levels
+        # Quality assessment thresholds - simplified: ≥60% auto-approve, <60% manual review
         self.quality_thresholds = {
-            'high_confidence': {
-                'total_score': 0.8,
-                'min_source_score': 0.7,
-                'min_content_score': 0.6,
-                'auto_approve': True
-            },
-            'medium_confidence': {
-                'total_score': 0.6,
-                'min_source_score': 0.5,
-                'min_content_score': 0.4,
-                'auto_approve': True
-            },
-            'review_required': {
-                'total_score': 0.6,
-                'auto_approve': False
-            }
+            'auto_approve_threshold': 0.6,
+            'auto_approve': True,
+            'manual_review': False
         }
         
         # Source credibility indicators with associated weights
@@ -116,7 +103,7 @@ class LiteratureQualityValidator:
                 relevance_score * 0.2
             )
             
-            # Determine confidence level and approval status
+            # Determine confidence level and approval status (simplified: only total_score matters)
             confidence_level, auto_approve = self._determine_confidence_level(
                 total_score, source_score, content_score
             )
@@ -258,26 +245,17 @@ class LiteratureQualityValidator:
                                   content_score: float) -> Tuple[str, bool]:
         """Determine confidence level and approval status based on scores."""
         
-        if (total_score >= self.quality_thresholds['high_confidence']['total_score'] and
-            source_score >= self.quality_thresholds['high_confidence']['min_source_score'] and
-            content_score >= self.quality_thresholds['high_confidence']['min_content_score']):
-            return 'high', True
-        
-        elif (total_score >= self.quality_thresholds['medium_confidence']['total_score'] and
-              source_score >= self.quality_thresholds['medium_confidence']['min_source_score'] and
-              content_score >= self.quality_thresholds['medium_confidence']['min_content_score']):
-            return 'medium', True
-        
+        # Simplified logic: ≥60% auto-approve, <60% manual review
+        if total_score >= self.quality_thresholds['auto_approve_threshold']:
+            return 'high', self.quality_thresholds['auto_approve']
         else:
-            return 'low', False
+            return 'low', self.quality_thresholds['manual_review']
 
     def _generate_quality_recommendation(self, score: float, confidence: str, 
                                        auto_approve: bool) -> str:
         """Generate human-readable quality recommendation."""
-        if auto_approve and confidence == 'high':
-            return f"Excellent quality document (score: {score:.1%}). Approved for automatic inclusion in knowledge base."
-        elif auto_approve and confidence == 'medium':
-            return f"Good quality document (score: {score:.1%}). Approved for inclusion with standard review."
+        if auto_approve:
+            return f"Quality document (score: {score:.1%}). Approved for automatic inclusion in knowledge base."
         else:
             return f"Lower quality document (score: {score:.1%}). Requires manual review before inclusion."
 

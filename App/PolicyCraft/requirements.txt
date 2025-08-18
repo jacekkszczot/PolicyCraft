@@ -12,6 +12,7 @@ Jinja2>=3.1.0
 Flask-Login>=0.6.3
 Flask-WTF>=1.2.0
 WTForms>=3.1.0
+email_validator>=2.2.0  # Required for WTForms email validation
 
 # ===== Database =====
 pymongo>=4.6.0
@@ -34,7 +35,7 @@ contractions>=0.1.73  # For expanding contractions in text
 pypdf>=6.0.0  # For PDF processing
 python-docx>=1.1.0  # For Word document processing
 
-# ===== Data Visualization =====
+# ===== Data Visualisation =====
 plotly>=5.17.0
 kaleido>=0.2.1  # Required for static image export with Plotly
 
@@ -46,11 +47,24 @@ requests>=2.31.0  # For HTTP requests
 # ===== Logging =====
 python-json-logger>=2.0.7  # For structured logging
 
-# Note: After installation, download the spaCy model with:
-# python -m spacy download en_core_web_sm
+# IMPORTANT: POST-INSTALLATION STEPS
+# ===================================
+# After installing requirements, run these commands:
+#
+# 1. Download spaCy English model:
+#    python -m spacy download en_core_web_sm
+#
+# 2. Download NLTK data (for enhanced text processing):
+#    python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('averaged_perceptron_tagger')"
+#
+# 3. Set environment variables (optional but recommended):
+#    echo "FEATURE_ADVANCED_ENGINE=1" >> .env
 #
 # For development dependencies, install from requirements-dev.txt:
 # pip install -r requirements-dev.txt
+#
+# The application includes comprehensive dependency validation and will
+# report any missing components at startup with installation instructions.
 
 # ===== File and Document libs =====
 PyMuPDF>=1.23.0

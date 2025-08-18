@@ -567,7 +567,7 @@ class ThemeExtractor:
             }
         }
         
-        # Initialize spaCy if available
+        # Initialise spaCy if available
         if SPACY_AVAILABLE:
             self._initialize_spacy()
         else:
@@ -592,7 +592,7 @@ class ThemeExtractor:
             self.nlp = spacy.load(self.model_name)
             print(f"spaCy model '{self.model_name}' loaded successfully")
             
-            # Initialize matchers
+            # Initialise matchers
             self.matcher = Matcher(self.nlp.vocab)
             self.phrase_matcher = PhraseMatcher(self.nlp.vocab, attr="LOWER")
             
@@ -1065,7 +1065,7 @@ class ThemeExtractor:
         if not themes:
             return {'labels': [], 'scores': [], 'colors': []}
         
-        # Color palette for themes
+        # Colour palette for themes
         colors = [
             '#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6',
             '#1abc9c', '#34495e', '#e67e22', '#95a5a6', '#16a085'

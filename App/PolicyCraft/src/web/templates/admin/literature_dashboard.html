@@ -73,6 +73,15 @@
                 <a href="{{ url_for('admin.literature_cleanup') }}" class="btn btn-primary">Cleanup Documents</a>
             </div>
         </div>
+        
+        <div class="action-card reprocess-card">
+            <div class="card-icon">🔄</div>
+            <div class="card-content">
+                <h3>Reload Literature</h3>
+                <p>Reload existing documents</p>
+                <button id="reprocessBtn" class="btn btn-primary">Reload Documents</button>
+            </div>
+        </div>
     </div>
 
     <!-- System Status Cards -->
@@ -103,60 +112,62 @@
 
         <!-- Recent Processing History -->
         <div class="history-section">
-            <h3 class="section-title">📊 Recent Processing History</h3>
+            <h3 class="section-title">📊 Recent Processing History (Last 5)</h3>
             {% if recent_history %}
-            <div class="history-table-container">
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th class="table-header">Date</th>
-                            <th class="table-header">Document</th>
-                            <th class="table-header">Action</th>
-                            <th class="table-header">Quality</th>
-                            <th class="table-header">Insights</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in recent_history %}
-                        <tr class="table-row">
-                            <td class="table-cell">
-                                <div class="date-cell">
-                                    <span class="date-text">{{ item.timestamp[:10] if item.timestamp }}</span>
-                                </div>
-                            </td>
-                            <td class="table-cell">
-                                <div class="document-cell">
-                                    <span class="document-name">{{ item.document_id|clean_literature_name }}</span>
-                                </div>
-                            </td>
-                            <td class="table-cell">
-                                <span class="action-badge action-{{ item.action }}">
-                                    {{ item.action|replace('_', ' ')|title if item.action }}
-                                </span>
-                            </td>
-                            <td class="table-cell">
-                                {% if item.quality_score %}
-                                <div class="quality-indicator">
-                                    <div class="quality-bar">
-                                         <div class="quality-fill quality-{{ 'high' if item.quality_score >= 90 else 'medium' if item.quality_score >= 70 else 'low' }}"
-                                              data-width="{{ item.quality_score|round }}"></div>
+            <div class="history-table-container scrollable-table">
+                <div class="table-scroll-wrapper">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th class="table-header">Date</th>
+                                <th class="table-header">Document</th>
+                                <th class="table-header">Action</th>
+                                <th class="table-header">Quality</th>
+                                <th class="table-header">Insights</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in recent_history[:5] %}
+                            <tr class="table-row">
+                                <td class="table-cell">
+                                    <div class="date-cell">
+                                        <span class="date-text">{{ item.timestamp[:10] if item.timestamp }}</span>
                                     </div>
-                                    <span class="quality-text">{{ "%.1f%%"|format(item.quality_score) }}</span>
-                                </div>
-                                {% else %}
-                                <span class="quality-na">N/A</span>
-                                {% endif %}
-                            </td>
-                            <td class="table-cell">
-                                <div class="insights-cell">
-                                    <span class="insights-count">{{ item.insights_count or 0 }}</span>
-                                    <small class="insights-label">insights</small>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                </td>
+                                <td class="table-cell">
+                                    <div class="document-cell">
+                                        <span class="document-name">{{ item.document_id }}</span>
+                                    </div>
+                                </td>
+                                <td class="table-cell">
+                                    <span class="action-badge action-{{ item.action }}">
+                                        {{ item.action|replace('_', ' ')|title if item.action }}
+                                    </span>
+                                </td>
+                                <td class="table-cell">
+                                    {% if item.quality_score %}
+                                    <div class="quality-indicator">
+                                        <div class="quality-bar">
+                                             <div class="quality-fill quality-{{ 'high' if item.quality_score >= 80 else 'medium' if item.quality_score >= 60 else 'low' }}"
+                                                  data-width="{{ item.quality_score|round }}"></div>
+                                        </div>
+                                        <span class="quality-text">{{ "%.1f%%"|format(item.quality_score) }}</span>
+                                    </div>
+                                    {% else %}
+                                    <span class="quality-na">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td class="table-cell">
+                                    <div class="insights-cell">
+                                        <span class="insights-count">{{ item.insights_count or 0 }}</span>
+                                        <small class="insights-label">insights</small>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             {% else %}
             <div class="empty-state">
@@ -169,65 +180,67 @@
 
         <!-- Recent Activity Section -->
         <div class="activity-section">
-            <h3 class="section-title">⏱️ Recent Processing Activity</h3>
+            <h3 class="section-title">⏱️ Recent Processing Activity (Last 5)</h3>
             {% if recent_activity %}
-            <div class="table-container">
-                <table class="pc-table">
-                    <thead>
-                        <tr>
-                            <th>File</th>
-                            <th>Timestamp</th>
-                            <th>Processing</th>
-                            <th>Completed</th>
-                            <th>Failed</th>
-                            <th>Deleted</th>
-                            <th>Quality</th>
-                            <th>Insights</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for activity in recent_activity[:12] %}
-                        <tr>
-                            <td>
-                                <span class="doc-name">{{ activity.filename|clean_literature_name }}</span>
-                            </td>
-                            <td>
-                                {% if activity.timestamp %}
-                                    {% if activity.timestamp is string %}
-                                        {{ activity.timestamp }}
+            <div class="table-container scrollable-table">
+                <div class="table-scroll-wrapper">
+                    <table class="pc-table">
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Timestamp</th>
+                                <th>Processing</th>
+                                <th>Completed</th>
+                                <th>Failed</th>
+                                <th>Deleted</th>
+                                <th>Quality</th>
+                                <th>Insights</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in recent_activity[:5] %}
+                            <tr>
+                                <td>
+                                    <span class="doc-name">{{ activity.filename }}</span>
+                                </td>
+                                <td>
+                                    {% if activity.timestamp %}
+                                        {% if activity.timestamp is string %}
+                                            {{ activity.timestamp }}
+                                        {% else %}
+                                            {{ activity.timestamp.strftime('%d/%m/%Y %H:%M') }}
+                                        {% endif %}
                                     {% else %}
-                                        {{ activity.timestamp.strftime('%d/%m/%Y %H:%M') }}
+                                        —
                                     {% endif %}
-                                {% else %}
-                                    —
-                                {% endif %}
-                            </td>
-                            <td class="status-col">
-                                {% if activity.status == 'processing' %}<span class="badge badge-processing">Processing</span>{% endif %}
-                            </td>
-                            <td class="status-col">
-                                {% if activity.status == 'completed' %}<span class="badge badge-completed">Completed</span>{% endif %}
-                            </td>
-                            <td class="status-col">
-                                {% if activity.status == 'failed' %}<span class="badge badge-failed">Failed</span>{% endif %}
-                            </td>
-                            <td class="status-col">
-                                {% if activity.status == 'deleted' %}<span class="badge badge-deleted">Deleted</span>{% endif %}
-                            </td>
-                            <td>
-                                {% if activity.quality is not none %}
-                                    {{ "%.0f%%"|format(activity.quality * 100) }}
-                                {% else %}
-                                    —
-                                {% endif %}
-                            </td>
-                            <td>
-                                {{ activity.insights_count or 0 }}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                </td>
+                                <td class="status-col">
+                                    {% if activity.status == 'processing' %}<span class="badge badge-processing">Processing</span>{% endif %}
+                                </td>
+                                <td class="status-col">
+                                    {% if activity.status == 'completed' %}<span class="badge badge-completed">Completed</span>{% endif %}
+                                </td>
+                                <td class="status-col">
+                                    {% if activity.status == 'failed' %}<span class="badge badge-failed">Failed</span>{% endif %}
+                                </td>
+                                <td class="status-col">
+                                    {% if activity.status == 'deleted' %}<span class="badge badge-deleted">Deleted</span>{% endif %}
+                                </td>
+                                <td>
+                                    {% if activity.quality is not none %}
+                                        {{ "%.0f%%"|format(activity.quality * 100) }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ activity.insights_count or 0 }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             {% else %}
             <div class="empty-state">
@@ -263,6 +276,14 @@
         </div>
     </div>
         
+    <!-- Pending Reviews Section -->
+    <div id="pendingReviewsSection" style="margin-top: 2rem; padding: 2rem; border-top: 1px solid #e9ecef;">
+        <h3 style="margin-bottom: 1rem; color: #333;">📋 Documents Pending Review</h3>
+        <div id="pendingDocuments">
+            <p style="color: #28a745; text-align: center; padding: 2rem;">✅ Loading pending documents...</p>
+        </div>
+    </div>
+
     <!-- Back to Dashboard Button -->
     <div class="form-actions" style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e9ecef;">
         <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
@@ -281,6 +302,42 @@
   overflow: hidden;
   background: #fff;
   box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+/* Scrollable table styles */
+.scrollable-table {
+  position: relative;
+}
+
+.table-scroll-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border-radius: 8px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-corner {
+  background: #f1f1f1;
 }
 
 .pc-table {
@@ -913,15 +970,166 @@
 
 {% endblock %}
 
-{% block scripts %}
-{{ parent() }}
+{% block extra_scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('.quality-fill[data-width]')
-    .forEach(el => {
-      const w = parseInt(el.getAttribute('data-width'), 10);
-      if (!isNaN(w)) el.style.width = `${Math.max(0, Math.min(100, w))}%`;
+console.log('Literature dashboard JavaScript loaded');
+
+// Global function to load pending documents
+window.loadPendingDocuments = async function() {
+  console.log('Starting loadPendingDocuments...');
+  try {
+    const response = await fetch('/admin/literature/pending-reviews');
+    console.log('Response status:', response.status);
+    
+    if (!response.ok) {
+      const container = document.getElementById('pendingDocuments');
+      if (container) {
+        container.innerHTML = '<p style="color: red;">Error loading documents: ' + response.status + '</p>';
+      }
+      return;
+    }
+    
+    const result = await response.json();
+    console.log('Found documents:', result.count);
+    
+    const container = document.getElementById('pendingDocuments');
+    if (!container) {
+      console.error('Container not found');
+      return;
+    }
+    
+    if (result.success && result.pending_documents.length > 0) {
+      let html = '<div style="display: grid; gap: 1rem;">';
+      
+      result.pending_documents.forEach(function(doc) {
+        const qualityPercent = Math.round(doc.quality_score * 100);
+        const qualityColor = qualityPercent >= 80 ? '#28a745' : qualityPercent >= 60 ? '#ffc107' : '#dc3545';
+        
+        html += '<div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid ' + qualityColor + ';">';
+        html += '<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">';
+        html += '<div style="flex: 1;">';
+        html += '<h4 style="margin: 0 0 0.5rem 0; color: #333;">' + doc.original_filename + '</h4>';
+        html += '<p style="margin: 0 0 0.5rem 0; color: #666; font-size: 0.9rem;">📊 Quality: ' + qualityPercent + '% | 💡 Insights: ' + (doc.insights_count || 0) + ' | 📅 ' + new Date(doc.processing_date).toLocaleDateString() + '</p>';
+        if (doc.metadata && doc.metadata.author) {
+          html += '<p style="margin: 0; color: #666; font-size: 0.9rem;">👤 ' + doc.metadata.author + '</p>';
+        }
+        html += '</div>';
+        html += '<div style="display: flex; gap: 0.5rem; flex-shrink: 0;">';
+        html += '<button onclick="approveDocument(\'' + doc.document_id + '\')" style="background: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">✅ Approve</button>';
+        html += '<button onclick="rejectDocument(\'' + doc.document_id + '\')" style="background: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">❌ Reject</button>';
+        html += '</div>';
+        html += '</div>';
+        html += '</div>';
+      });
+      
+      html += '</div>';
+      container.innerHTML = html;
+    } else {
+      container.innerHTML = '<p style="color: #28a745; text-align: center; padding: 2rem;">✅ No documents pending review</p>';
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    const container = document.getElementById('pendingDocuments');
+    if (container) {
+      container.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+    }
+  }
+};
+
+// Global functions for approve/reject
+window.approveDocument = async function(documentId) {
+  if (!confirm('Approve this document?')) return;
+  try {
+    const response = await fetch('/admin/literature/approve-document', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ document_id: documentId })
     });
+    const result = await response.json();
+    if (result.success) {
+      alert('Document approved!');
+      window.loadPendingDocuments();
+    } else {
+      alert('Error: ' + result.error);
+    }
+  } catch (error) {
+    alert('Network error: ' + error.message);
+  }
+};
+
+window.rejectDocument = async function(documentId) {
+  const reason = prompt('Reason for rejection:') || 'No reason';
+  if (!confirm('Reject this document?')) return;
+  try {
+    const response = await fetch('/admin/literature/reject-document', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ document_id: documentId, reason: reason })
+    });
+    const result = await response.json();
+    if (result.success) {
+      alert('Document rejected!');
+      window.loadPendingDocuments();
+    } else {
+      alert('Error: ' + result.error);
+    }
+  } catch (error) {
+    alert('Network error: ' + error.message);
+  }
+};
+
+// Load documents when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOMContentLoaded - loading documents');
+  
+  // Initialize quality bars
+  document.querySelectorAll('.quality-fill[data-width]').forEach(function(el) {
+    const w = parseInt(el.getAttribute('data-width'), 10);
+    if (!isNaN(w)) el.style.width = Math.max(0, Math.min(100, w)) + '%';
+  });
+  
+  window.loadPendingDocuments();
+  
+  // Add reprocess button functionality
+  const reprocessBtn = document.getElementById('reprocessBtn');
+  if (reprocessBtn) {
+    reprocessBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (this.disabled) return;
+      
+      const originalText = this.textContent;
+      this.disabled = true;
+      this.textContent = 'Processing...';
+      
+      fetch('/admin/literature/reprocess', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reprocess_all' })
+      })
+      .then(function(response) { return response.json(); })
+      .then(function(data) {
+        if (data.success) {
+          this.textContent = '✓ Completed';
+          this.style.backgroundColor = '#28a745';
+          alert('Literature reprocessing completed successfully!');
+          setTimeout(function() { window.location.reload(); }, 1500);
+        } else {
+          throw new Error(data.error || 'Unknown error');
+        }
+      }.bind(this))
+      .catch(function(error) {
+        this.textContent = '✗ Failed';
+        this.style.backgroundColor = '#dc3545';
+        alert('Reprocessing failed: ' + error.message);
+        setTimeout(function() {
+          this.textContent = originalText;
+          this.style.backgroundColor = '';
+          this.disabled = false;
+        }.bind(this), 3000);
+      }.bind(this));
+    });
+  }
 });
+
 </script>
 {% endblock %}

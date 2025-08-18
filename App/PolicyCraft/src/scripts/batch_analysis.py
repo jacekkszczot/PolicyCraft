@@ -36,7 +36,7 @@ def run_batch_analysis():
     print("🚀 STARTING BATCH ANALYSIS OF CLEAN DATASET")
     print("=" * 60)
     
-    # Initialize components
+    # Initialise components
     print("🔧 Initializing PolicyCraft components...")
     text_processor = TextProcessor()
     theme_extractor = ThemeExtractor()
@@ -57,7 +57,7 @@ def run_batch_analysis():
     
     # Get all policy files
     policy_files = list(dataset_dir.glob("*.pdf")) + list(dataset_dir.glob("*.docx"))
-    print(f"\n📄 Found {len(policy_files)} policy files to analyze")
+    print(f"\n📄 Found {len(policy_files)} policy files to analyse")
     
     # Results storage
     all_results = []

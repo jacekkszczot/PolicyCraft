@@ -109,7 +109,7 @@
                             </th>
                             <th class="table-header">Date</th>
                             <th class="table-header">Document ID</th>
-                            <th class="table-header">Action</th>
+                            <th class="table-header">Author(s)</th>
                             <th class="table-header">Quality</th>
                             <th class="table-header">Insights</th>
                         </tr>
@@ -125,20 +125,24 @@
                             </td>
                             <td class="table-cell">{{ update.timestamp[:10] if update.timestamp }}</td>
                             <td class="table-cell">
-                                <div class="document-name">
+                                <div class="document-name" title="{{ update.document_id }}">
                                     {{ update.document_id|clean_literature_name }}
                                 </div>
                             </td>
                             <td class="table-cell">
-                                <span class="action-badge action-{{ update.action }}">
-                                    {{ update.action|replace('_', ' ')|title if update.action }}
-                                </span>
+                                <div class="author-info">
+                                    {% if update.author %}
+                                        {{ update.author[:50] }}{% if update.author|length > 50 %}...{% endif %}
+                                    {% else %}
+                                        <em class="text-muted">Unknown</em>
+                                    {% endif %}
+                                </div>
                             </td>
                             <td class="table-cell">
                                 {% if update.quality_score %}
                                 <div class="quality-indicator">
                                     <div class="quality-bar">
-                                          <div class="quality-fill quality-{{ 'high' if update.quality_score >= 90 else 'medium' if update.quality_score >= 70 else 'low' }}"
+                                          <div class="quality-fill quality-{{ 'high' if update.quality_score >= 80 else 'medium' if update.quality_score >= 60 else 'low' }}"
                                                data-width="{{ update.quality_score|round }}"></div>
                                     </div>
                                      <small class="quality-text">{{ "%.1f%%"|format(update.quality_score) }}</small>
@@ -265,13 +269,13 @@ function applyFilters() {
     let showQuality = true;
     switch (qualityValue) {
       case 'low':
-        showQuality = quality < 40;
+        showQuality = quality < 60;
         break;
       case 'medium':
-        showQuality = quality >= 40 && quality <= 70;
+        showQuality = quality >= 60 && quality < 80;
         break;
       case 'high':
-        showQuality = quality > 70;
+        showQuality = quality >= 80;
         break;
       case 'all':
       default:
@@ -317,7 +321,7 @@ function confirmAction() {
   return confirm(`Are you sure you want to ${actionText.toLowerCase()} ${selectedCount} document(s)? This action cannot be undone.`);
 }
 
-// Initialize
+// Initialise
 document.addEventListener('DOMContentLoaded', function() {
   updateSelectedCount();
   applyFilters();
@@ -539,28 +543,24 @@ document.addEventListener('DOMContentLoaded', function() {
     text-overflow: ellipsis;
     white-space: nowrap;
     font-weight: 500;
+    cursor: help;
 }
 
-/* Action Badge Styles */
-.action-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: white;
+.author-info {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9rem;
+    color: #6c757d;
 }
 
-.action-document_merged {
-    background: #007bff;
+.author-info .text-muted {
+    font-style: italic;
+    color: #adb5bd;
 }
 
-.action-new_document_created {
-    background: #28a745;
-}
-
-.action-badge:not([class*="action-"]) {
-    background: #6c757d;
-}
+/* Action Badge Styles - Removed (no longer used) */
 
 /* Quality Indicator */
 .quality-indicator {

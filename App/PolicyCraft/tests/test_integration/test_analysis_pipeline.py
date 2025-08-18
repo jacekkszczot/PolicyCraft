@@ -30,14 +30,43 @@ from src.recommendation.engine import RecommendationEngine
 class TestAnalysisPipeline:
     """Test the complete analysis pipeline integration."""
     
-    def test_full_analysis_workflow(self, temp_policy_file):
+    def test_full_analysis_workflow(self, temp_policy_file, tmp_path):
         """Test complete PDF → themes → classification → recommendations workflow."""
         
-        # Initialize all components
+        # Create a temporary knowledge base for testing
+        kb_path = tmp_path / "test_kb"
+        kb_path.mkdir()
+        
+        # Create a sample knowledge base markdown file with YAML frontmatter
+        sample_doc = kb_path / "sample_guidelines.md"
+        sample_doc.write_text("""---
+title: Sample AI Ethics Guidelines
+date: 2023-01-01
+author: Test Author
+quality_score: 85
+---
+
+# Sample AI Ethics Guidelines (2023)
+
+This is a sample document containing AI ethics guidelines for testing purposes.
+It includes key principles such as transparency, accountability, and fairness.
+
+## Key Principles
+- AI systems should be transparent in their operations
+- Human oversight is essential for critical decisions
+- Fairness must be ensured in AI applications
+
+## Recommendations
+1. Implement clear documentation for all AI systems
+2. Establish review processes for AI-assisted work
+3. Provide training on ethical AI use
+""")
+        
+        # Initialise all components
         text_processor = TextProcessor()
         theme_extractor = ThemeExtractor()
         policy_classifier = PolicyClassifier()
-        recommendation_engine = RecommendationEngine()
+        recommendation_engine = RecommendationEngine(knowledge_base_path=str(kb_path))
         
         # Step 1: Extract text
         extracted_text = text_processor.extract_text_from_file(temp_policy_file)
@@ -152,7 +181,7 @@ class TestAnalysisPipeline:
             }
         ]
         
-        # Initialize components
+        # Initialise components
         text_processor = TextProcessor()
         theme_extractor = ThemeExtractor()
         policy_classifier = PolicyClassifier()
@@ -269,9 +298,38 @@ class TestAnalysisPipeline:
         
         print(f"\n✅ Error recovery test: {successful_processes}/{len(problematic_inputs)} inputs handled")
 
-    def test_performance_benchmarking(self):
+    def test_performance_benchmarking(self, tmp_path):
         """Test pipeline performance with realistic document sizes."""
         import time
+        
+        # Create a temporary knowledge base for testing
+        kb_path = tmp_path / "test_kb"
+        kb_path.mkdir()
+        
+        # Create a sample knowledge base markdown file with YAML frontmatter
+        sample_doc = kb_path / "sample_guidelines.md"
+        sample_doc.write_text("""---
+title: Sample AI Ethics Guidelines
+date: 2023-01-01
+author: Test Author
+quality_score: 85
+---
+
+# Sample AI Ethics Guidelines (2023)
+
+This is a sample document containing AI ethics guidelines for testing purposes.
+It includes key principles such as transparency, accountability, and fairness.
+
+## Key Principles
+- AI systems should be transparent in their operations
+- Human oversight is essential for critical decisions
+- Fairness must be ensured in AI applications
+
+## Recommendations
+1. Implement clear documentation for all AI systems
+2. Establish review processes for AI-assisted work
+3. Provide training on ethical AI use
+""")
         
         # Create realistic policy document (similar to actual university policies)
         realistic_policy = """
@@ -348,11 +406,11 @@ class TestAnalysisPipeline:
         - Legal and regulatory requirements
         """
         
-        # Initialize components
+        # Initialise components
         text_processor = TextProcessor()
         theme_extractor = ThemeExtractor()
         policy_classifier = PolicyClassifier()
-        recommendation_engine = RecommendationEngine()
+        recommendation_engine = RecommendationEngine(knowledge_base_path=str(kb_path))
         
         # Measure processing time for each component
         print("\n🚀 Performance Benchmarking")
@@ -424,13 +482,42 @@ class TestAnalysisPipeline:
         
         # Test passes if all assertions passed
 
-    def test_data_flow_consistency(self, sample_policy_text):
+    def test_data_flow_consistency(self, sample_policy_text, tmp_path):
         """Test that data flows consistently through the pipeline without corruption."""
+        
+        # Create a temporary knowledge base for testing
+        kb_path = tmp_path / "test_kb"
+        kb_path.mkdir()
+        
+        # Create a sample knowledge base markdown file with YAML frontmatter
+        sample_doc = kb_path / "sample_guidelines.md"
+        sample_doc.write_text("""---
+title: Sample AI Ethics Guidelines
+date: 2023-01-01
+author: Test Author
+quality_score: 85
+---
+
+# Sample AI Ethics Guidelines (2023)
+
+This is a sample document containing AI ethics guidelines for testing purposes.
+It includes key principles such as transparency, accountability, and fairness.
+
+## Key Principles
+- AI systems should be transparent in their operations
+- Human oversight is essential for critical decisions
+- Fairness must be ensured in AI applications
+
+## Recommendations
+1. Implement clear documentation for all AI systems
+2. Establish review processes for AI-assisted work
+3. Provide training on ethical AI use
+""")
         
         text_processor = TextProcessor()
         theme_extractor = ThemeExtractor()
         policy_classifier = PolicyClassifier()
-        recommendation_engine = RecommendationEngine()
+        recommendation_engine = RecommendationEngine(knowledge_base_path=str(kb_path))
         
         # Track data through pipeline
         original_text = sample_policy_text

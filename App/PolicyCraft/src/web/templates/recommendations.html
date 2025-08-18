@@ -6,7 +6,7 @@
 <!-- 
     PolicyCraft – Recommendations Page
     
-    This page provides AI‑generated recommendations based on the analysis of
+    This page provides evidence-based recommendations derived from the analysis of
     policy documents. It offers strategic guidance for implementing or improving
     AI policies in higher education institutions.
     
@@ -120,7 +120,7 @@
                 </span>
             </div>
             <div class="summary-item">
-                <span class="label">Generated:</span>
+                <span class="label">Analysis Date:</span>
                 <span class="value">{{ data.generated_date }}</span>
             </div>
             <div class="summary-item">
@@ -354,7 +354,7 @@
                     </tr>
                     {% endfor %}
                     {% if not data.recommendations %}
-                    <tr><td colspan="4" style="text-align:center;color:#6c757d;">No detailed recommendations yet – the matrix will be populated after generation.</td></tr>
+                    <tr><td colspan="4" style="text-align:center;color:#6c757d;">Recommendation details will appear here once analysis is complete.</td></tr>
                     {% endif %}
                 </tbody>
             </table>
@@ -788,7 +788,7 @@ function exportRecommendations() {
     const analysisInfo = {
         filename: "{{ data.analysis.filename if data and data.analysis else 'Unknown' }}",
         classification: "{{ data.analysis.classification if data and data.analysis else 'Unknown' }}",
-        generated_date: "{{ data.generated_date if data else 'Unknown' }}"
+        analysis_date: "{{ data.generated_date if data else 'Unknown' }}"
     };
 
     // Read recommendations from embedded JSON for lint-safe JS
@@ -806,8 +806,8 @@ function exportRecommendations() {
     let csvContent = "data:text/csv;charset=utf-8,";
     csvContent += "Policy Recommendations Export\n\n";
     csvContent += "Analysis Information\n";
-    csvContent += "Filename,Classification,Generated Date\n";
-    csvContent += `"${analysisInfo.filename}","${analysisInfo.classification}","${analysisInfo.generated_date}"\n\n`;
+    csvContent += "Filename,Classification,Analysis Date\n";
+    csvContent += `"${analysisInfo.filename}","${analysisInfo.classification}","${analysisInfo.analysis_date}"\n\n`;
     csvContent += "Recommendations\n";
     csvContent += "Title,Description,Priority,Timeframe\n";
     recs.forEach(rec=>{

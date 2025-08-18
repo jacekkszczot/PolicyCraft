@@ -189,10 +189,13 @@ class KnowledgeBaseManager:
             
             # Check if document should be integrated
             recommendation = processing_results.get('processing_recommendation', {})
+            logger.info("Integration recommendation - action: %s, confidence: %s", 
+                       recommendation.get('action'), recommendation.get('confidence'))
             if not self._should_integrate_document(recommendation):
-                return self._generate_integration_result(
-                    'rejected', 'Document does not meet integration criteria'
-                )
+                logger.warning("Document does not meet integration criteria - routing to manual review")
+                # Instead of hard rejection, route to manual review so the admin UI
+                # shows a non-failing state and provides appropriate next steps.
+                return self._handle_manual_review_case(processing_results)
             
             # Create backup before making changes (intelligent backup)
             backup_id = self._create_backup()
@@ -224,10 +227,14 @@ class KnowledgeBaseManager:
         action = recommendation.get('action', 'review_required')
         confidence = recommendation.get('confidence', 'low')
         
+        logger.info("Should integrate check - action: %s, confidence: %s", action, confidence)
+        
         # Auto-approve high-confidence documents
         if action in ['approve_new_document', 'merge_with_existing'] and confidence in ['high', 'medium']:
+            logger.info("Document meets integration criteria")
             return True
         
+        logger.info("Document does not meet integration criteria")
         return False
 
     def _generate_document_filename(self, processing_results: Dict) -> Tuple[str, str]:
@@ -301,6 +308,21 @@ class KnowledgeBaseManager:
             
         # Generate safe filename and display name
         filename = f"{doc_type}_{clean_title}{year}_{doc_id}.md".lower()
+        
+        # Ensure filename doesn't exceed filesystem limits (255 chars for most systems)
+        MAX_FILENAME_LENGTH = 250  # Leave some buffer
+        if len(filename) > MAX_FILENAME_LENGTH:
+            # Calculate available space for clean_title
+            prefix_suffix_length = len(f"{doc_type}_{year}_{doc_id}.md")
+            available_length = MAX_FILENAME_LENGTH - prefix_suffix_length
+            
+            if available_length > 10:  # Ensure we have some meaningful content
+                clean_title = clean_title[:available_length]
+                filename = f"{doc_type}_{clean_title}{year}_{doc_id}.md".lower()
+            else:
+                # If still too long, use minimal filename
+                filename = f"document_{doc_id}.md"
+        
         display_name = f"{title} ({doc_id})"  # Human-readable format for UI
         
         return filename, display_name
@@ -308,9 +330,13 @@ class KnowledgeBaseManager:
     def _integrate_new_document(self, processing_results: Dict, backup_id: str) -> Dict:
         """Integrate completely new document into knowledge base with consistent naming."""
         try:
+            logger.info("Starting new document integration")
+            
             # Generate consistent filename and display name
             filename, display_name = self._generate_document_filename(processing_results)
+            logger.info("Generated filename: %s", filename)
             file_path = os.path.join(self.knowledge_base_path, filename)
+            logger.info("Target file path: %s", file_path)
             
             # Store the display name in processing results for UI use
             if 'metadata' not in processing_results:
@@ -318,11 +344,15 @@ class KnowledgeBaseManager:
             processing_results['metadata']['display_name'] = display_name
             
             # Generate markdown content
+            logger.info("Generating markdown content")
             markdown_content = self._generate_markdown_content(processing_results)
+            logger.info("Markdown content generated, length: %d", len(markdown_content))
             
             # Write new file
+            logger.info("Writing file to: %s", file_path)
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(markdown_content)
+            logger.info("File written successfully")
             
             return self._generate_integration_result(
                 'success',
@@ -337,6 +367,7 @@ class KnowledgeBaseManager:
             )
             
         except Exception as e:
+            logger.error("Exception in _integrate_new_document: %s", str(e), exc_info=True)
             return self._generate_integration_result('error', f'Failed to integrate new document: {str(e)}')
 
     def _merge_with_existing_document(self, processing_results: Dict, backup_id: str) -> Dict:
@@ -405,6 +436,8 @@ class KnowledgeBaseManager:
         metadata = processing_results.get('metadata', {})
         insights = processing_results.get('extracted_insights', [])
         quality_assessment = processing_results.get('quality_assessment', {})
+        themes = processing_results.get('extracted_themes', [])
+        recommendations = processing_results.get('content_recommendations', [])
         
         # Get document title or use filename as fallback
         title = metadata.get('title')
@@ -422,6 +455,14 @@ class KnowledgeBaseManager:
         
         if 'publication_date' in metadata and metadata['publication_date']:
             doc_info.append(f"- **Publication Date**: {metadata['publication_date']}")
+        elif 'publication_year' in metadata and metadata['publication_year']:
+            doc_info.append(f"- **Publication Year**: {metadata['publication_year']}")
+        
+        if 'journal' in metadata and metadata['journal']:
+            doc_info.append(f"- **Journal/Conference**: {metadata['journal']}")
+        
+        if 'doi' in metadata and metadata['doi']:
+            doc_info.append(f"- **DOI**: {metadata['doi']}")
         
         if 'source' in metadata and metadata['source']:
             doc_info.append(f"- **Source**: {metadata['source']}")
@@ -465,6 +506,41 @@ class KnowledgeBaseManager:
                 markdown_content += f"\n### Insight {i}\n{insight.strip()}\n"
         else:
             markdown_content += "\nNo insights extracted.\n"
+        
+        # Add abstract if available
+        if 'abstract' in metadata and metadata['abstract']:
+            markdown_content += f"""
+## Abstract
+{metadata['abstract']}
+"""
+        
+        # Add keywords if available
+        if 'keywords' in metadata and metadata['keywords']:
+            keywords_str = ', '.join(metadata['keywords'])
+            markdown_content += f"""
+## Keywords
+{keywords_str}
+"""
+        
+        # Add themes if available
+        if themes:
+            markdown_content += "\n## Key Themes\n"
+            for i, theme in enumerate(themes, 1):
+                if isinstance(theme, dict):
+                    theme_name = theme.get('name', f'Theme {i}')
+                    theme_score = theme.get('score', 0)
+                    markdown_content += f"### {theme_name}\n"
+                    if 'description' in theme:
+                        markdown_content += f"{theme['description']}\n"
+                    markdown_content += f"*Relevance Score: {theme_score:.2f}*\n\n"
+                else:
+                    markdown_content += f"### Theme {i}\n{theme}\n\n"
+        
+        # Add content recommendations if available
+        if recommendations:
+            markdown_content += "\n## Content-Based Recommendations\n"
+            for i, rec in enumerate(recommendations, 1):
+                markdown_content += f"{i}. {rec.strip()}\n"
         
         # Add integration metadata
         markdown_content += f"""
@@ -665,14 +741,16 @@ class KnowledgeBaseManager:
                         metadata["publication_date"] = f"{year_match.group(1)}-01-01"
                 
                 # Extract author (multiple formats including knowledge base format)
-                elif any(pattern in line.lower() for pattern in ["**author**:", "**authors**:", "author:", "by:"]):
+                elif any(pattern in line.lower() for pattern in ["**author**:", "**authors**:", "**author(s)**:", "author:", "by:"]):
                     try:
-                        # Knowledge base format: - **Author**: value or - **Authors**: value
+                        # Knowledge base format: - **Author**: value or - **Authors**: value or - **Author(s)**: value
                         if line.strip().startswith("- **Author"):
                             if "**Author**:" in line:
                                 metadata["author"] = line.split("**Author**:", 1)[1].strip()
                             elif "**Authors**:" in line:
                                 metadata["author"] = line.split("**Authors**:", 1)[1].strip()
+                            elif "**Author(s)**:" in line:
+                                metadata["author"] = line.split("**Author(s)**:", 1)[1].strip()
                         # Standard formats
                         elif "**author**:" in line.lower():
                             metadata["author"] = line.split("**Author**:", 1)[1].strip()

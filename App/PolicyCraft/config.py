@@ -35,7 +35,7 @@ class Config:
     DATABASE_DIR = os.path.join(os.path.dirname(BASE_DIR), 'PolicyCraft-Databases')
     
     # File size and type restrictions
-    MAX_CONTENT_LENGTH = 128 * 1024 * 1024  # 128MB maximum file size
+    MAX_CONTENT_LENGTH = 30 * 1024 * 1024  # 30MB maximum file size
     ALLOWED_EXTENSIONS = {'pdf', 'txt', 'docx', 'doc'}
     
     # Multi-file upload configuration

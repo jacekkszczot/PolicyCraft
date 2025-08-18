@@ -262,7 +262,7 @@ if __name__ == "__main__":
 
     df = pd.read_csv(args.data_path)
 
-    # Usuń ewentualne zdublowane wiersze nagłówka
+    # Remove any duplicate header rows
     if args.label_col in df[args.label_col].values:
         df = df[df[args.label_col] != args.label_col].reset_index(drop=True)
     X = df[args.text_col].astype(str)

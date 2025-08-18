@@ -165,7 +165,7 @@ class LiteratureRepository:
                 year = pub_date
             url = meta.get("doi") or meta.get("url") or meta.get("source_url")
             quality = _to_pct(pr.get("quality_assessment", {}).get("total_score") or pr.get("quality_score"))
-            topics = meta.get("topics") or meta.get("tags") or []
+            topics = meta.get("topics") or meta.get("tags") or pr.get("document_topics") or []
             if isinstance(topics, str):
                 topics = [topics]
             return SourceRecord(

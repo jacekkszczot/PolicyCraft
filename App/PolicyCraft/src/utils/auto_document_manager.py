@@ -34,7 +34,7 @@ class AutoDocumentManager:
     
     def __init__(self, knowledge_base_path: str, academic_refs_path: str, validation_path: str):
         """
-        Initialize the AutoDocumentManager.
+        Initialise the AutoDocumentManager.
         
         Args:
             knowledge_base_path: Path to docs/knowledge_base/

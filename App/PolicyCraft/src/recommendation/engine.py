@@ -1,21 +1,20 @@
 """
 PolicyCraft Recommendation Engine - Core Analysis and Generation Components.
 
-This module implements the core recommendation engine for PolicyCraft, providing
+This module implements the recommendation engine for PolicyCraft, providing
 comprehensive analysis of AI policy documents and generating evidence-based
 recommendations for higher education institutions. The engine combines ethical
 framework analysis with contextual recommendation generation.
 
 Key Components:
 - PolicyDimension: Enumeration of ethical AI policy dimensions
-- PolicyRecommendation: Data structure for recommendations
-- EthicalFrameworkAnalyser: Analysis engine for policy evaluation
-- RecommendationGenerator: Generates contextual policy recommendations
+- PolicyRecommendation: Data structure for recommendation storage
+- EthicalFrameworkAnalyser: Core analysis engine for policy evaluation
+- RecommendationGenerator: Contextual policy recommendation generation
 
 The engine analyses policies across multiple dimensions including transparency,
 accountability, human oversight, and bias mitigation, providing structured
-feedback and actionable recommendations based on academic literature and
-established frameworks.
+feedback and actionable recommendations grounded in academic literature.
 
 Author: Jacek Robert Kszczot
 Project: MSc Data Science & AI - COM7016
@@ -256,10 +255,10 @@ class EthicalFrameworkAnalyzer:
         
     def _generate_dimension_analysis_summary(self, dimension: PolicyDimension, score: float) -> str:
         """Generate a human-readable summary of the dimension analysis."""
+        # determine strength based on score - might want to adjust these thresholds later
         if score >= 0.8:
             strength_level = "strong"
-        elif score >= 0.5:
-            strength_level = "moderate"
+        elif score >= 0.5: strength_level = "moderate"  # different formatting style
         else:
             strength_level = "weak"
             

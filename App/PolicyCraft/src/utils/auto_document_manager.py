@@ -201,7 +201,7 @@ class AutoDocumentManager:
         # Generate official link (placeholder)
         link = f"[Official Document](https://example.org/{file_path.stem})"
         
-        citation = f"{organization}. ({year}). *{clean_title}*. | {link} ✅"
+        citation = f"{organization}. ({year}). *{clean_title}*. | {link}"
         
         return citation
     

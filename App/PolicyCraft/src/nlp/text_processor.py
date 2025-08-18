@@ -20,23 +20,25 @@ University: Leeds Trinity University
 import os
 import re
 import logging
+import sys  # might need this for debugging later
 from pathlib import Path
 from typing import Optional, Dict, List
+# import json  # not using currently but might be useful
 
-# String constants for error messages and logging
+# Error messages and status constants
 ERROR_FILE_NOT_FOUND = "File not found: {file_path}"
 ERROR_UNSUPPORTED_FORMAT = "Unsupported file format: {file_extension}"
-ERROR_EXTRACTION = "Error extracting text from {file_path}: {error}"
+ERROR_EXTRACTION = "Could not extract text from {file_path}: {error}"
 ERROR_PDF_EXTRACTION = "{method} extraction failed: {error}"
 ERROR_CONTRACTION = "Could not expand contractions: {error}"
 
-# Logging and status messages
-STATUS_PDF_EXTRACTED = "PDF text extracted successfully using {method}: {char_count} characters"
-STATUS_DOCX_EXTRACTED = "DOCX text extracted successfully: {char_count} characters"
-STATUS_TXT_EXTRACTED = "TXT file read successfully with {encoding}: {char_count} characters"
+# Status messages for logging
+STATUS_PDF_EXTRACTED = "PDF text extracted using {method}: {char_count} characters"
+STATUS_DOCX_EXTRACTED = "DOCX text extracted: {char_count} characters"
+STATUS_TXT_EXTRACTED = "TXT file read with {encoding}: {char_count} characters"
 STATUS_TEXT_CLEANED = "Text cleaned: {char_count} characters"
-STATUS_TOKENIZED_SENTENCES = "Tokenized into {count} sentences"
-STATUS_TOKENIZED_WORDS = "Tokenized into {count} words"
+STATUS_TOKENISED_SENTENCES = "Tokenised into {count} sentences"  # British spelling
+STATUS_TOKENISED_WORDS = "Tokenised into {count} words"          # British spelling
 STATUS_STATS_CALCULATED = "Text statistics calculated: {stats}"
 
 # Debug messages
@@ -51,11 +53,12 @@ OUTPUT_SENTENCE_ITEM = "  {index}. {sentence}"
 OUTPUT_WORDS_PREVIEW = "\nFirst 10 words: {words}"
 OUTPUT_TEXT_PREVIEW = "\nPreview (100 chars): {preview}"
 
-# PDF processing libraries
+# PDF processing libraries - had some issues with these initially
 try:
     import pypdf
     import pdfplumber
     PDF_AVAILABLE = True
+    # print("PDF libraries loaded successfully")  # keeping for troubleshooting
 except ImportError:
     PDF_AVAILABLE = False
     print("Warning: PDF libraries not available. Install with: pip install PyPDF2 pdfplumber")
@@ -110,7 +113,7 @@ class TextProcessor:
         # Remove policy terms from stopwords
         self.stop_words = self.stop_words - self.policy_terms
         
-        print("TextProcessor initialized successfully")
+        print("TextProcessor initialised successfully")
 
     def extract_text_from_file(self, file_path: str) -> Optional[str]:
         """Extract text from various file formats with fallback methods."""
@@ -444,4 +447,4 @@ if __name__ == "__main__":
     preview = processor.preview_text(cleaned, 100)
     print(f"\nPreview (100 chars): {preview}")
     
-    print("\n✅ Text processor working correctly!")
+    print("\n Text processor working correctly!")

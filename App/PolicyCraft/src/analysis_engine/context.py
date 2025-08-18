@@ -46,7 +46,7 @@ class AlternativeAnalysisModes:
         },
         "efficiency_focused": {
             "weight_adjustments": {"cost_efficiency": 1.5, "implementation_speed": 1.3},
-            "focus_areas": ["automation", "resource_optimization", "streamlined_processes"],
+            "focus_areas": ["automation", "resource_optimisation", "streamlined_processes"],
         },
         "innovation_enabler": {
             "weight_adjustments": {"flexibility": 1.4, "academic_freedom": 1.3},

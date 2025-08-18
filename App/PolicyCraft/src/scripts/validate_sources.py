@@ -50,7 +50,7 @@ def parse_reference_markdown(md_path: Path) -> Dict[str, Dict[str, Any]]:
     """Return mapping citation_text -> metadata {year:int, doi:str|None}."""
     refs: Dict[str, Dict[str, Any]] = {}
     if not md_path.exists():
-        print(f"❌ Reference file not found: {md_path}", file=sys.stderr)
+        print(f"ERROR: Reference file not found: {md_path}", file=sys.stderr)
         return refs
 
     for line in md_path.read_text(encoding="utf-8").splitlines():
@@ -125,7 +125,7 @@ def flatten_sources(recs: List[Dict[str, Any]]) -> List[str]:
 def validate(max_age: int, output_path: Path | None = None) -> None:
     allowed_refs = parse_reference_markdown(REF_MD)
     if not allowed_refs:
-        print("⚠️  No references parsed – aborting.")
+        print("WARNING:  No references parsed – aborting.")
         return
 
     current_year = datetime.now(timezone.utc).year
@@ -164,11 +164,11 @@ def validate(max_age: int, output_path: Path | None = None) -> None:
             writer = csv.DictWriter(fh, fieldnames=["analysis_id", "title", "issues"])
             writer.writeheader()
             writer.writerows(summary_rows)
-        print(f"✅ Report written to {output_path} ({offenses}/{total_recs} with issues)")
+        print(f" Report written to {output_path} ({offenses}/{total_recs} with issues)")
     else:
         for row in summary_rows:
             if row["issues"] != "PASS":
-                print(f"[⚠️ ] {row['analysis_id']} :: {row['title']} -> {row['issues']}")
+                print(f"[WARNING: ] {row['analysis_id']} :: {row['title']} -> {row['issues']}")
         print(f"\nScanned {total_recs} recommendations – {offenses} with issues (threshold {max_age}y).")
 
 

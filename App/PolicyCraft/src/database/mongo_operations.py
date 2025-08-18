@@ -1,31 +1,26 @@
 """
-MongoDB-backed data operations for PolicyCraft.
+MongoDB operations for PolicyCraft data persistence.
 
-This module provides the same public API (method names and signatures)
-as the former JSON-based `DatabaseOperations` so that the rest of the
-application can switch storage by changing the import only.
+This module provides database operations using MongoDB as the backend storage.
+Maintains the same API as the previous JSON-based implementation to ensure
+compatibility with existing application components.
 
-For simplicity we implement only the methods actually referenced by the
-Flask app. Additional helpers can be added later.
+The implementation covers the methods currently used by the Flask application.
+Additional database operations can be added as requirements evolve.
 
 MongoDB collections:
-    analyses          – user analyses and baseline documents
-    recommendations   – recommendations generated for an analysis
+    analyses          – user analyses and baseline documents  
+    recommendations   – recommendations generated for analyses
 
 Author: Jacek Robert Kszczot
 Project: MSc Data Science & AI - COM7016
 University: Leeds Trinity University
 
-The module expects a running MongoDB instance (>=4.0) and the `pymongo`
-package. Install locally via:
-    pip install pymongo
+Requirements:
+- MongoDB instance (version 4.0 or higher)
+- pymongo package (install via: pip install pymongo)
 
-Environment variables (or kwargs) may override default connection URI
-and database name.
-
-Author: Jacek Robert Kszczot
-Project: MSc Data Science & AI - COM7016
-University: Leeds Trinity University
+Configuration through environment variables or connection parameters.
 """
 
 from __future__ import annotations
@@ -34,6 +29,7 @@ import os
 import logging
 from datetime import datetime, timezone
 from typing import List, Dict, Optional, Tuple
+# import time  # might need for debugging connection issues
 
 from pymongo import MongoClient, ASCENDING, DESCENDING, ReturnDocument
 from pymongo.collection import Collection
@@ -41,9 +37,9 @@ from pymongo.errors import DuplicateKeyError
 
 logger = logging.getLogger(__name__)
 
-# MongoDB query constants
+# MongoDB constants - these make the queries cleaner
 MATCH_QUERY = "$match"
-SORT_QUERY = "$sort"
+SORT_QUERY = "$sort"  
 GROUP_QUERY = "$group"
 SET_OPERATOR = "$set"
 PUSH_OPERATOR = "$push"
@@ -52,7 +48,7 @@ AVG_OPERATOR = "$avg"
 SIZE_OPERATOR = "$size"
 NOT_OPERATOR = "$not"
 
-# Field name constants
+# Field names - using constants to avoid typos
 USER_ID_FIELD = "user_id"
 ANALYSIS_ID_FIELD = "analysis_id"
 FILENAME_FIELD = "filename"

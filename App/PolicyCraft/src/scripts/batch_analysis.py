@@ -33,11 +33,11 @@ from src.recommendation.engine import RecommendationGenerator
 def run_batch_analysis():
     """Run complete analysis on clean dataset."""
     
-    print("🚀 STARTING BATCH ANALYSIS OF CLEAN DATASET")
+    print("STARTING BATCH ANALYSIS OF CLEAN DATASET")
     print("=" * 60)
     
     # Initialise components
-    print("🔧 Initializing PolicyCraft components...")
+    print("Initializing PolicyCraft components...")
     text_processor = TextProcessor()
     theme_extractor = ThemeExtractor()
     policy_classifier = PolicyClassifier()
@@ -48,7 +48,7 @@ def run_batch_analysis():
     mongo_db.recommendations.delete_many({"user_id": -1})
     chart_generator = ChartGenerator()
     recommendation_engine = RecommendationGenerator()
-    print("✅ All components loaded")
+    print("All components loaded")
     
     # Dataset paths
     dataset_dir = Path("data/policies/clean_dataset")
@@ -57,7 +57,7 @@ def run_batch_analysis():
     
     # Get all policy files
     policy_files = list(dataset_dir.glob("*.pdf")) + list(dataset_dir.glob("*.docx"))
-    print(f"\n📄 Found {len(policy_files)} policy files to analyse")
+    print(f"\nFound {len(policy_files)} policy files to analyse")
     
     # Results storage
     all_results = []
@@ -98,24 +98,24 @@ def run_batch_analysis():
             extracted_text = text_processor.extract_text_from_file(str(file_path))
             if not extracted_text:
                 raise Exception("Text extraction failed")
-            print(f"✅ Extracted {len(extracted_text)} characters")
+            print(f"Extracted {len(extracted_text)} characters")
             
             # STEP 2: Text Cleaning
             print("🧹 STEP 2: Text cleaning...")
             cleaned_text = text_processor.clean_text(extracted_text)
-            print(f"✅ Cleaned to {len(cleaned_text)} characters")
+            print(f" Cleaned to {len(cleaned_text)} characters")
             
             # STEP 3: Theme Extraction
             print("🎯 STEP 3: Theme extraction...")
             themes = theme_extractor.extract_themes(cleaned_text)
-            print(f"✅ Found {len(themes)} themes")
+            print(f" Found {len(themes)} themes")
             for theme in themes[:3]:
                 print(f"   - {theme['name']}: {theme['score']} ({theme['confidence']}%)")
             
             # STEP 4: Policy Classification
-            print("📊 STEP 4: Policy classification...")
+            print(" STEP 4: Policy classification...")
             classification = policy_classifier.classify_policy(cleaned_text)
-            print(f"✅ Classification: {classification['classification']} ({classification['confidence']}%)")
+            print(f" Classification: {classification['classification']} ({classification['confidence']}%)")
             # Store analysis in MongoDB
             # Prefix baseline filenames so UI treats them as non-deletable
             baseline_filename = f"[BASELINE] {file_path.stem}"
@@ -133,7 +133,7 @@ def run_batch_analysis():
             )
             
             # STEP 5: Enhanced Recommendation Generation with Full Results Capture
-            print("💡 STEP 5: Enhanced recommendation generation...")
+            print(" STEP 5: Enhanced recommendation generation...")
             recommendations = recommendation_engine.generate_recommendations(
                 themes=themes,
                 classification=classification,
@@ -150,7 +150,7 @@ def run_batch_analysis():
             try:
                 mongo_db.store_recommendations(-1, analysis_id, recommendation_list)
             except Exception as e:
-                print(f"⚠️ Could not save recommendations: {e}")
+                print(f"WARNING: Could not save recommendations: {e}")
             
             # Calculate enhanced metrics
             rec_count = len(recommendation_list)
@@ -189,25 +189,25 @@ def run_batch_analysis():
                     key_existing_policies.append(policy_type.replace('_', ' ').title())
             
             # Enhanced console output with meaningful information
-            print(f"✅ Generated {rec_count} contextual recommendations")
-            print(f"✅ Overall coverage: {overall_coverage}% (realistic scoring)")
-            print("📊 Dimension scores: " + " | ".join([
+            print(f" Generated {rec_count} contextual recommendations")
+            print(f" Overall coverage: {overall_coverage}% (realistic scoring)")
+            print(" Dimension scores: " + " | ".join([
                 f"{dim.replace('_', ' ').title()}: {data['score']:.1f}%" 
                 for dim, data in detailed_coverage.items()
             ]))
             print(f"🏛️ Existing policies detected: {existing_policy_count} ({', '.join(key_existing_policies[:3])})")
-            print(f"🔧 Recommendation mix: {enhancement_count} enhancements, {new_implementations} new implementations")
+            print(f" Recommendation mix: {enhancement_count} enhancements, {new_implementations} new implementations")
             
             # STEP 6: Generate Charts
             print("📈 STEP 6: Chart generation...")
             charts = chart_generator.generate_analysis_charts(themes, classification, cleaned_text)
-            print(f"✅ Generated {len(charts)} charts")
+            print(f" Generated {len(charts)} charts")
             # Persist charts in the analysis doc so they are available in the UI
             try:
                 from bson import ObjectId
                 mongo_db.analyses.update_one({"_id": ObjectId(analysis_id)}, {"$set": {"charts": charts}})
             except Exception as e:
-                print(f"⚠️  Failed to persist charts for {baseline_filename}: {e}")
+                print(f"WARNING:  Failed to persist charts for {baseline_filename}: {e}")
             
             # Calculate processing time
             processing_time = round(time.time() - start_time, 2)
@@ -294,10 +294,10 @@ def run_batch_analysis():
             }
             
             all_results.append(result)
-            print("✅ Enhanced analysis completed successfully!")
+            print(" Enhanced analysis completed successfully!")
             
         except Exception as e:
-            print(f"❌ ERROR: {str(e)}")
+            print(f"ERROR: ERROR: {str(e)}")
             failed_analyses.append({
                 'filename': file_path.name,
                 'error': str(e),
@@ -306,15 +306,15 @@ def run_batch_analysis():
     
     # Generate summary report
     print(f"\n{'='*60}")
-    print("📊 BATCH ANALYSIS SUMMARY")
+    print(" BATCH ANALYSIS SUMMARY")
     print(f"{'='*60}")
     
     successful = len(all_results)
     failed = len(failed_analyses)
     total = successful + failed
     
-    print(f"✅ Successful analyses: {successful}/{total} ({(successful/total*100):.1f}%)")
-    print(f"❌ Failed analyses: {failed}/{total} ({(failed/total*100):.1f}%)")
+    print(f" Successful analyses: {successful}/{total} ({(successful/total*100):.1f}%)")
+    print(f"ERROR: Failed analyses: {failed}/{total} ({(failed/total*100):.1f}%)")
     
     if successful > 0:
         # Calculate aggregate statistics
@@ -326,8 +326,8 @@ def run_batch_analysis():
         print("\n📈 AGGREGATE STATISTICS:")
         print(f"   ⏱️  Average processing time: {avg_processing_time}s")
         print(f"   🎯 Average themes per policy: {avg_themes_count}")
-        print(f"   📊 Average classification confidence: {avg_confidence}%")
-        print(f"   💡 Average coverage score: {avg_coverage}%")
+        print(f"    Average classification confidence: {avg_confidence}%")
+        print(f"    Average coverage score: {avg_coverage}%")
         
         # Classification distribution
         classifications = [r['classification']['type'] for r in all_results]
@@ -463,9 +463,9 @@ def generate_enhanced_csv_summary(all_results, csv_file):
     
     # Print summary of enhanced metrics
     print("\n🔍 ENHANCED METRICS SUMMARY:")
-    print(f"   📊 Average overall coverage: {df['Overall_Coverage_Score'].mean():.1f}%")
+    print(f"    Average overall coverage: {df['Overall_Coverage_Score'].mean():.1f}%")
     print(f"   🎯 Average recommendations per policy: {df['Recommendations_Count'].mean():.1f}")
-    print(f"   🔧 Enhancement vs New ratio: {df['Enhancement_Recs'].sum()}:{df['New_Implementation_Recs'].sum()}")
+    print(f"    Enhancement vs New ratio: {df['Enhancement_Recs'].sum()}:{df['New_Implementation_Recs'].sum()}")
     print(f"   🏛️ Policies with existing governance: {df['Has_Governance_Structure'].sum()}/{len(df)}")
     print(f"   📋 Policies with disclosure requirements: {df['Has_Disclosure_Requirements'].sum()}/{len(df)}")
     

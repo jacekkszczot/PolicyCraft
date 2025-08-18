@@ -417,4 +417,4 @@ if __name__ == "__main__":
     dashboard_charts = chart_gen.generate_user_dashboard_charts(test_analyses)
     logger.info("Generated dashboard charts: %s", list(dashboard_charts.keys()))
     
-    logger.info("✅ Chart generator working correctly!")
+    logger.info(" Chart generator working correctly!")

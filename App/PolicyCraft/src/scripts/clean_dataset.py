@@ -172,11 +172,11 @@ if __name__ == "__main__":
                 result = auto_processor.process_uploaded_file(str(file_path), file_path.name)
                 
                 if result['success']:
-                    print(f"✅ {result['original_name']} → {result['standardized_name']}")
+                    print(f" {result['original_name']} → {result['standardized_name']}")
                 else:
-                    print(f"❌ {result['original_name']}: {result['error']}")
+                    print(f"ERROR: {result['original_name']}: {result['error']}")
         
-        print("✅ Processing completed!")
+        print(" Processing completed!")
     else:
         print(f"📁 Create '{raw_folder}' folder and put policy files there")
         print("   Then run: python clean_dataset.py")

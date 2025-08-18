@@ -441,9 +441,9 @@ def validate_dependencies():
     for package, description in core_packages:
         try:
             __import__(package.replace('-', '_'))
-            validation_results.append(f"✅ {description}: {package}")
+            validation_results.append(f" {description}: {package}")
         except ImportError as e:
-            critical_failures.append(f"❌ {description}: {package} - {str(e)}")
+            critical_failures.append(f"ERROR: {description}: {package} - {str(e)}")
     
     # NLP and ML packages
     nlp_packages = [
@@ -457,9 +457,9 @@ def validate_dependencies():
     for package, description in nlp_packages:
         try:
             __import__(package.replace('-', '_'))
-            validation_results.append(f"✅ {description}: {package}")
+            validation_results.append(f" {description}: {package}")
         except ImportError as e:
-            critical_failures.append(f"❌ {description}: {package} - {str(e)}")
+            critical_failures.append(f"ERROR: {description}: {package} - {str(e)}")
     
     # Document processing packages
     doc_packages = [
@@ -472,9 +472,9 @@ def validate_dependencies():
     for package, description in doc_packages:
         try:
             __import__(package)
-            validation_results.append(f"✅ {description}: {package}")
+            validation_results.append(f" {description}: {package}")
         except ImportError as e:
-            warnings.append(f"⚠️  {description}: {package} - {str(e)}")
+            warnings.append(f"WARNING:  {description}: {package} - {str(e)}")
     
     # Visualization packages
     viz_packages = [
@@ -487,9 +487,9 @@ def validate_dependencies():
     for package, description in viz_packages:
         try:
             __import__(package)
-            validation_results.append(f"✅ {description}: {package}")
+            validation_results.append(f" {description}: {package}")
         except ImportError as e:
-            warnings.append(f"⚠️  {description}: {package} - {str(e)}")
+            warnings.append(f"WARNING:  {description}: {package} - {str(e)}")
     
     # Critical NLP models and data
     print("\n🧠 NLP Models and Data Validation")
@@ -499,21 +499,21 @@ def validate_dependencies():
     try:
         import spacy
         nlp = spacy.load('en_core_web_sm')
-        validation_results.append("✅ spaCy English model: en_core_web_sm")
-        print("✅ spaCy en_core_web_sm model loaded successfully")
+        validation_results.append(" spaCy English model: en_core_web_sm")
+        print(" spaCy en_core_web_sm model loaded successfully")
     except Exception as e:
-        critical_failures.append(f"❌ spaCy English model: en_core_web_sm - {str(e)}")
-        print(f"❌ spaCy model error: {str(e)}")
+        critical_failures.append(f"ERROR: spaCy English model: en_core_web_sm - {str(e)}")
+        print(f"ERROR: spaCy model error: {str(e)}")
     
     # SentenceTransformer model validation
     try:
         from sentence_transformers import SentenceTransformer
         embedder = SentenceTransformer('all-MiniLM-L6-v2')
-        validation_results.append("✅ SentenceTransformer model: all-MiniLM-L6-v2")
-        print("✅ SentenceTransformer all-MiniLM-L6-v2 model loaded successfully")
+        validation_results.append(" SentenceTransformer model: all-MiniLM-L6-v2")
+        print(" SentenceTransformer all-MiniLM-L6-v2 model loaded successfully")
     except Exception as e:
-        critical_failures.append(f"❌ SentenceTransformer model: all-MiniLM-L6-v2 - {str(e)}")
-        print(f"❌ SentenceTransformer error: {str(e)}")
+        critical_failures.append(f"ERROR: SentenceTransformer model: all-MiniLM-L6-v2 - {str(e)}")
+        print(f"ERROR: SentenceTransformer error: {str(e)}")
     
     # NLTK data validation
     try:
@@ -524,11 +524,11 @@ def validate_dependencies():
                 nltk.data.find(f'tokenizers/{resource}' if resource == 'punkt' else 
                               f'corpora/{resource}' if resource in ['stopwords', 'wordnet'] else 
                               f'taggers/{resource}')
-                validation_results.append(f"✅ NLTK resource: {resource}")
+                validation_results.append(f" NLTK resource: {resource}")
             except LookupError:
-                warnings.append(f"⚠️  NLTK resource missing: {resource}")
+                warnings.append(f"WARNING:  NLTK resource missing: {resource}")
     except ImportError as e:
-        warnings.append(f"⚠️  NLTK validation failed: {str(e)}")
+        warnings.append(f"WARNING:  NLTK validation failed: {str(e)}")
     
     # Recommendation Engine validation
     print("\n🎯 Recommendation Engine Validation")
@@ -543,33 +543,33 @@ def validate_dependencies():
         if os.path.exists(kb_path):
             try:
                 engine = RecommendationEngine(knowledge_base_path=kb_path)
-                validation_results.append("✅ RecommendationEngine: Initialized successfully")
-                print("✅ RecommendationEngine initialized with knowledge base")
+                validation_results.append("RecommendationEngine: Initialized successfully")
+                print("RecommendationEngine initialized with knowledge base")
             except Exception as e:
                 if "knowledge base is not available" in str(e):
-                    warnings.append("⚠️  RecommendationEngine: Knowledge base empty (will be populated on document upload)")
-                    print("⚠️  Knowledge base empty - recommendations available after document upload")
+                    warnings.append("RecommendationEngine: Knowledge base empty (will be populated on document upload)")
+                    print("Knowledge base empty - recommendations available after document upload")
                 else:
-                    critical_failures.append(f"❌ RecommendationEngine: {str(e)}")
+                    critical_failures.append(f"RecommendationEngine error: {str(e)}")
         else:
-            warnings.append("⚠️  Knowledge base directory missing (will be created on first use)")
-            print("⚠️  Knowledge base directory will be created on first use")
+            warnings.append("Knowledge base directory missing (will be created on first use)")
+            print("Knowledge base directory will be created on first use")
         
         # Test advanced analysis engine
         try:
             analysis_engine = PolicyAnalysisEngine()
-            validation_results.append("✅ Advanced PolicyAnalysisEngine: Available")
-            print("✅ Advanced analysis engine loaded successfully")
+            validation_results.append("Advanced PolicyAnalysisEngine: Available")
+            print("Advanced analysis engine loaded successfully")
         except Exception as e:
-            warnings.append(f"⚠️  Advanced analysis engine: {str(e)}")
-            print(f"⚠️  Advanced analysis engine error: {str(e)}")
+            warnings.append(f"Advanced analysis engine: {str(e)}")
+            print(f"Advanced analysis engine error: {str(e)}")
             
     except ImportError as e:
-        critical_failures.append(f"❌ Recommendation engine components: {str(e)}")
-        print(f"❌ Recommendation engine import error: {str(e)}")
+        critical_failures.append(f"Recommendation engine components: {str(e)}")
+        print(f"Recommendation engine import error: {str(e)}")
 
     # Environment variables validation
-    print("\n⚙️  Environment Configuration")
+    print("\nEnvironment Configuration")
     print("-" * 30)
     
     env_vars = [
@@ -581,37 +581,38 @@ def validate_dependencies():
     for var, description in env_vars:
         value = os.environ.get(var)
         if value:
-            validation_results.append(f"✅ {description}: {var} = {value}")
-            print(f"✅ {description}: {var} = {value}")
+            validation_results.append(f"{description}: {var} = {value}")
+            print(f"{description}: {var} = {value}")
         else:
-            warnings.append(f"⚠️  {description}: {var} not set")
-            print(f"⚠️  {description}: {var} not set")
+            warnings.append(f"{description}: {var} not set")
+            print(f"{description}: {var} not set")
     
     # Summary
-    print("\n📊 Validation Summary")
+    print("\nValidation Summary")
     print("=" * 50)
-    print(f"✅ Successful validations: {len(validation_results)}")
-    print(f"⚠️  Warnings: {len(warnings)}")
-    print(f"❌ Critical failures: {len(critical_failures)}")
+    print(f"Successful validations: {len(validation_results)}")
+    print(f"Warnings: {len(warnings)}")
+    print(f"Critical failures: {len(critical_failures)}")
     
     if critical_failures:
-        print("\n❌ CRITICAL FAILURES:")
+        print("\nCRITICAL FAILURES:")
         for failure in critical_failures:
             print(f"   {failure}")
-        print("\n💡 To fix critical failures:")
+        print("\nTo fix critical failures:")
         print("   pip install -r requirements.txt")
         print("   python -m spacy download en_core_web_sm")
         print("\nApplication startup ABORTED due to missing critical dependencies.")
         sys.exit(1)
     
     if warnings:
-        print("\n⚠️  WARNINGS (non-critical):")
+        print("\nWARNINGS (non-critical):")
         for warning in warnings:
             print(f"   {warning}")
         print("\nApplication will start with reduced functionality.")
     
-    print("\n🚀 All critical dependencies validated. Starting application...")
+    print("\nAll critical dependencies validated. Starting application...")
     print("=" * 50)
+    # print("Debug: dependency check completed")  # keeping for troubleshooting
 
 # Import configuration
 from config import get_config, create_secure_directories

@@ -28,38 +28,25 @@ logger = logging.getLogger(__name__)
 
 class PolicyClassifier:
     """
-    Advanced AI policy classifier using hybrid machine learning and rule-based approaches.
+    AI policy classifier using hybrid machine learning and rule-based approaches.
     
-    This classifier analyses policy documents related to AI usage in academic settings
-    and classifies them into one of three categories:
+    Classifies policy documents into three categories based on their stance toward AI usage.
+    The implementation combines keyword analysis with machine learning techniques when
+    scikit-learn is available, falling back to rule-based classification otherwise.
+    
+    Categories:
     - Restrictive: Policies that prohibit or strictly limit AI usage
-    - Permissive: Policies that encourage or allow broad AI usage
-    - Moderate: Policies that allow AI usage with specific guidelines or conditions
+    - Permissive: Policies that encourage or broadly allow AI usage  
+    - Moderate: Policies that permit AI usage with specific guidelines
     
-    The classifier employs a hybrid approach that combines:
-    - Rule-based keyword matching for interpretability
-    - Machine learning for contextual understanding
-    - Confidence scoring for result reliability
-    
-    Note:
-        For optimal performance, the scikit-learn library should be installed.
-        If not available, the classifier will fall back to rule-based classification.
+    The hybrid approach provides interpretable results whilst maintaining classification accuracy.
     """
     
     def __init__(self):
-        """
-        Initialise the policy classifier with predefined rules and training data.
+        """Setup the classifier with keyword lists and weights"""
+        # print("Setting up policy classifier...")  # kept this for debugging
         
-        This constructor sets up the classification pipeline, including:
-        - Defining policy classification categories
-        - Configuring keyword patterns and weights for rule-based classification
-        - Initialising the machine learning model (if dependencies are available)
-        
-        The classifier is pre-configured with domain-specific knowledge about
-        AI policy language and common patterns in academic policy documents.
-        """
-        
-        # Classification categories
+        # Three main types we can detect
         self.categories = ['Restrictive', 'Moderate', 'Permissive']
         
         # Rule-based classification keywords
@@ -98,14 +85,14 @@ class PolicyClassifier:
             }
         }
         
-        # Weight multipliers for different keyword categories
+        # How much weight each type of keyword gets - had to tune these manually
         self.category_weights = {
             'Restrictive': {'prohibition': 2.0, 'control': 1.5, 'penalties': 2.0, 'mandatory': 1.3},
             'Permissive': {'encouragement': 1.8, 'flexibility': 1.5, 'benefits': 1.2, 'guidance': 1.0},
             'Moderate': {'balance': 1.5, 'conditions': 1.2, 'responsibility': 1.3, 'evaluation': 1.4}
         }
         
-        # ML pipeline
+        # ML stuff (if sklearn works)
         
         # === Explainability parameters ===
         self.top_explain_terms = 10  # default number of terms returned by explain_classification
@@ -114,7 +101,7 @@ class PolicyClassifier:
         if SKLEARN_AVAILABLE:
             self._initialize_ml_model()
         
-        print("PolicyClassifier initialized successfully")
+        print("PolicyClassifier ready")  # simple message
 
     # ------------------------------------------------------------------
     # Explainability helper
@@ -776,4 +763,4 @@ if __name__ == "__main__":
         print(f"Policy Tone: {details['text_analysis']['policy_tone']}")
         print(f"Keyword Density: {details['keyword_density']}")
     
-    print("\n✅ Policy classifier working correctly!")
+    print("\n Policy classifier working correctly!")

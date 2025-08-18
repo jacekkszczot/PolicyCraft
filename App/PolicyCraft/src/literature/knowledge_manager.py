@@ -548,10 +548,10 @@ class KnowledgeBaseManager:
 - **Document ID**: {processing_results.get('document_id', 'N/A')}
 - **Processing Version**: PolicyCraft Literature Processor v1.0
 - **Integration Date**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-- **Auto-Generated**: Yes
+- **Processed**: Yes
 
 ---
-*This document was automatically processed and integrated into the PolicyCraft knowledge base.*
+*This document was processed and integrated into the PolicyCraft knowledge base.*
 """
         
         return markdown_content

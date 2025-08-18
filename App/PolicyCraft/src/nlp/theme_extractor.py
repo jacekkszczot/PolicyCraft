@@ -300,7 +300,7 @@ class ThemeExtractor:
                     'student ai literacy', 'ethical ai use by students', 'ai and academic integrity',
                     'student ai policy awareness', 'ai for personalized learning', 'ai in coursework',
                     'student research with ai', 'ai for student productivity', 'ai and student creativity',
-                    'student concerns about ai', 'ai policy for students', 'student centered ai policies',
+                    'student concerns about ai', 'ai policy for students', 'student centred ai policies',
                     'ai in higher education', 'student ai training', 'ai for student success',
                     'student engagement with ai', 'ai and student assessment'
                 ]
@@ -570,6 +570,7 @@ class ThemeExtractor:
         # Initialise spaCy if available
         if SPACY_AVAILABLE:
             self._initialize_spacy()
+            # print("spaCy initialization complete")  # debug line
         else:
             print("spaCy not available - using fallback keyword extraction")
             
@@ -1056,17 +1057,17 @@ class ThemeExtractor:
             >>> themes = extractor.extract_themes(some_text)
             >>> viz_data = extractor.visualize_themes(themes)
             >>> # Use with a charting library like Chart.js or Matplotlib
-            >>> # plt.bar(viz_data['labels'], viz_data['scores'], color=viz_data['colors'])
+            >>> # plt.bar(viz_data['labels'], viz_data['scores'], color=viz_data['colours'])
             
         Note:
             The colour palette is fixed to ensure consistency across visualisations.
             If you have more than 10 themes, the colours will repeat.
         """
         if not themes:
-            return {'labels': [], 'scores': [], 'colors': []}
+            return {'labels': [], 'scores': [], 'colours': []}
         
         # Colour palette for themes
-        colors = [
+        colours = [
             '#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6',
             '#1abc9c', '#34495e', '#e67e22', '#95a5a6', '#16a085'
         ]
@@ -1076,7 +1077,7 @@ class ThemeExtractor:
             'scores': [theme['score'] for theme in themes],
             'frequencies': [theme['frequency'] for theme in themes],
             'confidences': [theme['confidence'] for theme in themes],
-            'colors': colors[:len(themes)]
+            'colours': colours[:len(themes)]
         }
         
         return viz_data
@@ -1128,4 +1129,4 @@ if __name__ == "__main__":
     print(f"Chart labels: {viz_data['labels']}")
     print(f"Chart scores: {viz_data['scores']}")
     
-    print("\n✅ Theme extractor working correctly!")
+    print("\n Theme extractor working correctly!")

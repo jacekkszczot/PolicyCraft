@@ -6,7 +6,7 @@ This package contains all test modules for the PolicyCraft application, includin
 - Integration tests for module interactions
 - Functional tests for end-to-end workflows
 
-Test files are organized by the module they test, following the structure of the main
+Test files are organised by the module they test, following the structure of the main
 application package for easy navigation and maintenance.
 
 Author: Jacek Robert Kszczot

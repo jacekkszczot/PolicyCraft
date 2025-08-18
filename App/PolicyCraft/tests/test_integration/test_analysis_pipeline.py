@@ -72,13 +72,13 @@ It includes key principles such as transparency, accountability, and fairness.
         extracted_text = text_processor.extract_text_from_file(temp_policy_file)
         assert extracted_text is not None
         assert len(extracted_text) > 0
-        print(f"✅ Text extraction: {len(extracted_text)} characters")
+        print(f" Text extraction: {len(extracted_text)} characters")
         
         # Step 2: Clean text
         cleaned_text = text_processor.clean_text(extracted_text)
         assert cleaned_text is not None
         assert len(cleaned_text) > 0
-        print(f"✅ Text cleaning: {len(cleaned_text)} characters")
+        print(f" Text cleaning: {len(cleaned_text)} characters")
         
         # Step 3: Extract themes
         themes = theme_extractor.extract_themes(cleaned_text)
@@ -89,14 +89,14 @@ It includes key principles such as transparency, accountability, and fairness.
         for theme in themes:
             pytest.assert_valid_theme(theme)
         
-        print(f"✅ Theme extraction: {len(themes)} themes found")
+        print(f" Theme extraction: {len(themes)} themes found")
         print(f"   Top themes: {[t['name'] for t in themes[:3]]}")
         
         # Step 4: Classify policy
         classification = policy_classifier.classify_policy(cleaned_text)
         pytest.assert_valid_classification(classification)
         
-        print(f"✅ Policy classification: {classification['classification']} ({classification['confidence']}%)")
+        print(f" Policy classification: {classification['classification']} ({classification['confidence']}%)")
         
         # Step 5: Generate recommendations
         recommendations_result = recommendation_engine.generate_recommendations(
@@ -117,7 +117,7 @@ It includes key principles such as transparency, accountability, and fairness.
         for rec in recommendations:
             pytest.assert_valid_recommendation(rec)
         
-        print(f"✅ Recommendation generation: {len(recommendations)} recommendations")
+        print(f" Recommendation generation: {len(recommendations)} recommendations")
         print(f"   Coverage: {recommendations_result['summary'].get('overall_coverage', 'N/A')}%")
         
         # Step 6: Validate end-to-end coherence
@@ -137,7 +137,7 @@ It includes key principles such as transparency, accountability, and fairness.
         assert any(dim in rec_dimensions for dim in expected_dimensions), \
             "Recommendations should address ethical framework dimensions"
         
-        print("✅ End-to-end pipeline integration successful")
+        print(" End-to-end pipeline integration successful")
         
         # Store results for potential inspection (without returning)
         _integration_results = {
@@ -207,7 +207,7 @@ It includes key principles such as transparency, accountability, and fairness.
                 'theme_count': len(themes)
             })
             
-            print(f"✅ {policy_data['name']}: {classification['classification']} ({len(themes)} themes)")
+            print(f" {policy_data['name']}: {classification['classification']} ({len(themes)} themes)")
         
         # Validate batch results diversity
         classifications = [result['classification']['classification'] for result in batch_results]
@@ -236,7 +236,7 @@ It includes key principles such as transparency, accountability, and fairness.
             # Note: We don't assert exact match as classification algorithms may vary
             # The important thing is that we get reasonable, different results
         
-        print(f"\n✅ Batch processing completed: {len(batch_results)} policies processed")
+        print(f"\n Batch processing completed: {len(batch_results)} policies processed")
         
         # Store results for inspection without returning
         _batch_processing_results = batch_results
@@ -280,23 +280,23 @@ It includes key principles such as transparency, accountability, and fairness.
                         pytest.assert_valid_classification(classification)
                         
                         successful_processes += 1
-                        print(f"✅ Processed successfully: {len(themes)} themes, {classification['classification']}")
+                        print(f" Processed successfully: {len(themes)} themes, {classification['classification']}")
                     else:
-                        print("⚠️ Cleaned text was empty, skipping further processing")
+                        print("WARNING: Cleaned text was empty, skipping further processing")
                         successful_processes += 1  # Still successful handling
                 else:
-                    print("⚠️ None input handled gracefully")
+                    print("WARNING: None input handled gracefully")
                     successful_processes += 1
                     
             except Exception as e:
-                print(f"❌ Error with input {i + 1}: {str(e)}")
+                print(f"ERROR: Error with input {i + 1}: {str(e)}")
                 # Errors are acceptable for truly invalid inputs
                 # but pipeline should not crash completely
         
         # Should successfully handle at least some edge cases
         assert successful_processes > 0, "Pipeline should handle at least some edge cases gracefully"
         
-        print(f"\n✅ Error recovery test: {successful_processes}/{len(problematic_inputs)} inputs handled")
+        print(f"\n Error recovery test: {successful_processes}/{len(problematic_inputs)} inputs handled")
 
     def test_performance_benchmarking(self, tmp_path):
         """Test pipeline performance with realistic document sizes."""
@@ -413,7 +413,7 @@ It includes key principles such as transparency, accountability, and fairness.
         recommendation_engine = RecommendationEngine(knowledge_base_path=str(kb_path))
         
         # Measure processing time for each component
-        print("\n🚀 Performance Benchmarking")
+        print("\n Performance Benchmarking")
         
         # Text processing performance
         start_time = time.time()
@@ -437,7 +437,7 @@ It includes key principles such as transparency, accountability, and fairness.
         classification = policy_classifier.classify_policy(cleaned_text)
         classification_time = time.time() - start_time
         
-        print(f"📊 Classification: {classification_time:.3f}s ({classification['classification']})")
+        print(f" Classification: {classification_time:.3f}s ({classification['classification']})")
         assert classification_time < 1.0, f"Classification too slow: {classification_time:.3f}s"
         
         # Recommendation generation performance
@@ -451,7 +451,7 @@ It includes key principles such as transparency, accountability, and fairness.
         recommendation_time = time.time() - start_time
         
         rec_count = len(recommendations.get('recommendations', []))
-        print(f"💡 Recommendations: {recommendation_time:.3f}s ({rec_count} recommendations)")
+        print(f" Recommendations: {recommendation_time:.3f}s ({rec_count} recommendations)")
         assert recommendation_time < 3.0, f"Recommendation generation too slow: {recommendation_time:.3f}s"
         
         # Total pipeline performance
@@ -466,7 +466,7 @@ It includes key principles such as transparency, accountability, and fairness.
         assert classification['confidence'] > 30, "Should have reasonable classification confidence"
         assert rec_count >= 2, "Should generate multiple recommendations"
         
-        print("✅ Performance benchmarking passed")
+        print(" Performance benchmarking passed")
         
         # Store performance data without returning
         _performance_data = {
@@ -582,6 +582,6 @@ It includes key principles such as transparency, accountability, and fairness.
             matching_dimensions = set(rec_dimensions) & set(coverage_dimensions)
             assert len(matching_dimensions) > 0, "Recommendations should address coverage dimensions"
         
-        print("✅ Data flow consistency validated")
+        print(" Data flow consistency validated")
         
         # Test passes if all validations completed successfully

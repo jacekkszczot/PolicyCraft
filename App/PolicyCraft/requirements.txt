@@ -1,6 +1,7 @@
 # PolicyCraft - Core Dependencies
 # ============================
 # This file contains all the core dependencies required to run the PolicyCraft application.
+# Includes OCR capabilities for scanned PDF documents.
 # For development dependencies, see requirements-dev.txt
 
 # ===== Web Framework & Core =====
@@ -57,7 +58,12 @@ python-json-logger>=2.0.7  # For structured logging
 # 2. Download NLTK data (for enhanced text processing):
 #    python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('averaged_perceptron_tagger')"
 #
-# 3. Set environment variables (optional but recommended):
+# 3. Install system dependencies for OCR (macOS):
+#    brew install tesseract poppler
+#    # For Ubuntu/Debian: sudo apt-get install tesseract-ocr poppler-utils
+#    # For Windows: Download from https://github.com/UB-Mannheim/tesseract/wiki
+#
+# 4. Set environment variables (optional but recommended):
 #    echo "FEATURE_ADVANCED_ENGINE=1" >> .env
 #
 # For development dependencies, install from requirements-dev.txt:
@@ -69,6 +75,11 @@ python-json-logger>=2.0.7  # For structured logging
 # ===== File and Document libs =====
 PyMuPDF>=1.23.0
 sentence-transformers>=2.2.0
+
+# ===== OCR (Optical Character Recognition) =====
+pytesseract>=0.3.13  # Python wrapper for Tesseract OCR
+pdf2image>=1.17.0    # Convert PDF to images for OCR processing
+Pillow>=10.4.0       # Image processing (required by pdf2image and pytesseract)
 
 # ===== Test-suite required (missing previously) =====
 pdfplumber>=0.11.7

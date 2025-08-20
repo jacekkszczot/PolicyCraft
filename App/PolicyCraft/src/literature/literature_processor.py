@@ -52,7 +52,7 @@ except Exception:
     print("Warning: sentence-transformers not available. Using basic similarity.")
 # Internal imports
 from .quality_validator import LiteratureQualityValidator
-from src.nlp.theme_extractor import ThemeExtractor
+from ..nlp.theme_extractor import ThemeExtractor
 
 logger = logging.getLogger(__name__)
 

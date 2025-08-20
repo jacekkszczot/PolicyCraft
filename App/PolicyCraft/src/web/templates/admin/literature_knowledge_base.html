@@ -105,7 +105,7 @@
                             <td class="timestamp-cell">{{ update.timestamp[:19] if update.timestamp }}</td>
                             <td class="document-cell">
                                 <div class="document-title">
-                                    {{ update.filename or update.document_id or "Unknown document" }}
+                                    {{ update.filename or update.display_id or update.document_id or "Unknown document" }}
                                 </div>
                                 <div class="document-meta">
                                     {% if update.metadata and update.metadata.author %}

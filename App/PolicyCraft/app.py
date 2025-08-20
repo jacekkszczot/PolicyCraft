@@ -42,7 +42,6 @@ def _fetch_analysis_for_recommendations(analysis_id):
         logger.info(f"Analysis details - ID: {analysis.get('_id')}")
         logger.info(f"Analysis owner: User ID: {analysis.get('user_id')}, Username: {analysis.get('username')}")
         logger.info(f"Is baseline: {analysis.get('is_baseline', False)}")
-        logger.warning("Temporary disabling permission checks for testing")
         logger.info(f"Analysis user_id: {analysis.get('user_id')}, Current user ID: {current_user.id}")
         logger.info(f"Analysis username: {analysis.get('username')}, Current username: {getattr(current_user, 'username', 'N/A')}")
         return analysis
@@ -152,8 +151,6 @@ def _load_or_generate_recommendations(analysis_id, cleaned_text, themes=None, cl
             return engine_package
 
         # No stored recommendations - use full package from engine
-        for i, rec in enumerate(engine_package.get("recommendations", [])):
-            logger.debug(f"Recommendation {i+1}: {rec.get('title', 'Unknown')}")
         return engine_package
 
     except Exception as e:
@@ -199,10 +196,20 @@ def _get_or_create_analysis_record(filename: str, is_baseline: bool, file_path: 
     analysis_id = _store_analysis_results(filename, extracted_text, cleaned_text, themes, classification)
     return extracted_text, cleaned_text, themes, classification, analysis_id
 
-def _build_basic_export_data(analysis_id, analysis, recommendations):
+def _build_basic_export_data(analysis_id, analysis, recommendations, recommendation_package=None):
     """Build the base export data package used by PDF/Word/Excel (without charts)."""
     # Extract confidence factors and calculate confidence percentage
-    confidence_factors = analysis.get('confidence_factors', {})
+    confidence_factors = {}
+    if recommendation_package and isinstance(recommendation_package, dict):
+        package_analysis = recommendation_package.get('analysis', {})
+        confidence_factors = package_analysis.get('confidence_factors') or package_analysis.get('confidence', {}).get('factors', {})
+        # Debug logging
+        logger.info(f"Export binary: confidence_factors from package: {confidence_factors}")
+    else:
+        confidence_factors = analysis.get('confidence_factors', {})
+        # Debug logging
+        logger.info(f"Export binary: confidence_factors from analysis: {confidence_factors}")
+    
     confidence_raw = analysis.get('classification', {}).get('confidence', 0)
     confidence_pct = confidence_raw * 100 if confidence_raw <= 1 else confidence_raw
     
@@ -233,12 +240,8 @@ def _require_analysis_or_redirect(analysis_id):
 
 def _require_recommendations_or_redirect(analysis_id):
     """Ensure recommendations exist; otherwise flash and redirect to generator."""
-    recommendations = _get_export_recommendations(analysis_id)
-    if not recommendations:
-        logger.warning(f"No recommendations found for analysis {analysis_id}")
-        flash(f'{NO_RECOMMENDATIONS_FOUND}.', 'warning')
-        return None, redirect(url_for('get_recommendations', analysis_id=analysis_id))
-    return recommendations, None
+    # This function is no longer needed since export works directly from recommendations page
+    return None, None
 
 def _prepare_basic_export_data_or_error(analysis_id):
     """Fetch analysis and recommendations; return (export_data, None) or (None, (json, code))."""
@@ -263,16 +266,20 @@ def _prepare_basic_export_data_or_error(analysis_id):
         recommendations = package.get('recommendations', [])
         narrative = package.get('narrative', {})
     except Exception:
-        # Fallback to existing recommendations only
-        recommendations = _get_export_recommendations(analysis_id) or []
-        narrative = {}
-        if not recommendations:
-            return None, (jsonify({'error': NO_RECOMMENDATIONS_FOUND}), 404)
+        # No fallback needed - if package generation fails, return error
+        return None, (jsonify({'error': NO_RECOMMENDATIONS_FOUND}), 404)
 
-    base = _build_basic_export_data(analysis_id, analysis, recommendations)
+    base = _build_basic_export_data(analysis_id, analysis, recommendations, package)
     base['narrative'] = narrative
     # Add charts for binary exports
-    base['charts'] = _generate_export_charts(analysis)
+    try:
+        themes = analysis.get('themes', [])
+        classification = analysis.get('classification', {})
+        cleaned_text = analysis.get('text_data', {}).get('cleaned_text', '')
+        base['charts'] = chart_generator.generate_analysis_charts(themes, classification, cleaned_text)
+    except Exception as chart_error:
+        logger.error(f"Error generating charts: {chart_error}")
+        base['charts'] = {}
     return base, None
 
 def _make_binary_response(binary_data: bytes, content_type: str, filename: str):
@@ -318,6 +325,43 @@ def _build_recommendation_data(analysis_id, analysis, themes, classification, re
     conf_pct = max(0.0, min(100.0, conf_pct))
 
     extended = recommendation_package.get('analysis', {}) if isinstance(recommendation_package, dict) else {}
+    
+    # Debug logging
+    logger.info(f"Export view: extended data keys: {list(extended.keys()) if extended else 'None'}")
+    logger.info(f"Export view: confidence_factors: {extended.get('confidence_factors')}")
+    logger.info(f"Export view: confidence data: {extended.get('confidence')}")
+    
+    # Build the data structure for template
+    template_data = {
+        'analysis': {
+            'filename': analysis.get('filename', 'Unknown'),
+            'classification': classification.get('classification', 'Unknown'),
+            'confidence': classification.get('confidence', 0),
+            'confidence_pct': conf_pct,
+            'confidence_factors': extended.get('confidence_factors') or extended.get('confidence', {}).get('factors'),
+            'stakeholders': extended.get('stakeholders'),
+            'risk_benefit': extended.get('risk_benefit'),
+            'analysis_id': analysis_id,
+            'themes_count': len(themes)
+        },
+        'recommendations': recommendation_package.get('recommendations', []),
+        'coverage_analysis': recommendation_package.get('coverage_analysis', {}),
+        'gaps': recommendation_package.get('identified_gaps', []),
+        'generated_date': recommendation_package.get('analysis_metadata', {}).get('generated_date', datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+        'methodology': recommendation_package.get('analysis_metadata', {}).get('methodology', 'Ethical Framework Analysis'),
+        'academic_sources': recommendation_package.get('analysis_metadata', {}).get('academic_sources', []),
+        'summary': recommendation_package.get('summary', {}),
+        'total_recommendations': len(recommendation_package.get('recommendations', [])),
+        'narrative': recommendation_package.get('narrative', {})
+    }
+    
+    # Debug the final template data
+    logger.info(f"Export view: Final template data structure:")
+    logger.info(f"  - analysis.confidence_factors: {template_data['analysis'].get('confidence_factors')}")
+    logger.info(f"  - analysis.stakeholders: {template_data['analysis'].get('stakeholders')}")
+    logger.info(f"  - analysis.risk_benefit: {template_data['analysis'].get('risk_benefit')}")
+    
+    return template_data
 
     return {
         'analysis': {
@@ -325,7 +369,7 @@ def _build_recommendation_data(analysis_id, analysis, themes, classification, re
             'classification': classification.get('classification', 'Unknown'),
             'confidence': classification.get('confidence', 0),
             'confidence_pct': conf_pct,
-            'confidence_factors': extended.get('confidence_factors'),
+            'confidence_factors': extended.get('confidence_factors') or extended.get('confidence', {}).get('factors'),
             'stakeholders': extended.get('stakeholders'),
             'risk_benefit': extended.get('risk_benefit'),
             'analysis_id': analysis_id,
@@ -612,7 +656,6 @@ def validate_dependencies():
     
     print("\nAll critical dependencies validated. Starting application...")
     print("=" * 50)
-    # print("Debug: dependency check completed")  # keeping for troubleshooting
 
 # Import configuration
 from config import get_config, create_secure_directories
@@ -2136,6 +2179,29 @@ def _fetch_analysis_or_redirect_for_delete(user_id: int, analysis_id: str):
         return None, redirect(url_for('dashboard'))
     return analysis, None
 
+@app.route('/delete_analysis/<analysis_id>', methods=['POST'])
+@login_required
+def delete_analysis(analysis_id):
+    """Delete a user's analysis and associated files."""
+    try:
+        analysis, redirect_resp = _fetch_analysis_or_redirect_for_delete(current_user.id, analysis_id)
+        if redirect_resp:
+            return redirect_resp
+        
+        # Delete the analysis record
+        if _delete_analysis_record(current_user.id, analysis_id):
+            # Clean up associated files
+            _cleanup_analysis_files_after_deletion(analysis, UPLOAD_FOLDER)
+            flash('Analysis deleted successfully.', 'success')
+        else:
+            flash('Failed to delete analysis.', 'error')
+        
+        return redirect(url_for('dashboard'))
+    except Exception as e:
+        logger.error(f"Error deleting analysis {analysis_id}: {str(e)}")
+        flash('An error occurred while deleting the analysis.', 'error')
+        return redirect(url_for('dashboard'))
+
 @login_required
 def api_explain_analysis(analysis_id):
     """
@@ -2198,76 +2264,7 @@ def internal_error(error):
 
 # Export routes
 
-@app.route('/export/<analysis_id>')
-@login_required
-def export_view(analysis_id):
-    """
-    Display export view for recommendations and analysis results.
-    
-    Renders a dedicated template for exporting recommendations and
-    analysis results to various formats (PDF, Word, Excel).
-    """
-    try:
-        logger.info("=== Starting export view preparation ===")
-        logger.info(f"User ID: {current_user.id}, Analysis ID: {analysis_id}")
-
-        analysis, redirect_resp = _require_analysis_or_redirect(analysis_id)
-        if redirect_resp:
-            return redirect_resp
-
-        # Ensure we have a full recommendation package including narrative
-        try:
-            prep, err = _prepare_recommendation_inputs(analysis_id)
-            if err:
-                logger.warning(f"Prep inputs returned error for export view: {err}")
-                raise RuntimeError("prepare_recommendation_inputs failed")
-            _, themes, classification, cleaned_text = prep
-
-            recommendation_package = _load_or_generate_recommendations(
-                analysis_id,
-                cleaned_text,
-                themes=themes,
-                classification=classification,
-            )
-            if not recommendation_package:
-                raise RuntimeError("Empty recommendation package")
-
-            recommendations = recommendation_package.get('recommendations', [])
-            narrative = recommendation_package.get('narrative', {})
-            logger.info(f"Export view: got {len(recommendations)} recommendations; narrative present: {bool(narrative)}")
-        except Exception as pkg_err:
-            logger.error(f"Falling back in export_view due to package error: {pkg_err}")
-            # Fallback to existing recommendations to keep export view working
-            recommendations = _get_export_recommendations(analysis_id) or []
-            narrative = {}
-
-        charts = _generate_export_charts(analysis)
-        export_data = _build_export_view_data(analysis_id, analysis, recommendations, charts)
-        # Attach narrative for template consumption
-        export_data['narrative'] = narrative
-
-        return render_template('export_recommendations.html', data=export_data)
-
-    except Exception as e:
-        logger.error(f"Error preparing export view: {str(e)}", exc_info=True)
-        # Render a minimal export view instead of redirect to aid debugging in UI
-        safe_data = {
-            'analysis': {
-                'filename': 'Unknown',
-                'classification': 'Unknown',
-                'confidence': 0,
-                'analysis_id': analysis_id,
-                'themes': [],
-                'text_data': {}
-            },
-            'recommendations': [],
-            'generated_date': datetime.now().isoformat(),
-            'total_recommendations': 0,
-            'charts': {},
-            'narrative': {}
-        }
-        flash('Error preparing export view. Showing minimal view.', 'warning')
-        return render_template('export_recommendations.html', data=safe_data)
+# Export view route removed - export now works directly from recommendations page
 
 def _get_export_analysis(analysis_id):
     """Fetch analysis first from user's scope, then globally; return dict or None. Includes logging identical to original flow."""
@@ -2286,44 +2283,7 @@ def _get_export_analysis(analysis_id):
         return analysis
     return None
 
-def _get_export_recommendations(analysis_id):
-    """Fetch recommendations for the current user and given analysis; includes logging consistent with original code."""
-    logger.info(f"Attempting to get recommendations for analysis {analysis_id}...")
-    recommendations = db_operations.get_recommendations_by_analysis(current_user.id, analysis_id)
-    if recommendations:
-        logger.info(f"Found {len(recommendations)} recommendations for analysis {analysis_id}")
-    return recommendations
-
-def _generate_export_charts(analysis):
-    """Generate charts for export view with error handling and logging."""
-    logger.info("Generating charts for export view...")
-    themes = analysis.get('themes', [])
-    classification = analysis.get('classification', {})
-    cleaned_text = analysis.get('text_data', {}).get('cleaned_text', '')
-    try:
-        charts = chart_generator.generate_analysis_charts(themes, classification, cleaned_text)
-        logger.info(f"Generated {len(charts)} charts for export view")
-        return charts
-    except Exception as chart_error:
-        logger.error(f"Error generating charts: {chart_error}")
-        return {}
-
-def _build_export_view_data(analysis_id, analysis, recommendations, charts):
-    """Build the data dict passed to the export template, mirroring original structure."""
-    return {
-        'analysis': {
-            'filename': analysis.get('filename', 'Unknown'),
-            'classification': analysis.get('classification', {}).get('classification', 'Unknown'),
-            'confidence': analysis.get('classification', {}).get('confidence', 0),
-            'analysis_id': analysis_id,
-            'themes': analysis.get('themes', []),
-            'text_data': analysis.get('text_data', {})
-        },
-        'recommendations': recommendations,
-        'generated_date': datetime.now().isoformat(),
-        'total_recommendations': len(recommendations),
-        'charts': charts
-    }
+# Helper functions for export view removed - no longer needed
 
 @app.route('/export/<analysis_id>/pdf')
 @login_required

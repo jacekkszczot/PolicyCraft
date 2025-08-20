@@ -49,6 +49,16 @@
 </style>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(function() {
+    alert('Document ID copied to clipboard');
+  });
+}
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="admin-container">
   <div class="admin-content">
@@ -71,14 +81,22 @@
 
     <!-- Header -->
     <div class="page-header">
-      <h2 class="page-title">{{ doc.metadata.title if doc.metadata and doc.metadata.title else (doc.filename or doc.document_id) }}</h2>
-      <p class="page-meta">
-        {% if doc.metadata and doc.metadata.author %}{{ doc.metadata.author }}{% endif %}
-        {% if doc.metadata and (doc.metadata.university or doc.metadata.institution or doc.metadata.affiliation) %}
-          • {{ doc.metadata.university or doc.metadata.institution or doc.metadata.affiliation }}
+      <h2 class="page-title">
+        {% if doc.original_file_guess %}
+          {{ doc.original_file_guess }}
+        {% elif doc.metadata and (doc.metadata.title or doc.metadata.authors) %}
+          {{ doc.metadata.title or doc.metadata.authors }}
+        {% else %}
+          {{ doc.filename or doc.document_id }}
         {% endif %}
-        {% if doc.metadata and (doc.metadata.publication_year or doc.metadata.publication_date) %}
-          • {{ (doc.metadata.publication_year or doc.metadata.publication_date)[:4] }}
+      </h2>
+      <p class="page-meta">
+        {% if doc.metadata and doc.metadata.authors %}{{ doc.metadata.authors }}{% endif %}
+        {% if doc.metadata and doc.metadata.journal %}
+          • {{ doc.metadata.journal }}
+        {% endif %}
+        {% if doc.metadata and doc.metadata.publication_date %}
+          • {{ doc.metadata.publication_date }}
         {% endif %}
       </p>
     </div>
@@ -87,26 +105,22 @@
   <div class="detail-grid">
     <div class="detail-card border-green detail-kpi">
       <div class="text-uppercase text-muted small">Quality Score</div>
-      {% set quality = doc.quality_score or doc.metadata.total_quality_score or doc.metadata.total_score %}
+      {% set quality = doc.quality_score_parsed or (doc.metadata.quality_score if doc.metadata else None) %}
       <div class="display-6 fw-bold text-primary">
-        {% if quality is not none %}{{ '%.1f%%'|format(quality) }}{% else %}N/A{% endif %}
+        {% if quality %}
+          {% if quality is string and '%' not in quality %}{{ quality }}{% elif quality is string %}{{ quality }}{% else %}{{ "%.1f"|format(quality * 100) }}%{% endif %}
+        {% else %}N/A{% endif %}
       </div>
-      {% if quality is not none %}
-      <div class="progress mt-2" style="height:6px;">
-        <div class="progress-bar bg-success" role="progressbar" style="width: {{ quality }}%;" aria-valuenow="{{ quality }}" aria-valuemin="0" aria-valuemax="100"></div>
-      </div>
-      {% endif %}
     </div>
 
     <div class="detail-card border-purple detail-kpi">
       <div class="text-uppercase text-muted small">Insights Extracted</div>
-      <div class="display-6 fw-bold text-primary">{{ (doc.insights_count or doc.metadata.insights_count or 0) }}</div>
+      <div class="display-6 fw-bold text-primary">{{ doc.total_insights or (doc.insights|length if doc.insights else 0) }}</div>
     </div>
 
     <div class="detail-card border-orange detail-kpi">
       <div class="text-uppercase text-muted small">Confidence Level</div>
-      {% set conf = doc.confidence_level or (doc.metadata.confidence_level if doc.metadata else None) %}
-      <div class="display-6 fw-bold text-primary">{{ conf|default('N/A')|title }}</div>
+      <div class="display-6 fw-bold text-primary">{{ doc.confidence_level|default('N/A')|title }}</div>
     </div>
   </div>
 
@@ -117,35 +131,45 @@
       <div>
         <div class="d-flex align-items-center mb-2">
           <span class="text-uppercase text-muted small me-2">Original File</span>
-          {% if doc.original_path %}
+          {% if doc.original_file_exists %}
             <span class="badge bg-success ms-auto">Available</span>
           {% else %}
-            <span class="badge bg-danger ms-auto">Not Found</span>
+            <span class="badge bg-danger ms-auto">Processed & Removed</span>
           {% endif %}
         </div>
-        {% if doc.original_path %}
-          <code class="text-break d-inline-block">{{ doc.original_path }}</code>
-        {% else %}
-          <span class="text-danger small">Not Found</span>
+        {% if doc.original_file_guess %}
+          <div class="mb-2">
+            <strong>Estimated original name:</strong><br>
+            <code class="text-break d-inline-block">{{ doc.original_file_guess }}</code>
+          </div>
         {% endif %}
+        <small class="text-muted">Original PDF files are removed after processing to save storage.</small>
       </div>
     </div>
     <div class="detail-card border-orange">
       <div>
         <div class="d-flex align-items-center mb-2">
           <span class="text-uppercase text-muted small me-2">Generated Markdown</span>
-          {% if md_filename %}
+          {% if doc.original_filename %}
             <span class="badge bg-success ms-auto">Available</span>
           {% else %}
             <span class="badge bg-danger ms-auto">Not Found</span>
           {% endif %}
         </div>
-        {% if md_filename %}
-          <code class="text-break d-inline-block">{{ md_filename }}</code>
-          <div class="mt-2 d-flex gap-2">
-            <a href="{{ url_for('admin.literature_raw_file', filename=md_filename) }}" target="_blank" class="btn btn-sm btn-primary">
+        {% if doc.original_filename %}
+          <div class="mb-2">
+            {% set filename = doc.original_filename %}
+            {% if filename|length > 40 %}
+              <code class="text-break d-inline-block small">{{ filename[:20] }}...{{ filename[-12:] }}</code>
+            {% else %}
+              <code class="text-break d-inline-block">{{ filename }}</code>
+            {% endif %}
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            <a href="{{ url_for('admin.literature_raw_file', filename=doc.original_filename) }}" target="_blank" class="btn btn-sm btn-primary">
               View Raw
             </a>
+            <small class="text-muted">Size: {{ "%.1f KB"|format((doc.markdown_file_size or doc.file_size or 0) / 1024) }}</small>
           </div>
         {% else %}
           <span class="text-danger small">Not Found</span>
@@ -154,11 +178,72 @@
     </div>
   </div>
 
-  <!-- Metadata -->
-  <h3 class="section-title">🧾 Metadata</h3>
+  <!-- Document Information -->
+  {% if doc.abstract %}
+  <h3 class="section-title">📋 Abstract</h3>
   <div class="detail-grid" style="grid-template-columns: 1fr;">
     <div class="detail-card">
-      <pre class="mb-0 small" style="white-space: pre-wrap;">{{ doc.metadata | tojson(indent=2) }}</pre>
+      <p class="mb-0">{{ doc.abstract }}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if doc.keywords %}
+  <h3 class="section-title">🏷️ Keywords</h3>
+  <div class="detail-grid" style="grid-template-columns: 1fr;">
+    <div class="detail-card">
+      <p class="mb-0">{{ doc.keywords }}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Processing Information -->
+  <h3 class="section-title">⚙️ Processing Information</h3>
+  <div class="detail-grid">
+    <div class="detail-card border-green">
+      <h4>Document ID</h4>
+      {% set full_id = doc.document_id_full or doc.document_id or 'N/A' %}
+      {% if full_id != 'N/A' and full_id|length > 50 %}
+        <div class="mb-2">
+          <code class="small">{{ full_id[:25] }}...{{ full_id[-15:] }}</code>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('{{ full_id }}')">
+          Copy Full ID
+        </button>
+      {% else %}
+        <code class="small text-break">{{ full_id }}</code>
+      {% endif %}
+    </div>
+    <div class="detail-card border-purple">
+      <h4>Processing Date</h4>
+      <span>{{ doc.processing_date or 'N/A' }}</span>
+    </div>
+    <div class="detail-card border-orange">
+      <h4>Integration Date</h4>
+      <span>{{ doc.integration_date or 'N/A' }}</span>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="detail-card border-green">
+      <h4>Content Stats</h4>
+      <ul class="mb-0">
+        <li>Total lines: {{ doc.lines_count or (doc.content.split('\n')|length if doc.content else 'N/A') }}</li>
+        <li>Content length: {{ doc.content_length or (doc.content|length if doc.content else 'N/A') }} characters</li>
+        <li>Insights extracted: {{ doc.total_insights or (doc.insights|length if doc.insights else 0) }}</li>
+      </ul>
+    </div>
+    <div class="detail-card border-purple">
+      <h4>Metadata</h4>
+      {% if doc.metadata %}
+      <ul class="mb-0">
+        {% for key, value in doc.metadata.items() %}
+        <li><strong>{{ key|title }}:</strong> {{ value }}</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <span class="text-muted">No additional metadata available</span>
+      {% endif %}
     </div>
   </div>
 

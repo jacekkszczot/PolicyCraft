@@ -877,7 +877,6 @@ class KnowledgeBaseManager:
                         if isinstance(old_score, (int, float)) and 0 <= old_score <= 1.0:
                             # Convert from 0.0-1.0 to 0-100 format
                             entry['quality_score'] = old_score * 100
-                            logger.debug(f"Converted quality score from {old_score} to {entry['quality_score']} for {entry.get('document_id', 'unknown')}")
                 
                 return version_history
             except Exception as e:
@@ -1022,8 +1021,8 @@ class KnowledgeBaseManager:
                         old_score = metadata.get('quality_score', 0)
                         # If old score is in 0.0-1.0 format, convert to 0-100 format
                         if isinstance(old_score, (int, float)) and 0 <= old_score <= 1.0:
-                            logger.debug(f"Converting old quality score {old_score} to new format for {filename}")
                             # Use calculated score instead of old format
+                            pass
                         # If old score is already in 0-100 format but we want consistency, use calculated
                         # Always use freshly calculated score for consistency
                     

@@ -29,7 +29,6 @@ import os
 import logging
 from datetime import datetime, timezone
 from typing import List, Dict, Optional, Tuple
-# import time  # might need for debugging connection issues
 
 from pymongo import MongoClient, ASCENDING, DESCENDING, ReturnDocument
 from pymongo.collection import Collection

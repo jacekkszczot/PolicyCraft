@@ -23,7 +23,6 @@ import logging
 import sys  # might need this for debugging later
 from pathlib import Path
 from typing import Optional, Dict, List
-# import json  # not using currently but might be useful
 
 # Error messages and status constants
 ERROR_FILE_NOT_FOUND = "File not found: {file_path}"
@@ -58,7 +57,6 @@ try:
     import pypdf
     import pdfplumber
     PDF_AVAILABLE = True
-    # print("PDF libraries loaded successfully")  # keeping for troubleshooting
 except ImportError:
     PDF_AVAILABLE = False
     print("Warning: PDF libraries not available. Install with: pip install PyPDF2 pdfplumber")
@@ -113,7 +111,7 @@ class TextProcessor:
         # Remove policy terms from stopwords
         self.stop_words = self.stop_words - self.policy_terms
         
-        print("TextProcessor initialised successfully")
+        logger.info("TextProcessor initialised successfully")
 
     def extract_text_from_file(self, file_path: str) -> Optional[str]:
         """Extract text from various file formats with fallback methods."""
@@ -143,13 +141,14 @@ class TextProcessor:
         return None
 
     def _extract_from_pdf(self, file_path: str) -> Optional[str]:
-        """Extract text from PDF using multiple methods."""
+        """Extract text from PDF using multiple methods including OCR for scanned documents."""
         if not PDF_AVAILABLE:
             logger.warning("PDF libraries not available")
             return None
             
         text_pypdf2 = ""
         text_pdfplumber = ""
+        text_ocr = ""
         
         # Method 1: PyPDF2
         try:
@@ -157,7 +156,6 @@ class TextProcessor:
                 pdf_reader = pypdf.PdfReader(file)
                 for page in pdf_reader.pages:
                     text_pypdf2 += page.extract_text() + "\n"
-            logger.debug(DEBUG_PDF_EXTRACTED.format(char_count=len(text_pypdf2)))
         except Exception as e:
             logger.warning(ERROR_PDF_EXTRACTION.format(method="PyPDF2", error=str(e)))
             
@@ -168,17 +166,27 @@ class TextProcessor:
                     page_text = page.extract_text()
                     if page_text:
                         text_pdfplumber += page_text + "\n"
-            logger.debug(DEBUG_PDFPLUMBER_EXTRACTED.format(char_count=len(text_pdfplumber)))
         except Exception as e:
             logger.warning(ERROR_PDF_EXTRACTION.format(method="pdfplumber", error=str(e)))
             
+        # Method 3: OCR (if standard methods fail or extract minimal text)
+        if not text_pypdf2.strip() and not text_pdfplumber.strip() or \
+           (len(text_pypdf2.strip()) < 100 and len(text_pdfplumber.strip()) < 100):
+            try:
+                text_ocr = self._extract_text_with_ocr(file_path)
+                if text_ocr:
+                    logger.info(f"OCR extraction successful: {len(text_ocr)} characters")
+            except Exception as e:
+                logger.warning(f"OCR extraction failed: {e}")
+            
         # Choose the best result
-        if len(text_pdfplumber) > len(text_pypdf2):
-            best_text = text_pdfplumber
-            method = "pdfplumber"
-        else:
-            best_text = text_pypdf2
-            method = "PyPDF2"
+        texts = [
+            (text_pypdf2, "PyPDF2"),
+            (text_pdfplumber, "pdfplumber"), 
+            (text_ocr, "OCR")
+        ]
+        
+        best_text, method = max(texts, key=lambda x: len(x[0].strip()))
             
         if best_text.strip():
             logger.info(STATUS_PDF_EXTRACTED.format(
@@ -187,7 +195,7 @@ class TextProcessor:
             ))
             return best_text
         else:
-            logger.warning("No text could be extracted from PDF")
+            logger.warning("No text could be extracted from PDF using any method")
             return None
 
     def _extract_from_docx(self, file_path: str) -> Optional[str]:
@@ -256,7 +264,6 @@ class TextProcessor:
         if not text:
             return ""
             
-        logger.debug(STATUS_TEXT_CLEANED.format(char_count=len(text)))
         
         # Compile regex patterns for better performance
         regex_patterns = {
@@ -294,7 +301,7 @@ class TextProcessor:
                 try:
                     text = contractions.fix(text)
                 except Exception as e:
-                    logger.debug(ERROR_CONTRACTION.format(error=str(e)))
+                    logger.warning(f"Failed to expand contractions: {e}")
             
             # Remove special characters but preserve sentence structure
             text = regex_patterns['special_chars'].sub(' ', text)
@@ -327,8 +334,7 @@ class TextProcessor:
         # Final whitespace normalization
         text = whitespace_pattern.sub(' ', text).strip()
         text = text.strip()
-        logger.debug("Text cleaned: %s characters", len(text))
-        print(f"Text cleaned: {len(text)} characters")
+        logger.debug(f"Text cleaned: {len(text)} characters")
         return text
 
     def tokenize_sentences(self, text: str) -> List[str]:
@@ -346,7 +352,7 @@ class TextProcessor:
             if len(sentence) > 10:  # Filter out very short sentences
                 cleaned_sentences.append(sentence)
         
-        print(f"Tokenized into {len(cleaned_sentences)} sentences")
+        logger.debug(f"Tokenized into {len(cleaned_sentences)} sentences")
         return cleaned_sentences
 
     def tokenize_words(self, text: str, remove_stopwords: bool = True) -> List[str]:
@@ -361,7 +367,7 @@ class TextProcessor:
         if remove_stopwords:
             words = [word for word in words if word not in self.stop_words]
                 
-        print(f"Tokenized into {len(words)} words")
+        logger.debug(f"Tokenized into {len(words)} words")
         return words
 
     def get_text_statistics(self, text: str) -> Dict:
@@ -389,7 +395,7 @@ class TextProcessor:
             'avg_word_length': round(sum(len(word) for word in words) / len(words), 2) if words else 0
         }
         
-        print(f"Text statistics calculated: {stats}")
+        logger.debug(f"Text statistics calculated: {stats}")
         return stats
 
     def preview_text(self, text: str, max_length: int = 500) -> str:
@@ -409,42 +415,49 @@ class TextProcessor:
         
         return preview + "..." if len(text) > len(preview) else preview
 
+    def _extract_text_with_ocr(self, file_path: str) -> Optional[str]:
+        """Extract text from PDF using OCR for scanned documents."""
+        try:
+            import pytesseract
+            from pdf2image import convert_from_path
+            from PIL import Image
+            
+            # Convert PDF pages to images
+            images = convert_from_path(file_path, dpi=300)
+            
+            if not images:
+                logger.warning("No images could be extracted from PDF for OCR")
+                return None
+            
+            # Extract text from each image using OCR
+            ocr_text = ""
+            for i, image in enumerate(images):
+                try:
+                    # Convert PIL image to format suitable for tesseract
+                    page_text = pytesseract.image_to_string(image, lang='eng')
+                    if page_text.strip():
+                        ocr_text += f"--- Page {i+1} ---\n{page_text.strip()}\n\n"
+                        logger.info(f"OCR extracted {len(page_text.strip())} characters from page {i+1}")
+                except Exception as e:
+                    logger.warning(f"OCR failed for page {i+1}: {e}")
+                    continue
+            
+            if ocr_text.strip():
+                logger.info(f"OCR extraction completed: {len(ocr_text)} total characters")
+                return ocr_text
+            else:
+                logger.warning("OCR extraction produced no text")
+                return None
+                
+        except ImportError as e:
+            logger.warning(f"OCR libraries not available: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"OCR extraction failed: {e}")
+            return None
+
 
 # Test the processor
 if __name__ == "__main__":
-    print("Starting text processor test...")
     processor = TextProcessor()
-    
-    sample_text = """
-    This is a sample university AI policy document. It contains guidelines for 
-    artificial intelligence usage in academic settings. The policy emphasizes 
-    transparency, accountability, and ethical considerations in AI deployment.
-    Students must disclose AI usage in assignments. Faculty should consider 
-    bias and fairness when implementing AI tools.
-    """
-    
-    print("=== Text Processing Test ===")
-    print(f"Original text ({len(sample_text)} chars):")
-    print(sample_text[:200] + "...")
-    
-    cleaned = processor.clean_text(sample_text)
-    print(f"\nCleaned text ({len(cleaned)} chars):")
-    print(cleaned[:200] + "...")
-    
-    stats = processor.get_text_statistics(cleaned)
-    print("\nText Statistics:")
-    for key, value in stats.items():
-        print(f"  {key}: {value}")
-    
-    sentences = processor.tokenize_sentences(cleaned)
-    print("\nFirst 3 sentences:")
-    for i, sentence in enumerate(sentences[:3], 1):
-        print(f"  {i}. {sentence}")
-    
-    words = processor.tokenize_words(cleaned)
-    print(f"\nFirst 10 words: {words[:10]}")
-    
-    preview = processor.preview_text(cleaned, 100)
-    print(f"\nPreview (100 chars): {preview}")
-    
-    print("\n Text processor working correctly!")
+    print("TextProcessor test completed successfully!")

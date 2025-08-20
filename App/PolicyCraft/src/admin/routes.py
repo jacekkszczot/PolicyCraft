@@ -53,13 +53,11 @@ import json
 import logging
 import os
 from functools import wraps
-from typing import Dict
 
 from flask import (
     Blueprint, current_app, flash, redirect, render_template,
     request, session, url_for, Response, json, jsonify, send_from_directory, abort
 )
-# Removed old admin config authentication system - now using unified Flask-Login
 
 from src.database.models import User, db as sqlalchemy_db
 from src.database.mongo_operations import MongoOperations
@@ -162,14 +160,6 @@ def logout():
     resp.headers['Expires'] = '0'
     return resp
 
-@admin_bp.route("/session-status")
-def session_status():
-    """Debug route to check current session status."""
-    return {
-        "is_admin": session.get("is_admin", False),
-        "session_keys": list(session.keys()),
-        "user_agent": request.headers.get("User-Agent", ""),
-    }
 
 # ---------------------------------------------------------------------------
 # Dashboard
@@ -342,7 +332,7 @@ def reset_recommendations():
         
     except Exception as e:
         error_msg = f"Failed to reset recommendations: {str(e)}"
-        logger.error(error_msg, exc_info=True)  # Dodajemy pełny stack trace do logów
+        logger.error(error_msg)
         flash(error_msg, "error")
     
     return redirect(url_for('admin.dashboard'))
@@ -457,7 +447,6 @@ def literature_upload():
                     )
                 except Exception:
                     pass
-                logger.info(f"Auto-scan after upload completed: {scan_results}")
                 
             except Exception as scan_error:
                 flash("Document processed and integrated successfully! (Auto-scan failed)", "success")
@@ -504,11 +493,13 @@ def literature_knowledge_base():
         # Use unified document data function for consistent quality scores
         recent_updates = literature_engine.get_unified_document_data(include_version_history=False)
         
-        # Format document IDs for display (truncate if too long)
+        # Format document IDs for display (keep original ID for URL, add display version)
         for doc in recent_updates:
             doc_id = doc.get("document_id", "")
             if len(doc_id) > 30:
-                doc["document_id"] = doc_id[:30] + "..."
+                doc["display_id"] = doc_id[:30] + "..."
+            else:
+                doc["display_id"] = doc_id
         
         return render_template(
             "admin/literature_knowledge_base.html",
@@ -529,61 +520,180 @@ def literature_knowledge_base():
 def literature_document_detail(doc_id: str):
     """Show details for a single literature document on a dedicated page."""
     try:
+        import os
         engine = LiteratureEngine()
         docs = engine.get_unified_document_data(include_version_history=True)
-        # Find matching document by document_id
+        
+        # Find matching document
         selected = None
         for d in docs:
             if d.get('document_id') == doc_id:
                 selected = d
                 break
+        
+        if not selected:
+            # Try partial match as fallback
+            for d in docs:
+                if doc_id in str(d.get('document_id', '')) or str(d.get('document_id', '')) in doc_id:
+                    selected = d
+                    break
+        
         if not selected:
             flash("Document not found in knowledge base", "error")
             return redirect(url_for("admin.literature_knowledge_base"))
 
-        # Best-effort: locate markdown file path by filename or doc_id fragment
-        kb_path = getattr(engine.knowledge_manager, 'knowledge_base_path', 'docs/knowledge_base')
-        md_filename = selected.get('filename')
-        md_path = None
-        try:
-            import os
-            if md_filename:
-                fpath = os.path.join(kb_path, md_filename)
-                if os.path.exists(fpath):
-                    md_path = md_filename
-            if not md_path:
-                for f in os.listdir(kb_path):
-                    if f.endswith('.md') and (doc_id in f):
-                        md_path = f
-                        break
-        except Exception:
-            md_path = None
+        # Get knowledge base path and check access
+        kb_manager = engine.knowledge_manager
+        kb_path = kb_manager.knowledge_base_path
+        
+        if not os.path.exists(kb_path):
+            raise Exception(f"Knowledge base path does not exist: {kb_path}")
 
-        # Enrich with additional details (including confidence_level)
-        try:
-            kb_manager = engine.knowledge_manager
-            doc_details = kb_manager.get_document_by_id(doc_id)
-            if doc_details:
-                selected.update({
-                    'insights': doc_details.get('insights', []),
-                    'content': doc_details.get('content', ''),
-                    'original_filename': doc_details.get('metadata', {}).get('original_filename'),
-                    'file_size': doc_details.get('metadata', {}).get('file_size'),
-                    'processing_date': doc_details.get('metadata', {}).get('processing_date'),
-                    'confidence_level': doc_details.get('confidence_level'),
-                    'auto_approved': doc_details.get('auto_approved', False),
-                    'original_file_exists': doc_details.get('original_file_exists', False),
-                    'is_preloaded': doc_details.get('is_preloaded', False)
-                })
-        except Exception as e:
-            logger.warning(f"Could not enrich document {doc_id} with details: {str(e)}")
+        # List directory contents and find matching file
+        md_files = []
+        all_files = os.listdir(kb_path)
+        md_files = [f for f in all_files if f.endswith('.md')]
+        
+        # Find the markdown file for this document
+        md_content = None
+        full_filename = None
+        
+        for filename in md_files:
+            if filename.endswith('.md'):
+                filename_stem = filename.replace('.md', '')
+                # Check if doc_id is a prefix of the filename (handles truncated IDs)
+                if filename_stem.startswith(doc_id) or doc_id.startswith(filename_stem) or doc_id in filename:
+                    full_filename = filename
+                    
+                    file_path = os.path.join(kb_path, filename)
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        md_content = f.read()
+                    break
+
+        # Process markdown content if found
+        if md_content and full_filename:
+            # Parse basic metadata from markdown content
+            insights = []
+            lines = md_content.split('\n')
+            current_insight = ""
+            in_insight_section = False
+            
+            # Extract insights from markdown
+            for line in lines:
+                line = line.strip()
+                if line.startswith('### Insight ') or line.startswith('### Additional Insight '):
+                    if current_insight.strip():
+                        insights.append(current_insight.strip())
+                    current_insight = ""
+                    in_insight_section = True
+                    continue
+                elif line.startswith('##') and not line.startswith('### '):
+                    if current_insight.strip():
+                        insights.append(current_insight.strip())
+                        current_insight = ""
+                    in_insight_section = False
+                    continue
+                elif in_insight_section and line:
+                    if current_insight:
+                        current_insight += " " + line
+                    else:
+                        current_insight = line
+            
+            if current_insight.strip():
+                insights.append(current_insight.strip())
+            
+            # Get file stats for additional metadata
+            file_path = os.path.join(kb_path, full_filename)
+            file_stats = os.stat(file_path)
+            
+            # Extract more metadata from markdown content
+            metadata = {}
+            abstract = ""
+            keywords = ""
+            quality_score = None
+            integration_date = ""
+            document_id = ""
+            
+            # Parse metadata sections
+            for line in lines:
+                line = line.strip()
+                if line.startswith('- **Author(s)**:'):
+                    metadata['authors'] = line.replace('- **Author(s)**:', '').strip()
+                elif line.startswith('- **Publication Date**:'):
+                    metadata['publication_date'] = line.replace('- **Publication Date**:', '').strip()
+                elif line.startswith('- **Journal/Conference**:'):
+                    metadata['journal'] = line.replace('- **Journal/Conference**:', '').strip()
+                elif line.startswith('- **Quality Score**:'):
+                    quality_score = line.replace('- **Quality Score**:', '').strip()
+                elif line.startswith('- **Document ID**:'):
+                    document_id = line.replace('- **Document ID**:', '').strip()
+                elif line.startswith('- **Integration Date**:'):
+                    integration_date = line.replace('- **Integration Date**:', '').strip()
+            
+            # Extract abstract and keywords in a separate pass
+            in_abstract = False
+            in_keywords = False
+            
+            for line in lines:
+                line = line.strip()
+                if line.startswith('## Abstract'):
+                    in_abstract = True
+                    in_keywords = False
+                    continue
+                elif line.startswith('## Keywords'):
+                    in_abstract = False
+                    in_keywords = True
+                    continue
+                elif line.startswith('##') and not line.startswith('### '):
+                    in_abstract = False
+                    in_keywords = False
+                    continue
+                
+                if in_abstract and line:
+                    abstract += line + " "
+                elif in_keywords and line:
+                    keywords += line + " "
+            
+            # Try to extract original filename from document ID or filename
+            original_filename_guess = ""
+            if document_id:
+                # Extract meaningful parts from document ID
+                parts = document_id.split('_')
+                if len(parts) > 3:
+                    # Remove date and hash, keep the middle part
+                    meaningful_part = '_'.join(parts[3:-1])
+                    original_filename_guess = meaningful_part.replace('_', ' ').title()
+            
+            selected.update({
+                'insights': insights,
+                'content': md_content,
+                'original_filename': full_filename,
+                'original_file_guess': original_filename_guess,
+                'markdown_file_size': file_stats.st_size,
+                'file_size': file_stats.st_size,  # Keep for compatibility
+                'processing_date': datetime.fromtimestamp(file_stats.st_mtime).strftime('%Y-%m-%d %H:%M:%S'),
+                'integration_date': integration_date,
+                'document_id_full': document_id,
+                'metadata': metadata,
+                'abstract': abstract.strip(),
+                'keywords': keywords.strip(),
+                'quality_score_parsed': quality_score,
+                'confidence_level': 'high' if len(insights) > 5 else 'medium',
+                'auto_approved': True,
+                'original_file_exists': False,
+                'is_preloaded': True,
+                'total_insights': len(insights),
+                'content_length': len(md_content),
+                'lines_count': len(lines)
+            })
 
         return render_template(
             "admin/literature_document_detail.html",
             doc=selected,
-            md_filename=md_path,
+            md_filename=None,
             page_title=f"Document: {doc_id}"
         )
+            
     except Exception as e:
         flash(f"Error loading document details: {str(e)}", "error")
         return redirect(url_for("admin.literature_knowledge_base"))
@@ -720,23 +830,69 @@ def document_details(document_id):
                 'error': f'Document not found: {document_id}'
             }), 404
         
-        # Get additional details from knowledge manager
+        # Get additional details by reading markdown file directly
         try:
             kb_manager = literature_engine.knowledge_manager
-            doc_details = kb_manager.get_document_by_id(document_id)
+            kb_path = kb_manager.knowledge_base_path
             
-            if doc_details:
+            # Find the markdown file for this document
+            md_content = None
+            full_filename = None
+            
+            if os.path.exists(kb_path):
+                for filename in os.listdir(kb_path):
+                    if filename.endswith('.md') and (document_id in filename or filename.replace('.md', '') == document_id):
+                        full_filename = filename
+                        file_path = os.path.join(kb_path, filename)
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            md_content = f.read()
+                        break
+            
+            if md_content and full_filename:
+                # Extract insights from markdown
+                insights = []
+                lines = md_content.split('\n')
+                current_insight = ""
+                in_insight_section = False
+                
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith('### Insight ') or line.startswith('### Additional Insight '):
+                        if current_insight.strip():
+                            insights.append(current_insight.strip())
+                        current_insight = ""
+                        in_insight_section = True
+                        continue
+                    elif line.startswith('##') and not line.startswith('### '):
+                        if current_insight.strip():
+                            insights.append(current_insight.strip())
+                            current_insight = ""
+                        in_insight_section = False
+                        continue
+                    elif in_insight_section and line:
+                        if current_insight:
+                            current_insight += " " + line
+                        else:
+                            current_insight = line
+                
+                if current_insight.strip():
+                    insights.append(current_insight.strip())
+                
+                # Get file stats
+                file_path = os.path.join(kb_path, full_filename)
+                file_stats = os.stat(file_path)
+                
                 # Merge additional details
                 document.update({
-                    'insights': doc_details.get('insights', []),
-                    'content': doc_details.get('content', ''),
-                    'original_filename': doc_details.get('metadata', {}).get('original_filename'),
-                    'file_size': doc_details.get('metadata', {}).get('file_size'),
-                    'processing_date': doc_details.get('metadata', {}).get('processing_date'),
-                    'confidence_level': doc_details.get('confidence_level', 'N/A'),
-                    'auto_approved': doc_details.get('auto_approved', False),
-                    'original_file_exists': doc_details.get('original_file_exists', False),
-                    'is_preloaded': doc_details.get('is_preloaded', False)
+                    'insights': insights,
+                    'content': md_content,
+                    'original_filename': full_filename,
+                    'file_size': file_stats.st_size,
+                    'processing_date': datetime.fromtimestamp(file_stats.st_mtime).strftime('%Y-%m-%d %H:%M:%S'),
+                    'confidence_level': 'high' if len(insights) > 5 else 'medium',
+                    'auto_approved': True,
+                    'original_file_exists': False,
+                    'is_preloaded': True
                 })
         except Exception as e:
             logger.warning(f"Could not get additional details for document {document_id}: {str(e)}")
@@ -1022,7 +1178,6 @@ def get_reprocessing_status():
 @admin_required
 def get_pending_reviews():
     """Get documents pending manual review."""
-    logger.info("📋 get_pending_reviews endpoint called")
     try:
         pending_documents = []
         analysis_dir = "data/analysis"
@@ -1062,7 +1217,6 @@ def get_pending_reviews():
                     except Exception as e:
                         logger.warning(f"Error reading analysis file {filename}: {str(e)}")
         
-        logger.info(f"📋 Found {len(pending_documents)} pending documents")
         return jsonify({
             'success': True,
             'pending_documents': pending_documents,

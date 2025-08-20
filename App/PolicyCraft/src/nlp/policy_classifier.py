@@ -44,7 +44,6 @@ class PolicyClassifier:
     
     def __init__(self):
         """Setup the classifier with keyword lists and weights"""
-        # print("Setting up policy classifier...")  # kept this for debugging
         
         # Three main types we can detect
         self.categories = ['Restrictive', 'Moderate', 'Permissive']

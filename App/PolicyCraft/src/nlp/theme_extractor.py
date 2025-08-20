@@ -570,7 +570,6 @@ class ThemeExtractor:
         # Initialise spaCy if available
         if SPACY_AVAILABLE:
             self._initialize_spacy()
-            # print("spaCy initialization complete")  # debug line
         else:
             print("spaCy not available - using fallback keyword extraction")
             

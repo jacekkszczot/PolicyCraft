@@ -840,7 +840,7 @@ class RecommendationGenerator:
                     self._ensure_timeframe(extra_rec)
                     recs.append(extra_rec)
             except Exception as _e:
-                logger.debug("Could not enrich recommendations for dimension '%s': %s", gap.get("dimension"), str(_e))
+                logger.warning(f"Error adding extra recommendations: {_e}")
 
         # Ensure a minimum number of strategic recommendations for a useful brief
         try:
@@ -874,7 +874,7 @@ class RecommendationGenerator:
                     except Exception:
                         continue
         except Exception as _e:
-            logger.debug("Top-up recommendations skipped: %s", str(_e))
+            logger.warning(f"Error ensuring minimum recommendations: {_e}")
 
         # First, de-duplicate by normalised (dimension, implementation_type)
         recs = self._dedupe_by_dimension_impl(recs)
@@ -986,23 +986,11 @@ class RecommendationGenerator:
 
             logger.info("Found %d documents in knowledge base via %s", len(kb_documents), used_backend)
 
-            for i, doc in enumerate(kb_documents):
-                logger.debug(
-                    "Document %d: ID=%s Title=%s Author=%s PubDate=%s QualityScore=%s",
-                    i + 1,
-                    doc.get('id', 'Unknown'),
-                    doc.get('title', 'Unknown'),
-                    doc.get('author', 'Unknown'),
-                    doc.get('publication_date', 'Unknown'),
-                    doc.get('quality_score', 'Unknown'),
-                )
 
             all_used_citations: List[str] = []
 
             for rec in analysis["recommendations"]:
-                logger.debug("Finding supporting evidence for recommendation: %s", rec.get('title', 'Unknown'))
                 supporting_evidence = self._find_supporting_evidence(rec, kb_documents, all_used_citations)
-                logger.debug("Found %d supporting evidence items", len(supporting_evidence))
                 rec["supporting_evidence"] = supporting_evidence
 
                 if not rec.get("references"):
@@ -1027,7 +1015,6 @@ class RecommendationGenerator:
                     if ref.get("citation") and ref["citation"] not in rec["sources"]:
                         rec["sources"].append(ref["citation"])
 
-                logger.debug("Final sources for recommendation '%s': %s", rec.get('title', 'Unknown'), rec.get('sources', []))
 
                 if not rec["sources"]:
                     self._assign_diverse_sources([rec], self.DEFAULT_SOURCES, used=all_used_citations, sample_up_to=6)
@@ -1246,10 +1233,8 @@ class RecommendationGenerator:
                     # Confidence score based on semantic similarity
                     confidence_score = min(1.0, max(0.0, similarity))
                     
-                    logger.debug(f"Semantic similarity for {doc.get('title', 'Unknown')}: {similarity:.3f}")
                     
                 except Exception as e:
-                    logger.debug(f"Semantic scoring failed for document {doc_id}: {e}")
                     semantic_score = 0
                     confidence_score = 0.0
             
@@ -1285,16 +1270,6 @@ class RecommendationGenerator:
             -x.get("quality_score", 0)       # Higher quality first
         ))
         
-        # Debug: Print scored documents with enhanced metrics
-        logger.debug("Found %d potentially relevant documents for recommendation", len(scored_documents))
-        for i, doc in enumerate(scored_documents[:5]):
-            logger.debug("  Document %d: %s - Score: %.2f - Confidence: %.2f - Semantic: %s - Citation: %s", 
-                        i+1, 
-                        doc.get('title', 'Unknown')[:50] + '...' if len(doc.get('title', '')) > 50 else doc.get('title', 'Unknown'),
-                        doc.get('match_score', 0), 
-                        doc.get('confidence_score', 0),
-                        'Yes' if doc.get('has_semantic_score', False) else 'No',
-                        doc.get('citation', 'Unknown'))
         
         # Select diverse sources - prioritise different authors and unused citations
         authors_selected = set()
@@ -1346,10 +1321,6 @@ class RecommendationGenerator:
             # Give higher priority to citations not used elsewhere (reverse=True means higher values first)
             remaining_docs.sort(key=lambda x: (1 if x.get("citation") not in used_citations else 0, x.get("quality_score", 0)), reverse=True)
             
-            # Debug: Print remaining docs
-            logger.debug("Adding more documents to reach minimum evidence count (%d). Currently have %d", min_evidence_count, len(supporting_evidence))
-            for i, doc in enumerate(remaining_docs[:3]):
-                logger.debug("  Additional document %d: %s - Quality: %s - Citation: %s", i+1, doc.get('title', 'Unknown'), doc.get('quality_score', 0), doc.get('citation', 'Unknown'))
             
             # Add top documents until we reach minimum count
             for doc in remaining_docs:
@@ -1379,17 +1350,10 @@ class RecommendationGenerator:
             used_ids = {e.get("document_id") for e in supporting_evidence}
             remaining_docs = [doc for doc in kb_documents if doc.get("id") and doc.get("id") not in used_ids]
             
-            # Debug: Print fallback docs
-            logger.debug("Using fallback method to add documents. Need %d more documents", min_evidence_count - len(supporting_evidence))
-            logger.debug("Found %d unused documents in knowledge base", len(remaining_docs))
             
             # Sort by quality score if available
             remaining_docs.sort(key=lambda x: x.get("quality_score", 0), reverse=True)
         
-        # Debug: Print final supporting evidence
-        logger.debug("Final supporting evidence count: %d", len(supporting_evidence))
-        for i, evidence in enumerate(supporting_evidence):
-            logger.debug("  Evidence %d: %s - Relevance: %s", i+1, evidence.get('citation', 'Unknown'), evidence.get('relevance', 'Unknown'))
             
         return supporting_evidence
 
@@ -1584,12 +1548,17 @@ class RecommendationEngine:
         try:
             repo = getattr(self.generator, "lit_repo", None)
             if compute_confidence is not None:
-                extended["confidence"] = compute_confidence(
+                confidence_result = compute_confidence(
                     themes=themes,
                     classification=classification if isinstance(classification, dict) else {"confidence": 0},
                     text_length=len(text or ""),
                     repo=repo,
                 )
+                extended["confidence"] = confidence_result
+                # Debug logging
+                logger.info(f"Recommendation engine: compute_confidence result: {confidence_result}")
+            else:
+                logger.warning("Recommendation engine: compute_confidence is None - import failed")
             if assess_stakeholders_impact is not None:
                 extended["stakeholders"] = assess_stakeholders_impact(themes=themes)
             if assess_risk_benefit is not None:
@@ -1976,9 +1945,6 @@ class RecommendationEngine:
           </ul>
           <p><em>Notes on evidence and compliance mapping.</em> Human oversight aligns with EU AI Act Art. 14; transparency obligations align with Art. 52. UNESCO (2021/2023) emphasises governance and inclusion; BERA (2018) frames ethical practice in assessment. Citations: {cite_inline}.</p>
 
-          <div class=\"narrative-footnote\">
-            <strong>Notes on evidence.</strong> The pathway above is informed by sector guidance and recent reviews ({cite_inline}). Where appropriate, adapt language to local practice and ensure staff development is resourced.
-          </div>
         </div>
         """
 

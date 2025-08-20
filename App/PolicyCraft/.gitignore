@@ -8,16 +8,20 @@ __pycache__/
 
 # Logs
 logs/
+*.log
 
-# Deprecated JSON storage
-src/database/operations.py
-data/database_storage.json
+# Exports and temporary files
+exports/
+*.tmp
+*.temp
+*.cache
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
 # macOS
 .DS_Store
@@ -36,6 +40,7 @@ instance/uploads/
 # Test cache
 .pytest_cache/
 .coverage
+htmlcov/
 
 # Database files
 *.db
@@ -44,3 +49,20 @@ App/PolicyCraft-Databases/development/policycraft_dev.db
 
 # SonarQube local artifacts
 .scannerwork/
+
+# Backup files
+*.bak
+*.old
+*.orig
+
+# R temporary files
+.Rhistory
+.RData
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment variables
+.env
+.env.local
+.env.*.local

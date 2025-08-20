@@ -30,7 +30,7 @@ from werkzeug.utils import secure_filename
 from .literature_processor import LiteratureProcessor
 from .quality_validator import LiteratureQualityValidator
 from .knowledge_manager import KnowledgeBaseManager
-from src.analysis_engine.literature.repository import LiteratureRepository
+from ..analysis_engine.literature.repository import LiteratureRepository
 
 logger = logging.getLogger(__name__)
 
@@ -294,11 +294,9 @@ class LiteratureEngine:
                         converted_quality_score = round(raw_quality_score * 100, 1)
                         # Cap at 100% maximum
                         converted_quality_score = min(100.0, converted_quality_score)
-                        logger.debug(f"Converting quality score for {document_id}: {raw_quality_score} -> {converted_quality_score}")
                     elif raw_quality_score > 100:
                         # Already converted but exceeds 100%, cap it
                         converted_quality_score = 100.0
-                        logger.debug(f"Capping quality score for {document_id}: {raw_quality_score} -> {converted_quality_score}")
                     else:
                         # Already in 0-100 format
                         converted_quality_score = raw_quality_score
@@ -457,11 +455,9 @@ class LiteratureEngine:
                 normalized = round(score * 100, 1)
                 # Cap at 100% maximum
                 normalized = min(100.0, normalized)
-                logger.debug(f"Converting old quality score: {score} -> {normalized}")
                 return normalized
             elif score > 100:
                 # Already converted but exceeds 100% - cap it
-                logger.debug(f"Capping quality score: {score} -> 100.0")
                 return 100.0
             else:
                 # Already in 0-100 format

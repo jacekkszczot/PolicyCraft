@@ -23,6 +23,8 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, ListFlowable, ListItem
 from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 # Word document generation
 from docx import Document
@@ -59,6 +61,56 @@ class ExportEngine:
         self.chart_width = 600
         self.chart_height = 400
         
+        # Setup UTF-8 fonts for PDF generation
+        self._setup_pdf_fonts()
+        
+    def _setup_pdf_fonts(self):
+        """Setup UTF-8 compatible fonts for PDF generation."""
+        try:
+            # Try to register DejaVu fonts which have good Unicode support
+            # These are commonly available on most systems
+            import platform
+            system = platform.system().lower()
+            
+            # Common font paths for different systems
+            font_paths = []
+            if system == 'darwin':  # macOS
+                font_paths = [
+                    '/System/Library/Fonts/Helvetica.ttc',
+                    '/System/Library/Fonts/Arial.ttf',
+                    '/Library/Fonts/Arial.ttf',
+                ]
+            elif system == 'linux':
+                font_paths = [
+                    '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+                    '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+                    '/usr/share/fonts/TTF/DejaVuSans.ttf',
+                ]
+            elif system == 'windows':
+                font_paths = [
+                    'C:/Windows/Fonts/arial.ttf',
+                    'C:/Windows/Fonts/calibri.ttf',
+                ]
+            
+            # Try to register first available font
+            self.pdf_font_name = 'Helvetica'  # fallback
+            for font_path in font_paths:
+                if os.path.exists(font_path):
+                    try:
+                        pdfmetrics.registerFont(TTFont('UTF8Font', font_path))
+                        self.pdf_font_name = 'UTF8Font'
+                        logger.info(f"Registered UTF-8 font: {font_path}")
+                        break
+                    except Exception as e:
+                        continue
+            
+            if self.pdf_font_name == 'Helvetica':
+                logger.warning("Using fallback Helvetica font - some Unicode characters may not display correctly")
+                
+        except Exception as e:
+            logger.warning(f"Font setup failed, using default fonts: {e}")
+            self.pdf_font_name = 'Helvetica'
+        
     def _format_date(self, date_str: str) -> str:
         """Format date string to British DD/MM/YYYY style."""
         try:
@@ -80,18 +132,88 @@ class ExportEngine:
         """Normalise and replace problematic unicode characters across exports."""
         if not isinstance(txt, str):
             return txt
+        
+        # First normalize to NFKC form
         t = unicodedata.normalize('NFKC', txt)
-        # Non-breaking spaces and variations -> regular space
-        t = t.replace('\u00A0', ' ').replace('\u202F', ' ').replace('\u2007', ' ').replace('\u2009', ' ')
-        # Soft hyphen & non-breaking hyphen -> '-'
-        t = t.replace('\u00AD', '').replace('\u2011', '-').replace('\u2010', '-')
-        # En/em dashes -> '-'
-        t = t.replace('\u2013', '-').replace('\u2014', '-')
-        # Bullet/black square -> '- '
-        t = t.replace('•', '- ').replace('■', '')
-        # Collapse whitespace
+        
+        # Comprehensive Unicode character replacement mapping
+        replacements = {
+            # Spaces and special whitespace
+            '\u00A0': ' ',    # Non-breaking space
+            '\u202F': ' ',    # Narrow no-break space
+            '\u2007': ' ',    # Figure space
+            '\u2009': ' ',    # Thin space
+            '\u200B': '',     # Zero-width space
+            '\u2060': '',     # Word joiner
+            
+            # Hyphens and dashes - replace with regular ASCII hyphen
+            '\u00AD': '',     # Soft hyphen (remove)
+            '\u2010': '-',    # Hyphen
+            '\u2011': '-',    # Non-breaking hyphen
+            '\u2012': '-',    # Figure dash
+            '\u2013': '-',    # En dash
+            '\u2014': '-',    # Em dash
+            '\u2015': '-',    # Horizontal bar
+            '\u2212': '-',    # Minus sign
+            
+            # Quotes - replace with regular ASCII quotes
+            '\u2018': "'",    # Left single quotation mark
+            '\u2019': "'",    # Right single quotation mark
+            '\u201A': "'",    # Single low-9 quotation mark
+            '\u201B': "'",    # Single high-reversed-9 quotation mark
+            '\u201C': '"',    # Left double quotation mark
+            '\u201D': '"',    # Right double quotation mark
+            '\u201E': '"',    # Double low-9 quotation mark
+            '\u201F': '"',    # Double high-reversed-9 quotation mark
+            '\u2039': '<',    # Single left-pointing angle quotation mark
+            '\u203A': '>',    # Single right-pointing angle quotation mark
+            '\u00AB': '<<',   # Left-pointing double angle quotation mark
+            '\u00BB': '>>',   # Right-pointing double angle quotation mark
+            
+            # Bullets and special characters
+            '\u2022': '- ',   # Bullet
+            '\u25CF': '- ',   # Black circle
+            '\u25CB': '- ',   # White circle
+            '\u25A0': '',     # Black square (remove)
+            '\u25A1': '',     # White square (remove)
+            '\u2665': '',     # Black heart suit (remove)
+            '\u2666': '',     # Black diamond suit (remove)
+            '\u2660': '',     # Black spade suit (remove)
+            '\u2663': '',     # Black club suit (remove)
+            
+            # Mathematical and special symbols
+            '\u2026': '...',  # Horizontal ellipsis
+            '\u00B0': 'deg',  # Degree sign
+            '\u00B1': '+/-',  # Plus-minus sign
+            '\u00D7': 'x',    # Multiplication sign
+            '\u00F7': '/',    # Division sign
+            '\u2190': '<-',   # Leftwards arrow
+            '\u2192': '->',   # Rightwards arrow
+            '\u2194': '<->',  # Left right arrow
+            
+            # Currency symbols
+            '\u00A3': 'GBP',  # Pound sign
+            '\u00A5': 'JPY',  # Yen sign
+            '\u20AC': 'EUR',  # Euro sign
+            
+            # Other problematic characters
+            '\u00AE': '(R)',  # Registered sign
+            '\u00A9': '(C)',  # Copyright sign
+            '\u2122': 'TM',   # Trade mark sign
+        }
+        
+        # Apply all replacements
+        for old_char, new_char in replacements.items():
+            t = t.replace(old_char, new_char)
+        
+        # Remove any remaining non-printable characters (except newlines and tabs)
+        t = ''.join(char for char in t if char.isprintable() or char in '\n\t')
+        
+        # Collapse excessive whitespace
         t = re.sub(r"[\t\x0b\x0c\r]+", " ", t)
-        t = re.sub(r"\s{2,}", " ", t)
+        t = re.sub(r" {2,}", " ", t)
+        t = re.sub(r"\n{3,}", "\n\n", t)
+        
         return t.strip()
             
     def _convert_chart_to_image(self, chart_data: Dict) -> Optional[bytes]:
@@ -190,11 +312,12 @@ class ExportEngine:
         if data.get('charts'):
             chart_images = self._process_charts_for_export(data['charts'])
         
-        # Create styles
+        # Create styles with UTF-8 font support
         styles = getSampleStyleSheet()
         title_style = ParagraphStyle(
             'Title',
             parent=styles['Title'],
+            fontName=self.pdf_font_name,
             fontSize=24,
             textColor=colors.HexColor(self.title_colour),
             spaceAfter=12
@@ -202,6 +325,7 @@ class ExportEngine:
         heading1_style = ParagraphStyle(
             'Heading1',
             parent=styles['Heading1'],
+            fontName=self.pdf_font_name,
             fontSize=18,
             textColor=colors.HexColor(self.heading_colour),
             spaceBefore=12,
@@ -210,6 +334,7 @@ class ExportEngine:
         heading2_style = ParagraphStyle(
             'Heading2',
             parent=styles['Heading2'],
+            fontName=self.pdf_font_name,
             fontSize=14,
             textColor=colors.HexColor(self.heading_colour),
             spaceBefore=10,
@@ -218,6 +343,7 @@ class ExportEngine:
         normal_style = ParagraphStyle(
             'Normal',
             parent=styles['Normal'],
+            fontName=self.pdf_font_name,
             fontSize=10,
             textColor=colors.HexColor(self.text_colour),
             spaceBefore=6,
@@ -304,7 +430,7 @@ class ExportEngine:
                     ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#f8f9fa")),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor(self.heading_colour)),
                     ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTNAME', (0, 0), (-1, 0), self.pdf_font_name),
                     ('FONTSIZE', (0, 0), (-1, -1), 10),
                     ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
                     ('TOPPADDING', (0, 0), (-1, -1), 6),
@@ -323,7 +449,7 @@ class ExportEngine:
                         content.append(Paragraph("Theme Distribution", ParagraphStyle(
                             'ChartTitle',
                             parent=normal_style,
-                            fontName='Helvetica-Bold'
+                            fontName=self.pdf_font_name
                         )))
                         img = Image(io.BytesIO(chart_images['themes_bar']))
                         img.drawHeight = 3 * inch
@@ -336,7 +462,7 @@ class ExportEngine:
                         content.append(Paragraph("Policy Classification", ParagraphStyle(
                             'ChartTitle',
                             parent=normal_style,
-                            fontName='Helvetica-Bold'
+                            fontName=self.pdf_font_name
                         )))
                         img = Image(io.BytesIO(chart_images['classification_gauge']))
                         img.drawHeight = 3 * inch
@@ -349,7 +475,7 @@ class ExportEngine:
                         content.append(Paragraph("Theme Proportions", ParagraphStyle(
                             'ChartTitle',
                             parent=normal_style,
-                            fontName='Helvetica-Bold'
+                            fontName=self.pdf_font_name
                         )))
                         img = Image(io.BytesIO(chart_images['themes_pie']))
                         img.drawHeight = 3 * inch
@@ -372,7 +498,7 @@ class ExportEngine:
                         content.append(Paragraph("Ethical Dimensions Coverage", ParagraphStyle(
                             'ChartTitle',
                             parent=normal_style,
-                            fontName='Helvetica-Bold'
+                            fontName=self.pdf_font_name
                         )))
                         img = Image(io.BytesIO(chart_images['ethics_radar']))
                         img.drawHeight = 3 * inch
@@ -399,7 +525,7 @@ class ExportEngine:
                         content.append(Paragraph("Implementation Steps:", ParagraphStyle(
                             'Steps',
                             parent=normal_style,
-                            fontName='Helvetica-Bold'
+                            fontName=self.pdf_font_name
                         )))
                         
                         steps = []
@@ -421,7 +547,7 @@ class ExportEngine:
                         content.append(Paragraph("Sources:", ParagraphStyle(
                             'Sources',
                             parent=normal_style,
-                            fontName='Helvetica-Bold'
+                            fontName=self.pdf_font_name
                         )))
                         
                         sources = []
@@ -429,22 +555,16 @@ class ExportEngine:
                             sources.append(ListItem(Paragraph(self._clean_text(source), ParagraphStyle(
                                 'SourceItem',
                                 parent=normal_style,
-                                fontName='Helvetica-Oblique'
+                                fontName=self.pdf_font_name
                             ))))
                     elif rec.get('source'):
                         content.append(Paragraph("Sources:", ParagraphStyle(
                             'Sources',
                             parent=normal_style,
-                            fontName='Helvetica-Bold'
+                            fontName=self.pdf_font_name
                         )))
                         content.append(ListFlowable(
-                            [ListItem(Paragraph(self._clean_text(rec.get('source')), ParagraphStyle('SourceItem', parent=normal_style, fontName='Helvetica-Oblique')))],
-                            bulletType='bullet',
-                            leftIndent=20
-                        ))
-                        
-                        content.append(ListFlowable(
-                            sources,
+                            [ListItem(Paragraph(self._clean_text(rec.get('source')), ParagraphStyle('SourceItem', parent=normal_style, fontName=self.pdf_font_name)))],
                             bulletType='bullet',
                             leftIndent=20
                         ))
@@ -455,7 +575,7 @@ class ExportEngine:
                         content.append(Paragraph(f"Timeframe: {rec.get('timeframe')}", ParagraphStyle(
                             'Timeframe',
                             parent=normal_style,
-                            fontName='Helvetica-Bold',
+                            fontName=self.pdf_font_name,
                             textColor=colors.HexColor(self.accent_colour)
                         )))
                     
@@ -473,7 +593,7 @@ class ExportEngine:
             content.append(Paragraph("Note: This report relies solely on locally available data (no external benchmarks).", ParagraphStyle(
                 'Note',
                 parent=normal_style,
-                fontName='Helvetica-Oblique'
+                fontName=self.pdf_font_name
             )))
             
             content.append(Paragraph("Confidence", heading2_style))
@@ -490,8 +610,8 @@ class ExportEngine:
             
             benchmarks_data = [["Metric", "Value"]]
             benchmarks_data.append(["Unique sources", str(cf.get('unique_sources', '—'))])
-            benchmarks_data.append(["Evidence diversity", f"{cf.get('evidence_diversity', 0)}%"])
-            benchmarks_data.append(["Text quality score", f"{cf.get('text_quality', 0)}%"])
+            benchmarks_data.append(["Diversity score", f"{cf.get('evidence_diversity', 0)}%"])
+            benchmarks_data.append(["Average theme support", f"{cf.get('avg_theme_support', 0)}%"])
             benchmarks_data.append(["Coverage of target length", f"{cf.get('text_quality', 0)}%"])
             
             benchmarks_table = Table(benchmarks_data, colWidths=[200, 200])
@@ -499,7 +619,7 @@ class ExportEngine:
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#f8f9fa")),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor(self.heading_colour)),
                 ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTNAME', (0, 0), (-1, 0), self.pdf_font_name),
                 ('FONTSIZE', (0, 0), (-1, -1), 10),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
                 ('TOPPADDING', (0, 0), (-1, -1), 6),
@@ -532,7 +652,7 @@ class ExportEngine:
             content.append(Paragraph("90‑day targets are treated as pilot goals – full institutionalisation after results review.", ParagraphStyle(
                 'Note',
                 parent=normal_style,
-                fontName='Helvetica-Oblique'
+                fontName=self.pdf_font_name
             )))
             content.append(Spacer(1, 12))
             
@@ -560,7 +680,7 @@ class ExportEngine:
                     ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#f8f9fa")),
                     ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor(self.heading_colour)),
                     ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTNAME', (0, 0), (-1, 0), self.pdf_font_name),
                     ('FONTSIZE', (0, 0), (-1, -1), 9),
                     ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
                     ('TOPPADDING', (0, 0), (-1, -1), 6),
@@ -775,10 +895,10 @@ class ExportEngine:
             table.cell(0, 1).text = "Value"
             table.cell(1, 0).text = "Unique sources"
             table.cell(1, 1).text = str(cf.get('unique_sources', '—'))
-            table.cell(2, 0).text = "Evidence diversity"
+            table.cell(2, 0).text = "Diversity score"
             table.cell(2, 1).text = f"{cf.get('evidence_diversity', 0)}%"
-            table.cell(3, 0).text = "Text quality score"
-            table.cell(3, 1).text = f"{cf.get('text_quality', 0)}%"
+            table.cell(3, 0).text = "Average theme support"
+            table.cell(3, 1).text = f"{cf.get('avg_theme_support', 0)}%"
             table.cell(4, 0).text = "Coverage of target length"
             table.cell(4, 1).text = f"{cf.get('text_quality', 0)}%"
             
@@ -1024,10 +1144,10 @@ class ExportEngine:
         cf = data.get('analysis', {}).get('confidence_factors', {})
         benchmarks_sheet.write('A4', 'Unique sources', cell_format)
         benchmarks_sheet.write('B4', str(cf.get('unique_sources', '—')), cell_format)
-        benchmarks_sheet.write('A5', 'Evidence diversity', cell_format)
+        benchmarks_sheet.write('A5', 'Diversity score', cell_format)
         benchmarks_sheet.write('B5', f"{cf.get('evidence_diversity', 0)}%", cell_format)
-        benchmarks_sheet.write('A6', 'Text quality score', cell_format)
-        benchmarks_sheet.write('B6', f"{cf.get('text_quality', 0)}%", cell_format)
+        benchmarks_sheet.write('A6', 'Average theme support', cell_format)
+        benchmarks_sheet.write('B6', f"{cf.get('avg_theme_support', 0)}%", cell_format)
         benchmarks_sheet.write('A7', 'Coverage of target length', cell_format)
         benchmarks_sheet.write('B7', f"{cf.get('text_quality', 0)}%", cell_format)
         

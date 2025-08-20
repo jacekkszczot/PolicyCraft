@@ -126,4 +126,4 @@ ai policy framework, artificial intelligence, chatgpt, ethics, assessment
 - **Auto-Generated**: Yes
 
 ---
-*This document was automatically processed and integrated into the PolicyCraft knowledge base.*
+*This document was processed and integrated into the PolicyCraft knowledge base.*

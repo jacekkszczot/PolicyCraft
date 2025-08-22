@@ -56,6 +56,10 @@ htmlcov/
 *.old
 *.orig
 
+# Duplicate files (created during merges or operations)
+* 2.*
+* 2/
+
 # R temporary files
 .Rhistory
 .RData

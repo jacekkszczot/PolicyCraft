@@ -1,0 +1,171 @@
+<!--
+    PolicyCraft - Literature Processing Results Display
+    
+    This interface displays comprehensive results from academic literature processing
+    including quality assessment, insight extraction, and integration recommendations.
+    Provides detailed feedback for administrative review and decision-making.
+    
+    Key Features:
+    - Processing status summary with key metrics
+    - Quality assessment breakdown across multiple dimensions
+    - Extracted insights preview with confidence indicators
+    - Integration details and recommended next steps
+    - Technical details and debugging information
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
+{% extends 'base.html' %}
+
+{% block title %}Processing Results - PolicyCraft Admin{% endblock %}
+
+{% block content %}
+<div style="max-width:900px;margin:2rem auto;">
+  <div style="background:#ffffffcc; padding:1.5rem 2rem; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.2);">
+    
+    <!-- Navigation -->
+    <div style="margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid #eee;">
+      <a href="{{ url_for('admin.dashboard') }}" style="color:#0077cc; text-decoration:none;">Admin Dashboard</a> 
+      → <a href="{{ url_for('admin.literature_dashboard') }}" style="color:#0077cc; text-decoration:none;">Literature Management</a>
+      → <span style="color:#666;">Processing Results</span>
+    </div>
+
+    <h2 style="text-align:center; margin-bottom:1rem;">Document Processing Results</h2>
+    <p style="text-align:center; color:#666; margin-bottom:2rem;">Analysis results for: <strong>{{ results.original_filename }}</strong></p>
+
+    <!-- Status Summary -->
+    <div style="background:{% if results.status == 'integrated_successfully' %}#d4edda{% elif results.status == 'requires_review' %}#fff3cd{% else %}#f8d7da{% endif %}; border:1px solid {% if results.status == 'integrated_successfully' %}#c3e6cb{% elif results.status == 'requires_review' %}#ffeaa7{% else %}#f5c6cb{% endif %}; padding:1rem; border-radius:4px; margin-bottom:2rem;">
+      <h4 style="margin-bottom:0.5rem; color:{% if results.status == 'integrated_successfully' %}#155724{% elif results.status == 'requires_review' %}#856404{% else %}#721c24{% endif %};">
+        {{ results.status|replace('_', ' ')|title }}
+      </h4>
+      <p style="margin:0; color:{% if results.status == 'integrated_successfully' %}#155724{% elif results.status == 'requires_review' %}#856404{% else %}#721c24{% endif %};">{{ results.admin_summary }}</p>
+    </div>
+
+    <!-- Key Metrics -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:1rem; margin-bottom:2rem;">
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        <div style="font-size:1.8rem; font-weight:bold; color:#0077cc;">{{ "%.1f%%"|format(results.quality_score * 100) }}</div>
+        <small style="color:#666;">Quality Score</small>
+      </div>
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        <div style="font-size:1.8rem; font-weight:bold; color:#28a745;">{{ results.insights_extracted }}</div>
+        <small style="color:#666;">Insights Extracted</small>
+      </div>
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        <div style="font-size:1.8rem; font-weight:bold; color:#6f42c1;">{{ results.content_length }}</div>
+        <small style="color:#666;">Characters</small>
+      </div>
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        <div style="font-size:1.8rem; font-weight:bold; color:{% if results.confidence_level == 'high' %}#28a745{% elif results.confidence_level == 'medium' %}#ffc107{% else %}#dc3545{% endif %};">{{ results.confidence_level|title }}</div>
+        <small style="color:#666;">Confidence</small>
+      </div>
+    </div>
+
+    <!-- Next Steps -->
+    <div style="background:#f8f9fa; padding:1.5rem; border-radius:6px; margin-bottom:2rem;">
+      <h4 style="margin-bottom:1rem;">Recommended Next Steps</h4>
+      <ul style="margin:0; padding-left:1.5rem;">
+        {% for step in results.next_steps %}
+        <li style="margin-bottom:0.5rem;">{{ step }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Integration Details -->
+    {% if results.integration_action %}
+    <div style="background:#e3f2fd; padding:1.5rem; border-radius:6px; margin-bottom:2rem;">
+      <h4 style="margin-bottom:1rem; color:#0077cc;">Integration Details</h4>
+      <p style="margin:0;"><strong>Action Taken:</strong> {{ results.integration_action|replace('_', ' ')|title }}</p>
+      <p style="margin:0.5rem 0;">{{ results.integration_message }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Quality Assessment -->
+    {% if results.detailed_results.processing.quality_assessment %}
+    {% set qa = results.detailed_results.processing.quality_assessment %}
+    <div style="background:#f8f9fa; padding:1.5rem; border-radius:6px; margin-bottom:2rem;">
+      <h4 style="margin-bottom:1rem;">Quality Assessment Breakdown</h4>
+      
+      <div style="margin-bottom:1.5rem;">
+        <h5 style="margin-bottom:1rem;">Dimension Scores</h5>
+        {% for dimension, score in qa.dimension_scores.items() %}
+        <div style="margin-bottom:1rem;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+            <span>{{ dimension|replace('_', ' ')|title }}:</span>
+            <strong>{{ "%.1f%%"|format(score * 100) }}</strong>
+          </div>
+          <div style="background:#e9ecef; border-radius:10px; height:8px;">
+            <div style="background:#0077cc; height:8px; border-radius:10px; width:{{ (score * 100)|round }}%;"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;">
+        <div>
+          <strong>Overall Score:</strong> {{ "%.1f%%"|format(qa.total_score * 100) }}
+        </div>
+        <div>
+          <strong>Confidence:</strong> {{ qa.confidence_level|title }}
+        </div>
+        <div>
+          <strong>Auto-Approved:</strong> {% if qa.auto_approve %}✅ Yes{% else %}❌ No{% endif %}
+        </div>
+      </div>
+      
+      <div style="background:#ffffff; padding:1rem; border-radius:4px; margin-top:1rem; border-left:3px solid #0077cc;">
+        {{ qa.recommendation }}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Extracted Insights Preview -->
+    {% if results.detailed_results.processing.extracted_insights %}
+    <div style="background:#f8f9fa; padding:1.5rem; border-radius:6px; margin-bottom:2rem;">
+      <h4 style="margin-bottom:1rem;">Extracted Insights Preview <small style="color:#666;">(Top 5 of {{ results.insights_extracted }})</small></h4>
+      {% for insight in results.detailed_results.processing.extracted_insights[:5] %}
+      <div style="background:#ffffff; padding:0.75rem; margin-bottom:0.5rem; border-radius:4px; border-left:3px solid #0077cc;">
+        <strong>{{ loop.index }}.</strong> {{ insight }}
+      </div>
+      {% endfor %}
+      {% if results.insights_extracted > 5 %}
+      <p style="text-align:center; color:#666; margin:1rem 0 0 0;">... and {{ results.insights_extracted - 5 }} more insights extracted</p>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div style="text-align:center; margin-bottom:2rem;">
+      <a href="{{ url_for('admin.literature_upload') }}" class="btn btn-primary" style="margin:0 0.5rem;">Upload Another</a>
+      <a href="{{ url_for('admin.literature_knowledge_base') }}" class="btn btn-secondary" style="margin:0 0.5rem;">Knowledge Base</a>
+      <a href="{{ url_for('admin.literature_dashboard') }}" class="btn btn-secondary" style="margin:0 0.5rem;">Dashboard</a>
+    </div>
+
+    <!-- Technical Details -->
+    <div style="border-top:1px solid #eee; padding-top:1rem;">
+      <button onclick="toggleDetails()" style="background:#6c757d; color:white; border:none; padding:0.5rem 1rem; border-radius:4px; cursor:pointer;">
+        Show Technical Details
+      </button>
+      <div id="technicalDetails" style="display:none; background:#f8f9fa; padding:1rem; margin-top:1rem; border-radius:4px; overflow:auto;">
+        <pre style="margin:0; font-size:0.8rem; color:#666;">{{ results.detailed_results | tojson(indent=2) }}</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleDetails() {
+  const details = document.getElementById('technicalDetails');
+  const button = event.target;
+  
+  if (details.style.display === 'none') {
+    details.style.display = 'block';
+    button.textContent = 'Hide Technical Details';
+  } else {
+    details.style.display = 'none';
+    button.textContent = 'Show Technical Details';
+  }
+}
+</script>
+{% endblock %}

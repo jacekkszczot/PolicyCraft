@@ -1,0 +1,777 @@
+<!--
+    PolicyCraft - Literature Cleanup Interface
+    
+    This administrative interface provides tools for cleaning up outdated or
+    unnecessary documents from the knowledge base. Features bulk selection,
+    filtering by date/quality, and safe deletion with backup creation.
+    
+    Key Features:
+    - Bulk document selection and deletion
+    - Filtering by date, quality score, and document type
+    - Safe deletion with automatic backup creation
+    - Preview of documents before deletion
+    - Cleanup statistics and recommendations
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
+{% extends 'base.html' %}
+
+{% block title %}Literature Cleanup - PolicyCraft Admin{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-content">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">🧹 Literature Cleanup</h1>
+                <p class="hero-subtitle">Remove outdated or low-quality documents from the knowledge base</p>
+            </div>
+        </div>
+        
+        <!-- Navigation Breadcrumb -->
+        <nav class="breadcrumb-nav">
+            <a href="{{ url_for('admin.dashboard') }}" class="breadcrumb-link">Admin Dashboard</a>
+            <span class="breadcrumb-separator">→</span>
+            <a href="{{ url_for('admin.literature_dashboard') }}" class="breadcrumb-link">Literature Management</a>
+            <span class="breadcrumb-separator">→</span>
+            <a href="{{ url_for('admin.literature_knowledge_base') }}" class="breadcrumb-link">Knowledge Base</a>
+            <span class="breadcrumb-separator">→</span>
+            <span class="breadcrumb-current">Cleanup</span>
+        </nav>
+
+        <form method="POST" class="cleanup-form">
+            <!-- Cleanup Guidelines - Always Visible -->
+            <div class="guidelines-section">
+                <h3 class="section-title">⚠️ Cleanup Guidelines</h3>
+                <div class="guidelines-content">
+                    <ul class="guidelines-list">
+                        <li>Consider removing documents older than 2 years</li>
+                        <li>Review documents with quality scores below 40%</li>
+                        <li>Merge similar documents to reduce duplication</li>
+                        <li>Backup will be created automatically before deletion</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="filter-section">
+                <h3 class="section-title">🔍 Filter Options</h3>
+                <div class="filter-grid">
+                    <div class="form-group">
+                        <label for="date-filter" class="form-label">Filter by Date:</label>
+                        <select id="date-filter" onchange="filterByDate(this.value)" class="form-select">
+                            <option value="all">All Documents</option>
+                            <option value="older_than_1_year">Older than 1 Year</option>
+                            <option value="older_than_2_years">Older than 2 Years</option>
+                            <option value="older_than_6_months">Older than 6 Months</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="quality-filter" class="form-label">Filter by Quality:</label>
+                        <select id="quality-filter" onchange="filterByQuality(this.value)" class="form-select">
+                            <option value="all">All Quality Levels</option>
+                            <option value="low">Low Quality (< 40%)</option>
+                            <option value="medium">Medium Quality (40-70%)</option>
+                            <option value="high">High Quality (> 70%)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="action-select" class="form-label">Action Type:</label>
+                        <select id="action-select" name="action" required class="form-select">
+                            <option value="">Select action...</option>
+                            <option value="delete">Delete permanently</option>
+                            <option value="archive">Archive (move to backup)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents Section -->
+            {% if recent_updates %}
+            <div class="documents-section">
+                <h3 class="section-title">
+                    Documents in Knowledge Base 
+                    <span id="selectedCount" class="selected-count">(0 selected)</span>
+                </h3>
+                <div class="selection-controls">
+                    <button type="button" onclick="selectAll()" class="btn btn-success">Select All</button>
+                    <button type="button" onclick="clearSelection()" class="btn btn-secondary">Clear Selection</button>
+                </div>
+                
+                <table class="documents-table" id="documentsTable">
+                    <thead>
+                        <tr>
+                            <th class="table-header">
+                                <input type="checkbox" id="selectAllCheckbox" onchange="toggleAllSelection()">
+                            </th>
+                            <th class="table-header">Date</th>
+                            <th class="table-header">Document ID</th>
+                            <th class="table-header">Author(s)</th>
+                            <th class="table-header">Quality</th>
+                            <th class="table-header">Insights</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for update in recent_updates %}
+                        <tr class="document-row" 
+                            data-date="{{ update.timestamp[:10] if update.timestamp }}" 
+                            data-quality="{{ update.quality_score or 0 }}">
+                            <td class="table-cell">
+                                <input type="checkbox" name="selected_documents" value="{{ update.document_id }}" 
+                                       onchange="updateSelectedCount()" class="doc-checkbox">
+                            </td>
+                            <td class="table-cell">{{ update.timestamp[:10] if update.timestamp }}</td>
+                            <td class="table-cell">
+                                <div class="document-name" title="{{ update.document_id }}">
+                                    {{ update.document_id|clean_literature_name }}
+                                </div>
+                            </td>
+                            <td class="table-cell">
+                                <div class="author-info">
+                                    {% if update.author %}
+                                        {{ update.author[:50] }}{% if update.author|length > 50 %}...{% endif %}
+                                    {% else %}
+                                        <em class="text-muted">Unknown</em>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="table-cell">
+                                {% if update.quality_score %}
+                                <div class="quality-indicator">
+                                    <div class="quality-bar">
+                                          <div class="quality-fill quality-{{ 'high' if update.quality_score >= 80 else 'medium' if update.quality_score >= 60 else 'low' }}"
+                                               data-width="{{ update.quality_score|round }}"></div>
+                                    </div>
+                                     <small class="quality-text">{{ "%.1f%%"|format(update.quality_score) }}</small>
+                                </div>
+                                {% else %}
+                                <span class="quality-na">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="table-cell">{{ update.insights_count if update.insights_count else 0 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-summary">
+                <div class="summary-text">
+                    <span id="actionSummary">Select documents and choose an action above</span>
+                </div>
+                <div class="action-buttons">
+                    <a href="{{ url_for('admin.literature_knowledge_base') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-danger btn-lg" onclick="return confirmAction()">Execute Action</button>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🗂️</div>
+                <h4 class="empty-title">No Documents to Clean</h4>
+                <p class="empty-description">The knowledge base is empty or all documents are recent.</p>
+                <a href="{{ url_for('admin.literature_upload') }}" class="btn btn-primary btn-lg">Upload Documents</a>
+            </div>
+            {% endif %}
+        </form>
+        
+        <!-- Back to Literature Management Button -->
+        <div class="back-navigation">
+            <a href="{{ url_for('admin.literature_dashboard') }}" class="btn btn-secondary btn-lg">
+                ← Back to Literature Management
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedCount = 0;
+
+function updateSelectedCount() {
+  const checkboxes = document.querySelectorAll('.doc-checkbox:checked');
+  selectedCount = checkboxes.length;
+  document.getElementById('selectedCount').textContent = `(${selectedCount} selected)`;
+  
+  const actionSelect = document.querySelector('select[name="action"]');
+  const actionText = actionSelect.value ? actionSelect.options[actionSelect.selectedIndex].text : 'action';
+  
+  if (selectedCount > 0) {
+    document.getElementById('actionSummary').textContent = `Ready to ${actionText.toLowerCase()} ${selectedCount} document(s)`;
+    document.getElementById('actionSummary').style.color = '#dc3545';
+  } else {
+    document.getElementById('actionSummary').textContent = 'Select documents and choose an action above';
+    document.getElementById('actionSummary').style.color = '#666';
+  }
+}
+
+function toggleAllSelection() {
+  const selectAll = document.getElementById('selectAllCheckbox');
+  const checkboxes = document.querySelectorAll('.doc-checkbox');
+  
+  checkboxes.forEach(checkbox => {
+    if (checkbox.closest('tr').style.display !== 'none') {
+      checkbox.checked = selectAll.checked;
+    }
+  });
+  
+  updateSelectedCount();
+}
+
+function selectAll() {
+  document.querySelectorAll('.doc-checkbox').forEach(cb => {
+    if (cb.closest('tr').style.display !== 'none') cb.checked = true;
+  });
+  updateSelectedCount();
+}
+
+function clearSelection() {
+  document.querySelectorAll('.doc-checkbox').forEach(cb => cb.checked = false);
+  document.getElementById('selectAllCheckbox').checked = false;
+  updateSelectedCount();
+}
+
+// Apply both filters together (date AND quality)
+function applyFilters() {
+  const rows = document.querySelectorAll('.document-row');
+  const today = new Date();
+  const dateValue = document.getElementById('date-filter')?.value || 'all';
+  const qualityValue = document.getElementById('quality-filter')?.value || 'all';
+
+  rows.forEach(row => {
+    // Date filter
+    const dateStr = row.dataset.date;
+    const hasDate = !!dateStr;
+    const docDate = hasDate ? new Date(dateStr) : null;
+    let showDate = true;
+
+    switch (dateValue) {
+      case 'older_than_1_year':
+        showDate = hasDate && (today - docDate) > (365 * 24 * 60 * 60 * 1000);
+        break;
+      case 'older_than_2_years':
+        showDate = hasDate && (today - docDate) > (730 * 24 * 60 * 60 * 1000);
+        break;
+      case 'older_than_6_months':
+        showDate = hasDate && (today - docDate) > (182 * 24 * 60 * 60 * 1000);
+        break;
+      case 'all':
+      default:
+        showDate = true;
+        break;
+    }
+
+    // Quality filter (0–100 scale)
+    const q = parseFloat(row.dataset.quality);
+    const quality = isNaN(q) ? 0 : q;
+    let showQuality = true;
+    switch (qualityValue) {
+      case 'low':
+        showQuality = quality < 60;
+        break;
+      case 'medium':
+        showQuality = quality >= 60 && quality < 80;
+        break;
+      case 'high':
+        showQuality = quality >= 80;
+        break;
+      case 'all':
+      default:
+        showQuality = true;
+        break;
+    }
+
+    const show = showDate && showQuality;
+    row.style.display = show ? '' : 'none';
+    if (!show) {
+      const cb = row.querySelector('.doc-checkbox');
+      if (cb) cb.checked = false;
+    }
+  });
+
+  // Reset Select All checkbox if any row hidden
+  const visibleRows = Array.from(document.querySelectorAll('.document-row')).filter(r => r.style.display !== 'none');
+  if (visibleRows.length === 0) {
+    const selectAll = document.getElementById('selectAllCheckbox');
+    if (selectAll) selectAll.checked = false;
+  }
+
+  updateSelectedCount();
+}
+
+function filterByDate() { applyFilters(); }
+
+function filterByQuality() { applyFilters(); }
+
+function confirmAction() {
+  if (selectedCount === 0) {
+    alert('Please select at least one document');
+    return false;
+  }
+  
+  const actionSelect = document.querySelector('select[name="action"]');
+  if (!actionSelect.value) {
+    alert('Please select an action');
+    return false;
+  }
+  
+  const actionText = actionSelect.options[actionSelect.selectedIndex].text;
+  return confirm(`Are you sure you want to ${actionText.toLowerCase()} ${selectedCount} document(s)? This action cannot be undone.`);
+}
+
+// Initialise
+document.addEventListener('DOMContentLoaded', function() {
+  updateSelectedCount();
+  applyFilters();
+  document.querySelectorAll('.quality-fill[data-width]')
+    .forEach(el => {
+      const w = parseInt(el.getAttribute('data-width'), 10);
+      if (!isNaN(w)) el.style.width = `${Math.max(0, Math.min(100, w))}%`;
+    });
+});
+</script>
+
+<style>
+/* Literature Cleanup Styles */
+.admin-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.admin-content {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+}
+
+/* Hero section uses global styles from layout.css */
+
+.hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+/* Breadcrumb Navigation */
+.breadcrumb-nav {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+.breadcrumb-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.breadcrumb-link:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb-separator {
+    margin: 0 0.5rem;
+    color: #6c757d;
+}
+
+.breadcrumb-current {
+    color: #495057;
+    font-weight: 600;
+}
+
+/* Alert Styles */
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.alert-warning {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+
+.alert-title {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.alert-list {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+/* Form Styles */
+.cleanup-form {
+    margin-bottom: 2rem;
+}
+
+/* Guidelines Section - Always Visible */
+.guidelines-section {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-left: 4px solid #ffc107;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.guidelines-content {
+    color: #856404;
+}
+
+.guidelines-list {
+    margin: 0.5rem 0 0 0;
+    padding-left: 1.5rem;
+}
+
+.guidelines-list li {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.filter-section {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #495057;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+.form-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-select:focus {
+    border-color: #007bff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Documents Section */
+.documents-section {
+    margin-bottom: 2rem;
+}
+
+.selected-count {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.selection-controls {
+    margin: 1rem 0;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Table Styles */
+.documents-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.table-header {
+    background: #f8f9fa;
+    padding: 1rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table-cell {
+    padding: 0.75rem;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+}
+
+.document-row:hover {
+    background: #f8f9fa;
+}
+
+.document-name {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+    cursor: help;
+}
+
+.author-info {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.author-info .text-muted {
+    font-style: italic;
+    color: #adb5bd;
+}
+
+/* Action Badge Styles - Removed (no longer used) */
+
+/* Quality Indicator */
+.quality-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quality-bar {
+    width: 60px;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.quality-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.quality-high {
+    background: #28a745;
+}
+
+.quality-medium {
+    background: #ffc107;
+}
+
+.quality-low {
+    background: #dc3545;
+}
+
+.quality-text {
+    font-weight: 500;
+    color: #495057;
+}
+
+.quality-na {
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Action Summary */
+.action-summary {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.summary-text {
+    color: #6c757d;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #6c757d;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.empty-title {
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+.empty-description {
+    margin-bottom: 2rem;
+}
+
+/* Button Styles */
+.btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+    border-color: #0056b3;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+    border-color: #545b62;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.btn-success:hover {
+    background: #1e7e34;
+    border-color: #1e7e34;
+    color: white;
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+    border-color: #17a2b8;
+}
+
+.btn-info:hover {
+    background: #117a8b;
+    border-color: #117a8b;
+    color: white;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    border-color: #c82333;
+    color: white;
+}
+
+/* Back Navigation */
+.back-navigation {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-container {
+        margin: 1rem auto;
+        padding: 0 0.5rem;
+    }
+    
+    .admin-content {
+        padding: 1rem;
+    }
+    
+    .hero-section {
+        margin: -1rem -1rem 2rem -1rem;
+        padding: 2rem 1rem;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .filter-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-summary {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .action-buttons {
+        justify-content: center;
+    }
+    
+    .selection-controls {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}

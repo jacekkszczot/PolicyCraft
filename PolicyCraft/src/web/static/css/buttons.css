@@ -1,0 +1,225 @@
+/**
+ * ============================================================================
+ * PolicyCraft - Button Styles
+ * ============================================================================
+ *
+ * This file contains all button-related styles for the PolicyCraft application.
+ * It defines the visual appearance, states, and behaviors of all button components
+ * used throughout the interface, ensuring consistency in user interactions.
+ *
+ * Table of Contents:
+ * 1. Base Button Styles
+ * 2. Button Variants
+ *   2.1 Primary Buttons
+ *   2.2 Secondary Buttons
+ *   2.3 Tertiary Buttons
+ *   2.4 Text Buttons
+ *   2.5 Icon Buttons
+ * 3. Button Sizes
+ * 4. Button States
+ * 5. Button Groups
+ * 6. Responsive Adjustments
+ *
+ * Key Features:
+ * - Consistent button styling across the application
+ * - Multiple button variants for different use cases
+ * - Accessible focus and hover states
+ * - Responsive button sizes
+ * - Support for icons within buttons
+ * - Disabled state styling
+ * - Loading state indicators
+ *
+ * Best Practices:
+ * - Use semantic button elements (<button>) for actions
+ * - Include appropriate ARIA attributes for accessibility
+ * - Ensure sufficient color contrast for readability
+ * - Provide visual feedback on interaction
+ * - Use consistent spacing and padding
+ * - Test with keyboard navigation
+ *
+ * Dependencies:
+ * - variables.css for colors, spacing, and typography
+ * - layout.css for consistent spacing
+ * - responsive.css for breakpoint variables
+ *
+ * Author: Jacek Robert Kszczot
+ * Project: MSc Data Science & AI - COM7016
+ * University: Leeds Trinity University
+ * ============================================================================
+ */
+
+/* Import variables first to ensure they're available to all styles */
+@import 'variables.css';
+
+/* ========================
+   1. Base Button Styles
+   ======================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background: var(--secondary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--secondary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+}
+
+.btn-secondary {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #334155;
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--secondary);
+    color: var(--secondary);
+}
+
+.btn-outline:hover {
+    background: var(--secondary);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-large {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.btn-icon {
+    font-size: 1.2rem;
+}
+
+/* Delete button styles */
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: all 0.2s;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+    transform: translateY(-1px);
+}
+
+.btn-delete:active {
+    transform: translateY(0);
+}
+
+/* Action buttons container */
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.action-buttons form {
+    margin: 0;
+}
+
+/* Style dla kart akcji w panelu admina */
+.admin-action-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.admin-action-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Style dla ikon w kartach */
+.admin-action-card .action-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+/* Style dla różnych typów kart */
+.admin-action-card.primary {
+    border: 2px solid #3b82f6; /* Niebieskie obramowanie */
+}
+
+.admin-action-card.warning {
+    border: 2px solid #f59e0b; /* Pomarańczowe obramowanie */
+}
+
+.admin-action-card.danger {
+    border: 2px solid #ef4444; /* Czerwone obramowanie */
+}
+
+/* Style dla siatki kart akcji */
+.admin-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+/* Loading state for buttons */
+.btn.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+    position: relative;
+}
+
+.btn.loading::after {
+    content: "⏳";
+    margin-left: 8px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsywność */
+@media (max-width: 768px) {
+    .admin-actions-grid {
+        grid-template-columns: 1fr;
+    }
+}

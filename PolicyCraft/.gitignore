@@ -1,0 +1,69 @@
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+
+# Logs
+logs/
+*.log
+
+# Exports and temporary files
+exports/
+*.tmp
+*.temp
+*.cache
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Virtual Environment (exclude user-specific environments)
+venv/
+env/
+ENV/
+policycraft-env/
+
+# Flask instance and local data
+instance/
+instance/uploads/
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Database files (exclude only user-specific databases, not configuration)
+*.db
+# Note: PolicyCraft-Databases/ contains configuration templates - DO NOT ignore
+# Only ignore user-specific database instances
+
+# SonarQube local artifacts
+.scannerwork/
+
+# Backup files
+*.bak
+*.old
+*.orig
+
+# R temporary files
+.Rhistory
+.RData
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment variables
+.env
+.env.local
+.env.*.local

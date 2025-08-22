@@ -1,0 +1,174 @@
+/**
+ * ============================================================================
+ * PolicyCraft - Responsive Design Styles
+ * ============================================================================
+ *
+ * This file contains responsive design rules and overrides that ensure the
+ * PolicyCraft application delivers an optimal user experience across all
+ * device sizes and orientations. It implements a mobile-first approach,
+ * progressively enhancing the layout and features for larger screens.
+ *
+ * Table of Contents:
+ * 1. Base Responsive Settings
+ * 2. Responsive Typography
+ * 3. Flexible Grids & Layouts
+ * 4. Navigation & Menus
+ * 5. Form Elements & Controls
+ * 6. Component-Specific Adjustments
+ * 7. Print Styles
+ *
+ * Breakpoint Strategy:
+ * - Mobile (default): 0px - 639px
+ * - sm: 640px - 767px
+ * - md: 768px - 1023px
+ * - lg: 1024px - 1279px
+ * - xl: 1280px - 1535px
+ * - 2xl: 1536px and up
+ *
+ * Key Features:
+ * - Mobile-first responsive design
+ * - Fluid typography that scales with viewport width
+ * - Responsive images and media
+ * - Touch-friendly interactive elements
+ * - Print-specific styles for better document output
+ *
+ * Best Practices:
+ * - Use relative units (rem, em, %) for flexible layouts
+ * - Implement responsive images with srcset and sizes
+ * - Test on actual devices when possible
+ * - Consider performance implications of media queries
+ * - Maintain touch targets of at least 44x44px
+ *
+ * Dependencies:
+ * - variables.css for breakpoints and spacing
+ * - layout.css for base layout structures
+ * - navigation.css for responsive navigation components
+ *
+ * Author: Jacek Robert Kszczot
+ * Project: MSc Data Science & AI - COM7016
+ * University: Leeds Trinity University
+ * ============================================================================
+ */
+
+/* Import variables first to ensure they're available to all styles */
+@import 'variables.css';
+
+/* ========================
+   1. Base Responsive Settings
+   ======================== */
+
+/* Base responsive settings */
+:root {
+    --mobile-padding: 1rem;
+}
+
+/* Use CSS variable --w set inline to control dynamic widths */
+.bar, .confidence-fill {
+    width: var(--w, 0%);
+}
+
+/* Ensure tables scroll horizontally on small screens */
+.analyses-table-container,
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 calc(-1 * var(--mobile-padding));
+    padding: 0 var(--mobile-padding);
+}
+
+/* Flexible stat cards */
+.stats-overview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.stat-card {
+    flex: 1 1 200px;
+}
+
+/* Analysis Summary on mobile */
+.summary-grid {
+    grid-template-columns: 1fr;
+}
+
+/* Responsive typography */
+@media (max-width: 768px) {
+    html {
+        font-size: 14px;
+    }
+    
+    .container {
+        padding: 0 var(--mobile-padding);
+    }
+    
+    /* Navigation */
+    .nav-links {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 1rem 0;
+    }
+    
+    .nav-links a {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Analysis items */
+    .summary-item {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem;
+    }
+    
+    .label, .value {
+        width: 100%;
+        text-align: left;
+    }
+    
+    /* Buttons */
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Hide/show elements */
+    .desktop-only {
+        display: none;
+    }
+    
+    .mobile-only {
+        display: block;
+    }
+}
+
+/* Larger mobile devices and tablets */
+@media (min-width: 481px) and (max-width: 768px) {
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+    .nav-brand a {
+        font-size: 1.2rem;
+    }
+    
+    .summary-item {
+        padding: 0.8rem;
+    }
+    
+    .label {
+        font-size: 0.9rem;
+    }
+    
+    .value {
+        font-size: 1rem;
+    }
+}
+
+/* Hide mobile elements by default */
+.mobile-only {
+    display: none;
+}

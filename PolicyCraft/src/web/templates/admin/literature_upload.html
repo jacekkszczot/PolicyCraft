@@ -1,0 +1,585 @@
+<!--
+    PolicyCraft - Academic Literature Upload Interface
+    
+    This administrative form provides secure upload and processing capabilities for
+    academic literature documents. The interface includes comprehensive metadata
+    collection, file validation, and processing pipeline integration.
+    
+    Key Features:
+    - Secure file upload with validation and size limits
+    - Comprehensive metadata collection for document tracking
+    - Real-time processing with quality assessment pipeline
+    - Support for PDF, TXT, and MD format documents
+    - Processing guidelines and quality indicators
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
+{% extends 'base.html' %}
+
+{% block title %}Upload Literature - PolicyCraft Admin{% endblock %}
+
+{% block extra_scripts %}
+{{ super() }}
+<script>
+(function() {
+  const area = document.getElementById('kbUploadArea');
+  const input = document.getElementById('file');
+  const info = document.getElementById('selectedFileInfo');
+  const nameEl = document.getElementById('selectedFileName');
+  const sizeEl = document.getElementById('selectedFileSize');
+  const maxSize = 30 * 1024 * 1024; // 30MB
+  const allowed = ['pdf','txt','md','docx'];
+
+  function formatSize(bytes){
+    const k = 1024; const units = ['B','KB','MB','GB'];
+    let i = Math.floor(Math.log(bytes)/Math.log(k));
+    return (bytes/Math.pow(k,i)).toFixed(2)+' '+units[i];
+  }
+
+  function showFile(file){
+    if(!file) return;
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if(!allowed.includes(ext)) { alert('Unsupported format. Use PDF, TXT, MD, or DOCX.'); input.value=''; info.style.display='none'; return; }
+    if(file.size > maxSize) { alert('File too large. Max 30MB.'); input.value=''; info.style.display='none'; return; }
+    nameEl.textContent = file.name;
+    sizeEl.textContent = `(${formatSize(file.size)})`;
+    info.style.display = 'block';
+  }
+
+  input.addEventListener('change', (e)=>{
+    const file = e.target.files && e.target.files[0];
+    showFile(file);
+  });
+
+  // Drag & drop events
+  ['dragenter','dragover'].forEach(evt=>{
+    area.addEventListener(evt, (e)=>{ e.preventDefault(); e.stopPropagation(); area.classList.add('drag-over'); });
+  });
+  ;['dragleave','dragend'].forEach(evt=>{
+    area.addEventListener(evt, (e)=>{ e.preventDefault(); e.stopPropagation(); area.classList.remove('drag-over'); });
+  });
+  area.addEventListener('drop', (e)=>{
+    e.preventDefault(); e.stopPropagation(); area.classList.remove('drag-over');
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if(files && files.length){
+      // Assign to input via DataTransfer for form submission
+      const dt = new DataTransfer();
+      dt.items.add(files[0]);
+      input.files = dt.files;
+      showFile(files[0]);
+    }
+  });
+})();
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-content">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">📄 Upload Literature</h1>
+                <p class="hero-subtitle">Add new academic documents</p>
+            </div>
+        </div>
+        
+        <!-- Navigation Breadcrumb -->
+        <nav class="breadcrumb-nav">
+            <a href="{{ url_for('admin.dashboard') }}" class="breadcrumb-link">Admin Dashboard</a>
+            <span class="breadcrumb-separator">→</span>
+            <a href="{{ url_for('admin.literature_dashboard') }}" class="breadcrumb-link">Literature Management</a>
+            <span class="breadcrumb-separator">→</span>
+            <span class="breadcrumb-current">Upload Document</span>
+        </nav>
+
+        <!-- Admin Trust Note -->
+        <div class="info-section">
+            <div class="info-card" style="background: linear-gradient(135deg, #fff3e0 0%, #fce4ec 100%); border-color: #f8bbd9;">
+                <div class="info-icon">🛡️</div>
+                <div class="info-content">
+                    <h4>Administrator Responsibility</h4>
+                    <p>As an administrator, you have full discretion over document quality and relevance. The system trusts your professional judgement in selecting appropriate academic literature and regulatory documents for the knowledge base.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Form -->
+        <div class="upload-section">
+            <form method="POST" enctype="multipart/form-data" class="upload-form">
+      
+                <!-- File Upload Section -->
+                <div class="form-group">
+                    <label for="file" class="form-label">📁 Select Document</label>
+                    <div class="file-upload-area" id="kbUploadArea">
+                        <input type="file" 
+                               id="file" 
+                               name="file" 
+                               accept=".pdf,.txt,.md,.docx" 
+                               class="file-input"
+                               required>
+                        <div class="file-upload-text">
+                            <div class="upload-icon">📄</div>
+                            <p>Click to select or drag & drop your document</p>
+                            <small>Supported formats: PDF, TXT, MD, DOCX (Max: 30MB)</small>
+                        </div>
+                    </div>
+                    <div id="selectedFileInfo" style="display:none; margin-top:0.75rem; color:#333;">
+                        <strong>Selected:</strong> <span id="selectedFileName"></span>
+                        <span id="selectedFileSize" style="color:#6c757d; margin-left:0.5rem;"></span>
+                    </div>
+                </div>
+
+                <!-- Metadata Fields -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom:0.5rem;">Document Title</label>
+                        <input type="text" name="title" placeholder="e.g., AI Ethics in Higher Education"
+                               style="width:100%; padding:0.75rem; border:1px solid #ccc; border-radius:4px; font-size:1rem;">
+                    </div>
+                    <div class="form-group">
+                        <label for="author" class="form-label">✍️ Author(s)</label>
+                        <input type="text" 
+                               id="author" 
+                               name="author" 
+                               placeholder="Enter author name(s)" 
+                               class="form-input">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label for="year" class="form-label">📅 Publication Year</label>
+                        <input type="number" 
+                               id="year" 
+                               name="year" 
+                               placeholder="e.g., 2024" 
+                               min="1900" 
+                               max="2030" 
+                               class="form-input">
+                    </div>
+                    <div>
+                        <label style="display:block; font-weight:600; margin-bottom:0.5rem;">
+                            Source URL or Other Source <span style="color:#dc3545; font-size:0.85rem;">*</span>
+                        </label>
+                        <input type="text" name="source_url" placeholder="https://example.com/document OR Ministry of Education, Internal Document 2024"
+                               style="width:100%; padding:0.75rem; border:1px solid #ccc; border-radius:4px; font-size:1rem;"
+                               required>
+                        <small style="color:#666; font-size:0.8rem; margin-top:0.25rem; display:block;">
+                            Enter URL if available, or describe the source (e.g., "Government Report", "Email from Institution")
+                        </small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="form-label">📝 Description (Optional)</label>
+                    <textarea id="description" 
+                              name="description" 
+                              placeholder="Brief description of the document's content and relevance" 
+                              rows="3" 
+                              class="form-textarea"></textarea>
+                </div>
+
+
+
+                <!-- Submit Button -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-upload">
+                        🚀 Upload & Process Document
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Processing Information -->
+        <div class="info-section">
+            <div class="info-card">
+                <div class="info-icon">🔄</div>
+                <div class="info-content">
+                    <h4>Automatic Processing</h4>
+                    <p>After successful upload, the system will automatically scan for new regulatory documents and integrate them into the recommendation engine. This ensures your uploaded content is immediately available for policy analysis.</p>
+                    <ul style="margin-top: 1rem; padding-left: 1.2rem; color: #6a1b9a;">
+                        <li>Document will be processed through quality assessment pipeline</li>
+                        <li>Key insights will be extracted using advanced NLP techniques</li>
+                        <li>System will check for similarity with existing knowledge base</li>
+                        <li>High-quality documents may be automatically integrated</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guidelines -->
+        <div class="guidelines-section">
+            <h3 class="section-title">📊 Upload Guidelines</h3>
+            <div class="guidelines-grid">
+                <div class="guideline-card">
+                    <h4>✅ Recommended Documents</h4>
+                    <ul class="guideline-list">
+                        <li>🎓 Academic literature & research</li>
+                        <li>📜 Regulatory documents & legal frameworks</li>
+                        <li>📄 Government policies & guidelines</li>
+                        <li>📈 Research reports & white papers</li>
+                        <li>🏛️ International standards & directives</li>
+                    </ul>
+                </div>
+                <div class="guideline-card">
+                    <h4>⭐ Quality Indicators</h4>
+                    <ul class="guideline-list">
+                        <li>✍️ Clear authorship or issuing authority</li>
+                        <li>🏛️ Official or credible institutional source</li>
+                        <li>📄 Complete and accessible content</li>
+                        <li>🎯 Relevance to AI policy or education</li>
+                    </ul>
+                </div>
+                <div class="guideline-card">
+                    <h4>📊 Processing Pipeline</h4>
+                    <ul class="guideline-list">
+                        <li>📊 Quality assessment processing</li>
+                        <li>🧠 Advanced NLP content extraction</li>
+                        <li>🔍 Automatic similarity checking</li>
+                        <li>⚡ Instant integration to engine</li>
+                    </ul>
+                </div>
+                <div class="guideline-card">
+                    <h4>🔄 Automatic Features</h4>
+                    <ul class="guideline-list">
+                        <li>🔄 Auto-scan for new documents</li>
+                        <li>📈 Real-time policy analysis</li>
+                        <li>🔎 Knowledge base integration</li>
+                        <li>✨ Seamless workflow automation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Back to Literature Management Button -->
+        <div class="form-actions" style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e9ecef;">
+            <a href="{{ url_for('admin.literature_dashboard') }}" class="btn btn-secondary">
+                ← Back to Literature Management
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Literature Upload Styles */
+.admin-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+/* Info Section Styles */
+.info-section {
+    margin: 2rem 0;
+}
+
+.info-card {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border: 1px solid #e1bee7;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.info-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+}
+
+.info-content h4 {
+    color: #4a148c;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.info-content p {
+    color: #6a1b9a;
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+.admin-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+}
+
+.admin-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.95);
+    z-index: 1;
+}
+
+.admin-content > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* Hero section uses global styles from layout.css */
+
+.hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.breadcrumb-nav {
+    padding: 0 2rem 1rem 2rem;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 2rem;
+}
+
+.breadcrumb-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.breadcrumb-link:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb-separator {
+    margin: 0 0.5rem;
+    color: #6c757d;
+}
+
+.breadcrumb-current {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.upload-section {
+    padding: 0 2rem 2rem 2rem;
+}
+
+.upload-form {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-size: 1rem;
+}
+
+.form-input, .form-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: #f8f9fa;
+}
+
+.form-input:focus, .form-textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.file-upload-area {
+    position: relative;
+    border: 2px dashed #007bff;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.file-upload-area:hover {
+    border-color: #0056b3;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    transform: translateY(-2px);
+}
+
+.file-upload-area.drag-over {
+    border-color: #4caf50;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+}
+
+.file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-upload-text {
+    pointer-events: none;
+}
+
+.upload-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.file-upload-text p {
+    font-size: 1.1rem;
+    color: #333;
+    margin: 0 0 0.5rem 0;
+    font-weight: 500;
+}
+
+.file-upload-text small {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.form-actions {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn-upload {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-upload:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,123,255,0.3);
+}
+
+.guidelines-section {
+    padding: 0 2rem 2rem 2rem;
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+    text-align: center;
+}
+
+.guidelines-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 1.5rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.guideline-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.guideline-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.guideline-card h4 {
+    color: #333;
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.guideline-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.guideline-list li {
+    padding: 0.5rem 0;
+    color: #6c757d;
+    border-bottom: 1px solid #f8f9fa;
+    font-size: 0.95rem;
+}
+
+.guideline-list li:last-child {
+    border-bottom: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-container {
+        margin: 1rem auto;
+        padding: 0 0.5rem;
+    }
+    
+    .hero-section {
+        padding: 2rem 1rem;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .upload-form {
+        padding: 1.5rem;
+    }
+    
+    .file-upload-area {
+        padding: 1.5rem;
+    }
+    
+    .guidelines-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+{% endblock %}

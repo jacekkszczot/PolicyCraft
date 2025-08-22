@@ -1,0 +1,1062 @@
+{% extends "base.html" %}
+
+{% block title %}Implementation Brief - PolicyCraft{% endblock %}
+
+{% block content %}
+<!-- 
+    PolicyCraft – Recommendations Page
+    
+    This page provides evidence-based recommendations derived from the analysis of
+    policy documents. It offers strategic guidance for implementing or improving
+    AI policies in higher education institutions.
+    
+    Key components:
+    1. Analysis summary – overview of the analysed document
+    2. Strategic recommendations – actionable insights
+    3. Implementation roadmap – phased approach to policy improvement
+    4. Citation validation – academic reference verification
+    
+    Features:
+    - Interactive recommendation cards with details
+    - Export functionality for reports
+    - Citation validation against academic sources
+    - Responsive design for all devices
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">Recommendation</h1>
+        <h2 class="hero-subtitle">Strategic guidance for AI policy implementation</h2>
+    </div>
+
+    <!-- Scoped typography polish for the narrative section -->
+    <style>
+      .narrative-section {
+        line-height: 1.6;
+        font-size: 0.98rem;
+        max-width: 1200px;
+        margin: 0 auto 1.25rem auto;
+        padding: 1.25rem 1.5rem;
+        border: 2px solid #f5c2c7; /* light red border only */
+        background: #ffffff;       /* no fill – white content */
+        border-radius: 14px;
+        box-shadow: 0 3px 10px rgba(220, 53, 69, 0.06); /* subtle red shadow */
+      }
+      .narrative-section h2,
+      .narrative-section h3,
+      .narrative-section h4 {
+        color: #1d3557; /* revert to original heading colour; frame only is red */
+        margin: 1.1rem 0 .5rem 0;
+        line-height: 1.35;
+      }
+      .narrative-section p { margin: .4rem 0 .9rem; }
+      .narrative-section ul,
+      .narrative-section ol {
+        padding-left: 1.25rem;
+        margin: .25rem 0 1rem;
+      }
+      .narrative-section li { margin: .3rem 0; }
+      .narrative-section strong { color: #2c3e50; }
+      .narrative-section code {
+        background: #f1f3f5;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        padding: 0 .25rem;
+        font-size: .92em;
+      }
+      .narrative-section blockquote {
+        margin: .75rem 0 1rem;
+        padding: .75rem 1rem;
+        border-left: 4px solid #a8dadc;
+        background: #f7fbfc;
+        color: #264653;
+        border-radius: 6px;
+      }
+      .narrative-section hr {
+        border: 0;
+        border-top: 1px dashed #d9dee3;
+        margin: 1rem 0;
+      }
+    </style>
+
+<!-- Scoped styles for new sections -->
+<style>
+.methodology-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+.methodology-block, .confidence-block { background:#f8f9fa; border:1px solid #e9ecef; border-radius:10px; padding:1rem; }
+.methodology-block .note, .pilot-plan .note { color:#6c757d; font-size:.925rem; margin-top:.5rem; }
+.confidence-factors { margin:.5rem 0 0 1rem; }
+.stakeholders-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap:1rem; }
+.stakeholder-card { background:#f8f9fa; border:1px solid #e9ecef; border-radius:10px; padding:1rem; }
+.pilot-plan ul { margin:.25rem 0 .5rem 1.2rem; }
+.iuf-table-wrapper { overflow:auto; border:1px solid #e9ecef; border-radius:10px; }
+.iuf-table { width:100%; border-collapse:collapse; font-size:.95rem; }
+.iuf-table th, .iuf-table td { padding:.6rem .8rem; border-bottom:1px solid #f1f3f5; text-align:left; }
+.iuf-table thead th { background:#f8f9fa; }
+.tag { display:inline-block; padding:.1rem .5rem; border-radius:999px; background:#eef2f7; color:#415063; font-weight:600; font-size:.85rem; }
+</style>
+
+</section>
+
+<div class="recommendations-container">
+
+    {% if data and data.analysis %}
+    <!-- Analysis Summary Card -->
+    <div class="summary-card">
+        <h2>📋 Analysis Summary</h2>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <span class="label">Document:</span>
+                <span class="value">{{ data.analysis.filename.split('_', 2)[-1] if '_' in data.analysis.filename else data.analysis.filename }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="label">Classification:</span>
+                <span class="value classification-badge classification-{{ data.analysis.classification.lower() }}">
+                    {{ data.analysis.classification }}
+                </span>
+            </div>
+            <div class="summary-item">
+                <span class="label">Analysis Date:</span>
+                <span class="value">{{ data.generated_date }}</span>
+            </div>
+            <div class="summary-item">
+                <span class="label">Total Recommendations:</span>
+                <span class="value">{{ data.recommendations|length if data.recommendations else 0 }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Policy Implementation Brief Section -->
+    {% if data.narrative and data.narrative.html %}
+    <div class="narrative-section">
+        {{ data.narrative.html | safe }}
+    </div>
+    {% else %}
+    <div class="narrative-section" style="background:#fff8e1;border-color:#ffe082;">
+        <h2>📝 Recommendation</h2>
+        <p>The narrative has not been returned by the engine yet. Please hard refresh the page (Cmd/Ctrl+Shift+R) or regenerate recommendations by returning to the analysis results and clicking “View recommendation”.</p>
+    </div>
+    {% endif %}
+    
+    <!-- Recommendations Section -->
+    <div class="recommendations-section">
+        <h2>💡 Strategic Recommendations</h2>
+        
+        {% if data.recommendations and data.recommendations|length > 0 %}
+        <div class="recommendations-grid">
+            {% for recommendation in data.recommendations %}
+            <div class="recommendation-card">
+                <div class="recommendation-header">
+                    <h3>{{ recommendation.title if recommendation.title else 'Recommendation ' + loop.index|string }}</h3>
+                    {% if recommendation.priority %}
+                    <span class="priority priority-{{ recommendation.priority.lower() }}">
+                        {{ recommendation.priority }}
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <div class="recommendation-content">
+                    {% if recommendation.description %}
+                    <p>{{ recommendation.description }}</p>
+                    {% else %}
+                    <p>{{ recommendation }}</p>
+                    {% endif %}
+                </div>
+                
+                {% if recommendation.implementation_steps %}
+                <div class="implementation-steps">
+                    <h4>Implementation steps:</h4>
+                    <ul>
+                        {% for step in recommendation.implementation_steps %}
+                        <li>{{ step }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                {% if recommendation.sources or recommendation.source %}
+                <div class="sources">
+                    <h4>Sources:</h4>
+                    <ul>
+                        {% if recommendation.sources %}
+                            {% for src in recommendation.sources %}
+                            <li>{{ src }}</li>
+                            {% endfor %}
+                        {% elif recommendation.source %}
+                            <li>{{ recommendation.source }}</li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                {% if recommendation.timeframe %}
+                <div class="timeframe">
+                    <span class="timeframe-label">⏱️ Timeframe:</span>
+                    <span class="timeframe-value">{{ recommendation.timeframe }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% else %}
+        <!-- No Recommendations State -->
+        <div class="no-recommendations">
+            <div class="no-rec-icon">🔍</div>
+            <h3>No Specific Recommendations Available</h3>
+            <p>Our analysis system is still learning from this type of policy document. Here are some general recommendations based on the classification:</p>
+            
+            <!-- General recommendations based on classification -->
+            <div class="general-recommendations">
+                {% if data.analysis.classification == 'Restrictive' %}
+                <div class="general-rec-card">
+                    <h4>Consider Moderate Approach</h4>
+                    <p>Your policy is restrictive, prohibiting or strictly limiting AI usage. Consider incorporating flexibility for legitimate academic use while maintaining integrity safeguards.</p>
+                </div>
+                {% elif data.analysis.classification == 'Permissive' %}
+                <div class="general-rec-card">
+                    <h4>Strengthen Guidelines</h4>
+                    <p>Your policy is permissive, encouraging or allowing broad AI usage. Consider adding clearer guidelines and assessment criteria to maintain academic standards.</p>
+                </div>
+                {% else %}
+                <div class="general-rec-card">
+                    <h4>Maintain Balance</h4>
+                    <p>Your policy is moderate, allowing AI usage with specific guidelines or conditions. Continue monitoring effectiveness and adjust based on student and faculty feedback.</p>
+                </div>
+                {% endif %}
+                
+                <div class="general-rec-card">
+                    <h4>Regular Review</h4>
+                    <p>Implement regular policy reviews (6-12 months) to adapt to rapidly evolving AI technologies and educational needs.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Methodology & Confidence -->
+    <div class="recommendations-section">
+        <h2>🧭 Methodology & Confidence</h2>
+        <div class="methodology-grid">
+            <div class="methodology-block">
+                <h3>Methodology</h3>
+                <p>{{ data.methodology or 'PolicyCraft local analysis pipeline (text extraction → classification → theme detection → rules‑based + ML heuristics).' }}</p>
+                <p class="note">Note: This report relies solely on locally available data (no external benchmarks).</p>
+            </div>
+            <div class="confidence-block">
+                <h3>Confidence</h3>
+                <p>
+                    Overall confidence: <strong>{{ (data.analysis.confidence_pct) | round(0) if data.analysis.confidence_pct is not none else '—' }}%</strong>
+                </p>
+                <ul class="confidence-factors">
+                    <li>Number of independent evidence snippets in the document</li>
+                    <li>Alignment between detected themes and classification</li>
+                    <li>Completeness of text extraction (document quality)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Benchmarks (evidence & quality signals) -->
+    <div class="recommendations-section">
+        <h2>📏 Benchmarks</h2>
+        {% set cf = data.analysis.confidence_factors %}
+        <div class="stakeholders-grid">
+            <div class="stakeholder-card">
+                <h4>Evidence Diversity</h4>
+                <p>
+                    Unique sources: <strong>{{ cf.unique_sources if cf else '—' }}</strong>
+                </p>
+                <p>
+                    Diversity score: <strong>{{ cf.evidence_diversity if cf else '—' }}%</strong>
+                </p>
+                <p class="note">More diverse sources generally increase robustness of recommendations.</p>
+            </div>
+            <div class="stakeholder-card">
+                <h4>Theme Support</h4>
+                <p>Average theme support: <strong>{{ cf.avg_theme_support if cf else '—' }}%</strong></p>
+            </div>
+            <div class="stakeholder-card">
+                <h4>Text Quality Proxy</h4>
+                <p>Coverage of target length: <strong>{{ cf.text_quality if cf else '—' }}%</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stakeholder Perspectives -->
+    <div class="recommendations-section">
+        <h2>👥 Stakeholder Perspectives</h2>
+        <div class="stakeholders-grid">
+            <div class="stakeholder-card">
+                <h4>Students</h4>
+                <ul>
+                    <li>Transparency of AI usage rules and appeal processes</li>
+                    <li>Clear guides on permitted vs non‑permitted use</li>
+                </ul>
+            </div>
+            <div class="stakeholder-card">
+                <h4>Faculty</h4>
+                <ul>
+                    <li>Workload reduction: ready‑made rubrics and checklists</li>
+                    <li>Training on interpretability and good practice</li>
+                </ul>
+            </div>
+            <div class="stakeholder-card">
+                <h4>Administration / IT</h4>
+                <ul>
+                    <li>Compliance monitoring and policy maintenance</li>
+                    <li>Data security and event logging</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pilot & Evaluation Plan -->
+    <div class="recommendations-section">
+        <h2>🧪 Pilot & Evaluation Plan</h2>
+        <div class="pilot-plan">
+            <ul>
+                <li><strong>30 days:</strong> pilot in selected courses; metrics: compliance, incident rate, satisfaction</li>
+                <li><strong>60 days:</strong> scale‑up, refine guidelines, follow‑up training</li>
+                <li><strong>90 days:</strong> evaluate results; go/no‑go decision for full roll‑out</li>
+            </ul>
+            <p class="note">90‑day targets are treated as pilot goals – full institutionalisation after results review.</p>
+        </div>
+    </div>
+
+    <!-- Impact–Urgency–Feasibility Matrix -->
+    <div class="recommendations-section">
+        <h2>📊 Impact–Urgency–Feasibility</h2>
+        <div class="iuf-table-wrapper">
+            <table class="iuf-table">
+                <thead>
+                    <tr>
+                        <th>Recommendation</th>
+                        <th>Impact</th>
+                        <th>Urgency</th>
+                        <th>Feasibility</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in data.recommendations %}
+                    <tr>
+                        <td>{{ rec.title or ('Recommendation ' ~ loop.index) }}</td>
+                        <td><span class="tag">{{ rec.impact or 'medium' }}</span></td>
+                        <td><span class="tag">{{ rec.urgency or (rec.priority|lower if rec.priority else 'medium') }}</span></td>
+                        <td><span class="tag">{{ rec.feasibility or 'medium' }}</span></td>
+                    </tr>
+                    {% endfor %}
+                    {% if not data.recommendations %}
+                    <tr><td colspan="4" style="text-align:center;color:#6c757d;">Recommendation details will appear here once analysis is complete.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="actions-section">
+        <h2>⚡ Next Steps</h2>
+        <div class="action-buttons">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                <span class="btn-icon">📊</span>
+                Back to Dashboard
+            </a>
+            <a href="{{ url_for('upload_file') }}" class="btn btn-secondary">
+                <span class="btn-icon">📤</span>
+                Analyse Another Document
+            </a>
+            <div class="export-buttons">
+                <button onclick="exportToPDF('{{ data.analysis.analysis_id }}')" class="btn btn-outline" data-format="pdf">
+                    <span class="btn-icon">📄</span>
+                    Export PDF
+                </button>
+                <button onclick="exportToWord('{{ data.analysis.analysis_id }}')" class="btn btn-outline" data-format="word">
+                    <span class="btn-icon">📝</span>
+                    Export Word
+                </button>
+                <button onclick="exportToExcel('{{ data.analysis.analysis_id }}')" class="btn btn-outline" data-format="excel">
+                    <span class="btn-icon">📊</span>
+                    Export Excel
+                </button>
+            </div>
+             <button onclick="validateCitations('{{ data.analysis.analysis_id }}')" class="btn btn-secondary">
+                 <span class="btn-icon">🔍</span>
+                 Validate Citations
+             </button>
+        </div>
+    </div>
+    
+    {% else %}
+    <!-- Error State -->
+    <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <h2>No Recommendation Data Available</h2>
+        <p>We couldn't load the recommendation data. This might be because:</p>
+        <ul>
+            <li>The analysis is still processing</li>
+            <li>There was an error generating recommendations</li>
+            <li>The recommendation system is temporarily unavailable</li>
+        </ul>
+        <div class="error-actions">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Return to Dashboard</a>
+            <a href="{{ url_for('upload_file') }}" class="btn btn-secondary">Try New Analysis</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.recommendations-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.recommendations-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 3rem 2rem;
+    border-radius: 20px;
+}
+
+.recommendations-header h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.summary-card, .recommendations-section, .actions-section {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    border: 1px solid #e1e8ed;
+}
+
+.narrative-section {
+    background: #ffffff; /* white content - no fill */
+    border-radius: 14px;
+    padding: 1.5rem; /* align with top-scoped rule */
+    margin-bottom: 2rem;
+    box-shadow: 0 3px 10px rgba(220, 53, 69, 0.06); /* subtle red shadow */
+    border: 2px solid #f5c2c7; /* light red border */
+}
+
+.narrative-card h2 {
+    margin-top: 0;
+}
+
+.narrative-card ul {
+    padding-left: 1.2rem;
+}
+
+/* Subtle separators for readability */
+.narrative-sep {
+    border: 0;
+    border-top: 1px solid #e7eef5;
+    margin: 1rem 0 1.25rem;
+}
+
+.narrative-footnote {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #5f6b7a;
+    background: #f8fbff;
+    border-left: 3px solid #a3c4f3;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+}
+
+.narrative-meta .badge {
+    display: inline-block;
+    margin-top: 0.5rem;
+    background: #eef2f7;
+    color: #415063;
+    border-radius: 12px;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.8rem;
+}
+
+.summary-card h2, .recommendations-section h2, .actions-section h2 {
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.summary-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.2rem 1.5rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border-left: 4px solid #3498db;
+    transition: all 0.2s ease;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.summary-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background: #f0f4f8;
+}
+
+.label {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+
+.value {
+    color: #1a202c;
+    font-size: 1.05rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.classification-badge {
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-weight: bold;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.classification-restrictive { background: #e74c3c; }
+.classification-moderate { background: #f39c12; }
+.classification-permissive { background: #2ecc71; }
+
+.recommendations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.recommendation-card {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 1.5rem;
+    border-left: 4px solid #3498db;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recommendation-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.recommendation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.recommendation-header h3 {
+    color: #2c3e50;
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.priority {
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: white;
+}
+
+.priority-high { background: #e74c3c; }
+.priority-medium { background: #f39c12; }
+.priority-low { background: #2ecc71; }
+
+.recommendation-content {
+    color: #34495e;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.implementation-steps {
+    background: white;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
+.implementation-steps h4 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.implementation-steps ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.implementation-steps li {
+    margin-bottom: 0.3rem;
+    color: #34495e;
+}
+
+.timeframe {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.timeframe-label {
+    font-weight: bold;
+    color: #7f8c8d;
+}
+
+.timeframe-value {
+    background: #3498db;
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+}
+
+.no-recommendations {
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+.no-rec-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.6;
+}
+
+.no-recommendations h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.general-recommendations {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.general-rec-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    border-left: 4px solid #f39c12;
+    text-align: left;
+}
+
+.general-rec-card h4 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.export-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.export-buttons .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+}
+
+.btn-secondary {
+    background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+    color: white;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #3498db;
+    border: 2px solid #3498db;
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.btn-icon {
+    font-size: 1.2rem;
+}
+
+.error-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.error-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+    opacity: 0.6;
+}
+
+.error-state h2 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.error-state ul {
+    text-align: left;
+    display: inline-block;
+    margin: 1rem 0;
+}
+
+.error-actions {
+    margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+    .recommendations-container {
+        padding: 1rem;
+    }
+    
+    .recommendations-header {
+        padding: 2rem 1rem;
+    }
+    
+    .recommendations-header h1 {
+        font-size: 2rem;
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .recommendations-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .general-recommendations {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script id="recs-data" type="application/json">{{ (data.recommendations or [])|tojson }}</script>
+<script>
+// Export recommendations function (safe JSON approach)
+function exportRecommendations() {
+    const analysisInfo = {
+        filename: "{{ data.analysis.filename if data and data.analysis else 'Unknown' }}",
+        classification: "{{ data.analysis.classification if data and data.analysis else 'Unknown' }}",
+        analysis_date: "{{ data.generated_date if data else 'Unknown' }}"
+    };
+
+    // Read recommendations from embedded JSON for lint-safe JS
+    let recs = [];
+    try {
+        const raw = document.getElementById('recs-data');
+        if (raw && raw.textContent) {
+            recs = JSON.parse(raw.textContent);
+        }
+    } catch (e) {
+        console.warn('Failed to parse recommendations JSON', e);
+        recs = [];
+    }
+    
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Policy Recommendations Export\n\n";
+    csvContent += "Analysis Information\n";
+    csvContent += "Filename,Classification,Analysis Date\n";
+    csvContent += `"${analysisInfo.filename}","${analysisInfo.classification}","${analysisInfo.analysis_date}"\n\n`;
+    csvContent += "Recommendations\n";
+    csvContent += "Title,Description,Priority,Timeframe\n";
+    recs.forEach(rec=>{
+        const title = (rec && rec.title) ? rec.title : '';
+        const desc = (rec && rec.description) ? rec.description : '';
+        const priority = (rec && rec.priority) ? rec.priority : 'Medium';
+        const timeframe = (rec && rec.timeframe) ? rec.timeframe : 'Not specified';
+        csvContent += `"${String(title).replace(/"/g,'""')}","${String(desc).replace(/"/g,'""')}","${priority}","${timeframe}"\n`;
+    });
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `recommendations_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Direct export functions for different formats
+async function exportToPDF(analysisId) {
+    try {
+        showExportLoading('PDF');
+        const response = await fetch(`/export/${analysisId}/pdf`);
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `recommendations_${analysisId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            hideExportLoading();
+        } else {
+            throw new Error('Export failed');
+        }
+    } catch (error) {
+        console.error('PDF export error:', error);
+        alert('Failed to export PDF. Please try again.');
+        hideExportLoading();
+    }
+}
+
+async function exportToWord(analysisId) {
+    try {
+        showExportLoading('Word');
+        const response = await fetch(`/export/${analysisId}/word`);
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `recommendations_${analysisId}.docx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            hideExportLoading();
+        } else {
+            throw new Error('Export failed');
+        }
+    } catch (error) {
+        console.error('Word export error:', error);
+        alert('Failed to export Word document. Please try again.');
+        hideExportLoading();
+    }
+}
+
+async function exportToExcel(analysisId) {
+    try {
+        showExportLoading('Excel');
+        const response = await fetch(`/export/${analysisId}/excel`);
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `recommendations_${analysisId}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            hideExportLoading();
+        } else {
+            throw new Error('Export failed');
+        }
+    } catch (error) {
+        console.error('Excel export error:', error);
+        alert('Failed to export Excel file. Please try again.');
+        hideExportLoading();
+    }
+}
+
+// Loading indicators for export
+function showExportLoading(format) {
+    const buttons = document.querySelectorAll('.export-buttons .btn');
+    buttons.forEach(btn => {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="btn-icon">⏳</span> Exporting ${format}...`;
+    });
+}
+
+function hideExportLoading() {
+    const buttons = document.querySelectorAll('.export-buttons .btn');
+    buttons.forEach(btn => {
+        btn.disabled = false;
+        // Restore original button text based on data-format attribute
+        const format = btn.getAttribute('data-format');
+        if (format === 'pdf') {
+            btn.innerHTML = '<span class="btn-icon">📄</span> Export PDF';
+        } else if (format === 'word') {
+            btn.innerHTML = '<span class="btn-icon">📝</span> Export Word';
+        } else if (format === 'excel') {
+            btn.innerHTML = '<span class="btn-icon">📊</span> Export Excel';
+        }
+    });
+}
+</script>
+
+<!-- Citation Validation Modal -->
+<div id="validationModal" class="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+  <div class="modal-content" style="background:#fff;padding:1.5rem;border-radius:8px;max-width:600px;width:90%;max-height:80%;overflow:auto;position:relative;">
+      <button type="button" aria-label="Close" style="position:absolute;top:10px;right:15px;font-size:1.5rem;cursor:pointer;background:none;border:none;" onclick="closeModal()">&times;</button>
+      <h3>Citation Validation Report</h3>
+      <div id="validationResults"></div>
+  </div>
+</div>
+
+<script>
+function closeModal(){
+    var m = document.getElementById('validationModal');
+    if(m){ m.style.display = 'none'; }
+}
+
+async function validateCitations(analysisId) {
+    try {
+        const res = await fetch(`/validate/${analysisId}`);
+        if (!res.ok) {
+            alert('Server error running validation');
+            return;
+        }
+        
+        const data = await res.json();
+        const container = document.getElementById('validationResults');
+        container.innerHTML = '';
+        
+        if (data.issues.length === 0) {
+            container.innerHTML = '<p>No recommendations found for validation.</p>';
+            document.getElementById('validationModal').style.display = 'flex';
+            return;
+        }
+        
+        // Create a summary section
+        const summaryDiv = document.createElement('div');
+        const totalItems = data.issues.length;
+        const passedItems = data.issues.filter(item => item.issues.length === 0).length;
+        const failedItems = totalItems - passedItems;
+        
+        summaryDiv.innerHTML = 
+            '<div class="validation-summary" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">' +
+            '<h3 style="margin-top: 0;">Validation Summary</h3>' +
+            '<p>Total recommendations: <strong>' + totalItems + '</strong></p>' +
+            '<p>Passed: <strong>' + passedItems + '</strong></p>' +
+            '<p>Issues found: <strong>' + failedItems + '</strong></p>' +
+            '</div>';
+        container.appendChild(summaryDiv);
+        
+        // Create a list of recommendations
+        const list = document.createElement('div');
+        list.className = 'validation-list';
+        
+        data.issues.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.style.marginBottom = '15px';
+            itemDiv.style.padding = '10px';
+            itemDiv.style.borderLeft = '4px solid ' + (item.issues.length === 0 ? '#28a745' : '#ffc107');
+            itemDiv.style.backgroundColor = item.issues.length === 0 ? '#f8fff8' : '#fffcf5';
+            
+            // Title and status
+            let html = '' +
+                '<div style="font-weight: bold; margin-bottom: 5px;">' +
+                (item.issues.length === 0 ? '✅' : '⚠️') + ' ' +
+                item.title + 
+                '</div>';
+            
+            // Show issues if any
+            if (item.issues.length > 0) {
+                html += '<div style="margin-left: 20px; margin-bottom: 10px; color: #dc3545;">';
+                html += item.issues.join('<br>');
+                html += '</div>';
+            } else {
+                html += '<div style="color: #28a745; margin-left: 20px;">✓ All citations are valid</div>';
+            }
+            
+            // Show sources with validation status
+            if (item.sources && item.sources.length > 0) {
+                html += '<div style="margin-top: 10px; margin-left: 20px;">';
+                html += '<div style="font-size: 0.9em; color: #6c757d; margin-bottom: 5px;">References:</div>';
+                html += '<ul style="margin: 0; padding-left: 20px;">';
+                
+                item.sources.forEach(source => {
+                    const isValid = source.valid;
+                    const original = source.original || 'Unknown source';
+                    const validated = source.validated || original;
+                    const year = source.year ? ' (' + source.year + ')' : '';
+                    
+                    if (isValid) {
+                        html += '<li>' + validated + year + ' <span style="color: #28a745;">✓</span></li>';
+                    } else {
+                        html += '<li>' + original + ' <span style="color: #dc3545;">✗ Not found in references</span></li>';
+                    }
+                });
+                
+                html += '</ul></div>';
+            }
+            
+            itemDiv.innerHTML = html;
+            list.appendChild(itemDiv);
+        });
+        
+        container.appendChild(list);
+        document.getElementById('validationModal').style.display = 'flex';
+    } catch (e) {
+        console.error('Validation error:', e);
+        alert('Validation failed: ' + (e.message || 'Unknown error'));
+    }
+}
+function closeModal(){document.getElementById('validationModal').style.display='none';}
+</script>
+
+{% endblock %}

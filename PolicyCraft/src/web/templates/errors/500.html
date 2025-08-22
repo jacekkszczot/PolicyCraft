@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - PolicyCraft{% endblock %}
+
+{% block content %}
+<!--    PolicyCraft - 500 Error Page Template    -->
+    
+    This template is displayed when an unexpected server error occurs.
+    It provides a user-friendly error message and helpful navigation options
+    while preventing exposure of sensitive system information.
+    
+    Table of Contents:
+    1. Error Code Display
+    2. Error Message
+    3. Navigation Actions
+    
+    Dependencies:
+    - base.html template
+    - Bootstrap 5.3.0 (CSS/JS)
+    - Custom CSS from static/css/
+    - Server-side error logging system
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+
+<div class="error-container">
+    <div class="error-content">
+        <h1 class="error-code">500</h1>
+        <h2 class="error-title">Internal Server Error</h2>
+        <p class="error-message">Something went wrong on our end. Please try again later.</p>
+        
+        <div class="error-actions">
+            <a href="{{ url_for('index') }}" class="btn btn-primary">Go Home</a>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Dashboard</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

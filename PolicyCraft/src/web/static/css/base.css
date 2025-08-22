@@ -1,0 +1,147 @@
+/**
+ * ============================================================================
+ * PolicyCraft - Base Styles
+ * ============================================================================
+ * 
+ * This file contains the foundational styles for the PolicyCraft application,
+ * including CSS resets, typography rules, and basic layout structures that
+ * provide a consistent look and feel across all pages. These styles serve as
+ * the core styling layer that other component-specific styles build upon.
+ *
+ * Table of Contents:
+ * 1. CSS Custom Properties (Variables)
+ * 2. CSS Resets & Normalization
+ * 3. Typography
+ * 4. Base Elements
+ * 5. Layout Components
+ * 6. Profile Page Styles
+ * 7. Utility Classes
+ *
+ * Key Features:
+ * - Modern CSS reset for consistent cross-browser rendering
+ * - Responsive typography with fluid type scaling
+ * - Consistent spacing system using CSS custom properties
+ * - Accessible focus states and interactive elements
+ * - Print styles for better document output
+ * - Dark mode support via CSS custom properties
+ *
+ * Organization:
+ * - Variables are defined at the top for easy customization
+ * - Styles progress from most generic to most specific
+ * - Related styles are grouped together with clear section headers
+ * - All selectors are prefixed with appropriate namespaces
+ *
+ * Best Practices:
+ * - Use CSS Custom Properties for theming and consistent values
+ * - Follow BEM (Block Element Modifier) naming convention
+ * - Keep selectors specific but not overly specific
+ * - Group related properties together (layout, typography, colors, etc.)
+ * - Use relative units (rem, em) for better accessibility
+ * - Implement prefers-reduced-motion for animations
+ * - Ensure sufficient color contrast for readability
+ *
+ * Dependencies:
+ * - variables.css for color schemes and design tokens
+ * - layout.css for structural components
+ * - responsive.css for media query breakpoints
+ *
+ * Author: Jacek Robert Kszczot
+ * Project: MSc Data Science & AI - COM7016
+ * University: Leeds Trinity University
+ * ============================================================================
+ */
+
+/* Import variables first to ensure they're available to all styles */
+@import 'variables.css';
+
+/* === Profile Page === */
+.profile-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.profile-card {
+    background: #fff;
+    padding: 1.75rem 2rem;
+    margin: 1.75rem 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.welcome-text {
+    font-size: 1.1rem;
+    margin-bottom: 0.4rem;
+    color: #555;
+}
+
+.profile-header h2 {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-weight: 400;
+    font-style: italic;
+    margin-bottom: 0.5rem;
+}
+
+.profile-card h3 {
+    margin-bottom: 1rem;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.profile-form .form-row {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-form label {
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+.profile-form input {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #fff;
+    background: #0077cc;
+    text-align: center;
+}
+
+.btn-primary {background: #0077cc;}
+.btn-secondary {background: #555;}
+.btn-danger {background: #d33;}
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--background);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}

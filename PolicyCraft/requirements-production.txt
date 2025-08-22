@@ -30,6 +30,10 @@ nltk>=3.8.1
 contractions>=0.1.73
 sentence-transformers>=2.2.0
 
+# ===== Core ML Dependencies =====
+torch>=2.0.0  # PyTorch - required by sentence-transformers and spaCy
+thinc>=8.0.0  # Neural network library required by spaCy
+
 # ===== Document Processing =====
 pypdf>=6.0.0
 python-docx>=1.1.0
@@ -52,6 +56,11 @@ kaleido>=0.2.1
 # ===== Production Server =====
 gunicorn>=21.2.0
 
+# ===== Utilities =====
+tqdm>=4.66.0
+python-slugify>=8.0.1
+typer>=0.9.0
+
 # IMPORTANT: POST-INSTALLATION STEPS
 # ===================================
 # After installing requirements, run these commands:
@@ -62,10 +71,11 @@ gunicorn>=21.2.0
 # 2. Download NLTK data:
 #    python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('averaged_perceptron_tagger')"
 #
-# 3. Install system dependencies for OCR (macOS):
-#    brew install tesseract poppler
-#    # For Ubuntu/Debian: sudo apt-get install tesseract-ocr poppler-utils
-#    # For Windows: Download from https://github.com/UB-Mannheim/tesseract/wiki
+# 3. Install system dependencies for OCR (Ubuntu/Debian):
+#    sudo apt-get update
+#    sudo apt-get install tesseract-ocr poppler-utils
+#    # For CentOS/RHEL: sudo yum install tesseract poppler-utils
+#    # For macOS: brew install tesseract poppler
 #
 # 4. Set environment variables (required for production):
 #    echo "SECRET_KEY=your-secret-key-here" >> .env

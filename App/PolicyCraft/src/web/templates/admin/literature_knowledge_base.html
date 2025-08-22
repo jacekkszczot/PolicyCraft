@@ -1,0 +1,706 @@
+<!--
+    PolicyCraft - Knowledge Base Management Interface
+    
+    This administrative interface provides comprehensive management of the academic
+    literature knowledge repository including statistics, version control, and
+    system health monitoring for the PolicyCraft knowledge base.
+    
+    Key Features:
+    - Knowledge base statistics and document tracking
+    - Version history and backup management
+    - Recent updates monitoring with quality metrics
+    - System health indicators and processing capabilities
+    - Export and backup functionality for data management
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
+{% extends 'base.html' %}
+
+{% block title %}Knowledge Base Management - PolicyCraft Admin{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-content">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">📚 Knowledge Base Management</h1>
+                <p class="hero-subtitle">Monitor and manage the academic literature repository</p>
+            </div>
+        </div>
+        
+        <!-- Navigation Breadcrumb -->
+        <nav class="breadcrumb-nav">
+            <a href="{{ url_for('admin.dashboard') }}" class="breadcrumb-link">Admin Dashboard</a>
+            <span class="breadcrumb-separator">→</span>
+            <a href="{{ url_for('admin.literature_dashboard') }}" class="breadcrumb-link">Literature Management</a>
+            <span class="breadcrumb-separator">→</span>
+            <span class="breadcrumb-current">Knowledge Base</span>
+        </nav>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📄</div>
+                <div class="stat-value">{{ kb_status.knowledge_base.total_documents }}</div>
+                <div class="stat-label">Total Documents</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">🔄</div>
+                <div class="stat-value stat-success">{{ kb_status.knowledge_base.version_count }}</div>
+                <div class="stat-label">Version History</div>
+            </div>
+            
+            <div class="stat-card clickable-stat" onclick="showBackupModal()">
+                <div class="stat-icon">💾</div>
+                <div class="stat-value stat-purple">{{ kb_status.knowledge_base.backup_count }}</div>
+                <div class="stat-label">Backups Available</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">⏰</div>
+                <div class="stat-value stat-warning">
+                    {% if kb_status.knowledge_base.last_update != 'Never' %}
+                        {{ kb_status.knowledge_base.last_update[:10] }}
+                    {% else %}
+                        Never
+                    {% endif %}
+                </div>
+                <div class="stat-label">Last Update</div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="{{ url_for('admin.literature_upload') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Document
+            </a>
+            <a href="{{ url_for('admin.literature_cleanup') }}" class="btn btn-danger">
+                <i class="fas fa-trash-alt"></i> Cleanup Documents
+            </a>
+        </div>
+
+        <!-- Recent Updates Table -->
+        <div class="table-section">
+            <h4 class="table-title" style="text-align: center; margin-top: 2.5rem; margin-bottom: 2rem;">Recent Knowledge Base Updates</h4>
+            {% if recent_updates %}
+            <div class="table-container">
+                <table class="updates-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Document</th>
+                            <th>Action</th>
+                            <th>Quality</th>
+                            <th>Insights</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for update in recent_updates %}
+                        <tr>
+                            <td class="timestamp-cell">{{ update.timestamp[:19] if update.timestamp }}</td>
+                            <td class="document-cell">
+                                <div class="document-title">
+                                    {{ update.filename or update.document_id or "Unknown document" }}
+                                </div>
+                                <div class="document-meta">
+                                    {% if update.metadata and update.metadata.author %}
+                                        <span>{{ update.metadata.author }}</span>
+                                    {% endif %}
+                                    
+                                    {# University/Institution #}
+                                    {% if update.metadata and (update.metadata.university or update.metadata.institution or update.metadata.affiliation) %}
+                                        {% if update.metadata and update.metadata.author %}
+                                            <span class="meta-separator"> • </span>
+                                        {% endif %}
+                                        <span>{{ update.metadata.university or update.metadata.institution or update.metadata.affiliation }}</span>
+                                    {% endif %}
+              
+                                    {# Publication year #}
+                                    {% if update.metadata and (update.metadata.publication_year or update.metadata.publication_date) %}
+                                        {% if (update.metadata and update.metadata.author) or (update.metadata and (update.metadata.university or update.metadata.institution or update.metadata.affiliation)) %}
+                                            <span class="meta-separator"> • </span>
+                                        {% endif %}
+                                        <span>{{ (update.metadata.publication_year or update.metadata.publication_date)[:4] }}</span>
+                                    {% endif %}
+                                </div>
+            
+            {# Show document type if available #}
+            {% if update.metadata is defined and update.metadata is mapping and update.metadata.document_type %}
+              <div class="document-type">
+                <span class="type-badge">
+                  {{ update.metadata.document_type|title }}
+                </span>
+              </div>
+            {% endif %}
+          </td>
+                            <td class="action-cell">
+                                <span class="action-badge action-{% if update.action == 'document_merged' %}merged{% elif update.action == 'new_document_created' %}new{% elif update.action == 'flagged_for_review' %}review{% else %}default{% endif %}">
+                                    {% if update.action == 'document_merged' %}
+                                        Merged
+                                    {% elif update.action == 'new_document_created' %}
+                                        New
+                                    {% elif update.action == 'flagged_for_review' %}
+                                        Review
+                                    {% elif update.action %}
+                                        {{ update.action|replace('_', ' ')|title }}
+                                    {% else %}
+                                        Processed
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="quality-cell">
+                                {% if update.quality_score %}
+                                <div class="quality-container">
+                                    <div class="progress-wrapper">
+                                        <div class="progress-bar-bg">
+                                              <div class="progress-bar-fill" style="width: {{ update.quality_score }}%;"></div>
+                                        </div>
+                                    </div>
+                                    <span class="quality-percentage">{{ update.quality_score }}%</span>
+                                </div>
+                                {% else %}
+                                <span class="na-text">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td class="insights-cell">
+                                <span class="insights-count">{{ update.insights_count if update.insights_count else 10 }}</span>
+                            </td>
+                            <td class="actions-cell">
+                                <a href="{{ url_for('admin.literature_document_detail', doc_id=update.document_id) }}" class="btn btn-sm btn-outline-primary details-btn">
+                                    <i class="fas fa-eye"></i> Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🗂️</div>
+                <h4 class="empty-title">No Updates Found</h4>
+                <p class="empty-text">The knowledge base hasn't been updated yet.</p>
+                <a href="{{ url_for('admin.literature_upload') }}" class="btn btn-primary">Upload First Document</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- System Health Section -->
+        <div class="system-health" style="margin: 3rem 2rem 2rem 2rem !important;">
+            <h4 class="health-title">System Health & Information</h4>
+            <div class="health-grid">
+                <div class="health-section">
+                    <h5 class="section-subtitle">Processing Capabilities</h5>
+                    <ul class="capabilities-list">
+                        <li>✅ PDF text extraction</li>
+                        <li>✅ NLP insight extraction</li>
+                        <li>✅ Quality assessment</li>
+                        <li>{% if kb_status.knowledge_base.total_documents > 0 %}✅{% else %}⚠️{% endif %} Similarity analysis</li>
+                        <li>✅ Version control</li>
+                    </ul>
+                </div>
+                <div class="health-section">
+                    <h5 class="section-subtitle">System Status</h5>
+                    <table class="status-table">
+                        <thead>
+                            <tr>
+                                <th scope="col" style="padding:0.25rem 0;">Property</th>
+                                <th scope="col" style="padding:0.25rem 0;">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            <tr>
+              <td style="padding:0.25rem 0;">Overall Status:</td>
+              <td style="padding:0.25rem 0;"><span style="color:#28a745; font-weight:bold;">{{ kb_status.system_status|title }}</span></td>
+            </tr>
+            <tr>
+              <td style="padding:0.25rem 0;">Max Upload Size:</td>
+              <td style="padding:0.25rem 0;">{{ kb_status.max_file_size_mb }}MB</td>
+            </tr>
+            <tr>
+              <td style="padding:0.25rem 0;">Supported Formats:</td>
+              <td style="padding:0.25rem 0;">
+                {% for format in kb_status.supported_formats %}{{ format }}{% if not loop.last %}, {% endif %}{% endfor %}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0.25rem 0;">Last Health Check:</td>
+              <td style="padding:0.25rem 0;">{{ kb_status.last_check[:19] }}</td>
+            </tr>
+                        </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    </div>
+</div>
+
+<style>
+/* Knowledge Base Management Styles */
+.admin-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.admin-content {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+/* Hero section uses global styles from layout.css */
+
+.hero-title {
+    font-size: 2.5rem;
+    font-weight: 500;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.breadcrumb-nav {
+    padding: 0 1rem 1rem 1rem;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 2rem;
+}
+
+.breadcrumb-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.breadcrumb-separator {
+    margin: 0 0.5rem;
+    color: #6c757d;
+}
+
+.breadcrumb-current {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem;
+    margin-bottom: 3rem;
+}
+
+.table-container {
+    margin: 0 2rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    transition: all 0.2s ease;
+    border: 1px solid #e9ecef;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.8;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0077cc;
+    margin-bottom: 0.5rem;
+    line-height: 1;
+}
+
+.stat-success {
+    color: #28a745;
+}
+
+.stat-purple {
+    color: #6f42c1;
+}
+
+.stat-warning {
+    color: #ffc107;
+    font-size: 1.2rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Cell-specific styles */
+.updates-table td {
+    padding: 0.75rem;
+    vertical-align: middle;
+    font-size: 0.85rem;
+    color: #4a5568;
+    border-bottom: 1px solid #f1f5f9;
+    border-right: 1px solid #f1f5f9;
+    background-color: #fafbfc;
+}
+
+.updates-table tr:hover td {
+    background-color: #f1f5f9;
+}
+
+.updates-table tr:nth-child(even) td {
+    background-color: #f8fafc;
+}
+
+.timestamp-cell {
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    color: #718096;
+    white-space: nowrap;
+    width: 120px;
+    border-right: 1px solid #e2e8f0 !important;
+}
+
+.document-cell {
+    max-width: 250px;
+    width: 35%;
+    border-right: 1px solid #e2e8f0 !important;
+}
+
+.document-title {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+    word-break: break-word;
+    font-size: 0.8rem;
+    line-height: 1.3;
+}
+
+.document-meta {
+    font-size: 0.7rem;
+    color: #718096;
+    line-height: 1.2;
+}
+
+.meta-separator {
+    color: #cbd5e0;
+    margin: 0 0.25rem;
+}
+
+.action-cell {
+    width: 15%;
+    text-align: center;
+    border-right: 1px solid #e2e8f0 !important;
+}
+
+.quality-cell {
+    width: 15%;
+    text-align: center;
+    border-right: 1px solid #e2e8f0 !important;
+}
+
+.insights-cell {
+    width: 10%;
+    text-align: center;
+    border-right: 1px solid #e2e8f0 !important;
+}
+
+.actions-cell {
+    width: 15%;
+    text-align: center;
+}
+
+.document-type {
+    margin-top: 0.5rem;
+}
+
+.type-badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-container {
+        margin: 1rem auto;
+        padding: 0 0.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        margin: 1rem;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .breadcrumb-nav {
+        padding: 0 1rem 1rem 1rem;
+    }
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #ffffff;
+    margin: 5% auto;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(-50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.close {
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #aaa;
+    transition: color 0.2s;
+}
+
+.close:hover {
+    color: #000;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+/* Backup List Styles */
+.backup-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.backup-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: #f8f9fa;
+    transition: all 0.2s;
+}
+
+.backup-item:hover {
+    background: #e9ecef;
+    border-color: #007bff;
+}
+
+.backup-info {
+    flex: 1;
+}
+
+.backup-info strong {
+    color: #2c3e50;
+}
+
+.backup-info small {
+    color: #666;
+    display: block;
+    margin-top: 0.25rem;
+}
+
+.backup-actions {
+    margin-left: 1rem;
+}
+
+.clickable-stat {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.clickable-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+</style>
+
+<!-- Backup Management Modal -->
+<div id="backupModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📁 Backup Management</h3>
+            <span class="close" onclick="closeBackupModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="backupList">
+                <p>Loading available backups...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function createBackup() {
+    alert('Backup creation functionality will be implemented in future version.');
+}
+
+function showBackupModal() {
+    document.getElementById('backupModal').style.display = 'block';
+    loadAvailableBackups();
+}
+
+function closeBackupModal() {
+    document.getElementById('backupModal').style.display = 'none';
+}
+
+function loadAvailableBackups() {
+    fetch('/admin/get-available-backups', {
+        credentials: 'same-origin'  // Include cookies
+    })
+        .then(response => response.json())
+        .then(data => {
+            const backupList = document.getElementById('backupList');
+            
+            if (data.success && data.backups.length > 0) {
+                let html = '<div class="backup-list">';
+                
+                data.backups.forEach(backup => {
+                    const creationDate = new Date(backup.creation_time).toLocaleString();
+                    html += `
+                        <div class="backup-item">
+                            <div class="backup-info">
+                                <strong>📦 Backup: ${backup.id}</strong><br>
+                                <small>Created: ${creationDate}</small><br>
+                                <small>Files: ${backup.file_count}, Size: ${backup.size_mb} MB</small>
+                            </div>
+                            <div class="backup-actions">
+                                <button class="btn btn-primary btn-sm" onclick="restoreBackup('${backup.id}')">
+                                    🔄 Restore
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                backupList.innerHTML = html;
+            } else {
+                backupList.innerHTML = '<p>❌ No backups available.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading backups:', error);
+            document.getElementById('backupList').innerHTML = '<p>❌ Error loading backups.</p>';
+        });
+}
+
+function restoreBackup(backupId) {
+    if (!confirm(`Are you sure you want to restore backup: ${backupId}?\n\nThis will replace the current knowledge base. A backup of the current state will be created first.`)) {
+        return;
+    }
+    
+    const button = event.target;
+    button.disabled = true;
+    button.innerHTML = '🔄 Restoring...';
+    
+    fetch('/admin/restore-backup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ backup_id: backupId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`✅ Backup restored successfully!\n\nRestored ${data.restored_files.length} files.\nCurrent state backed up as: ${data.current_backup_id}`);
+            location.reload();
+        } else {
+            alert(`❌ Error restoring backup: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error restoring backup:', error);
+        alert('❌ Error restoring backup. Check console for details.');
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.innerHTML = '🔄 Restore';
+    });
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('backupModal');
+    if (event.target == modal) {
+        closeBackupModal();
+    }
+}
+</script>
+
+        <!-- Back to Literature Management Button -->
+        <div class="form-actions" style="text-align: center; margin-top: 2rem; padding: 2rem; border-top: 1px solid #e9ecef;">
+            <a href="{{ url_for('admin.literature_dashboard') }}" class="btn btn-secondary">
+                ← Back to Literature Management
+            </a>
+        </div>
+
+{% endblock %}

@@ -1,0 +1,954 @@
+{% extends "base.html" %}
+
+{% block title %}Export Recommendations - PolicyCraft{% endblock %}
+
+{% block extra_head %}
+<!-- CSS for export styling -->
+{% endblock %}
+
+{% block extra_css %}
+<!-- Plotly CSS -->
+<style>
+    .js-plotly-plot .plotly .modebar {
+        z-index: 1000;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- No additional JS needed as Plotly is already loaded in extra_head -->
+{% endblock %}
+
+{% block content %}
+<!-- Load Plotly.js directly in content block to ensure it's available -->
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+
+<!-- 
+    PolicyCraft - Export Recommendations Page
+    
+    This page provides a comprehensive export view of all recommendations and analysis results
+    for a specific policy document. It is designed to be printer-friendly and exportable
+    to various formats (PDF, Word, Excel).
+    
+    Key Components:
+    1. Document Information - Overview of the analysed document
+    2. Analysis Results - Key findings and scores
+    3. Visualisations - Charts and graphs from the analysis
+    4. Strategic Recommendations - All recommendations with details
+    
+    Features:
+    - Comprehensive view of all data in one page
+    - Export buttons for different formats
+    - Printer-friendly layout
+    - Responsive design
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">Policy Analysis Report</h1>
+        <h2 class="hero-subtitle">Complete recommendations and analysis results</h2>
+    </div>
+</section>
+
+<div class="export-container">
+    {% if data and data.analysis %}
+    
+    <!-- Export Controls -->
+    <div class="export-controls">
+        <div class="export-buttons">
+            <button onclick="exportToPDF()" class="btn btn-primary">
+                <span class="btn-icon">📄</span>
+                Export to PDF
+            </button>
+            <button onclick="exportToWord()" class="btn btn-secondary">
+                <span class="btn-icon">📝</span>
+                Export to Word
+            </button>
+            <button onclick="exportToExcel()" class="btn btn-outline">
+                <span class="btn-icon">📊</span>
+                Export to Excel
+            </button>
+            <button onclick="window.print()" class="btn btn-outline">
+                <span class="btn-icon">🖨️</span>
+                Print
+            </button>
+        </div>
+        <div class="back-button">
+            <a href="{{ url_for('get_recommendations', analysis_id=data.analysis.analysis_id) }}" class="btn btn-text">
+                <span class="btn-icon">⬅️</span>
+                Back to Recommendations
+            </a>
+        </div>
+    </div>
+    
+    <!-- Recommendation (Narrative Brief) -->
+    <div class="export-section">
+        <div class="export-header">
+            <h2>📝 Recommendation</h2>
+        </div>
+        <div class="export-content">
+            {% if data.narrative and data.narrative.html %}
+            <div class="narrative-section">
+                {{ data.narrative.html | safe }}
+                <div class="narrative-meta" style="margin-top:.75rem;font-size:.9rem;color:#5f6b7a;">
+                    <span class="badge">Style: {{ data.narrative.style }}</span>
+                </div>
+            </div>
+            {% else %}
+            <div class="narrative-section" style="border-color:#ffe082;">
+                <p>The narrative has not been returned by the engine yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Document Information -->
+    <div class="export-section">
+        <div class="export-header">
+            <h2>📋 Document Information</h2>
+        </div>
+        <div class="export-content">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">Document:</span>
+                    <span class="value">{{ data.analysis.filename.split('_', 2)[-1] if '_' in data.analysis.filename else data.analysis.filename }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Classification:</span>
+                    <span class="value classification-badge classification-{{ data.analysis.classification.lower() }}">
+                        {{ data.analysis.classification }}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Generated:</span>
+                    <span class="value">{{ data.generated_date }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Total Recommendations:</span>
+                    <span class="value">{{ data.recommendations|length if data.recommendations else 0 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Analysis Results -->
+    {% if data.analysis.themes %}
+    <div class="export-section">
+        <div class="export-header">
+            <h2>📊 Analysis Results</h2>
+        </div>
+        <div class="export-content">
+            <div class="themes-section">
+                <h3>Key Themes</h3>
+                <div class="themes-grid">
+                    {% for theme in data.analysis.themes[:8] %}
+                    <div class="theme-item">
+                        <div class="theme-header">
+                            <span class="theme-name">{{ theme.name }}</span>
+                            <span class="theme-score">{{ theme.score }}</span>
+                        </div>
+                        <div class="theme-confidence">
+                            <div class="confidence-bar mini">
+                                <div class="confidence-fill" style="width: {{ theme.confidence }}%"></div>
+                            </div>
+                            <span>{{ theme.confidence }}%</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            {% if data.analysis.text_stats %}
+            <div class="stats-section">
+                <h3>Text Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value">{{ data.analysis.text_stats.word_count }}</span>
+                        <span class="stat-label">Words</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ data.analysis.text_stats.sentence_count }}</span>
+                        <span class="stat-label">Sentences</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ "%.1f"|format(data.analysis.text_stats.avg_sentence_length) }}</span>
+                        <span class="stat-label">Average Sentence Length</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ "%.1f"|format(data.analysis.text_stats.avg_word_length) }}</span>
+                        <span class="stat-label">Average Word Length</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Visualisations -->
+    {% if data.charts %}
+    <div class="export-section">
+        <div class="export-header">
+            <h2>📈 Visualisations</h2>
+        </div>
+        <div class="export-content">
+            <div class="charts-grid">
+                {% if data.charts.themes_bar %}
+                <div class="chart-container">
+                    <h4>Theme Scores</h4>
+                    <div id="themesChart"></div>
+                </div>
+                {% endif %}
+                
+                {% if data.charts.classification_gauge %}
+                <div class="chart-container">
+                    <h4>Classification Confidence</h4>
+                    <div id="classificationGauge"></div>
+                </div>
+                {% endif %}
+                
+                {% if data.charts.themes_pie %}
+                <div class="chart-container">
+                    <h4>Theme Distribution</h4>
+                    <div id="themePieChart"></div>
+                </div>
+                {% endif %}
+                
+                {% if data.charts.ethics_radar %}
+                <div class="chart-container">
+                    <h4>Ethical Dimension Coverage</h4>
+                    <div id="ethicsRadarChart"></div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Recommendations -->
+    <div class="export-section">
+        <div class="export-header">
+            <h2>💡 Strategic Recommendations</h2>
+        </div>
+        <div class="export-content">
+            {% if data.recommendations and data.recommendations|length > 0 %}
+            <div class="recommendations-grid">
+                {% for recommendation in data.recommendations %}
+                <div class="recommendation-item">
+                    <div class="recommendation-header">
+                        <h3>{{ recommendation.title if recommendation.title else 'Recommendation ' + loop.index|string }}</h3>
+                        {% if recommendation.priority %}
+                        <span class="priority priority-{{ recommendation.priority.lower() }}">
+                            {{ recommendation.priority }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="recommendation-content">
+                        {% if recommendation.description %}
+                        <p>{{ recommendation.description }}</p>
+                        {% else %}
+                        <p>{{ recommendation }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    {% if recommendation.implementation_steps %}
+                    <div class="implementation-steps">
+                        <h4>Implementation Steps:</h4>
+                        <ol>
+                            {% for step in recommendation.implementation_steps %}
+                            <li>{{ step }}</li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                    {% endif %}
+                    
+                    {% if recommendation.sources or recommendation.source %}
+                    <div class="sources">
+                        <h4>Sources:</h4>
+                        <ul>
+                            {% if recommendation.sources %}
+                                {% for src in recommendation.sources %}
+                                <li>{{ src }}</li>
+                                {% endfor %}
+                            {% elif recommendation.source %}
+                                <li>{{ recommendation.source }}</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    {% if recommendation.timeframe %}
+                    <div class="timeframe">
+                        <span class="timeframe-label">⏱️ Timeframe:</span>
+                        <span class="timeframe-value">{{ recommendation.timeframe }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-recommendations">
+                <p>No specific recommendations are available for this policy document.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="export-footer">
+        <p>Generated by PolicyCraft on {{ data.generated_date }}</p>
+        <p>© {{ data.generated_date.split('-')[0] }} PolicyCraft - Evidence-Based Policy Analysis</p>
+    </div>
+    
+    {% else %}
+    <!-- Error State -->
+    <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <h2>No Data Available</h2>
+        <p>We couldn't load the recommendation data for export. Please try again or return to the dashboard.</p>
+        <div class="error-actions">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Return to Dashboard</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+/* Print-specific styles */
+@media print {
+    .export-controls, .hero, .btn {
+        display: none !important;
+    }
+    
+    body, html {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background: white;
+    }
+    
+    .export-container {
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        box-shadow: none;
+    }
+    
+    .export-section {
+        page-break-inside: avoid;
+        margin-bottom: 20px;
+    }
+    
+    .recommendation-item {
+        page-break-inside: avoid;
+    }
+}
+
+/* Regular styles */
+.export-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.export-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    background: white;
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.export-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.export-section {
+    background: white;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    border: 1px solid #e1e8ed;
+    overflow: hidden;
+}
+
+.export-header {
+    background: #f8f9fa;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e1e8ed;
+}
+
+.export-header h2 {
+    color: #2c3e50;
+    margin: 0;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.export-content {
+    padding: 2rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.info-item {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border-left: 4px solid #3498db;
+}
+
+.label {
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 0.95rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+/* Narrative brief styling (border-only, light red) */
+.narrative-section {
+    background: #ffffff; /* no fill */
+    border: 2px solid #f5c2c7; /* light red border */
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 3px 10px rgba(220, 53, 69, 0.06);
+}
+.narrative-section h2,
+.narrative-section h3,
+.narrative-section h4 {
+    color: #1d3557;
+}
+.narrative-section ul,
+.narrative-section ol { padding-left: 1.25rem; }
+.narrative-section li { margin: .3rem 0; }
+
+.value {
+    color: #1a202c;
+    font-size: 1.05rem;
+    font-weight: 500;
+}
+
+.classification-badge {
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-weight: bold;
+    color: white;
+    font-size: 0.9rem;
+    display: inline-block;
+}
+
+.classification-restrictive { background: #e74c3c; }
+.classification-moderate { background: #f39c12; }
+.classification-permissive { background: #2ecc71; }
+
+.themes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.theme-item {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 10px;
+    border-left: 4px solid #e74c3c;
+}
+
+.theme-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.theme-name {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.theme-score {
+    background: #3498db;
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+}
+
+.theme-confidence {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.confidence-bar {
+    height: 10px;
+    background: #ecf0f1;
+    border-radius: 5px;
+    overflow: hidden;
+    flex-grow: 1;
+}
+
+.confidence-fill {
+    height: 100%;
+    background-color: #3498db;
+    border-radius: 4px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.stat-item {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+    border-bottom: 4px solid #3498db;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #2c3e50;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.chart-container {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.chart-container h4 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.recommendations-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .recommendations-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.recommendation-item {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 1.5rem;
+    border-left: 4px solid #3498db;
+}
+
+.recommendation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.recommendation-header h3 {
+    color: #2c3e50;
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.priority {
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: white;
+}
+
+.priority-high { background: #e74c3c; }
+.priority-medium { background: #f39c12; }
+.priority-low { background: #2ecc71; }
+
+.recommendation-content {
+    color: #34495e;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.implementation-steps {
+    background: white;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
+.implementation-steps h4, .sources h4 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.implementation-steps ol {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.implementation-steps li {
+    margin-bottom: 0.5rem;
+    color: #34495e;
+}
+
+.sources {
+    background: white;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
+.sources ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.sources li {
+    margin-bottom: 0.3rem;
+    color: #34495e;
+    font-style: italic;
+}
+
+.timeframe {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.timeframe-label {
+    font-weight: bold;
+    color: #7f8c8d;
+}
+
+.timeframe-value {
+    background: #3498db;
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+}
+
+.export-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e1e8ed;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.error-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.error-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.error-actions {
+    margin-top: 2rem;
+}
+
+.btn-text {
+    background: transparent;
+    color: #3498db;
+    box-shadow: none;
+}
+
+.btn-text:hover {
+    background: #f8f9fa;
+}
+</style>
+
+<script>
+
+
+// Export functions
+function exportToPDF() {
+    // Show loading indicator
+    showLoading('Generating PDF...');
+    
+    // Send request to server to generate PDF
+    fetch('{{ url_for("export_pdf", analysis_id=data.analysis.analysis_id) }}')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'PolicyCraft_Report_{{ data.analysis.analysis_id }}.pdf';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            hideLoading();
+        })
+        .catch(error => {
+            console.error('Error generating PDF:', error);
+            hideLoading();
+            alert('Error generating PDF. Please try again.');
+        });
+}
+
+function exportToWord() {
+    // Show loading indicator
+    showLoading('Generating Word document...');
+    
+    // Send request to server to generate Word document
+    fetch('{{ url_for("export_word", analysis_id=data.analysis.analysis_id) }}')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'PolicyCraft_Report_{{ data.analysis.analysis_id }}.docx';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            hideLoading();
+        })
+        .catch(error => {
+            console.error('Error generating Word document:', error);
+            hideLoading();
+            alert('Error generating Word document. Please try again.');
+        });
+}
+
+function exportToExcel() {
+    // Show loading indicator
+    showLoading('Generating Excel spreadsheet...');
+    
+    // Send request to server to generate Excel spreadsheet
+    fetch('{{ url_for("export_excel", analysis_id=data.analysis.analysis_id) }}')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'PolicyCraft_Report_{{ data.analysis.analysis_id }}.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            hideLoading();
+        })
+        .catch(error => {
+            console.error('Error generating Excel spreadsheet:', error);
+            hideLoading();
+            alert('Error generating Excel spreadsheet. Please try again.');
+        });
+}
+
+// Loading indicator functions
+function showLoading(message) {
+    // Create loading overlay if it doesn't exist
+    if (!document.getElementById('loadingOverlay')) {
+        const overlay = document.createElement('div');
+        overlay.id = 'loadingOverlay';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.background = 'rgba(0,0,0,0.7)';
+        overlay.style.display = 'flex';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        overlay.style.zIndex = '9999';
+        
+        const spinner = document.createElement('div');
+        spinner.className = 'loading-spinner';
+        spinner.innerHTML = `
+            <div style="text-align: center; color: white;">
+                <div style="border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 2s linear infinite; margin: 0 auto;"></div>
+                <p style="margin-top: 15px; font-weight: bold;">${message || 'Loading...'}</p>
+            </div>
+        `;
+        
+        overlay.appendChild(spinner);
+        document.body.appendChild(overlay);
+        
+        // Add animation style
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    } else {
+        // Update message if overlay exists
+        const spinner = document.querySelector('#loadingOverlay .loading-spinner');
+        spinner.innerHTML = `
+            <div style="text-align: center; color: white;">
+                <div style="border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 2s linear infinite; margin: 0 auto;"></div>
+                <p style="margin-top: 15px; font-weight: bold;">${message || 'Loading...'}</p>
+            </div>
+        `;
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+</script>
+
+<!-- Initialise chart data -->
+<script type="text/javascript">
+    // Store chart data in global variables to avoid Jinja2/JS conflicts
+    var chartData = {
+        themesBar: null,
+        classificationGauge: null,
+        themesPie: null,
+        ethicsRadar: null
+    };
+</script>
+
+<!-- Initialise chart data from server using separate script blocks to avoid Jinja2/JS conflicts -->
+{% if data.charts.themes_bar %}
+<script type="text/javascript">
+    chartData.themesBar = JSON.parse('{{ data.charts.themes_bar|safe }}');
+</script>
+{% endif %}
+
+{% if data.charts.classification_gauge %}
+<script type="text/javascript">
+    chartData.classificationGauge = JSON.parse('{{ data.charts.classification_gauge|safe }}');
+</script>
+{% endif %}
+
+{% if data.charts.themes_pie %}
+<script type="text/javascript">
+    chartData.themesPie = JSON.parse('{{ data.charts.themes_pie|safe }}');
+</script>
+{% endif %}
+
+{% if data.charts.ethics_radar %}
+<script type="text/javascript">
+    chartData.ethicsRadar = JSON.parse('{{ data.charts.ethics_radar|safe }}');
+</script>
+{% endif %}
+
+<!-- Chart rendering script -->
+<script type="text/javascript">
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if Plotly is loaded
+        function checkPlotly() {
+            if (typeof Plotly !== 'undefined') {
+                console.log('Plotly is loaded, rendering charts...');
+                renderAllCharts();
+            } else {
+                console.log('Plotly not loaded yet, waiting...');
+                setTimeout(checkPlotly, 200);
+            }
+        }
+
+        // Function to render all charts
+        function renderAllCharts() {
+            try {
+                console.log('Chart data available:', Object.keys(chartData));
+                
+                // Theme bar chart
+                if (document.getElementById('themesChart') && chartData.themesBar) {
+                    console.log('Rendering themes bar chart with data:', chartData.themesBar);
+                    Plotly.newPlot('themesChart', chartData.themesBar.data, chartData.themesBar.layout);
+                }
+
+                // Classification gauge
+                if (document.getElementById('classificationGauge') && chartData.classificationGauge) {
+                    console.log('Rendering classification gauge with data:', chartData.classificationGauge);
+                    Plotly.newPlot('classificationGauge', chartData.classificationGauge.data, chartData.classificationGauge.layout);
+                }
+
+                // Theme pie chart
+                if (document.getElementById('themePieChart') && chartData.themesPie) {
+                    console.log('Rendering themes pie chart with data:', chartData.themesPie);
+                    Plotly.newPlot('themePieChart', chartData.themesPie.data, chartData.themesPie.layout);
+                }
+
+                // Ethics radar chart
+                if (document.getElementById('ethicsRadarChart') && chartData.ethicsRadar) {
+                    console.log('Rendering ethics radar chart with data:', chartData.ethicsRadar);
+                    Plotly.newPlot('ethicsRadarChart', chartData.ethicsRadar.data, chartData.ethicsRadar.layout);
+                }
+                
+                console.log('All charts rendered successfully');
+            } catch (error) {
+                console.error('Error rendering charts:', error);
+            }
+        }
+
+        // Start checking for Plotly
+        checkPlotly();
+    });
+</script>
+{% endblock %}

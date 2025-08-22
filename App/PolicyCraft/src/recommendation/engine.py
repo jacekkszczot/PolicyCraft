@@ -1,3152 +1,1990 @@
 """
-Advanced Recommendation Engine for PolicyCraft AI Policy Analysis.
+PolicyCraft Recommendation Engine - Core Analysis and Generation Components.
 
-This module implements a sophisticated ethical AI framework for analysing and evaluating
-AI usage policies in higher education institutions. The framework is built around four
-key ethical dimensions:
+This module implements the recommendation engine for PolicyCraft, providing
+comprehensive analysis of AI policy documents and generating evidence-based
+recommendations for higher education institutions. The engine combines ethical
+framework analysis with contextual recommendation generation.
 
-1. Accountability and Responsibility: Ensuring clear governance and oversight mechanisms
-2. Transparency and Explainability: Promoting openness in AI system operations and decisions
-3. Human Agency and Oversight: Maintaining meaningful human control over AI systems
-4. Inclusiveness and Diversity: Ensuring equitable access and consideration of diverse needs
+Key Components:
+- PolicyDimension: Enumeration of ethical AI policy dimensions
+- PolicyRecommendation: Data structure for recommendation storage
+- EthicalFrameworkAnalyser: Core analysis engine for policy evaluation
+- RecommendationGenerator: Contextual policy recommendation generation
 
-The engine provides comprehensive policy analysis, gap identification, and evidence-based
-recommendations tailored to different institutional contexts and policy classifications.
+The engine analyses policies across multiple dimensions including transparency,
+accountability, human oversight, and bias mitigation, providing structured
+feedback and actionable recommendations grounded in academic literature.
 
 Author: Jacek Robert Kszczot
 Project: MSc Data Science & AI - COM7016
 University: Leeds Trinity University
 """
 
+import sys
+import json
+import os
 import logging
-from typing import Dict, List
-from datetime import datetime
 import re
+import random
+from typing import Dict, List, Any, Optional, Union
+from enum import Enum, auto
+from dataclasses import dataclass, field
 
+try:
+    from src.literature.knowledge_manager import KnowledgeBaseManager
+except ImportError:
+    KnowledgeBaseManager = None
+try:
+    from src.analysis_engine.literature.repository import LiteratureRepository
+except Exception:
+    LiteratureRepository = None  # type: ignore
+try:
+    from src.analysis_engine.metrics import (
+        compute_confidence,
+        assess_stakeholders_impact,
+        assess_risk_benefit,
+    )
+except Exception:
+    compute_confidence = assess_stakeholders_impact = assess_risk_benefit = None  # type: ignore
+try:
+    from src.analysis_engine.engine import PolicyAnalysisEngine
+except Exception:
+    PolicyAnalysisEngine = None  # type: ignore
+
+# Semantic embeddings for enhanced relevance scoring
+EMBEDDINGS_AVAILABLE = False
+try:
+    from sentence_transformers import SentenceTransformer
+    import numpy as np
+    EMBEDDINGS_AVAILABLE = True
+except ImportError:
+    SentenceTransformer = None
+    np = None
+    
 logger = logging.getLogger(__name__)
+
+# Reused literals/constants
+IMPLEMENTATION_TIME_MEDIUM = "3-6 months"
+IMPLEMENTATION_TIME_SHORT = "2-4 months"
+IMPLEMENTATION_TIME_2_3 = "2-3 months"
+IMPLEMENTATION_TIME_3_5 = "3-5 months"
+IMPLEMENTATION_TIME_1_3 = "1-3 months"
+IMPLEMENTATION_TIME_4_8 = "4-8 months"
+IMPLEMENTATION_TIME_6_12 = "6-12 months"
+UNIVERSITY_POLICY_LITERAL = "university policy"
+YEAR_REGEX = r"(19|20)\d{2}"
+
+class PolicyDimension(Enum):
+    ACCOUNTABILITY = "Accountability and Governance"
+    TRANSPARENCY = "Transparency and Explainability"
+    HUMAN_AGENCY = "Human Agency and Oversight"
+    INCLUSIVENESS = "Inclusiveness and Fairness"
+    
+DIMENSION_KEYWORDS = {
+    PolicyDimension.ACCOUNTABILITY: [
+        "accountable", "governance", "oversight", "responsibility", "compliance", "audit", "monitor"
+    ],
+    PolicyDimension.TRANSPARENCY: [
+        "transparent", "explain", "disclose", "acknowledge", "acknowledgement", "document", "clear", "interpretable", "explainable"
+    ],
+    PolicyDimension.HUMAN_AGENCY: [
+        "human", "oversight", "control", "decision", "judgment", "intervention", "review"
+    ],
+    PolicyDimension.INCLUSIVENESS: [
+        "inclusive", "fair", "bias", "diverse", "equitable", "discrimination", "representation"
+    ],
+}
+
+@dataclass
+class PolicyRecommendation:
+    """A single recommendation for improving a policy."""
+    id: str
+    title: str
+    description: str
+    rationale: str
+    priority: str  # "high", "medium", "low"
+    dimension: PolicyDimension
+    implementation_guidance: str = ""
+    references: List[Dict[str, str]] = field(default_factory=list)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert the recommendation to a dictionary for JSON serialization."""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "rationale": self.rationale,
+            "priority": self.priority,
+            "dimension": self.dimension.value,
+            "implementation_guidance": self.implementation_guidance,
+            "references": self.references or []
+        }
 
 class EthicalFrameworkAnalyzer:
     """
-    Analyses policy documents against an established ethical AI framework.
-    
-    This class provides comprehensive analysis of policy documents using advanced
-    natural language processing techniques, including:
-    - Weighted keyword matching for nuanced policy element detection
-    - Contextual phrase analysis to understand policy intent and implementation
-    - Multi-dimensional scoring across four key ethical dimensions
-    - Gap analysis to identify areas requiring policy enhancement
-    
-    The analyser is designed to work with policy documents from diverse higher
-    education institutions, adapting to different policy styles and formats while
-    maintaining consistent evaluation standards.
-    
-    Attributes:
-        ethical_dimensions (Dict): Configuration of the four ethical dimensions with
-                                 associated keywords, weights, and scoring parameters
-        classification_patterns (Dict): Patterns used to classify policy approaches
-                                      (restrictive/moderate/permissive)
+    Analyses policy text against ethical AI frameworks and provides structured feedback.
     """
     
-    def __init__(self):
+    def __init__(self, knowledge_manager: Optional[KnowledgeBaseManager] = None):
+        """Initialise with an optional knowledge manager for reference lookups."""
+        self.knowledge_manager = knowledge_manager
+        self.dimensions = list(PolicyDimension)
+        
+    def analyse_policy(self, policy_text: str, institution_type: str = "university") -> Dict[str, Any]:
         """
-        Initialise the ethical framework analyser with comprehensive dimension mapping.
-        
-        This constructor sets up the analysis framework by:
-        - Defining four core ethical dimensions with associated keywords and weights
-        - Configuring classification patterns for different policy approaches
-        - Establishing scoring thresholds for policy coverage assessment
-        
-        The framework is designed to be flexible and can be customised for different
-        institutional contexts while maintaining consistent evaluation standards.
-        
-        Note:
-            The keyword weights and patterns are based on extensive analysis of
-            academic literature and real-world policy documents, with higher weights
-            assigned to terms that are stronger indicators of policy intent.
-        """
-        
-        # Enhanced ethical dimensions with weights and phrases
-        self.ethical_dimensions = {
-            'accountability': {
-                'keywords': [
-                    'responsibility', 'accountable', 'oversight', 'governance', 
-                    'liable', 'responsible party', 'institutional responsibility',
-                    'academic responsibility', 'student responsibility', 'faculty oversight',
-                    'working group', 'committee', 'ai team', 'policy team'
-                ],
-                'keyword_weights': {
-                    # High importance indicators (3.0 weight)
-                    'governance': 3.0, 'oversight': 3.0, 'working group': 3.0,
-                    'committee': 3.0, 'accountable': 3.0,
-                    # Medium importance (2.0 weight)
-                    'responsibility': 2.0, 'responsible party': 2.0,
-                    'institutional responsibility': 2.0,
-                    # Standard indicators (1.0 weight)
-                    'liable': 1.0, 'academic responsibility': 1.0
-                },
-                'phrases': [
-                    'working group', 'governance structure', 'oversight committee',
-                    'responsible for', 'accountability framework', 'policy oversight'
-                ],
-                'weight': 1.0,
-                'description': 'Clear assignment of responsibility and governance structures'
-            },
-            'transparency': {
-                'keywords': [
-                    'transparent', 'explainable', 'clear guidelines', 'disclosure',
-                    'open', 'communicate', 'inform', 'clarity', 'explicit',
-                    'declare', 'state clearly', 'make known', 'transparency',
-                    'disclose', 'acknowledge', 'report', 'must disclose'
-                ],
-                'keyword_weights': {
-                    # High importance - direct disclosure language (3.0 weight)
-                    'disclose': 3.0, 'disclosure': 3.0, 'declare': 3.0,
-                    'acknowledge': 3.0, 'must disclose': 3.0,
-                    # Medium importance - transparency concepts (2.0 weight)
-                    'transparent': 2.0, 'communicate': 2.0, 'inform': 2.0,
-                    'report': 2.0, 'transparency': 2.0,
-                    # Lower importance - general clarity (1.0 weight)
-                    'clear guidelines': 1.0, 'open': 1.0, 'clarity': 1.0
-                },
-                'phrases': [
-                    'must disclose', 'required to disclose', 'shall declare',
-                    'transparency requirement', 'disclosure requirement',
-                    'must acknowledge', 'required to acknowledge'
-                ],
-                'weight': 1.0,
-                'description': 'Clear communication and explainable AI usage'
-            },
-            'human_agency': {
-                'keywords': [
-                    'human oversight', 'human control', 'human decision', 'final decision',
-                    'human judgment', 'human review', 'instructor approval',
-                    'faculty decision', 'human intervention', 'manual review',
-                    'approval', 'permission', 'instructor permission'
-                ],
-                'keyword_weights': {
-                    # High importance - direct human control (3.0 weight)
-                    'human oversight': 3.0, 'human control': 3.0, 'final decision': 3.0,
-                    'instructor approval': 3.0, 'human decision': 3.0,
-                    # Medium importance - review processes (2.0 weight)
-                    'human review': 2.0, 'approval': 2.0, 'permission': 2.0,
-                    'faculty decision': 2.0,
-                    # Standard importance (1.0 weight)
-                    'human judgment': 1.0, 'manual review': 1.0
-                },
-                'phrases': [
-                    'human oversight required', 'instructor approval needed',
-                    'faculty permission', 'human final decision', 'manual verification'
-                ],
-                'weight': 1.0,
-                'description': 'Maintaining human control and decision-making authority'
-            },
-            'inclusiveness': {
-                'keywords': [
-                    'inclusive', 'accessible', 'equity', 'diversity', 'fair',
-                    'equal opportunity', 'barrier-free', 'inclusive design',
-                    'equitable access', 'diverse needs', 'accessibility',
-                    'accommodation', 'disability', 'support'
-                ],
-                'keyword_weights': {
-                    # High importance - direct inclusion language (3.0 weight)
-                    'accessible': 3.0, 'accessibility': 3.0, 'inclusive': 3.0,
-                    'accommodation': 3.0, 'equitable access': 3.0,
-                    # Medium importance - equity concepts (2.0 weight)
-                    'equity': 2.0, 'diversity': 2.0, 'fair': 2.0,
-                    'equal opportunity': 2.0,
-                    # Standard importance (1.0 weight)
-                    'barrier-free': 1.0, 'diverse needs': 1.0, 'support': 1.0
-                },
-                'phrases': [
-                    'accessible to all', 'equitable access', 'inclusive design',
-                    'disability accommodation', 'barrier-free access'
-                ],
-                'weight': 1.0,
-                'description': 'Ensuring equitable access and diverse perspectives'
-            }
-        }
-        
-        # Policy classification patterns (from your classifier)
-        self.classification_patterns = {
-            'restrictive': {
-                'characteristics': ['prohibit', 'ban', 'forbid', 'not allowed', 'restriction'],
-                'risk_areas': ['accountability', 'transparency'],
-                'strength_areas': ['human_agency']
-            },
-            'moderate': {
-                'characteristics': ['guidelines', 'with permission', 'under supervision', 'limited use'],
-                'risk_areas': ['inclusiveness'],
-                'strength_areas': ['accountability', 'transparency']
-            },
-            'permissive': {
-                'characteristics': ['encouraged', 'freely', 'flexible', 'student choice'],
-                'risk_areas': ['accountability', 'human_agency'],
-                'strength_areas': ['inclusiveness']
-            }
-        }
-
-    def analyze_coverage(self, themes: List[Dict], text: str) -> Dict:
-        """
-        Analyse policy coverage against the established ethical framework dimensions.
-        
-        This method provides a comprehensive evaluation of how well a given policy document
-        addresses key ethical considerations in AI usage within higher education. The analysis
-        employs a sophisticated multi-layered approach combining:
-        
-        1. Weighted keyword matching to identify relevant policy elements
-        2. Contextual phrase detection to understand policy intent and strength
-        3. Theme relevance scoring based on the provided theme analysis
-        4. Pattern recognition to identify policy approaches and potential gaps
-        
-        The assessment is conducted across four primary ethical dimensions:
-        - Accountability and Responsibility: Governance structures and oversight mechanisms
-        - Transparency and Explainability: Disclosure requirements and communication standards
-        - Human Agency and Oversight: Human control and decision-making processes
-        - Inclusiveness and Diversity: Equitable access and consideration of diverse needs
-        
-        The scoring system is calibrated to reflect realistic expectations, with typical
-        comprehensive policies scoring within the 15-35% range, accounting for the
-        complexity and evolving nature of AI ethics in higher education.
-        
-        The scoring system is calibrated to reflect realistic expectations, with typical
-        comprehensive policies scoring within the 15-35% range, accounting for the
-        complexity and evolving nature of AI ethics in higher education.
+        Analyse a policy text and return a structured analysis.
         
         Args:
-            themes: A list of dictionaries containing themes extracted from the policy
-                   text by the NLP pipeline. Each dictionary should include:
-                   - 'theme': The identified theme or topic
-                   - 'relevance': A score (0-1) indicating the theme's prominence
-                   - 'sentiment': Optional sentiment analysis of the theme
-                   - 'category': Optional categorization of the theme
-            text: The complete policy text to be analysed, in its original form.
+            policy_text: The text of the policy to analyse
+            institution_type: Type of institution (university, college, etc.)
             
         Returns:
-            Dict: A comprehensive analysis containing:
-                - scores (Dict[str, float]): Coverage scores (0-100) for each dimension
-                - matches (Dict[str, List[Dict]]): Detailed breakdown of matched terms,
-                                                 phrases, and their weights
-                - overall_score (float): Weighted average score across all dimensions
-                - classification (str): Policy classification based on language patterns:
-                                     'restrictive', 'moderate', or 'permissive'
-                - recommendations (List[Dict]): Initial high-level recommendations
-                - confidence_scores (Dict[str, float]): Confidence levels (0-1) for
-                                                      each dimension's assessment
-                - key_findings (List[str]): Notable observations about the policy
-                - coverage_breakdown (Dict[str, Dict]): Detailed coverage metrics
-                                                      for each dimension
-        
-        Example:
-            >>> analyzer = EthicalFrameworkAnalyzer()
-            >>> themes = [{'theme': 'AI governance', 'relevance': 0.85}]
-            >>> policy_text = "The university requires all AI usage to be documented..."
-            >>> results = analyzer.analyze_coverage(themes, policy_text)
-            >>> print(results['scores']['transparency'])
-            72.5
-            >>> print(results['classification'])
-            'moderate'
+            Dict containing analysis results including scores and recommendations
         """
-        coverage = {}
-        text_lower = text.lower()
+        # This is a placeholder - in a real implementation, this would use NLP
+        # to analyze the policy text against each dimension
         
-        for dimension, config in self.ethical_dimensions.items():
-            dimension_score = 0
-            matched_items = []
-            
-            #  ENHANCED: Weighted keyword matching instead of binary counting
-            for keyword in config['keywords']:
-                if keyword.lower() in text_lower:
-                    weight = config.get('keyword_weights', {}).get(keyword, 1.0)
-                    dimension_score += weight
-                    matched_items.append(f"{keyword} (weight: {weight})")
-            
-            #  NEW: Phrase matching for contextual understanding
-            # This catches "must disclose" as stronger indicator than just "disclose"
-            for phrase in config.get('phrases', []):
-                if phrase.lower() in text_lower:
-                    dimension_score += 2.0  # Phrases get bonus points
-                    matched_items.append(f"PHRASE: {phrase}")
-            
-            #  ENHANCED: Theme boost (more generous than before)
-            theme_boost = 0
-            for theme in themes:
-                theme_name = theme.get('name', '').lower()
-                if any(kw.lower() in theme_name for kw in config['keywords'][:3]):
-                    theme_boost += theme.get('score', 0) * 0.3  # Increased from 0.1
-            
-            #  SCORING ALGORITHM
-            #  Use weighted maximum possible score
-            max_keyword_weight = 3.0  # Highest possible weight
-            max_phrase_bonus = len(config.get('phrases', [])) * 2.0
-            max_possible_base = len(config['keywords']) * max_keyword_weight + max_phrase_bonus
-            
-            # Calculate realistic percentage
-            if max_possible_base > 0:
-                raw_score = (dimension_score / max_possible_base) * 100
-            else:
-                raw_score = 0
-            
-            # Add theme boost and cap at 100%
-            final_score = min(100, raw_score + theme_boost)
-            
-            #  ADJUSTED THRESHOLDS: Much less restrictive than original 70%
-            # Columbia's disclosure should now get 'moderate' status instead of 'weak'
-            if final_score >= 40:
-                status = 'strong'
-            elif final_score >= 15:  # Was 70% before - way too high!
-                status = 'moderate'
-            else:
-                status = 'weak'
-            
-            coverage[dimension] = {
-                'score': round(final_score, 1),
-                'matched_items': matched_items,
-                'item_count': len(matched_items),
-                'description': config['description'],
-                'status': status,
-                'raw_score': round(raw_score, 1),
-                'theme_boost': round(theme_boost, 1),
-                'debug_info': {
-                    'dimension_score': dimension_score,
-                    'max_possible': max_possible_base,
-                    'keyword_matches': len([i for i in matched_items if 'PHRASE:' not in i]),
-                    'phrase_matches': len([i for i in matched_items if 'PHRASE:' in i])
-                }
-            }
-        
-        return coverage
-
-    def detect_existing_policies(self, text: str) -> Dict[str, List[Dict]]:
-        """
-        Analyse policy text to identify and extract existing policy elements and provisions.
-        
-        This method performs a detailed scan of the provided policy text to detect and
-        characterise various policy components. It employs natural language processing
-        techniques to identify not just the presence but also the strength and specificity
-        of policy provisions across multiple dimensions of AI governance.
-        
-        The detection system uses a combination of:
-        - Pattern matching for specific policy language and requirements
-        - Contextual analysis to determine policy intent and strength
-        - Semantic understanding to identify related policy elements
-        - Confidence scoring to assess the reliability of detections
-        
-        Args:
-            text: The complete policy text to be analysed. The text should be in its
-                 original form to preserve formatting and structure that might indicate
-                 policy importance or hierarchy.
-            
-        Returns:
-            Dict[str, List[Dict]]: A structured dictionary where each key represents
-                                 a policy domain, and the value is a list of detected
-                                 policy elements with their details. Example structure:
-                                 
-            {
-                'governance_structures': [
-                    {
-                        'text': 'The AI Ethics Committee shall oversee...',
-                        'type': 'oversight_body',
-                        'strength': 'strong',
-                        'confidence': 0.92,
-                        'context': 'Section 4.2: Governance',
-                        'related_dimensions': ['accountability', 'transparency']
-                    }
-                ],
-                'training_programs': [...],
-                'accessibility_measures': [...],
-                'bias_checking': [...],
-                'accuracy_verification': [...],
-                'ip_protection': [...],
-                'monitoring_mechanisms': [...],
-                'enforcement_procedures': [...],
-                'stakeholder_engagement': [...],
-                'review_processes': [...]
-            }
-        """
-        text_lower = text.lower() if text else ""
-        existing_policies = {
-            'disclosure_requirements': False,
-            'approval_processes': False,
-            'governance_structure': False,
-            'training_programs': False,
-            'accessibility_measures': False,
-            'bias_checking': False,
-            'accuracy_verification': False,
-            'ip_protection': False
+        analysis = {
+            "institution_type": institution_type,
+            "dimension_scores": {dim.value: self._score_dimension(dim, policy_text) 
+                               for dim in self.dimensions},
+            "overall_score": 0.0,
+            "strengths": [],
+            "areas_for_improvement": [],
+            "recommendations": []
         }
         
-        # Enhanced pattern matching for existing policies
-        policy_patterns = {
-            'disclosure_requirements': [
-                'must disclose', 'require disclosure', 'acknowledge', 'cite.*use',
-                'transparent.*use', 'declare.*use', 'must be transparent',
-                'required to disclose', 'shall declare', 'must acknowledge'
+        # Calculate overall score (simple average for now)
+        scores = [s["score"] for s in analysis["dimension_scores"].values()]
+        analysis["overall_score"] = sum(scores) / len(scores) if scores else 0
+        
+        # Generate recommendations
+        for dim in self.dimensions:
+            dim_score = analysis["dimension_scores"][dim.value]["score"]
+            if dim_score < 0.5:  # Threshold for needing improvement
+                analysis["areas_for_improvement"].append(dim.value)
+                analysis["recommendations"].extend(
+                    self._generate_dimension_recommendations(dim, policy_text)
+                )
+            else:
+                analysis["strengths"].append(dim.value)
+        
+        return analysis
+        
+    def _score_dimension(self, dimension: PolicyDimension, text: str) -> Dict[str, Any]:
+        """Score a single dimension of the policy (0-1 scale) with more sophisticated analysis."""
+        # Enhanced implementation with more keywords and contextual analysis
+        keywords = {
+            PolicyDimension.ACCOUNTABILITY: [
+                "accountable", "governance", "oversight", "responsibility", "compliance", 
+                "audit", "monitor", "review", "assess", "evaluate", "report", "board", 
+                "committee", "authority", "regulation", "standard", "policy", "procedure"
             ],
-            'approval_processes': [
-                'permission.*instructor', 'approval', 'prior.*permission', 
-                'contact.*before', 'prohibited.*without', 'granting permission',
-                'instructor.*approval', 'faculty.*permission'
+            PolicyDimension.TRANSPARENCY: [
+                "transparent", "explain", "disclose", "acknowledge", "acknowledgement", "document", "clear", "interpretable", 
+                "explainable", "communication", "inform", "publish", "report", "accessible", 
+                "visibility", "clarity", "understandable", "documentation", "openness"
             ],
-            'governance_structure': [
-                'working group', 'committee', 'ai team', 'governance', 
-                'oversight.*group', 'policy.*team', 'advisory.*group',
-                'governance.*structure', 'oversight.*committee'
+            PolicyDimension.HUMAN_AGENCY: [
+                "human", "oversight", "control", "decision", "judgment", "intervention", 
+                "review", "autonomy", "choice", "consent", "opt-out", "appeal", "override", 
+                "supervise", "authority", "discretion", "input", "feedback", "participation"
             ],
-            'training_programs': [
-                'training', 'education', 'workshop', 'consultation', 
-                'learning.*community', 'faculty.*development', 'literacy.*program'
-            ],
-            'accessibility_measures': [
-                'accessibility', 'disability', 'accommodation', 'barrier.*free',
-                'inclusive.*design', 'equitable.*access', 'diverse.*needs'
-            ],
-            'bias_checking': [
-                'check.*bias', 'bias.*output', 'discriminatory', 'disparate.*impact',
-                'protected.*classification', 'consider.*bias', 'bias.*aware'
-            ],
-            'accuracy_verification': [
-                'check.*accuracy', 'verify.*accuracy', 'confirm.*accuracy',
-                'additional.*sources', 'fact.*check', 'review.*output',
-                'verify.*information', 'cross.*check'
-            ],
-            'ip_protection': [
-                'intellectual.*property', 'copyright', 'plagiarism', 'ip.*rights',
-                'third.*party.*rights', 'respect.*ip', 'citation.*required'
+            PolicyDimension.INCLUSIVENESS: [
+                "inclusive", "fair", "bias", "diverse", "equitable", "discrimination", 
+                "representation", "accessibility", "equality", "diversity", "inclusion", 
+                "minority", "underrepresented", "vulnerable", "marginalized", "equity"
             ]
         }
         
-        # Check for existing policies using regex patterns
-        for policy_type, patterns in policy_patterns.items():
-            for pattern in patterns:
-                if re.search(pattern, text_lower):
-                    existing_policies[policy_type] = True
-                    break
+        # Advanced phrases that indicate strong policy in each dimension
+        advanced_phrases = {
+            PolicyDimension.ACCOUNTABILITY: [
+                "clear lines of responsibility", "governance framework", "oversight committee", 
+                "regular auditing", "compliance monitoring", "reporting mechanisms", 
+                "accountability structures", "responsibility matrix"
+            ],
+            PolicyDimension.TRANSPARENCY: [
+                "transparency report", "disclosure policy", "must disclose", "explainable ai", 
+                "clear documentation", "public reporting", "information access", 
+                "algorithmic transparency", "open communication"
+            ],
+            PolicyDimension.HUMAN_AGENCY: [
+                "human in the loop", "meaningful human control", "human oversight", 
+                "appeal process", "human review", "manual override", "human judgment", 
+                "human decision-making"
+            ],
+            PolicyDimension.INCLUSIVENESS: [
+                "bias mitigation", "fairness assessment", "inclusive design", 
+                "diversity considerations", "equitable outcomes", "accessibility requirements", 
+                "non-discrimination", "representation of diverse groups"
+            ]
+        }
         
-        return existing_policies
+        text_lower = text.lower()
+        
+        # Count keyword matches with more weight for important terms
+        keyword_matches = sum(1 for kw in keywords[dimension] if kw in text_lower)
+        # High-weight transparency indicators get a small bonus
+        if dimension == PolicyDimension.TRANSPARENCY:
+            if "disclose" in text_lower:
+                keyword_matches += 1
+            if "acknowledge" in text_lower:
+                keyword_matches += 1
+        
+        # Count advanced phrase matches with higher weight
+        phrase_matches = sum(2 for phrase in advanced_phrases[dimension] if phrase in text_lower)
+        
+        # Calculate total possible score
+        total_possible = len(keywords[dimension]) + (len(advanced_phrases[dimension]) * 2)
+        
+        # Calculate raw score (0-1 scale)
+        raw_score = (keyword_matches + phrase_matches) / (total_possible * 0.5)  # Slightly easier to reach meaningful %
+        score = min(1.0, raw_score)  # Cap at 1.0
+        
+        # Detailed analysis results
+        return {
+            "score": round(score, 2),
+            "keywords_found": [kw for kw in keywords[dimension] if kw in text_lower],
+            "keywords_missing": [kw for kw in keywords[dimension] if kw not in text_lower],
+            "advanced_phrases_found": [phrase for phrase in advanced_phrases[dimension] if phrase in text_lower],
+            "advanced_phrases_missing": [phrase for phrase in advanced_phrases[dimension] if phrase not in text_lower],
+            "analysis_summary": self._generate_dimension_analysis_summary(dimension, score)
+        }
+        
+    def _generate_dimension_analysis_summary(self, dimension: PolicyDimension, score: float) -> str:
+        """Generate a human-readable summary of the dimension analysis."""
+        # determine strength based on score - might want to adjust these thresholds later
+        if score >= 0.8:
+            strength_level = "strong"
+        elif score >= 0.5: strength_level = "moderate"  # different formatting style
+        else:
+            strength_level = "weak"
+            
+        summaries = {
+            PolicyDimension.ACCOUNTABILITY: {
+                "strong": "The policy demonstrates strong accountability measures with clear governance structures and oversight mechanisms.",
+                "moderate": "The policy includes some accountability measures but could benefit from more defined governance structures.",
+                "weak": "The policy lacks sufficient accountability measures and requires clearer governance structures."
+            },
+            PolicyDimension.TRANSPARENCY: {
+                "strong": "The policy demonstrates strong commitment to transparency with clear disclosure and explanation requirements.",
+                "moderate": "The policy addresses transparency but could benefit from more specific disclosure requirements.",
+                "weak": "The policy lacks sufficient transparency measures and needs clearer disclosure requirements."
+            },
+            PolicyDimension.HUMAN_AGENCY: {
+                "strong": "The policy strongly supports human agency with clear human oversight and intervention mechanisms.",
+                "moderate": "The policy acknowledges human agency but could strengthen human oversight provisions.",
+                "weak": "The policy insufficiently addresses human agency and requires stronger human oversight provisions."
+            },
+            PolicyDimension.INCLUSIVENESS: {
+                "strong": "The policy demonstrates strong commitment to inclusiveness with robust bias mitigation and fairness measures.",
+                "moderate": "The policy addresses inclusiveness but could benefit from more specific bias mitigation strategies.",
+                "weak": "The policy lacks sufficient inclusiveness measures and needs clearer bias mitigation strategies."
+            }
+        }
+        
+        return summaries.get(dimension, {}).get(strength_level, "No analysis available.")
+    
+    def _generate_dimension_recommendations(self, dimension: PolicyDimension, text: str) -> List[Dict[str, Any]]:
+        """Generate recommendations for a specific dimension based on policy text analysis."""
+        text_lower = text.lower()
+        recommendations = []
+        
+        # Local helper to reduce repeated dict construction
+        def add_rec(rid: str, title: str, description: str, rationale: str, priority: str, impl_time: str, steps: List[str]) -> None:
+            recommendations.append({
+                "id": rid,
+                "title": title,
+                "description": description,
+                "rationale": rationale,
+                "priority": priority,
+                "dimension": dimension.value,
+                "implementation_time": impl_time,
+                "implementation_steps": steps,
+            })
+        
+        # Get dimension-specific keywords and their presence in the text
+        found_keywords = [kw for kw in DIMENSION_KEYWORDS.get(dimension, []) if kw in text_lower]
+        missing_keywords = [kw for kw in DIMENSION_KEYWORDS.get(dimension, []) if kw not in text_lower]
+        
+        # Generate context-aware recommendations via per-dimension helpers
+        if dimension == PolicyDimension.ACCOUNTABILITY:
+            self._recs_accountability(dimension, found_keywords, missing_keywords, add_rec, recommendations)
+        elif dimension == PolicyDimension.TRANSPARENCY:
+            self._recs_transparency(dimension, found_keywords, add_rec)
+        elif dimension == PolicyDimension.HUMAN_AGENCY:
+            self._recs_human_agency(dimension, found_keywords, add_rec)
+        elif dimension == PolicyDimension.INCLUSIVENESS:
+            self._recs_inclusiveness(dimension, found_keywords, add_rec)
+        
+        # If no specific recommendations were generated, provide a generic one
+        if not recommendations:
+            add_rec(
+                f"{dimension.value.lower().split()[0][:5]}-gen",
+                f"Strengthen {dimension.value} in Your AI Policy",
+                f"Review and enhance your policy's approach to {dimension.value.lower()}.",
+                f"A robust approach to {dimension.value.lower()} is essential for ethical AI governance.",
+                "medium",
+                IMPLEMENTATION_TIME_MEDIUM,
+                [
+                    f"Conduct a comprehensive review of your policy's {dimension.value.lower()} provisions",
+                    f"Benchmark against best practices in {dimension.value.lower()} from leading institutions",
+                    f"Identify specific gaps in your {dimension.value.lower()} approach",
+                    "Develop targeted improvements for each identified gap",
+                    "Implement changes and establish metrics to track effectiveness",
+                ],
+            )
+            
+        return recommendations
 
-    def identify_gaps(self, coverage: Dict, classification: str) -> List[Dict]:
+    # ---- Extracted per-dimension helpers to reduce branching ----
+    def _recs_accountability(self, dimension: PolicyDimension, found_keywords: List[str], missing_keywords: List[str], add_rec, recommendations: List[Dict[str, Any]]) -> None:
+        if len(missing_keywords) > len(found_keywords):
+            add_rec(
+                "acc-001",
+                "Establish Clear Accountability Structures",
+                "Define clear roles and responsibilities for AI governance within your institution.",
+                "Clear accountability ensures that AI systems are used responsibly and that there is oversight at all levels.",
+                "high",
+                IMPLEMENTATION_TIME_MEDIUM,
+                [
+                    "Form an AI governance committee with representatives from key stakeholders",
+                    "Define clear roles and responsibilities for AI oversight",
+                    "Establish reporting lines and accountability mechanisms",
+                    "Document governance structures in formal policy documents",
+                    "Communicate governance framework to all relevant staff",
+                ],
+            )
+        if "audit" not in found_keywords or "monitor" not in found_keywords:
+            add_rec(
+                "acc-002",
+                "Implement Regular Auditing and Monitoring",
+                "Establish procedures for regular auditing and monitoring of AI systems to ensure compliance with ethical standards.",
+                "Regular auditing helps identify issues early and ensures continuous improvement of AI governance.",
+                "medium",
+                IMPLEMENTATION_TIME_SHORT,
+                [
+                    "Develop an AI audit framework with clear metrics and benchmarks",
+                    "Establish a regular audit schedule (quarterly or bi-annually)",
+                    "Create audit templates and checklists for consistency",
+                    "Train staff on audit procedures and ethical standards",
+                    "Implement reporting mechanisms for audit findings",
+                ],
+            )
+        if "compliance" not in found_keywords:
+            recommendations.append({
+                "id": "acc-003",
+                "title": "Develop Compliance Frameworks for AI Systems",
+                "description": "Create comprehensive compliance frameworks that align with regulatory requirements and ethical standards.",
+                "rationale": "Structured compliance frameworks reduce legal risks and ensure ethical AI deployment.",
+                "priority": "high",
+                "dimension": dimension.value,
+                "implementation_time": IMPLEMENTATION_TIME_4_8,
+                "implementation_steps": [
+                    "Research relevant AI regulations and ethical standards in your jurisdiction",
+                    "Develop a compliance matrix mapping requirements to institutional policies",
+                    "Create compliance documentation templates and checklists",
+                    "Establish compliance verification procedures for AI systems",
+                    "Implement regular compliance reviews and updates as regulations evolve"
+                ]
+            })
+
+    def _recs_transparency(self, dimension: PolicyDimension, found_keywords: List[str], add_rec) -> None:
+        if "explain" not in found_keywords or "explainable" not in found_keywords:
+            add_rec(
+                "trans-001",
+                "Improve Explainability of AI Systems",
+                "Implement mechanisms to explain AI decisions in clear, non-technical language to affected stakeholders.",
+                "Explainable AI builds trust and enables meaningful human oversight of automated decisions.",
+                "high",
+                IMPLEMENTATION_TIME_MEDIUM,
+                [
+                    "Audit current AI systems for explainability gaps",
+                    "Develop explainability standards for different stakeholder groups",
+                    "Implement technical solutions for generating explanations (e.g., LIME, SHAP)",
+                    "Create user-friendly interfaces for displaying explanations",
+                    "Train staff on communicating AI decisions to non-technical audiences",
+                ],
+            )
+        if "document" not in found_keywords:
+            add_rec(
+                "trans-002",
+                "Enhance Documentation of AI Systems",
+                "Create comprehensive documentation for all AI systems, including their purpose, limitations, and potential risks.",
+                "Thorough documentation enables better understanding and evaluation of AI systems by all stakeholders.",
+                "medium",
+                IMPLEMENTATION_TIME_SHORT,
+                [
+                    "Develop documentation templates for AI systems",
+                    "Conduct inventory of all AI systems requiring documentation",
+                    "Document technical specifications, data sources, and algorithms used",
+                    "Include known limitations, biases, and potential risks in documentation",
+                    "Establish a process for regular documentation updates as systems evolve",
+                ],
+            )
+        if "disclose" not in found_keywords:
+            add_rec(
+                "trans-003",
+                "Establish Disclosure Protocols",
+                "Develop clear protocols for when and how to disclose AI use to affected individuals and communities.",
+                "Appropriate disclosure respects autonomy and enables informed consent regarding AI-driven decisions.",
+                "medium",
+                IMPLEMENTATION_TIME_2_3,
+                [
+                    "Identify all contexts where AI is used to make or support decisions",
+                    "Define clear disclosure requirements for each context",
+                    "Create standardised disclosure templates",
+                    "Train staff on when and how to disclose AI use",
+                    "Establish processes for obtaining informed consent where appropriate",
+                ],
+            )
+
+    def _recs_human_agency(self, dimension: PolicyDimension, found_keywords: List[str], add_rec) -> None:
+        if "oversight" not in found_keywords or "intervention" not in found_keywords:
+            add_rec(
+                "human-001",
+                "Strengthen Human Oversight Mechanisms",
+                "Ensure that human oversight is built into all AI decision-making processes.",
+                "Human oversight is essential for ensuring accountability and preventing harmful outcomes from automated systems.",
+                "high",
+                IMPLEMENTATION_TIME_MEDIUM,
+                [
+                    "Define clear criteria for when human intervention is required",
+                    "Implement human-in-the-loop controls for critical decisions",
+                    "Establish procedures for reviewing and overriding AI decisions",
+                    "Train staff on responsible use and oversight of AI systems",
+                    "Create feedback mechanisms for reporting concerns about AI decisions",
+                ],
+            )
+        if "approval" not in found_keywords:
+            add_rec(
+                "human-002",
+                "Implement Approval Processes for AI Use",
+                "Establish approval processes for AI use in sensitive academic contexts.",
+                "Approval processes ensure appropriate oversight and alignment with institutional values.",
+                "medium",
+                IMPLEMENTATION_TIME_SHORT,
+                [
+                    "Define criteria for AI use requiring prior approval",
+                    "Establish an approval committee with cross-disciplinary representation",
+                    "Create application and review processes for AI use proposals",
+                    "Document approval decisions and conditions",
+                    "Implement review procedures for ongoing AI use",
+                ],
+            )
+
+    def _recs_inclusiveness(self, dimension: PolicyDimension, found_keywords: List[str], add_rec) -> None:
+        if "bias" not in found_keywords or "fairness" not in found_keywords:
+            add_rec(
+                "incl-001",
+                "Implement Bias Mitigation Strategies",
+                "Develop and implement strategies to identify and mitigate bias in AI systems used in academic contexts.",
+                "Bias mitigation is essential for ensuring equitable outcomes and preventing discrimination.",
+                "high",
+                IMPLEMENTATION_TIME_MEDIUM,
+                [
+                    "Conduct bias audits of AI systems",
+                    "Develop fairness metrics appropriate for academic contexts",
+                    "Implement debiasing techniques and fairness-aware algorithms",
+                    "Train staff on recognising and addressing bias in AI systems",
+                    "Establish monitoring procedures for fairness over time",
+                ],
+            )
+        if "accessibility" not in found_keywords:
+            add_rec(
+                "incl-002",
+                "Ensure Accessibility in AI Systems",
+                "Ensure that AI systems and their interfaces are accessible to all users, including those with disabilities.",
+                "Accessibility is a fundamental requirement for inclusive AI systems in higher education.",
+                "medium",
+                IMPLEMENTATION_TIME_SHORT,
+                [
+                    "Audit AI system interfaces for accessibility compliance",
+                    "Implement accessibility improvements based on audit findings",
+                    "Provide alternative formats and assistive technologies where needed",
+                    "Train staff on accessibility best practices for AI systems",
+                    "Establish ongoing accessibility monitoring and user feedback channels",
+                ],
+            )
+
+    # --- Compatibility API expected by tests ---
+    def analyze_coverage(self, themes: List[Dict[str, Any]], text: str) -> Dict[str, Any]:
+        """Produce coverage per dimension with percentage score and details.
+
+        Returns a dict with keys for each dimension name in lowercase, each value containing:
+        - score (0-100)
+        - item_count
+        - matched_items (keywords and phrases)
+        - status: weak/moderate/strong
         """
-        Identify and characterise gaps in policy coverage through comprehensive analysis.
-        
-        This method performs a detailed analysis of policy coverage metrics in the context
-        of the policy's classification to systematically identify areas requiring attention
-        or enhancement. The gap analysis considers multiple factors including:
-        
-        - Absolute coverage scores across ethical dimensions
-        - Relative strength compared to policy classification norms
-        - Interdependencies between different policy dimensions
-        - Common risk patterns associated with the policy's classification
-        
-        The analysis produces actionable insights that highlight not just what is missing,
-        but why it matters and how it impacts the overall effectiveness of the policy
-        framework.
-        
-        Args:
-            coverage: Dictionary containing comprehensive coverage metrics from
-                    analyze_coverage(), including:
-                    - scores: Dimension-wise coverage scores (0-100)
-                    - matches: Detailed term and phrase matches
-                    - confidence_scores: Assessment confidence levels
-                    - classification: Policy classification
-                    - key_findings: Notable observations
-            
-            classification: String indicating the policy's classification:
-                          - 'restrictive': Emphasises prohibitions and limitations
-                          - 'moderate': Balances guidance with flexibility
-                          - 'permissive': Encourages innovation with minimal restrictions
-            
-        Returns:
-            List[Dict]: A prioritised list of gap analyses, where each dictionary contains:
-                - dimension (str): The ethical dimension with identified gaps
-                - score (float): Current coverage score (0-100)
-                - priority (str): Recommended attention level ('high'/'medium'/'low')
-                - description (str): Detailed explanation of the gap's nature and impact
-                - type (str): Category of gap (e.g., 'missing_coverage', 'weak_implementation')
-                - risk_level (str): Associated risk if unaddressed ('critical' to 'low')
-                - improvement_opportunity (float): Potential score improvement possible
-                - related_dimensions (List[str]): Other dimensions this gap may affect
-                - evidence (List[str]): Specific policy excerpts or patterns indicating the gap
-                - recommendations (List[str]): Suggested actions to address the gap
-                
-        Example:
-            >>> analyzer = EthicalFrameworkAnalyzer()
-            >>> coverage = {
-            ...     'scores': {'transparency': 45, 'accountability': 30, ...},
-            ...     'classification': 'moderate',
-            ...     'matches': {...}
-            ... }
-            >>> gaps = analyzer.identify_gaps(coverage, 'moderate')
-            >>> print(gaps[0]['description'])
-            'The policy lacks specific requirements for documenting AI system decisions...'
-            
-        Note:
-            The gap analysis is informed by best practices in AI policy development and
-            considers the unique context of higher education institutions.
+        text_lower = (text or "").lower()
+
+        coverage: Dict[str, Any] = {}
+        for dim in [PolicyDimension.ACCOUNTABILITY, PolicyDimension.TRANSPARENCY, PolicyDimension.HUMAN_AGENCY, PolicyDimension.INCLUSIVENESS]:
+            # Reuse scoring config from _score_dimension
+            scored = self._score_dimension(dim, text_lower)
+            keywords_found = scored.get("keywords_found", [])
+            phrases_found = scored.get("advanced_phrases_found", [])
+            total_items = len(keywords_found) + len(phrases_found)
+
+            pct = int(round(scored.get("score", 0.0) * 100))
+            if pct >= 67:
+                status = "strong"
+            elif pct >= 34:
+                status = "moderate"
+            else:
+                status = "weak"
+
+            # tests use plain keys: 'transparency', 'human_agency', etc.
+            coverage[dim.name.lower()] = {
+                "score": pct,
+                "item_count": total_items,
+                "matched_items": keywords_found + [f"PHRASE: {p}" for p in phrases_found],
+                "status": status,
+            }
+
+        return coverage
+
+    def detect_existing_policies(self, text: str) -> Dict[str, bool]:
+        """Detect existing policy elements in text.
+
+        Returns booleans such as disclosure_requirements and approval_processes.
         """
-        gaps = []
-        
-        # Check for weak coverage areas
-        for dimension, analysis in coverage.items():
-            if analysis['status'] == 'weak':
-                gaps.append({
-                    'dimension': dimension,
-                    'type': 'coverage_gap',
-                    'priority': 'high',
-                    'current_score': analysis['score'],
-                    'description': f"Low coverage of {analysis['description'].lower()}",
-                    'matched_items': analysis.get('matched_items', [])
-                })
-            elif analysis['status'] == 'moderate':
-                gaps.append({
-                    'dimension': dimension,
-                    'type': 'improvement_opportunity',
-                    'priority': 'medium',
-                    'current_score': analysis['score'],
-                    'description': f"Moderate coverage of {analysis['description'].lower()}",
-                    'matched_items': analysis.get('matched_items', [])
-                })
-        
-        # Add classification-specific risks
-        if classification.lower() in self.classification_patterns:
-            pattern = self.classification_patterns[classification.lower()]
-            for risk_area in pattern['risk_areas']:
-                if coverage.get(risk_area, {}).get('status') != 'strong':
-                    gaps.append({
-                        'dimension': risk_area,
-                        'type': 'classification_risk',
-                        'priority': 'high',
-                        'current_score': coverage.get(risk_area, {}).get('score', 0),
-                        'description': f"{classification.title()} policies typically need stronger {risk_area} measures",
-                        'evidence': f"Classification pattern analysis indicates vulnerability",
-                        'matched_items': coverage.get(risk_area, {}).get('matched_items', [])
-                    })
-        
-        # Sort by priority and score (worst first)
-        gaps.sort(key=lambda x: (x['priority'] != 'high', x['current_score']))
-        
+        t = (text or "").lower()
+        return {
+            "disclosure_requirements": any(k in t for k in ["disclose", "acknowledge", "cite ai", "disclosure"]),
+            "approval_processes": any(k in t for k in ["approval", "approved", "faculty approval", "committee approval", "authorisation", "authorization"]),
+        }
+
+    def identify_gaps(self, coverage: Dict[str, Any], classification: str) -> List[Dict[str, Any]]:
+        """Create gap objects from coverage dict.
+
+        Each gap contains: dimension, type, priority, current_score, description
+        """
+        gaps: List[Dict[str, Any]] = []
+        for dim_key, data in (coverage or {}).items():
+            score = float(data.get("score", 0))
+            if score >= 67:
+                continue
+            # Map to friendly names
+            dim_map = {
+                "accountability": "accountability",
+                "transparency": "transparency",
+                "human_agency": "human_agency",
+                "inclusiveness": "inclusiveness",
+            }
+            priority = "high" if score < 34 else "medium"
+            gap_type = "coverage_gap" if score < 34 else "improvement_opportunity"
+            gaps.append({
+                "dimension": dim_map.get(dim_key, dim_key),
+                "type": gap_type,
+                "priority": priority,
+                "current_score": score,
+                "description": f"Low {dim_map.get(dim_key, dim_key).replace('_',' ')} coverage for classification '{classification}'.",
+            })
         return gaps
-
 
 class RecommendationGenerator:
     """
-    Advanced recommendation generator for AI policy enhancement in higher education.
-    
-    This class provides a sophisticated framework for generating context-aware policy
-    recommendations based on academic research and best practices in AI governance.
-    It implements a multi-dimensional matching approach that considers:
-    
-    - Ethical dimensions: accountability, transparency, human_agency, inclusiveness
-    - Institutional context: research university, teaching-focused, technical institute
-    - Policy maturity: new implementation vs. enhancement of existing policies
-    - Priority levels: critical gaps vs. improvement opportunities
-    
-    The recommendation system is built upon extensive academic research, including:
-    - UNESCO (2023) guidelines on AI in education
-    - JISC (2023) framework for digital transformation in higher education
-    - BERA (2018) ethical guidelines for educational research
-    - Dabis & Csáki (2024) on AI policy implementation in academia
-    
-    The templates are designed to be both academically rigorous and practically
-    implementable within the unique context of higher education institutions.
+    Generates policy recommendations based on ethical frameworks and best practices.
+    Integrates with knowledge base for evidence-based recommendations.
     """
     
-    def __init__(self):
+    def __init__(self, knowledge_base_path: Optional[str] = None):
         """
-        Initialise the recommendation generator with comprehensive policy templates.
-        
-        This constructor loads a structured set of recommendation templates that have been
-        carefully designed to address common policy gaps in AI governance for higher education.
-        Each template includes detailed implementation guidance, success metrics, and estimated
-        timeframes to support effective policy development and implementation.
-        
-        The templates are organised by ethical dimension and institutional context to enable
-        precise matching of recommendations to specific institutional needs and policy gaps.
-        
-        Note:
-            The template structure is designed to be extensible, allowing for easy addition
-            of new recommendations as AI policy best practices evolve.
-        """
-        
-        # Enhanced UNESCO 2023-based recommendations with specific implementation steps
-        self.unesco_2023_templates = {
-            'accountability': {
-                'research_university': {
-                    'new_implementation': [
-                        {
-                            'title': 'Establish Multi-Stakeholder AI Governance Committee',
-                            'description': 'Create institution-wide committee comprising faculty representatives, student body delegates, IT specialists, ethics experts, and senior administrators. Committee should meet monthly to review AI policy implementation, assess emerging risks, and update guidelines based on practical experience.',
-                            'implementation_steps': [
-                                'Identify and recruit diverse committee members with relevant expertise',
-                                'Develop committee charter defining roles, responsibilities, and decision-making authority',
-                                'Establish regular meeting schedule and reporting mechanisms to senior leadership',
-                                'Create standardised incident reporting and policy violation review processes'
-                            ],
-                            'success_metrics': ['Committee established within 2 months', 'Monthly meeting attendance >80%', 'Quarterly policy reviews completed'],
-                            'timeframe': '2-4 months',
-                            'priority': 'high'
-                        },
-                        {
-                            'title': 'Implement Research Integrity AI Oversight Framework',
-                            'description': 'Develop specialised oversight mechanisms for AI use in research contexts, including pre-approval processes for high-risk research applications, ongoing monitoring of AI-assisted research projects, and integration with existing research ethics review boards.',
-                            'implementation_steps': [
-                                'Extend research ethics board mandate to include AI governance oversight',
-                                'Develop risk assessment matrix for AI applications in research contexts',
-                                'Create streamlined approval process for low-risk AI research applications',
-                                'Establish quarterly compliance audits for active research projects using AI'
-                            ],
-                            'success_metrics': ['Ethics board AI protocols adopted', '>90% research project compliance', 'Risk assessment completed for all new projects'],
-                            'timeframe': '3-6 months',
-                            'priority': 'high'
-                        }
-                    ],
-                    'enhancement': [
-                        {
-                            'title': 'Strengthen Existing Governance with Formal Accountability Metrics',
-                            'description': 'Enhance current governance structures by implementing quantitative accountability measures, establishing clear performance indicators for policy effectiveness, and creating systematic feedback loops from stakeholder communities.',
-                            'implementation_steps': [
-                                'Develop KPIs for current governance structure effectiveness',
-                                'Implement quarterly stakeholder satisfaction surveys',
-                                'Create public transparency reports on governance activities and outcomes',
-                                'Establish formal escalation procedures for unresolved policy concerns'
-                            ],
-                            'success_metrics': ['KPI dashboard operational', 'Stakeholder satisfaction >75%', 'Response time to concerns <48 hours'],
-                            'timeframe': '1-3 months',
-                            'priority': 'medium'
-                        }
-                    ]
-                },
-                'teaching_focused': {
-                    'new_implementation': [
-                        {
-                            'title': 'Create Faculty-Led AI Teaching Excellence Network',
-                            'description': 'Establish collaborative network of teaching-focused faculty to develop and share best practices for AI integration in educational contexts, provide peer support for policy implementation, and ensure accountability through professional community engagement.',
-                            'implementation_steps': [
-                                'Recruit volunteer faculty champions from each academic department',
-                                'Organise monthly professional development sessions on AI pedagogy',
-                                'Create shared resource repository for AI teaching materials and assessments',
-                                'Develop peer review system for innovative AI-enhanced teaching approaches'
-                            ],
-                            'success_metrics': ['Network membership >50% of teaching faculty', 'Monthly session attendance >30', 'Resource repository with >100 materials'],
-                            'timeframe': '2-4 months',
-                            'priority': 'high'
-                        }
-                    ]
-                },
-                'technical_institute': {
-                    'new_implementation': [
-                        {
-                            'title': 'Implement Technical AI Safety and Security Oversight Board',
-                            'description': 'Establish technically-sophisticated oversight body with expertise in AI systems, cybersecurity, and educational technology to provide specialised governance for complex AI implementations in technical education contexts.',
-                            'implementation_steps': [
-                                'Recruit board members with advanced technical AI expertise',
-                                'Develop technical safety assessment protocols for AI educational tools',
-                                'Create incident response procedures for AI system failures or security breaches',
-                                'Establish integration protocols with existing IT security infrastructure'
-                            ],
-                            'success_metrics': ['Board operational with >5 technical experts', 'Safety protocols for all AI tools', 'Zero major security incidents'],
-                            'timeframe': '1-3 months',
-                            'priority': 'critical'
-                        }
-                    ]
-                }
-            },
-            'transparency': {
-                'research_university': {
-                    'new_implementation': [
-                        {
-                            'title': 'Develop Comprehensive AI Research Disclosure Framework',
-                            'description': 'Create detailed disclosure requirements for AI use in research publications, grant applications, and academic presentations. Framework should include methodology transparency, dataset acknowledgment, and limitations documentation to maintain research integrity.',
-                            'implementation_steps': [
-                                'Draft disclosure templates for different research publication types',
-                                'Integrate disclosure requirements into institutional publication guidelines',
-                                'Provide training for researchers on proper AI methodology documentation',
-                                'Create review checklist for research integrity office and journal submissions'
-                            ],
-                            'success_metrics': ['Disclosure templates adopted by all departments', '100% compliance in new publications', 'Training completed by >80% research-active faculty'],
-                            'timeframe': '3-6 months',
-                            'priority': 'high'
-                        },
-                        {
-                            'title': 'Establish Public AI Transparency Repository',
-                            'description': 'Create publicly accessible repository documenting institutional AI policies, implementation decisions, outcome assessments, and stakeholder feedback. Repository should demonstrate institutional commitment to openness and enable external scrutiny of AI governance practices.',
-                            'implementation_steps': [
-                                'Develop web-based transparency portal with searchable policy database',
-                                'Implement quarterly reporting cycle for AI policy implementation outcomes',
-                                'Create stakeholder feedback mechanism with public response commitments',
-                                'Establish annual third-party audit of transparency practices'
-                            ],
-                            'success_metrics': ['Portal launched with full policy documentation', 'Quarterly reports published on schedule', '>1000 annual portal visits'],
-                            'timeframe': '4-8 months',
-                            'priority': 'medium'
-                        }
-                    ],
-                    'enhancement': [
-                        {
-                            'title': 'Expand Existing Disclosure Requirements with Methodological Detail',
-                            'description': 'Enhance current disclosure practices by requiring detailed documentation of AI methodologies, decision-making processes, and outcome validation procedures. Focus on academic integrity and reproducibility standards.',
-                            'implementation_steps': [
-                                'Review and strengthen existing disclosure language for comprehensiveness',
-                                'Add requirements for AI methodology documentation in research contexts',
-                                'Create detailed examples and case studies for common disclosure scenarios',
-                                'Implement compliance monitoring through existing academic integrity mechanisms'
-                            ],
-                            'success_metrics': ['Enhanced disclosure guidelines published', 'Compliance monitoring system operational', 'Faculty feedback rating >4/5'],
-                            'timeframe': '1-2 months',
-                            'priority': 'medium'
-                        }
-                    ]
-                },
-                'teaching_focused': {
-                    'new_implementation': [
-                        {
-                            'title': 'Create Student-Friendly AI Transparency Dashboard',
-                            'description': 'Develop accessible, student-oriented transparency platform explaining institutional AI policies, providing clear examples of appropriate use, and offering easy access to support resources and feedback mechanisms.',
-                            'implementation_steps': [
-                                'Design user-friendly interface with clear navigation and search functionality',
-                                'Create multimedia content explaining AI policies with practical examples',
-                                'Implement live chat support for student questions about AI policy',
-                                'Develop mobile-responsive design for accessible student engagement'
-                            ],
-                            'success_metrics': ['Dashboard launched with <2 second load times', 'Student satisfaction rating >4.2/5', '>500 monthly active users'],
-                            'timeframe': '2-4 months',
-                            'priority': 'high'
-                        }
-                    ]
-                }
-            },
-            'human_agency': {
-                'research_university': {
-                    'new_implementation': [
-                        {
-                            'title': 'Implement Graduated Human Oversight Protocol for Research AI',
-                            'description': 'Establish risk-based human oversight framework requiring different levels of human control based on AI application complexity, research sensitivity, and potential impact. Protocol should preserve human authority in critical research decisions while enabling efficient AI integration.',
-                            'implementation_steps': [
-                                'Develop risk assessment matrix categorising AI applications by oversight requirements',
-                                'Create standard operating procedures for each oversight level',
-                                'Train research supervisors on appropriate oversight implementation',
-                                'Establish periodic review cycle for oversight level adjustments'
-                            ],
-                            'success_metrics': ['Risk matrix approved and implemented', 'All active research projects classified', 'Supervisor training >90% completion'],
-                            'timeframe': '2-5 months',
-                            'priority': 'high'
-                        },
-                        {
-                            'title': 'Preserve Human Authority in Academic Assessment and Evaluation',
-                            'description': 'Ensure human faculty maintain final decision-making authority over all academic assessments, grading decisions, and research evaluations. Implement safeguards preventing inappropriate delegation of academic judgment to AI systems.',
-                            'implementation_steps': [
-                                'Develop clear policy statements on human authority in academic evaluation',
-                                'Create training programmes for faculty on appropriate AI-assisted assessment',
-                                'Implement audit mechanisms to verify human oversight in grading processes',
-                                'Establish appeals process for students concerned about AI influence on evaluations'
-                            ],
-                            'success_metrics': ['Policy statements distributed to all faculty', 'Assessment audit system operational', 'Zero substantiated complaints about inappropriate AI delegation'],
-                            'timeframe': '1-3 months',
-                            'priority': 'critical'
-                        }
-                    ],
-                    'enhancement': [
-                        {
-                            'title': 'Strengthen Existing Human Oversight with Systematic Review Processes',
-                            'description': 'Enhance current human oversight practices by implementing systematic review processes, establishing clear decision-making hierarchies, and creating documentation requirements for AI-assisted decisions.',
-                            'implementation_steps': [
-                                'Audit existing oversight practices for completeness and effectiveness',
-                                'Implement standardised documentation requirements for AI-assisted decisions',
-                                'Create clear escalation procedures for complex or ambiguous cases',
-                                'Establish quarterly review meetings to assess oversight effectiveness'
-                            ],
-                            'success_metrics': ['Oversight audit completed', 'Documentation compliance >95%', 'Escalation procedures tested and functional'],
-                            'timeframe': '1-2 months',
-                            'priority': 'medium'
-                        }
-                    ]
-                },
-                'teaching_focused': {
-                    'new_implementation': [
-                        {
-                            'title': 'Empower Faculty with AI-Enhanced Teaching Authority',
-                            'description': 'Provide faculty with clear authority and practical tools to make informed decisions about AI integration in their courses, including assessment design, student support, and pedagogical innovation while maintaining educational quality standards.',
-                            'implementation_steps': [
-                                'Develop faculty decision-making framework for AI integration in courses',
-                                'Create practical toolkit with assessment examples and best practices',
-                                'Provide professional development workshops on AI-enhanced pedagogy',
-                                'Establish peer consultation network for complex teaching scenarios'
-                            ],
-                            'success_metrics': ['Decision framework adopted by >80% faculty', 'Workshop attendance >60% eligible faculty', 'Peer network membership >40 faculty'],
-                            'timeframe': '2-4 months',
-                            'priority': 'high'
-                        }
-                    ]
-                }
-            },
-            'inclusiveness': {
-                'research_university': {
-                    'new_implementation': [
-                        {
-                            'title': 'Establish Comprehensive AI Accessibility Standards',
-                            'description': 'Implement institution-wide accessibility requirements for all AI tools and platforms, ensuring compliance with disability rights legislation and promoting equitable access for students and faculty with diverse needs and capabilities.',
-                            'implementation_steps': [
-                                'Conduct accessibility audit of current AI tools and platforms',
-                                'Develop procurement requirements including accessibility criteria for new AI tools',
-                                'Create accommodation procedures for students unable to use standard AI tools',
-                                'Implement regular accessibility testing and compliance monitoring'
-                            ],
-                            'success_metrics': ['Accessibility audit completed for all AI tools', 'Procurement standards updated', 'Accommodation procedures operational'],
-                            'timeframe': '3-6 months',
-                            'priority': 'high'
-                        },
-                        {
-                            'title': 'Address Digital Equity Gaps in AI Access',
-                            'description': 'Develop comprehensive programme to ensure equitable access to AI tools across diverse student populations, addressing financial barriers, technical literacy gaps, and cultural considerations that may limit effective AI engagement.',
-                            'implementation_steps': [
-                                'Survey student population to identify access barriers and needs',
-                                'Establish AI tool lending programme for students with financial constraints',
-                                'Create multilingual support materials and culturally responsive training',
-                                'Develop partnerships with community organisations to extend support reach'
-                            ],
-                            'success_metrics': ['Student needs assessment completed', 'Lending programme operational', 'Support materials available in >3 languages'],
-                            'timeframe': '4-8 months',
-                            'priority': 'high'
-                        }
-                    ],
-                    'enhancement': [
-                        {
-                            'title': 'Expand Existing Accessibility Measures with Cultural Competency',
-                            'description': 'Enhance current accessibility practices by incorporating cultural competency considerations, addressing diverse learning styles and preferences, and ensuring AI implementations respect varied cultural and linguistic backgrounds.',
-                            'implementation_steps': [
-                                'Review existing accessibility measures for cultural inclusivity gaps',
-                                'Engage diverse student focus groups to identify additional needs',
-                                'Develop cultural competency guidelines for AI tool selection and implementation',
-                                'Create ongoing assessment mechanism for inclusive practice effectiveness'
-                            ],
-                            'success_metrics': ['Cultural inclusivity review completed', 'Focus group recommendations implemented', 'Assessment mechanism operational'],
-                            'timeframe': '2-4 months',
-                            'priority': 'medium'
-                        }
-                    ]
-                },
-                'teaching_focused': {
-                    'new_implementation': [
-                        {
-                            'title': 'Develop Alternative Assessment Pathways for Diverse Learning Needs',
-                            'description': 'Create multiple assessment options accommodating different learning styles, technical capabilities, and cultural backgrounds while maintaining academic standards and ensuring fair evaluation of student learning outcomes.',
-                            'implementation_steps': [
-                                'Design alternative assessment formats for students who cannot or prefer not to use AI',
-                                'Create flexibility guidelines for faculty to adapt assessments for diverse needs',
-                                'Develop support resources for students navigating different assessment options',
-                                'Implement quality assurance processes to ensure alternative assessments maintain academic rigour'
-                            ],
-                            'success_metrics': ['Alternative assessment options available in all courses', 'Student satisfaction with options >4/5', 'Academic standards maintained across all pathways'],
-                            'timeframe': '3-5 months',
-                            'priority': 'high'
-                        }
-                    ]
-                }
-            }
-        }
-        
-        # JISC 2023-based practical implementation templates
-        self.jisc_2023_templates = {
-            'accountability': {
-                'research_university': [
-                    {
-                        'title': 'Develop Research-Grade AI Competency Requirements',
-                        'description': 'Establish mandatory AI literacy requirements for research-active faculty, including understanding of AI capabilities and limitations, ethical considerations in research contexts, and best practices for AI-assisted scholarly work.',
-                        'implementation_steps': [
-                            'Create competency framework specific to research contexts and methodologies',
-                            'Develop assessment mechanism to verify faculty AI literacy levels',
-                            'Provide targeted training programmes for different research disciplines',
-                            'Implement continuing education requirements for faculty using AI in research'
-                        ],
-                        'success_metrics': ['Competency framework approved', 'Faculty assessment system operational', '>85% faculty meet basic competency requirements'],
-                        'timeframe': '4-6 months',
-                        'priority': 'high'
-                    }
-                ],
-                'teaching_focused': [
-                    {
-                        'title': 'Create Teaching-Focused AI Professional Development Programme',
-                        'description': 'Implement comprehensive professional development initiative specifically designed for teaching faculty, focusing on pedagogical applications of AI, assessment design in AI contexts, and student support strategies.',
-                        'implementation_steps': [
-                            'Design modular training programme addressing core teaching challenges with AI',
-                            'Create peer mentoring system pairing experienced and novice AI users',
-                            'Develop online resource library with practical teaching examples and case studies',
-                            'Establish ongoing support network for faculty implementing AI-enhanced teaching'
-                        ],
-                        'success_metrics': ['Training programme launched', 'Mentoring system operational with >50 participants', 'Resource library with >200 materials'],
-                        'timeframe': '3-5 months',
-                        'priority': 'high'
-                    }
-                ]
-            },
-            'transparency': {
-                'all_institutions': [
-                    {
-                        'title': 'Implement Comprehensive Stakeholder Communication Strategy',
-                        'description': 'Develop multi-channel communication approach ensuring all institutional stakeholders understand AI policies, implementation decisions, and ongoing developments through accessible, regular, and meaningful engagement.',
-                        'implementation_steps': [
-                            'Create stakeholder mapping identifying all relevant community groups',
-                            'Develop communication materials tailored to different audience needs and preferences',
-                            'Establish regular communication schedule with predictable updates and opportunities for feedback',
-                            'Implement feedback collection and response system with public accountability measures'
-                        ],
-                        'success_metrics': ['Communication strategy launched', 'All stakeholder groups receiving targeted updates', 'Feedback response rate >30%'],
-                        'timeframe': '2-4 months',
-                        'priority': 'medium'
-                    }
-                ]
-            }
-        }
-        
-        # BERA 2018 ethical principles adapted for AI contexts
-        self.bera_2018_templates = {
-            'human_agency': {
-                'research_university': [
-                    {
-                        'title': 'Implement Informed Consent Framework for AI-Assisted Research',
-                        'description': 'Develop comprehensive informed consent procedures for research involving AI tools, ensuring participants understand AI involvement, data usage, and potential implications while maintaining research ethics standards.',
-                        'implementation_steps': [
-                            'Update research ethics protocols to address AI-specific consent requirements',
-                            'Create template consent forms with clear AI disclosure language',
-                            'Train research ethics board members on AI-related ethical considerations',
-                            'Implement ongoing consent verification for longitudinal studies using AI'
-                        ],
-                        'success_metrics': ['Updated ethics protocols approved', 'Template forms available', 'Ethics board training completed'],
-                        'timeframe': '2-4 months',
-                        'priority': 'high'
-                    }
-                ]
-            },
-            'inclusiveness': {
-                'all_institutions': [
-                    {
-                        'title': 'Establish Participant Welfare Protection in AI Contexts',
-                        'description': 'Create robust safeguards ensuring AI implementation does not harm student welfare, academic progress, or personal development, with particular attention to vulnerable populations and those who may be disadvantaged by AI adoption.',
-                        'implementation_steps': [
-                            'Conduct impact assessment identifying potential welfare risks from AI implementation',
-                            'Develop early warning system to identify students experiencing difficulties with AI integration',
-                            'Create support services specifically addressing AI-related academic challenges',
-                            'Implement regular welfare monitoring and intervention protocols'
-                        ],
-                        'success_metrics': ['Impact assessment completed', 'Early warning system operational', 'Support services utilised by >5% student body'],
-                        'timeframe': '3-6 months',
-                        'priority': 'high'
-                    }
-                ]
-            }
-        }
-        
-        # Implementation timeframes based on complexity and urgency
-        self.implementation_timeframes = {
-            'critical': '1-2 months',
-            'high': '2-4 months', 
-            'medium': '3-6 months',
-            'low': '6-12 months',
-            'strategic': '12+ months'
-        }
-        
-        # Institution type characteristics for contextual matching
-        self.institution_characteristics = {
-            'research_university': {
-                'priorities': ['research_integrity', 'publication_ethics', 'graduate_supervision', 'grant_compliance'],
-                'stakeholders': ['faculty', 'graduate_students', 'research_staff', 'external_collaborators'],
-                'complexity_factors': ['multi_disciplinary', 'international_collaboration', 'high_risk_research']
-            },
-            'teaching_focused': {
-                'priorities': ['student_learning', 'assessment_quality', 'pedagogical_innovation', 'student_support'],
-                'stakeholders': ['undergraduate_students', 'teaching_faculty', 'academic_support_staff'],
-                'complexity_factors': ['diverse_student_body', 'varying_technical_literacy', 'resource_constraints']
-            },
-            'technical_institute': {
-                'priorities': ['technical_accuracy', 'industry_relevance', 'practical_skills', 'innovation'],
-                'stakeholders': ['technical_faculty', 'industry_partners', 'technical_students'],
-                'complexity_factors': ['rapid_technology_change', 'industry_integration', 'specialised_equipment']
-            }
-        }
-
-    def generate_recommendations(self, gaps: List[Dict], classification: str, 
-                               themes: List[Dict], text: str = "") -> List[Dict]:
-        """
-        Generate comprehensive, context-aware policy recommendations using advanced multi-dimensional analysis.
-        
-        This method produces academically rigorous recommendations by considering multiple contextual
-        factors, including institutional characteristics, existing policy landscape, and identified gaps.
-        Each recommendation includes detailed implementation guidance, success metrics, and contextual
-        adaptations specific to the institution's profile and requirements.
-        
-        The recommendation process involves:
-        1. Analysis of institutional context and characteristics
-        2. Detection of existing policy provisions
-        3. Multi-dimensional gap analysis
-        4. Contextual adaptation of recommendations
-        5. Prioritisation based on impact and feasibility
+        Initialise the recommendation generator.
         
         Args:
-            gaps: List of dictionaries containing identified policy gaps from the EthicalFrameworkAnalyzer.
-                  Each gap should include 'dimension', 'priority', and 'current_score' keys, along with
-                  relevant metadata about the nature and context of the gap.
-                  
-            classification: String indicating the policy classification, which should be one of:
-                          - 'restrictive': Policies emphasising limitations and controls
-                          - 'moderate': Balanced approach with specific guidelines
-                          - 'permissive': Flexible approach encouraging innovation
-                          
-            themes: List of dictionaries containing themes extracted from the policy document.
-                   Each theme dictionary should include the theme text, relevance score, and any
-                   associated metadata that provides context about the theme's importance.
-                   
-            text: Optional string containing the original policy text. When provided, enables detection
-                 of existing policy provisions to inform the recommendation strategy (enhancement vs
-                 new implementation).
+            knowledge_base_path: Path to the knowledge base directory (required)
+        """  
+        logger.info("Initialising RecommendationGenerator...")
         
-        Returns:
-            List[Dict]: A list of detailed recommendation dictionaries, each containing:
-                - title: Descriptive title of the recommendation
-                - dimension: The ethical dimension addressed
-                - priority: Recommended implementation priority ('high', 'medium', 'low')
-                - implementation_type: 'enhancement' or 'new_implementation'
-                - description: Detailed explanation of the recommendation
-                - implementation_steps: List of actionable steps
-                - success_metrics: Quantifiable measures of successful implementation
-                - timeframe: Estimated implementation duration
-                - source: Academic or policy source for the recommendation
+        # Initialise knowledge base manager
+        self.knowledge_manager = None
+        self.knowledge_base_available = False
+        
+        if KnowledgeBaseManager is not None and knowledge_base_path:
+            try:
+                logger.info(f"Initialising KnowledgeBaseManager with path: {knowledge_base_path}")
+                self.knowledge_manager = KnowledgeBaseManager(knowledge_base_path)
                 
-        Example:
-            >>> generator = RecommendationGenerator()
-            >>> gaps = [{'dimension': 'transparency', 'priority': 'high', 'current_score': 35}]
-            >>> themes = [{'theme': 'AI governance', 'relevance': 0.85}]
-            >>> recs = generator.generate_recommendations(gaps, 'moderate', themes, policy_text)
-            >>> print(recs[0]['title'])
-            'Develop Comprehensive AI Research Disclosure Framework'
+                # Verify if the knowledge base contains any documents
+                try:
+                    documents = self.knowledge_manager.get_all_documents()
+                    if documents and len(documents) > 0:
+                        self.knowledge_base_available = True
+                        logger.info(f"Found {len(documents)} documents in knowledge base")
+                    else:
+                        logger.error("Knowledge base is empty - cannot generate recommendations")
+                except Exception as e:
+                    logger.error(f"Error while checking knowledge base contents: {str(e)}")
+                    
+            except Exception as e:
+                logger.error(f"Failed to initialise knowledge base: {str(e)}")
+        else:
+            logger.error("No knowledge base path provided or KnowledgeBaseManager not available")
+        
+        # Initialise analyser only if we have access to knowledge base
+        if self.knowledge_base_available:
+            self.analyzer = EthicalFrameworkAnalyzer(self.knowledge_manager)
             
-        Note:
-            The method limits recommendations to the top 8 gaps to ensure quality and focus.
-            Recommendations are deduplicated to avoid repetition and prioritise the most
-            impactful suggestions based on the institution's specific context and needs.
+            # Initialise literature repository if available
+            self.lit_repo = None
+            try:
+                if LiteratureRepository is not None:
+                    self.lit_repo = LiteratureRepository.get()
+            except Exception as e:
+                logger.error(f"Failed to initialise literature repository: {str(e)}")
+                self.lit_repo = None
+            
+            # Initialise semantic embedder if available
+            self.embedder = None
+            if EMBEDDINGS_AVAILABLE:
+                try:
+                    self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
+                    logger.info("Semantic embedder loaded successfully")
+                except Exception as e:
+                    logger.error(f"Failed to load semantic embedder: {str(e)}")
+                    self.embedder = None
+            
+            logger.info("PolicyCraft Recommendation Engine initialised with knowledge base access")
+        else:
+            self.analyzer = None
+            self.lit_repo = None
+            self.embedder = None
+            logger.error("Cannot initialise analyser - no access to knowledge base")
+        
+    def generate_recommendations(self, policy_text: str = "", institution_type: str = "university", **kwargs) -> Dict[str, Any]:
         """
-        # Determine institution context for targeted recommendations
-        institution_context = self._analyze_institution_context(themes, text)
+        Generate recommendations for improving a policy.
         
-        # Detect existing policies to determine enhancement vs new implementation
-        existing_policies = self._detect_existing_policies(text) if text else {}
-        
-        recommendations = []
-        used_combinations = set()  # Prevent exact duplicates
-        
-        # Process each gap with sophisticated matching logic
-        for gap in gaps[:8]:  # Limit to top 8 gaps for quality over quantity
-            dimension = gap['dimension']
-            priority = gap.get('priority', 'medium')
-            current_score = gap.get('current_score', 0)
+        Args:
+            policy_text: The text of the policy to analyse
+            institution_type: Type of institution (university, college, etc.)
+            **kwargs: Additional parameters (e.g., analysis_id for tracking)
             
-            # Determine implementation approach based on existing policies
-            has_existing = self._has_existing_provision(gap, existing_policies)
-            implementation_type = 'enhancement' if has_existing else 'new_implementation'
+        Returns:
+            Dict containing analysis and recommendations
             
-            # Generate contextual recommendation using multi-dimensional matching
-            recommendation = self._generate_contextual_recommendation(
-                dimension=dimension,
-                institution_context=institution_context,
-                implementation_type=implementation_type,
-                priority=priority,
-                current_score=current_score,
-                gap_details=gap
+        Raises:
+            ValueError: If knowledge base is not available or policy text is empty
+        """
+        # Check if knowledge base is available
+        if not self.knowledge_base_available or not self.analyzer:
+            raise ValueError(
+                "Cannot generate recommendations - knowledge base is unavailable. "
+                "Please try again later or contact the system administrator."
             )
+
+        # Compatibility: allow tests to pass text via 'text' kwarg
+        if not policy_text and "text" in kwargs:
+            policy_text = kwargs.get("text", "")
+
+        # If the contextual API is used (gaps/classification/themes), return list of recommendations
+        if "gaps" in kwargs:
+            gaps: List[Dict[str, Any]] = kwargs.get("gaps", []) or []
+            themes = kwargs.get("themes", []) or []
+            return self._generate_from_gaps(gaps=gaps, themes=themes, policy_text=policy_text)
+
+        if not policy_text.strip():
+            raise ValueError("Policy text cannot be empty")
             
-            if recommendation:
-                # Create unique identifier to prevent duplicates
-                combo_key = f"{dimension}_{implementation_type}_{institution_context.get('type', 'general')}"
-                if combo_key not in used_combinations:
-                    recommendations.append(recommendation)
-                    used_combinations.add(combo_key)
+        logger.info("Generating recommendations for %s policy (%d characters)", institution_type, len(policy_text))
         
-        # Sort by priority and potential impact
-        recommendations.sort(key=lambda x: (
-            x.get('priority') != 'critical',
-            x.get('priority') != 'high', 
-            -x.get('impact_score', 0)
+        # Analyse policy using ethical framework
+        analysis = self.analyzer.analyse_policy(policy_text, institution_type)
+        
+        # Track the analysis ID if provided
+        analysis_id = kwargs.get('analysis_id', None)
+        if analysis_id:
+            analysis['analysis_id'] = analysis_id
+        
+        # Enhance recommendations with university-specific context
+        for rec in analysis["recommendations"]:
+            # Ensure recommendation is tailored for university context
+            self._tailor_for_university_context(rec)
+            
+            # Ensure timeframe is set for template display
+            self._ensure_timeframe(rec)
+        
+        # Enhance with knowledge base - required
+        if not self.knowledge_manager:
+            raise ValueError(
+                "Knowledge base manager is not available. "
+                "Cannot generate recommendations without a valid knowledge base."
+            )
+        self._enhance_with_kb(analysis)
+        
+        return analysis
+        
+    def _tailor_for_university_context(self, recommendation: Dict[str, Any]) -> None:
+        """
+        Tailor a recommendation specifically for university context.
+        
+        Args:
+            recommendation: The recommendation to tailor
+        """
+        # Get current fields
+        title = recommendation.get("title", "")
+        description = recommendation.get("description", "")
+        
+        university_terms = ["university", "universities", "higher education", "academic", "faculty", "campus"]
+        if self._is_already_university_tailored(title, description, university_terms):
+            return
+        
+        # Title adjustment
+        recommendation["title"] = self._adjust_title_for_university(title)
+        
+        # Description augmentation
+        recommendation["description"] = self._augment_description_for_university(description)
+        
+        # Steps tailoring
+        if "implementation_steps" in recommendation:
+            recommendation["implementation_steps"] = self._tailor_steps_for_university(
+                recommendation.get("implementation_steps", []), university_terms
+            )
+
+    # ---- Extracted micro-helpers for tailoring ----
+    def _is_already_university_tailored(self, title: str, description: str, terms: List[str]) -> bool:
+        t = (title or "").lower()
+        d = (description or "").lower()
+        return any(term in t or term in d for term in terms)
+
+    def _adjust_title_for_university(self, title: str) -> str:
+        if not title:
+            return title
+        lower = title.lower()
+        if "policy" in lower and UNIVERSITY_POLICY_LITERAL not in lower:
+            return title.replace("Policy", "University Policy").replace("policy", UNIVERSITY_POLICY_LITERAL)
+        return title
+
+    def _augment_description_for_university(self, description: str) -> str:
+        if not description:
+            return description
+        lower = description.lower()
+        if "university" in lower or "higher education" in lower:
+            return description
+        # Keep original capitalisation after the prefix where possible
+        return f"In the university context, {lower[0]}{description[1:]}"
+
+    def _tailor_steps_for_university(self, steps: List[str], terms: List[str]) -> List[str]:
+        tailored: List[str] = []
+        for step in steps:
+            s_lower = (step or "").lower()
+            if any(term in s_lower for term in terms):
+                tailored.append(step)
+                continue
+            if "stakeholders" in s_lower and "faculty" not in s_lower:
+                step = step.replace("stakeholders", "faculty, staff, students and other stakeholders")
+            elif "training" in s_lower and "faculty" not in s_lower:
+                step = step.replace("training", "faculty and staff training")
+            elif "policy" in s_lower and "university" not in s_lower:
+                step = step.replace("policy", UNIVERSITY_POLICY_LITERAL)
+            tailored.append(step)
+        return tailored
+
+    # ---- Helper methods to reduce cognitive complexity ----
+    def _generate_from_gaps(self, gaps: List[Dict[str, Any]], themes: List[Dict[str, Any]], policy_text: str) -> List[Dict[str, Any]]:
+        """Generate contextual recommendations from gaps flow and dedupe results."""
+        institution_context = self._analyze_institution_context(themes, policy_text)
+        recs: List[Dict[str, Any]] = []
+        existing = self._detect_existing_policies(policy_text)
+        impl_type = "enhancement" if existing.get("disclosure_requirements") else "new_implementation"
+
+        for gap in gaps:
+            rec = self._generate_contextual_recommendation(
+                dimension=gap.get("dimension", "transparency"),
+                institution_context=institution_context,
+                implementation_type=impl_type,
+                priority=gap.get("priority", "medium"),
+                current_score=float(gap.get("current_score", 0.0)),
+                gap_details=gap,
+            )
+            if rec:
+                self._ensure_timeframe(rec)
+                recs.append(rec)
+
+            # Add additional evidence-based recommendations for the same dimension
+            # to avoid under-providing suggestions (ethically safer to provide
+            # a broader set for human review rather than an overly narrow set).
+            try:
+                from typing import cast
+                # Map gap dimension string to PolicyDimension enum safely
+                dim_key = (gap.get("dimension", "") or "").upper()
+                # Normalise potential keys
+                dim_map = {
+                    "ACCOUNTABILITY": "ACCOUNTABILITY",
+                    "TRANSPARENCY": "TRANSPARENCY",
+                    "HUMAN_AGENCY": "HUMAN_AGENCY",
+                    "HUMAN AGENCY": "HUMAN_AGENCY",
+                    "INCLUSIVENESS": "INCLUSIVENESS",
+                }
+                enum_key = dim_map.get(dim_key, "TRANSPARENCY")
+                # PolicyDimension is defined in this module; import locally to avoid cycles
+                from enum import Enum
+                PD = cast(Enum, PolicyDimension)
+                enum_dim = getattr(PD, enum_key)
+
+                extra = self.analyzer._generate_dimension_recommendations(enum_dim, policy_text)
+                # Take top 2 complementary suggestions per dimension to keep report concise
+                # Ensure each receives a distinct implementation_type so dedupe by (dimension, implementation_type)
+                # will retain them alongside the primary recommendation for that dimension.
+                extra_types = ["pilot_programme", "training_and_capacity", "governance_controls"]
+                for idx, extra_rec in enumerate(extra[:2] if isinstance(extra, list) else []):
+                    # Tag implementation type if missing or identical to primary
+                    if not extra_rec.get("implementation_type") or extra_rec.get("implementation_type") == impl_type:
+                        extra_rec["implementation_type"] = extra_types[idx % len(extra_types)]
+                    # Ensure timeframe field for template/UI
+                    self._ensure_timeframe(extra_rec)
+                    recs.append(extra_rec)
+            except Exception as _e:
+                logger.debug("Could not enrich recommendations for dimension '%s': %s", gap.get("dimension"), str(_e))
+
+        # Ensure a minimum number of strategic recommendations for a useful brief
+        try:
+            MIN_RECS = 8
+            if len(recs) < MIN_RECS:
+                from typing import cast
+                from enum import Enum
+                PD = cast(Enum, PolicyDimension)
+                extra_types_fill = [
+                    "pilot_programme",
+                    "training_and_capacity",
+                    "governance_controls",
+                    "documentation_transparency",
+                    "evaluation_and_monitoring",
+                ]
+                type_idx = 0
+                # Iterate all dimensions to top-up
+                for dim in PD:
+                    if len(recs) >= MIN_RECS:
+                        break
+                    try:
+                        extra = self.analyzer._generate_dimension_recommendations(dim, policy_text)
+                        for x in (extra if isinstance(extra, list) else []):
+                            if len(recs) >= MIN_RECS:
+                                break
+                            if not x.get("implementation_type"):
+                                x["implementation_type"] = extra_types_fill[type_idx % len(extra_types_fill)]
+                                type_idx += 1
+                            self._ensure_timeframe(x)
+                            recs.append(x)
+                    except Exception:
+                        continue
+        except Exception as _e:
+            logger.debug("Top-up recommendations skipped: %s", str(_e))
+
+        # First, de-duplicate by normalised (dimension, implementation_type)
+        recs = self._dedupe_by_dimension_impl(recs)
+        # Then, de-duplicate by title to maintain clarity and avoid repetition
+        return self._dedupe_by_title(recs)
+
+    def _dedupe_by_title(self, recs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        seen: set[str] = set()
+        deduped: List[Dict[str, Any]] = []
+        for r in recs:
+            title = r.get("title", "")
+            if title not in seen:
+                seen.add(title)
+                deduped.append(r)
+        return deduped
+
+    def _norm_dim_name(self, n: str) -> str:
+        """Normalise dimension name to a canonical lower-case form.
+
+        Maps short/underscore variants to full names used in PolicyDimension values.
+        """
+        s = (n or "").strip().lower()
+        s = s.replace("&", "and").replace("_", " ")
+        s = " ".join(s.split())
+        # Known canonical full names (lower-case)
+        canonical = {
+            "accountability and governance": "accountability and governance",
+            "transparency and explainability": "transparency and explainability",
+            "human agency and oversight": "human agency and oversight",
+            "inclusiveness and fairness": "inclusiveness and fairness",
+        }
+        if s in canonical:
+            return s
+        # Map common short keys
+        short_map = {
+            "accountability": "accountability and governance",
+            "transparency": "transparency and explainability",
+            "human agency": "human agency and oversight",
+            "human_agency": "human agency and oversight",
+            "humanagency": "human agency and oversight",
+            "inclusiveness": "inclusiveness and fairness",
+            "fairness": "inclusiveness and fairness",
+        }
+        return short_map.get(s, s)
+
+    def _dedupe_by_dimension_impl(self, recs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Remove duplicates based on normalised (dimension, implementation_type).
+
+        Preserves first occurrence ordering. Also normalises the 'dimension' field
+        only for comparison; it does NOT overwrite the original display value to
+        preserve expected short labels in tests and API outputs.
+        """
+        seen: set[tuple[str, Optional[str]]] = set()
+        out: List[Dict[str, Any]] = []
+        for r in recs:
+            dim_raw = r.get("dimension", "") or ""
+            impl = r.get("implementation_type")
+            norm = self._norm_dim_name(dim_raw)
+            key = (norm, impl or None)
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(r)
+        return out
+
+    def _ensure_timeframe(self, rec: Dict[str, Any]) -> None:
+        if "implementation_time" in rec and "timeframe" not in rec:
+            rec["timeframe"] = rec["implementation_time"]
+
+    def _enhance_with_kb(self, analysis: Dict[str, Any]) -> None:
+        """Attach KB-based evidence and ensure diverse sources; keep behaviour identical."""
+        try:
+            logger.info("Enhancing recommendations with knowledge base integration")
+            analysis["knowledge_base_integration"] = True
+            analysis["kb_references"] = []
+
+            # Prefer LiteratureRepository for up-to-date, incremental view
+            kb_documents: List[Dict[str, Any]] = []
+            used_backend = "repository"
+            try:
+                if self.lit_repo is None and LiteratureRepository is not None:
+                    self.lit_repo = LiteratureRepository.get()
+                if self.lit_repo is not None:
+                    records = self.lit_repo.find_sources()  # returns all when query empty
+                    for r in records:
+                        pub_date = None
+                        if getattr(r, "year", None):
+                            pub_date = f"{int(r.year)}-01-01"
+                        kb_documents.append({
+                            "id": r.document_id,
+                            "document_id": r.document_id,
+                            "title": r.title,
+                            "author": ", ".join(r.authors or []),
+                            "publication_date": pub_date,
+                            "quality_score": r.quality,
+                            "filename": r.filename,
+                        })
+                else:
+                    used_backend = "knowledge_manager"
+            except Exception:
+                used_backend = "knowledge_manager"
+
+            # Fallback to KnowledgeBaseManager if repository isn't available
+            if not kb_documents:
+                if self.knowledge_manager is None:
+                    raise RuntimeError("No literature backend available")
+                kb_documents = self.knowledge_manager.get_all_documents()
+                used_backend = "knowledge_manager"
+
+            logger.info("Found %d documents in knowledge base via %s", len(kb_documents), used_backend)
+
+            for i, doc in enumerate(kb_documents):
+                logger.debug(
+                    "Document %d: ID=%s Title=%s Author=%s PubDate=%s QualityScore=%s",
+                    i + 1,
+                    doc.get('id', 'Unknown'),
+                    doc.get('title', 'Unknown'),
+                    doc.get('author', 'Unknown'),
+                    doc.get('publication_date', 'Unknown'),
+                    doc.get('quality_score', 'Unknown'),
+                )
+
+            all_used_citations: List[str] = []
+
+            for rec in analysis["recommendations"]:
+                logger.debug("Finding supporting evidence for recommendation: %s", rec.get('title', 'Unknown'))
+                supporting_evidence = self._find_supporting_evidence(rec, kb_documents, all_used_citations)
+                logger.debug("Found %d supporting evidence items", len(supporting_evidence))
+                rec["supporting_evidence"] = supporting_evidence
+
+                if not rec.get("references"):
+                    rec["references"] = []
+
+                for evidence in supporting_evidence:
+                    citation = evidence.get("citation")
+                    reference = {
+                        "citation": citation,
+                        "source": evidence.get("source"),
+                        "year": evidence.get("year"),
+                        "relevance": evidence.get("relevance", "high"),
+                    }
+                    if citation and not any(r.get("citation") == citation for r in rec["references"]):
+                        rec["references"].append(reference)
+                        if citation not in all_used_citations:
+                            all_used_citations.append(citation)
+
+                if not rec.get("sources"):
+                    rec["sources"] = []
+                for ref in rec.get("references", []):
+                    if ref.get("citation") and ref["citation"] not in rec["sources"]:
+                        rec["sources"].append(ref["citation"])
+
+                logger.debug("Final sources for recommendation '%s': %s", rec.get('title', 'Unknown'), rec.get('sources', []))
+
+                if not rec["sources"]:
+                    self._assign_diverse_sources([rec], self.DEFAULT_SOURCES, used=all_used_citations, sample_up_to=6)
+
+                for ref in rec.get("references", []):
+                    if ref.get("citation") and not any(r.get("citation") == ref.get("citation") for r in analysis["kb_references"]):
+                        analysis["kb_references"].append(ref)
+
+            logger.info("Enhanced %d recommendations with knowledge base evidence", len(analysis['recommendations']))
+            logger.info("Added %d unique references from knowledge base", len(analysis['kb_references']))
+            logger.info("Total unique citations used across recommendations: %d", len(all_used_citations))
+
+        except Exception as e:
+            logger.warning("Error querying knowledge base: %s", str(e))
+            analysis["knowledge_base_integration"] = False
+            # Fallback to diverse sources assignment
+            self._assign_diverse_sources(analysis["recommendations"], self.DEFAULT_SOURCES)
+
+    def _assign_diverse_sources(
+        self,
+        recs: List[Dict[str, Any]],
+        default_sources: List[str],
+        *,
+        used: Optional[List[str]] = None,
+        sample_up_to: int = 3,
+    ) -> None:
+        """Assign diverse placeholder sources to recommendations that lack them.
+
+        Arguments:
+            recs: recommendations to mutate
+            default_sources: pool of default citations
+            used: optional list to track already used citations across recs
+            sample_up_to: max number of sources to sample per recommendation (default 3, earlier path used 6)
+        """
+        import random
+
+        if used is None:
+            used = []
+
+        for i, rec in enumerate(recs):
+            if rec.get("sources"):
+                continue
+            start_idx = (i * 2) % len(default_sources)
+            pool = [s for s in default_sources if s not in used] or default_sources
+            # Keep behaviour similar: deterministic slice or random sample in KB path
+            if sample_up_to <= 3:
+                rec_sources = [pool[(start_idx + j) % len(pool)] for j in range(min(3, len(pool)))]
+            else:
+                rec_sources = random.sample(pool, min(sample_up_to, len(pool)))
+            rec["sources"] = rec_sources
+            for s in rec_sources:
+                if s not in used:
+                    used.append(s)
+    
+    def _find_supporting_evidence(self, recommendation: Dict[str, Any], kb_documents: List[Dict[str, Any]], used_citations: List[str] = None) -> List[Dict[str, Any]]:
+        """
+{{ ... }}
+        # Try to extract year from publication date
+        pub_date = doc.get("publication_date", "")
+        if pub_date:
+            year_match = YEAR_REGEX.search(pub_date)
+            if year_match:
+                doc_year = year_match.group(0)
+        Find supporting evidence for a recommendation from knowledge base documents.
+        Prioritizes diverse sources that haven't been used in other recommendations.
+        
+        Args:
+            recommendation: The recommendation to find evidence for
+            kb_documents: List of knowledge base documents
+            used_citations: List of citations already used in other recommendations (to promote diversity)
+            
+        Returns:
+            List of supporting evidence items with source information
+        """
+        supporting_evidence = []
+        min_evidence_count = 4  # Ensure at least 4 citations per recommendation for better diversity
+        
+        # Initialise used_citations if not provided
+        if used_citations is None:
+            used_citations = []
+        
+        # Extract key terms from the recommendation
+        rec_title = recommendation.get("title", "").lower()
+        rec_desc = recommendation.get("description", "").lower()
+        rec_rationale = recommendation.get("rationale", "").lower()
+        rec_dimension = recommendation.get("dimension", "").lower()
+        rec_implementation_steps = recommendation.get("implementation_steps", [])
+        
+        # Keywords to search for based on the recommendation dimension
+        dimension_keywords = {
+            "accountability and governance": ["accountability", "governance", "compliance", "oversight", "regulation", "audit", "responsibility", "framework", "policy", "standard", "guideline"],
+            "transparency and explainability": ["transparency", "explainability", "explainable", "interpretable", "disclosure", "clarity", "understandable", "communication", "documentation", "explanation", "report"],
+            "human agency and oversight": ["human agency", "oversight", "control", "autonomy", "intervention", "supervision", "human-in-the-loop", "decision-making", "authority", "review", "approval"],
+            "inclusiveness and fairness": ["inclusiveness", "fairness", "bias", "discrimination", "equity", "accessibility", "diversity", "representation", "inclusion", "equality", "justice"]
+        }
+        
+        # Get keywords for this recommendation's dimension
+        keywords = dimension_keywords.get(rec_dimension.lower(), [])
+        
+        # Add keywords from the recommendation title, description, and rationale
+        for text in [rec_title, rec_desc, rec_rationale]:
+            # Extract significant words (3+ chars)
+            words = [w for w in text.split() if len(w) >= 3 and w not in ["the", "and", "for", "with", "that"]]
+            keywords.extend(words[:5])  # Add up to 5 significant words
+        
+        # Add keywords from implementation steps
+        for step in rec_implementation_steps:
+            step_lower = step.lower()
+            # Extract significant words from each step
+            words = [w for w in step_lower.split() if len(w) >= 3 and w not in ["the", "and", "for", "with", "that"]]
+            keywords.extend(words[:2])  # Add up to 2 significant words per step
+        
+        # Remove duplicates and ensure all keywords are strings
+        keywords = [str(k) for k in keywords]
+        keywords = list(set(keywords))
+        
+        # Score each document based on relevance to this recommendation
+        scored_documents = []
+        for doc in kb_documents:
+            # Skip if document has no content - but first try to load content from file
+            if not doc.get("content"):
+                try:
+                    # Attempt to read content from the file
+                    file_path = os.path.join(self.knowledge_manager.knowledge_base_path, doc.get("filename", ""))
+                    if os.path.exists(file_path):
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            doc["content"] = f.read()
+                    else:
+                        logger.warning("Could not find file for document %s: %s", doc.get('id', 'Unknown'), file_path)
+                        continue
+                except Exception as e:
+                    logger.warning("Could not read content for document %s: %s", doc.get('id', 'Unknown'), str(e))
+                    continue
+                
+            doc_id = doc.get("id", "")
+            doc_title = doc.get("title", "").lower()
+            doc_content = doc.get("content", "").lower()
+            doc_author = doc.get("author", "Unknown")
+            doc_year = "Unknown"
+            
+            # Try to extract year from publication date
+            pub_date = doc.get("publication_date", "")
+            if pub_date:
+                year_match = re.search(YEAR_REGEX, pub_date)
+                if year_match:
+                    doc_year = year_match.group(0)
+            
+            # Format citation in APA style - skip documents with missing metadata
+            if not doc_author or doc_author == "Unknown":
+                logger.info("Skipping document with missing author: %s", doc.get('title', 'Unknown title'))
+                continue
+                
+            if doc_year != "Unknown":
+                citation = f"{doc_author} ({doc_year})"
+            else:
+                # Try to extract year from filename or other metadata if available
+                if doc.get("filename"):
+                    year_match = re.search(YEAR_REGEX, doc.get("filename", ""))
+                    if year_match:
+                        doc_year = year_match.group(0)
+                        citation = f"{doc_author} ({doc_year})"
+                    else:
+                        citation = f"{doc_author} (n.d.)"
+                else:
+                    citation = f"{doc_author} (n.d.)"
+                
+            # Give strong preference to citations not already used elsewhere
+            diversity_bonus = 5.0 if citation not in used_citations else 0.0
+                
+            # Calculate relevance score using both keyword matching and semantic similarity
+            relevance_score = 0
+            confidence_score = 0.0
+            
+            # Keyword-based scoring (traditional method)
+            keyword_score = 0
+            
+            # Title match bonus
+            for keyword in keywords:
+                if keyword in doc_title:
+                    keyword_score += 2  # Higher weight for title matches
+            
+            # Content match
+            content_matches = 0
+            for keyword in keywords:
+                if doc_content and keyword in doc_content:
+                    content_matches += 1
+            
+            # Add score based on content matches (with diminishing returns)
+            if content_matches > 0:
+                keyword_score += min(3, content_matches)
+            
+            relevance_score += keyword_score
+            
+            # Semantic similarity scoring (enhanced method)
+            semantic_score = 0
+            if self.embedder and doc_content:
+                try:
+                    # Create recommendation context for semantic comparison
+                    rec_context = f"{rec_title}. {rec_desc}. {rec_rationale}"
+                    
+                    # Extract meaningful content from document (first 1000 chars to avoid token limits)
+                    doc_excerpt = doc_content[:1000]
+                    
+                    # Calculate semantic similarity
+                    rec_embedding = self.embedder.encode([rec_context])
+                    doc_embedding = self.embedder.encode([doc_excerpt])
+                    
+                    # Cosine similarity
+                    similarity = np.dot(rec_embedding[0], doc_embedding[0]) / (
+                        np.linalg.norm(rec_embedding[0]) * np.linalg.norm(doc_embedding[0])
+                    )
+                    
+                    # Convert similarity to relevance score (0-10 scale)
+                    semantic_score = max(0, similarity * 10)
+                    
+                    # Confidence score based on semantic similarity
+                    confidence_score = min(1.0, max(0.0, similarity))
+                    
+                    logger.debug(f"Semantic similarity for {doc.get('title', 'Unknown')}: {similarity:.3f}")
+                    
+                except Exception as e:
+                    logger.debug(f"Semantic scoring failed for document {doc_id}: {e}")
+                    semantic_score = 0
+                    confidence_score = 0.0
+            
+            # Combine keyword and semantic scores (weighted average)
+            if semantic_score > 0:
+                relevance_score = (keyword_score * 0.4) + (semantic_score * 0.6)  # Favor semantic similarity
+            else:
+                relevance_score = keyword_score  # Fallback to keyword-only
+                confidence_score = min(1.0, keyword_score / 10.0)  # Estimate confidence from keywords
+                
+            # Add diversity bonus to promote citation diversity
+            relevance_score += diversity_bonus
+            
+            # If document seems relevant, add it to scored documents
+            if relevance_score > 0:
+                scored_documents.append({
+                    "document_id": doc_id,
+                    "title": doc.get("title", ""),
+                    "citation": citation,
+                    "source": doc.get("filename", ""),
+                    "year": doc_year,
+                    "quality_score": doc.get("quality_score", 0),
+                    "match_score": relevance_score,
+                    "confidence_score": confidence_score,
+                    "has_semantic_score": semantic_score > 0
+                })
+        
+        # Sort by relevance score, confidence, and diversity (prioritise high confidence, unused citations)
+        scored_documents.sort(key=lambda x: (
+            -x.get("match_score", 0),        # Higher relevance first
+            -x.get("confidence_score", 0),   # Higher confidence first
+            0 if x.get("citation") in used_citations else 1,  # Unused citations first
+            -x.get("quality_score", 0)       # Higher quality first
         ))
         
-        return recommendations
-
-    def _analyze_institution_context(self, themes: List[Dict], text: str) -> Dict:
-        """Determine institution type and characteristics for contextual recommendations."""
-        context = {
-            'type': 'research_university',  # Default assumption
-            'focus_areas': [],
-            'complexity_level': 'medium',
-            'stakeholder_emphasis': []
-        }
+        # Debug: Print scored documents with enhanced metrics
+        logger.debug("Found %d potentially relevant documents for recommendation", len(scored_documents))
+        for i, doc in enumerate(scored_documents[:5]):
+            logger.debug("  Document %d: %s - Score: %.2f - Confidence: %.2f - Semantic: %s - Citation: %s", 
+                        i+1, 
+                        doc.get('title', 'Unknown')[:50] + '...' if len(doc.get('title', '')) > 50 else doc.get('title', 'Unknown'),
+                        doc.get('match_score', 0), 
+                        doc.get('confidence_score', 0),
+                        'Yes' if doc.get('has_semantic_score', False) else 'No',
+                        doc.get('citation', 'Unknown'))
         
-        if not themes and not text:
-            return context
-        
-        # Combine theme names and text for analysis
-        theme_text = ' '.join([t.get('name', '').lower() for t in themes])
-        full_text = (text.lower() + ' ' + theme_text) if text else theme_text
-        
-        # Institution type detection based on content patterns
-        research_indicators = ['research', 'publication', 'scholarly', 'graduate', 'phd', 'faculty research']
-        teaching_indicators = ['teaching', 'student learning', 'undergraduate', 'classroom', 'pedagogy']
-        technical_indicators = ['technical', 'engineering', 'technology', 'industry', 'applied']
-        
-        research_score = sum(1 for indicator in research_indicators if indicator in full_text)
-        teaching_score = sum(1 for indicator in teaching_indicators if indicator in full_text)
-        technical_score = sum(1 for indicator in technical_indicators if indicator in full_text)
-        
-        # Determine primary institution type
-        if technical_score > max(research_score, teaching_score):
-            context['type'] = 'technical_institute'
-        elif teaching_score > research_score * 1.3:
-            context['type'] = 'teaching_focused'
-        else:
-            context['type'] = 'research_university'
-        
-        # Identify focus areas based on theme analysis
-        if any('privacy' in t.get('name', '').lower() for t in themes):
-            context['focus_areas'].append('data_governance')
-        if any('integrity' in t.get('name', '').lower() for t in themes):
-            context['focus_areas'].append('academic_integrity')
-        if any('research' in t.get('name', '').lower() for t in themes):
-            context['focus_areas'].append('research_excellence')
-        
-        return context
-
-    def _detect_existing_policies(self, text: str) -> Dict:
-        """Enhanced detection of existing policy elements."""
-        if not text:
-            return {}
+        # Select diverse sources - prioritise different authors and unused citations
+        authors_selected = set()
+        for doc in scored_documents:
+            citation = doc.get("citation", "")
+            author = citation.split(" (")[0] if " (" in citation else citation
             
-        text_lower = text.lower()
-        existing_policies = {}
+            # Track if this citation is already used in other recommendations
+            citation_used_elsewhere = citation in used_citations
+            
+            # Apply confidence threshold - only include sources with reasonable confidence
+            confidence_score = doc.get("confidence_score", 0)
+            if confidence_score < 0.15:  # Minimum confidence threshold
+                continue
+                
+            # Prioritize diverse authors (max 1 citation per author if already used elsewhere)
+            max_per_author = 1 if citation_used_elsewhere else 2
+            if len([e for e in supporting_evidence if e.get("citation", "").startswith(author)]) < max_per_author:
+                # Determine relevance level using both match score and confidence
+                relevance_score = doc.get("match_score", 0)
+                confidence_score = doc.get("confidence_score", 0)
+                
+                # Enhanced relevance classification
+                if relevance_score >= 5 and confidence_score >= 0.4:
+                    relevance = "high"
+                elif relevance_score >= 3 and confidence_score >= 0.25:
+                    relevance = "medium"
+                else:
+                    relevance = "low"
+                
+                doc["relevance"] = relevance
+                supporting_evidence.append(doc)
+                authors_selected.add(author)
+                
+                # Add this citation to the used citations list to track across recommendations
+                if citation and citation not in used_citations:
+                    used_citations.append(citation)
+                
+                # Stop once we have enough diverse sources
+                if len(supporting_evidence) >= min_evidence_count and len(authors_selected) >= 3:
+                    break
         
-        # Detection patterns for various policy types
-        policy_patterns = {
-            'disclosure_requirements': [
-                'must disclose', 'require.*disclosure', 'acknowledge.*use', 'cite.*ai',
-                'transparent.*about', 'declare.*use', 'must be transparent'
-            ],
-            'approval_processes': [
-                'permission.*required', 'approval.*needed', 'instructor.*approval',
-                'prior.*authorization', 'seek.*permission', 'faculty.*consent'
-            ],
-            'governance_structure': [
-                'committee', 'working group', 'governance.*board', 'oversight.*body',
-                'ai.*team', 'policy.*committee', 'steering.*group'
-            ],
-            'training_requirements': [
-                'training.*required', 'professional.*development', 'competency.*requirements',
-                'education.*programme', 'literacy.*training', 'skill.*development'
-            ],
-            'assessment_guidelines': [
-                'assessment.*guidelines', 'evaluation.*criteria', 'grading.*standards',
-                'academic.*evaluation', 'marking.*scheme', 'assessment.*policy'
-            ],
-            'research_protocols': [
-                'research.*ethics', 'research.*integrity', 'scholarly.*standards',
-                'publication.*requirements', 'research.*guidelines', 'ethics.*review'
-            ]
-        }
+        # If we still don't have enough evidence, add more documents regardless of author diversity
+        if len(supporting_evidence) < min_evidence_count:
+            # Get documents not already included
+            remaining_docs = [doc for doc in scored_documents if not any(e.get("document_id") == doc.get("document_id") for e in supporting_evidence)]
+            
+            # Sort remaining docs to prioritize unused citations and higher quality scores
+            # Give higher priority to citations not used elsewhere (reverse=True means higher values first)
+            remaining_docs.sort(key=lambda x: (1 if x.get("citation") not in used_citations else 0, x.get("quality_score", 0)), reverse=True)
+            
+            # Debug: Print remaining docs
+            logger.debug("Adding more documents to reach minimum evidence count (%d). Currently have %d", min_evidence_count, len(supporting_evidence))
+            for i, doc in enumerate(remaining_docs[:3]):
+                logger.debug("  Additional document %d: %s - Quality: %s - Citation: %s", i+1, doc.get('title', 'Unknown'), doc.get('quality_score', 0), doc.get('citation', 'Unknown'))
+            
+            # Add top documents until we reach minimum count
+            for doc in remaining_docs:
+                if len(supporting_evidence) >= min_evidence_count:
+                    break
+                
+                # Determine relevance level
+                relevance_score = doc.get("match_score", 0)
+                relevance = "medium"
+                if relevance_score >= 5:
+                    relevance = "high"
+                elif relevance_score <= 2:
+                    relevance = "low"
+                
+                doc["relevance"] = relevance
+                supporting_evidence.append(doc)
+                
+                # Track this citation as used
+                citation = doc.get("citation", "")
+                if citation and citation not in used_citations:
+                    used_citations.append(citation)
         
-        import re
-        for policy_type, patterns in policy_patterns.items():
-            existing_policies[policy_type] = any(
-                re.search(pattern, text_lower) for pattern in patterns
-            )
+        # If we still don't have enough evidence, add documents from the knowledge base
+        # regardless of keyword matching
+        if len(supporting_evidence) < min_evidence_count:
+            # Get documents not already included
+            used_ids = {e.get("document_id") for e in supporting_evidence}
+            remaining_docs = [doc for doc in kb_documents if doc.get("id") and doc.get("id") not in used_ids]
+            
+            # Debug: Print fallback docs
+            logger.debug("Using fallback method to add documents. Need %d more documents", min_evidence_count - len(supporting_evidence))
+            logger.debug("Found %d unused documents in knowledge base", len(remaining_docs))
+            
+            # Sort by quality score if available
+            remaining_docs.sort(key=lambda x: x.get("quality_score", 0), reverse=True)
         
-        return existing_policies
+        # Debug: Print final supporting evidence
+        logger.debug("Final supporting evidence count: %d", len(supporting_evidence))
+        for i, evidence in enumerate(supporting_evidence):
+            logger.debug("  Evidence %d: %s - Relevance: %s", i+1, evidence.get('citation', 'Unknown'), evidence.get('relevance', 'Unknown'))
+            
+        return supporting_evidence
 
-    def _has_existing_provision(self, gap: Dict, existing_policies: Dict) -> bool:
-        """Determine if gap area has existing policy coverage."""
-        dimension = gap['dimension']
-        current_score = gap.get('current_score', 0)
-        
-        # Mapping of dimensions to relevant existing policies
-        dimension_policy_map = {
-            'transparency': ['disclosure_requirements', 'assessment_guidelines'],
-            'accountability': ['governance_structure', 'approval_processes', 'training_requirements'],
-            'human_agency': ['approval_processes', 'assessment_guidelines'],
-            'inclusiveness': ['assessment_guidelines', 'training_requirements']
-        }
-        
-        if dimension in dimension_policy_map:
-            relevant_policies = dimension_policy_map[dimension]
-            if any(existing_policies.get(policy, False) for policy in relevant_policies):
-                return True
-        
-        # Also consider score-based determination
-        return current_score > 10  # Threshold for considering existing provision
+    def _analyze_institution_context(self, themes: List[Dict[str, Any]], text: str) -> Dict[str, Any]:
+        t = (text or "").lower()
+        score_research = sum(1 for k in ["research", "publication", "graduate", "phd", "faculty"] if k in t)
+        score_teaching = sum(1 for k in ["teaching", "undergraduate", "classroom", "pedagogy", "student"] if k in t)
+        score_technical = sum(1 for k in ["engineering", "technical", "institute", "laboratory", "computing"] if k in t)
+        if score_research >= max(score_teaching, score_technical):
+            itype = "research_university"
+        elif score_teaching >= max(score_research, score_technical):
+            itype = "teaching_focused"
+        else:
+            itype = "technical_institute"
+        return {"type": itype}
 
-    def _generate_contextual_recommendation(self, dimension: str, institution_context: Dict,
-                                          implementation_type: str, priority: str,
-                                          current_score: float, gap_details: Dict) -> Dict:
-        """Generate contextual recommendation using multi-dimensional matching."""
-        
-        institution_type = institution_context.get('type', 'research_university')
-        
-        # Try UNESCO templates first (most comprehensive)
-        if dimension in self.unesco_2023_templates:
-            if institution_type in self.unesco_2023_templates[dimension]:
-                if implementation_type in self.unesco_2023_templates[dimension][institution_type]:
-                    templates = self.unesco_2023_templates[dimension][institution_type][implementation_type]
-                    selected_template = templates[0]  # Take first as primary
-                    
-                    return self._build_recommendation_from_template(
-                        selected_template, dimension, institution_context, 
-                        implementation_type, current_score, gap_details
-                    )
-        
-        # Fallback to JISC templates
-        if dimension in self.jisc_2023_templates:
-            if institution_type in self.jisc_2023_templates[dimension]:
-                templates = self.jisc_2023_templates[dimension][institution_type]
-                selected_template = templates[0]
-                
-                return self._build_recommendation_from_template(
-                    selected_template, dimension, institution_context,
-                    implementation_type, current_score, gap_details
-                )
-            elif 'all_institutions' in self.jisc_2023_templates[dimension]:
-                templates = self.jisc_2023_templates[dimension]['all_institutions']
-                selected_template = templates[0]
-                
-                return self._build_recommendation_from_template(
-                    selected_template, dimension, institution_context,
-                    implementation_type, current_score, gap_details
-                )
-        
-        # Final fallback to BERA templates
-        if dimension in self.bera_2018_templates:
-            available_templates = self.bera_2018_templates[dimension].get(
-                'all_institutions', 
-                self.bera_2018_templates[dimension].get(institution_type, [])
-            )
-            if available_templates:
-                selected_template = available_templates[0]
-                
-                return self._build_recommendation_from_template(
-                    selected_template, dimension, institution_context,
-                    implementation_type, current_score, gap_details
-                )
-        
-        # Ultimate fallback - generate basic recommendation
-        return self._generate_fallback_recommendation(
-            dimension, institution_context, implementation_type, priority
+    def _detect_existing_policies(self, text: str) -> Dict[str, bool]:
+        t = (text or "").lower()
+        return {
+            "disclosure_requirements": any(k in t for k in ["disclose", "acknowledge", "cite ai", "disclosure"]),
+            "approval_processes": any(k in t for k in ["approval", "approved", "faculty approval", "committee approval", "authorisation", "authorization"]),
+        }
+
+    def _generate_contextual_recommendation(
+        self,
+        dimension: str,
+        institution_context: Dict[str, Any],
+        implementation_type: str,
+        priority: str,
+        current_score: float,
+        gap_details: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        dim_title = dimension.replace("_", " ").title()
+        context_type = institution_context.get("type", "university").replace("_", " ")
+        title = f"{dim_title}: {('Enhance' if implementation_type=='enhancement' else 'Implement')} Policy Measures"
+        description = (
+            f"Develop and {('enhance' if implementation_type=='enhancement' else 'implement')} {dim_title.lower()} measures "
+            f"appropriate for a {context_type} context."
         )
-
-    def _build_recommendation_from_template(self, template: Dict, dimension: str,
-                                          institution_context: Dict, implementation_type: str,
-                                          current_score: float, gap_details: Dict) -> Dict:
-        """Build comprehensive recommendation from selected template."""
-        
-        # Calculate impact score based on gap severity and template comprehensiveness
-        impact_score = self._calculate_impact_score(current_score, template, institution_context)
-        
-        # Customise title based on implementation type
-        base_title = template.get('title', f'Enhance {dimension.replace("_", " ").title()}')
-        if implementation_type == 'enhancement':
-            if not base_title.startswith('Enhance') and not base_title.startswith('Strengthen'):
-                base_title = f"Enhance {base_title}"
-        
-        # Build comprehensive recommendation object
-        recommendation = {
-            'title': base_title,
-            'description': template.get('description', ''),
-            'dimension': dimension,
-            'priority': self._adjust_priority_for_context(
-                template.get('priority', 'medium'), 
-                current_score, 
-                institution_context
-            ),
-            'implementation_type': implementation_type,
-            'timeframe': template.get('timeframe', self.implementation_timeframes.get('medium')),
-            'impact_score': impact_score,
-            'current_score': current_score,
-            'expected_improvement': self._estimate_improvement(current_score, template),
-            
-            # Detailed implementation guidance
-            'implementation_steps': template.get('implementation_steps', []),
-            'success_metrics': template.get('success_metrics', []),
-            'estimated_resources': self._estimate_resources(template, institution_context),
-            
-            # Academic sourcing and validation
-            'source': self._determine_source(template),
-            'academic_rationale': self._generate_academic_rationale(dimension, template, institution_context),
-            'related_literature': self._get_related_literature(dimension),
-            # Frontend expects a list of sources; fall back to related_literature if not provided
-            'sources': template.get('sources', self._get_related_literature(dimension)),
-            
-            # Contextual adaptations
-            'institution_specific_notes': self._generate_context_notes(institution_context, implementation_type),
-            'stakeholder_considerations': self._identify_stakeholders(dimension, institution_context),
-            'potential_challenges': self._identify_challenges(template, institution_context),
-            'mitigation_strategies': self._suggest_mitigations(template, institution_context),
-            
-            # Quality and validation metadata
-            'recommendation_confidence': self._calculate_confidence(template, institution_context),
-            'evidence_strength': self._assess_evidence_strength(template),
-            'implementation_complexity': self._assess_complexity(template, institution_context)
-        }
-        
-        return recommendation
-
-    def _calculate_impact_score(self, current_score: float, template: Dict, 
-                               institution_context: Dict) -> float:
-        """Calculate potential impact score for recommendation."""
-        # Base impact from gap severity (lower current score = higher impact potential)
-        gap_impact = max(0, 100 - current_score) / 100 * 40
-        
-        # Template comprehensiveness bonus
-        template_bonus = len(template.get('implementation_steps', [])) * 2
-        template_bonus += len(template.get('success_metrics', [])) * 3
-        
-        # Institution context multiplier
-        context_multiplier = 1.0
-        if institution_context.get('type') == 'research_university':
-            context_multiplier = 1.2  # Research universities have higher impact potential
-        elif institution_context.get('type') == 'technical_institute':
-            context_multiplier = 1.1
-        
-        total_impact = (gap_impact + template_bonus) * context_multiplier
-        return min(100, max(10, total_impact))  # Cap between 10-100
-
-    def _adjust_priority_for_context(self, base_priority: str, current_score: float,
-                                   institution_context: Dict) -> str:
-        """Adjust recommendation priority based on context and gap severity."""
-        # Critical gaps (score < 5%) get priority boost
-        if current_score < 5:
-            return 'critical'
-        
-        # Severe gaps (score < 15%) in important contexts get high priority
-        if current_score < 15:
-            if institution_context.get('type') == 'research_university':
-                return 'high'
-            elif base_priority == 'medium':
-                return 'high'
-        
-        # Research universities get priority boost for accountability and transparency
-        if (institution_context.get('type') == 'research_university' and 
-            base_priority == 'medium'):
-            return 'high'
-        
-        return base_priority
-
-    def _estimate_improvement(self, current_score: float, template: Dict) -> str:
-        """Estimate expected improvement from implementing recommendation."""
-        # Base improvement from template comprehensiveness
-        step_count = len(template.get('implementation_steps', []))
-        metric_count = len(template.get('success_metrics', []))
-        
-        if step_count >= 4 and metric_count >= 3:
-            expected_gain = 25 + (100 - current_score) * 0.3
-        elif step_count >= 3:
-            expected_gain = 20 + (100 - current_score) * 0.2
-        else:
-            expected_gain = 15 + (100 - current_score) * 0.1
-        
-        final_score = min(100, current_score + expected_gain)
-        
-        if expected_gain >= 25:
-            return f"Significant improvement expected: {current_score:.1f}% → {final_score:.1f}%"
-        elif expected_gain >= 15:
-            return f"Moderate improvement expected: {current_score:.1f}% → {final_score:.1f}%"
-        else:
-            return f"Incremental improvement expected: {current_score:.1f}% → {final_score:.1f}%"
-
-    def _estimate_resources(self, template: Dict, institution_context: Dict) -> Dict:
-        """Estimate required resources for implementation."""
-        step_count = len(template.get('implementation_steps', []))
-        
-        # Base resource estimates
-        if step_count >= 4:
-            staff_time = "Substantial (2-3 FTE months)"
-            budget_requirement = "Medium (£10,000-£25,000)"
-        elif step_count >= 3:
-            staff_time = "Moderate (1-2 FTE months)"
-            budget_requirement = "Low-Medium (£5,000-£15,000)"
-        else:
-            staff_time = "Light (0.5-1 FTE month)"
-            budget_requirement = "Low (£1,000-£5,000)"
-        
-        # Adjust for institution type
-        if institution_context.get('type') == 'research_university':
-            budget_requirement = budget_requirement.replace('Low', 'Medium').replace('Medium', 'High')
-        
-        return {
-            'staff_time': staff_time,
-            'budget_requirement': budget_requirement,
-            'specialist_expertise': self._identify_required_expertise(template),
-            'external_support': self._assess_external_support_needs(template)
-        }
-
-    def _determine_source(self, template: Dict) -> str:
-        """Determine primary academic source for recommendation."""
-        if 'unesco' in str(template).lower():
-            return 'UNESCO 2023'
-        elif 'jisc' in str(template).lower():
-            return 'JISC 2023'
-        elif 'bera' in str(template).lower():
-            return 'BERA 2018'
-        else:
-            return 'PolicyCraft Enhanced Framework'
-
-    def _generate_academic_rationale(self, dimension: str, template: Dict,
-                                   institution_context: Dict) -> str:
-        """Generate academic rationale for recommendation."""
-        rationale_map = {
-            'accountability': f"Establishes clear governance structures essential for responsible AI integration in {institution_context.get('type', 'academic')} contexts, addressing institutional risk management and stakeholder trust requirements.",
-            
-            'transparency': f"Implements disclosure and communication frameworks critical for maintaining academic integrity and enabling informed decision-making by all institutional stakeholders.",
-            
-            'human_agency': f"Preserves human authority and oversight in educational processes, ensuring AI augments rather than replaces human judgment in critical academic decisions.",
-            
-            'inclusiveness': f"Addresses equity and accessibility requirements to ensure AI implementation does not create or exacerbate educational inequalities or exclude diverse student populations."
-        }
-        
-        base_rationale = rationale_map.get(dimension, "Addresses critical gap in institutional AI governance.")
-        
-        # Add context-specific considerations
-        if institution_context.get('type') == 'research_university':
-            base_rationale += " Particularly important for research integrity and scholarly communication standards."
-        elif institution_context.get('type') == 'teaching_focused':
-            base_rationale += " Essential for maintaining educational quality and student support effectiveness."
-        
-        return base_rationale
-
-    def _get_related_literature(self, dimension: str) -> List[str]:
-        """Provide related academic literature references."""
-        literature_map = {
-            'accountability': [
-                "Dabis & Csáki (2024) - AI Ethics in Higher Education Policy",
+        rationale = f"Address identified gap ({gap_details.get('type','gap')}) with current score {current_score}%."
+        impl_time = IMPLEMENTATION_TIME_MEDIUM if priority == "high" else IMPLEMENTATION_TIME_2_3
+        rec = {
+            "id": f"{dimension[:4]}-{priority[:1]}-{int(max(1, 100-current_score))}",
+            "title": title,
+            "description": description,
+            "rationale": rationale,
+            "priority": priority,
+            "dimension": dimension,
+            "implementation_time": impl_time,
+            "implementation_steps": [
+                "Assess current state and gaps",
+                "Define objectives and success metrics",
+                "Engage stakeholders (faculty, students, staff)",
+                "Roll out in phases with feedback loops",
             ],
-            'transparency': [
-                "UNESCO (2023) - AI Transparency Guidelines",
-                "JISC (2023) - Generative AI in Teaching and Learning",
-                "Chen et al. (2024) - Global AI Policy Perspectives"            ],
-            'human_agency': [
-                "BERA (2018) - Ethical Guidelines for Educational Research",
-                "Chan & Hu (2023) - Student Perspectives on Generative AI",
-                "UNESCO (2023) - Human-Centric AI in Education",
-                "Li et al. (2024) - NLP in Policy Research"            ],
-            'inclusiveness': [
-                "JISC (2023) - Inclusive AI Implementation",
-                "Bond et al. (2024) - Equity Considerations in AI Education",
-                "An et al. (2025) - Stakeholder Engagement in AI Policies"            ]
+            "sources": [],
         }
-        
-        return literature_map.get(dimension, ["PolicyCraft Framework Documentation"])
-
-    def _generate_context_notes(self, institution_context: Dict, implementation_type: str) -> str:
-        """Generate institution-specific implementation notes."""
-        notes = []
-        
-        institution_type = institution_context.get('type', 'general')
-        
-        if institution_type == 'research_university':
-            notes.append("Consider integration with existing research ethics and integrity frameworks")
-            if implementation_type == 'enhancement':
-                notes.append("Build on established academic governance structures")
-        elif institution_type == 'teaching_focused':
-            notes.append("Prioritise student-facing aspects and teaching quality assurance")
-            notes.append("Ensure alignment with student support and academic success initiatives")
-        elif institution_type == 'technical_institute':
-            notes.append("Leverage technical expertise within institution for implementation")
-            notes.append("Consider industry partnership opportunities for practical implementation")
-        
-        if implementation_type == 'enhancement':
-            notes.append("Builds on existing policy foundation - focus on strengthening and expanding current provisions")
-        else:
-            notes.append("New implementation required - establish foundation before building advanced features")
-        
-        return "; ".join(notes)
-
-    def _identify_stakeholders(self, dimension: str, institution_context: Dict) -> List[str]:
-        """Identify key stakeholders for recommendation implementation."""
-        base_stakeholders = {
-            'accountability': ['Senior Leadership', 'IT Services', 'Legal/Compliance'],
-            'transparency': ['Communications Team', 'Student Services', 'Faculty Representatives'],
-            'human_agency': ['Academic Affairs', 'Faculty Senate', 'Student Representatives'],
-            'inclusiveness': ['Disability Services', 'Diversity & Inclusion Office', 'Student Support']
-        }
-        
-        stakeholders = base_stakeholders.get(dimension, ['Policy Committee'])
-        
-        # Add institution-specific stakeholders
-        if institution_context.get('type') == 'research_university':
-            stakeholders.extend(['Research Office', 'Graduate School', 'Ethics Board'])
-        elif institution_context.get('type') == 'teaching_focused':
-            stakeholders.extend(['Teaching & Learning Centre', 'Academic Support'])
-        
-        return stakeholders
-
-    def _identify_challenges(self, template: Dict, institution_context: Dict) -> List[str]:
-        """Identify potential implementation challenges."""
-        challenges = []
-        
-        step_count = len(template.get('implementation_steps', []))
-        if step_count >= 4:
-            challenges.append("Complex implementation requiring significant coordination")
-        
-        if institution_context.get('type') == 'research_university':
-            challenges.extend([
-                "Faculty autonomy considerations in research contexts",
-                "Integration with existing research governance structures"
-            ])
-        elif institution_context.get('type') == 'teaching_focused':
-            challenges.extend([
-                "Diverse faculty technical literacy levels",
-                "Student resistance to policy changes"
-            ])
-        
-        challenges.extend([
-            "Resource allocation and budget constraints",
-            "Timeline coordination with academic calendar",
-            "Change management and stakeholder buy-in"
-        ])
-        
-        return challenges
-
-    def _suggest_mitigations(self, template: Dict, institution_context: Dict) -> List[str]:
-        """Suggest mitigation strategies for identified challenges."""
-        mitigations = [
-            "Establish clear project governance with defined roles and responsibilities",
-            "Implement phased rollout approach to manage complexity and risk",
-            "Provide comprehensive training and support for all stakeholders",
-            "Create feedback mechanisms for continuous improvement during implementation"
-        ]
-        
-        if institution_context.get('type') == 'research_university':
-            mitigations.extend([
-                "Engage faculty governance bodies early in planning process",
-                "Align implementation with research ethics review cycles"
-            ])
-        elif institution_context.get('type') == 'teaching_focused':
-            mitigations.extend([
-                "Provide extensive faculty development and technical support",
-                "Create student advisory group to guide policy development"
-            ])
-        
-        return mitigations
-
-    def _calculate_confidence(self, template: Dict, institution_context: Dict) -> str:
-        """Calculate confidence level in recommendation effectiveness."""
-        confidence_score = 0
-        
-        # Template quality indicators
-        if len(template.get('implementation_steps', [])) >= 3:
-            confidence_score += 25
-        if len(template.get('success_metrics', [])) >= 2:
-            confidence_score += 25
-        if template.get('timeframe'):
-            confidence_score += 15
-        
-        # Institution context match
-        if institution_context.get('type') in ['research_university', 'teaching_focused']:
-            confidence_score += 20
-        
-        # Source credibility
-        source = self._determine_source(template)
-        if source in ['UNESCO 2023', 'JISC 2023', 'BERA 2018']:
-            confidence_score += 15
-        
-        if confidence_score >= 80:
-            return 'High'
-        elif confidence_score >= 60:
-            return 'Medium-High'
-        elif confidence_score >= 40:
-            return 'Medium'
-        else:
-            return 'Medium-Low'
-
-    def _assess_evidence_strength(self, template: Dict) -> str:
-        """Assess strength of evidence supporting recommendation."""
-        if 'research' in template.get('description', '').lower():
-            return 'Strong - Research-based'
-        elif len(template.get('success_metrics', [])) >= 3:
-            return 'Good - Measurable outcomes defined'
-        elif len(template.get('implementation_steps', [])) >= 4:
-            return 'Moderate - Detailed implementation guidance'
-        else:
-            return 'Basic - General guidance provided'
-
-    def _assess_complexity(self, template: Dict, institution_context: Dict) -> str:
-        """Assess implementation complexity."""
-        complexity_score = 0
-        
-        complexity_score += len(template.get('implementation_steps', [])) * 10
-        complexity_score += len(template.get('success_metrics', [])) * 5
-        
-        if institution_context.get('type') == 'research_university':
-            complexity_score += 15  # Higher complexity for research contexts
-        
-        if complexity_score >= 60:
-            return 'High'
-        elif complexity_score >= 40:
-            return 'Medium'
-        else:
-            return 'Low'
-
-    def _identify_required_expertise(self, template: Dict) -> List[str]:
-        """Identify specialist expertise required for implementation."""
-        expertise = []
-        
-        description = template.get('description', '').lower()
-        steps = ' '.join(template.get('implementation_steps', [])).lower()
-        
-        if any(term in description + steps for term in ['technical', 'system', 'platform']):
-            expertise.append('Technical/IT specialist')
-        if any(term in description + steps for term in ['legal', 'compliance', 'governance']):
-            expertise.append('Legal/Compliance expert')
-        if any(term in description + steps for term in ['training', 'education', 'development']):
-            expertise.append('Professional development specialist')
-        if any(term in description + steps for term in ['assessment', 'evaluation', 'measurement']):
-            expertise.append('Assessment design expert')
-        
-        return expertise if expertise else ['General project management']
-
-    def _assess_external_support_needs(self, template: Dict) -> str:
-        """Assess whether external support/consultation is needed."""
-        complexity_indicators = len(template.get('implementation_steps', []))
-        
-        if complexity_indicators >= 4:
-            return 'Recommended - Complex implementation benefits from external expertise'
-        elif complexity_indicators >= 3:
-            return 'Optional - Consider for specialised aspects'
-        else:
-            return 'Not required - Can be implemented with internal resources'
-
-    def _generate_fallback_recommendation(self, dimension: str, institution_context: Dict,
-                                        implementation_type: str, priority: str) -> Dict:
-        """Generate basic recommendation when no specific template matches."""
-        dimension_title = dimension.replace('_', ' ').title()
-        
-        fallback_recommendations = {
-            'accountability': {
-                'title': f'Strengthen {dimension_title} Framework',
-                'description': f'Develop comprehensive {dimension_title.lower()} measures including clear governance structures, defined responsibilities, and regular compliance monitoring to ensure effective AI policy implementation.',
-                'steps': [
-                    'Establish governance committee with clear mandate and authority',
-                    'Define roles and responsibilities for AI policy oversight',
-                    'Implement regular monitoring and compliance assessment procedures',
-                    'Create escalation procedures for policy violations or concerns'
-                ],
-                'sources': [
-                    'BERA 2018 – Ethical Guidelines, Principle 2',
-                    'UNESCO 2023 – Guidance for Generative AI, pp. 10–12'
-                ]
-            },
-            'transparency': {
-                'title': f'Implement {dimension_title} Requirements',
-                'description': f'Create comprehensive {dimension_title.lower()} framework requiring clear disclosure of AI usage, accessible communication of policies, and regular stakeholder engagement.',
-                'steps': [
-                    'Develop clear disclosure requirements for AI usage',
-                    'Create accessible policy communication materials',
-                    'Establish regular stakeholder consultation processes',
-                    'Implement feedback collection and response mechanisms'
-                ],
-                'sources': [
-                    'Jisc 2023 – Generative AI Guide, Section 4.1',
-                    'UNESCO 2023 – Guidance for Generative AI, pp. 8–9'
-                ]
-            },
-            'human_agency': {
-                'title': f'Preserve {dimension_title} in AI Implementation',
-                'description': f'Ensure human authority and oversight remain central to AI-enhanced processes, maintaining human control over critical decisions and preserving educational relationships.',
-                'steps': [
-                    'Define areas requiring mandatory human oversight',
-                    'Establish clear protocols for human authority in AI-assisted decisions',
-                    'Train staff on appropriate human-AI collaboration approaches',
-                    'Implement regular review of human oversight effectiveness'
-                ],
-                'sources': [
-                    'UNESCO 2023 – Guidance for Generative AI, p. 22',
-                    'Selwyn et al. 2020 – Machine Learning & Emotional Tenor'
-                ]
-            },
-            'inclusiveness': {
-                'title': f'Develop {dimension_title} Framework',
-                'description': f'Create comprehensive {dimension_title.lower()} measures ensuring equitable AI access, addressing diverse needs, and preventing discriminatory outcomes.',
-                'steps': [
-                    'Conduct accessibility audit of AI tools and processes',
-                    'Develop alternative pathways for diverse learning needs',
-                    'Implement bias monitoring and mitigation procedures',
-                    'Create support mechanisms for underrepresented groups'
-                ],
-                'sources': [
-                    'UNESCO 2023 – Guidance for Generative AI, pp. 16–18',
-                    'Corrigan et al. 2023 – ChatGPT Pedagogical Affordances'
-                ]
-            }
-        }
-        
-        template = fallback_recommendations.get(dimension, fallback_recommendations['accountability'])
-        
-        return {
-            'title': template['title'],
-            'description': template['description'],
-            'dimension': dimension,
-            'priority': priority,
-            'implementation_type': implementation_type,
-            'timeframe': self.implementation_timeframes.get(priority, '3-6 months'),
-            'implementation_steps': template['steps'],
-            'source': 'PolicyCraft Fallback Framework',
-            'sources': template.get('sources', []),
-            'recommendation_confidence': 'Medium',
-            'implementation_complexity': 'Medium'
-        }
+        return rec
 
 
 class RecommendationEngine:
-    """
-    Advanced recommendation engine for AI policy analysis and enhancement.
-    
-    This class serves as the central integration point between ethical framework analysis
-    and context-aware recommendation generation. It orchestrates the process of analysing
-    policy documents, identifying gaps, and generating actionable, institution-specific
-    recommendations for AI policy development and improvement.
-    
-    The engine combines multiple analytical approaches:
-    - Multi-dimensional ethical framework assessment
-    - Contextual policy classification
-    - Existing policy element detection
-    - Academic research-based recommendation generation
-    
-    The system is designed to provide comprehensive, practical guidance for higher education
-    institutions at various stages of AI policy development, from initial implementation
-    to continuous improvement of existing policies.
-    """
-    
-    def __init__(self):
-        """
-        Initialise the recommendation engine with required components.
-        
-        This constructor sets up the core analysis and recommendation generation
-        components, including the ethical framework analyser and recommendation
-        generator. It also performs initial system checks and logs the engine's
-        operational status.
-        
-        Note:
-            The initialisation process includes loading all necessary models and
-            templates, which may take a few moments to complete.
-        """
-        self.framework_analyzer = EthicalFrameworkAnalyzer()
-        self.recommendation_generator = RecommendationGenerator()
-        
-        logger.info("PolicyCraft Recommendation Engine initialised successfully")
-        print("PolicyCraft Recommendation Engine loaded with the following capabilities:")
-        print("   • Enhanced scoring algorithm (15-35% realistic range)")
-        print("   • Weighted keyword matching with contextual phrase detection")
-        print("   • Existing policy recognition and analysis")
-        print("   • Context-aware recommendations with academic foundation")
-        print("   • Comprehensive gap analysis and prioritisation")
+    """Integration wrapper combining analysis and recommendation generation.
 
-    def get_enhanced_recommendations(self, policy_analysis: Dict) -> Dict:
-        """
-        Enhance policy recommendations with additional insights from the knowledge base.
-        
-        This method takes an existing policy analysis and enriches it with additional
-        recommendations and insights derived from the knowledge base. It's particularly
-        useful for adding context-specific suggestions based on the policy's classification
-        and identified gaps.
+    Exposes a single generate_recommendations() API used by integration tests.
+    """
+
+    def __init__(self, knowledge_base_path: Optional[str] = None):
+        """Initialise the recommendation engine.
         
         Args:
-            policy_analysis: A dictionary containing the policy analysis results,
-                           including themes, classification, and initial recommendations.
-                           
-        Returns:
-            Dict: The enhanced policy analysis with additional recommendations and
-                 insights from the knowledge base.
+            knowledge_base_path: Path to the knowledge base directory (required)
         """
+        if not knowledge_base_path:
+            logger.error("No knowledge base path provided to RecommendationEngine")
+            raise ValueError("Knowledge base path is required")
+            
+        self.knowledge_base_path = knowledge_base_path
+        self.generator = RecommendationGenerator(knowledge_base_path=knowledge_base_path)
+        
+        # Verify knowledge base is available
+        if not hasattr(self.generator, 'knowledge_base_available') or not self.generator.knowledge_base_available:
+            logger.error("Failed to initialise with knowledge base at: %s", knowledge_base_path)
+            raise ValueError(
+                "Cannot initialise recommendation engine - knowledge base is not available. "
+                "Please check the knowledge base configuration and try again."
+            )
+            
+        # Initialize analyzer for coverage analysis
+        self.analyzer = EthicalFrameworkAnalyzer()
+
+    def generate_recommendations(
+        self,
+        themes: List[Dict[str, Any]] | None,
+        classification: Dict[str, Any] | str,
+        text: str,
+        analysis_id: str | None = None,
+    ) -> Dict[str, Any]:
+        """Run coverage analysis and produce contextual recommendations.
+
+        Returns:
+            Dict containing analysis results with keys: analysis_metadata, coverage_analysis, 
+            recommendations, summary.
+            
+        Raises:
+            ValueError: If knowledge base is not available or text is empty
+        """
+        if not text.strip():
+            raise ValueError("Policy text cannot be empty")
+            
+        if not hasattr(self, 'generator') or not hasattr(self.generator, 'knowledge_base_available') or not self.generator.knowledge_base_available:
+            raise ValueError(
+                "Cannot generate recommendations - knowledge base is not available. "
+                "Please try again later or contact the system administrator."
+            )
+        # Verify knowledge base is available before proceeding
+        if not hasattr(self, 'generator') or not hasattr(self.generator, 'knowledge_base_available') or not self.generator.knowledge_base_available:
+            raise ValueError(
+                "Cannot generate recommendations - knowledge base is not available. "
+                "Please try again later or contact the system administrator."
+            )
+            
+        # Normalise inputs
+        themes = themes or []
+        classification_str = (
+            classification.get("classification")
+            if isinstance(classification, dict)
+            else str(classification or "")
+        ) or "Moderate"
+
         try:
-            logger.info(f"Enhancing recommendations for policy analysis")
-            
-            # Extract relevant information from policy analysis
-            classification = policy_analysis.get('classification', {})
-            gaps = policy_analysis.get('gap_analysis', [])
-            current_recommendations = policy_analysis.get('recommendations', [])
-            
-            # Initialize enhanced recommendations with current ones
-            enhanced_recommendations = list(current_recommendations)
-            
-            # Add knowledge base specific enhancements based on policy classification
-            policy_type = classification.get('type', 'moderate').lower()
-            
-            if policy_type == 'restrictive':
-                enhanced_recommendations.append({
-                    'title': 'Consider Balanced Approach to AI Integration',
-                    'description': 'While maintaining safeguards, explore opportunities for responsible AI use in teaching and learning.',
-                    'source': 'BERA (2018) Ethical Guidelines',
-                    'priority': 'medium',
-                    'implementation_effort': 'moderate',
-                    'impact': 'high',
-                    'category': 'policy_approach'
-                })
-            
-            # Add recommendations based on identified gaps
-            for gap in gaps:
-                if 'transparency' in gap.get('dimension', '').lower():
-                    enhanced_recommendations.append({
-                        'title': 'Enhance Transparency Measures',
-                        'description': 'Implement clear documentation and communication about AI system capabilities and limitations.',
-                        'source': 'UNESCO (2023) AI in Education',
-                        'priority': 'high',
-                        'implementation_effort': 'low',
-                        'impact': 'high',
-                        'category': gap['dimension']
-                    })
-            
-            # Update the policy analysis with enhanced recommendations
-            policy_analysis['enhanced_recommendations'] = enhanced_recommendations
-            policy_analysis['knowledge_base_insights'] = {
-                'sources_consulted': ['BERA (2018)', 'UNESCO (2023)'],
-                'enhancement_date': datetime.now().isoformat(),
-                'enhancement_version': '1.0'
-            }
-            
-            return policy_analysis
-            
-        except Exception as e:
-            logger.error(f"Error enhancing recommendations: {str(e)}")
-            # Return original analysis if enhancement fails
-            policy_analysis['enhancement_error'] = str(e)
-            return policy_analysis
+            # Coverage analysis
+            coverage = self.analyzer.analyze_coverage(themes, text)
 
-    def generate_recommendations(self, themes: List[Dict], classification: Dict, 
-                               text: str, analysis_id: str = None) -> Dict:
-        """
-        Generate comprehensive, context-aware policy recommendations.
-        
-        This method serves as the primary interface for generating AI policy recommendations.
-        It orchestrates the complete analysis pipeline, from initial policy assessment to
-        final recommendation generation, while ensuring robust error handling and logging.
-        
-        The process includes:
-        1. Policy coverage analysis against ethical dimensions
-        2. Gap identification and prioritisation
-        3. Context-aware recommendation generation
-        4. Implementation planning and resource estimation
-        
-        Args:
-            themes: List of dictionaries containing extracted themes from the NLP pipeline.
-                   Each dictionary should include theme text, relevance score, and metadata.
-                   
-            classification: Dictionary containing policy classification results, including
-                          the classification type (restrictive/moderate/permissive) and
-                          confidence scores for each category.
-                          
-            text: The complete policy text to be analysed. This is used for detecting
-                 existing policy elements and providing contextual recommendations.
-                 
-            analysis_id: Optional unique identifier for tracking and logging purposes.
-                       If not provided, a UUID will be generated automatically.
-        
-        Returns:
-            Dict: A comprehensive recommendation package containing:
-                - analysis_metadata: Information about the analysis process
-                - policy_summary: Overview of the analysed policy
-                - coverage_analysis: Detailed assessment across ethical dimensions
-                - gap_analysis: Prioritised list of identified gaps
-                - recommendations: Actionable suggestions for policy improvement
-                - implementation_roadmap: Suggested timeline and milestones
-                - confidence_scores: Assessment reliability indicators
-                
-        Example:
-            >>> engine = RecommendationEngine()
-            >>> themes = [{'theme': 'AI governance', 'relevance': 0.85}]
-            >>> classification = {'type': 'moderate', 'confidence': 0.78}
-            >>> results = engine.generate_recommendations(themes, classification, policy_text)
-            >>> print(results['recommendations'][0]['title'])
-            'Establish Multi-Stakeholder AI Governance Committee'
-            
-        Note:
-            The method includes comprehensive error handling and will return a fallback
-            response with appropriate error details if the analysis encounters issues.
-            The fallback ensures the system remains operational even with unexpected inputs.
-        """
+            # Identify gaps based on coverage and classification
+            gaps = self.analyzer.identify_gaps(coverage, classification_str)
+
+            # Generate recommendations - this will raise ValueError if knowledge base is unavailable
+            recs = self.generator.generate_recommendations(
+                gaps=gaps,
+                classification=classification_str,
+                themes=themes,
+                text=text,
+            )
+        except ValueError as e:
+            if "knowledge base" in str(e).lower():
+                raise ValueError(
+                    "Cannot generate recommendations - knowledge base is not available. "
+                    "Please try again later or contact the system administrator."
+                ) from e
+            raise
+
+        # Ensure default tags for I-U-F matrix if absent
+        for r in recs:
+            try:
+                if "impact" not in r:
+                    r["impact"] = "high" if (r.get("priority", "").lower() == "high") else "medium"
+                if "urgency" not in r:
+                    r["urgency"] = (r.get("priority") or "medium").lower()
+                if "feasibility" not in r:
+                    # Slightly easier for documentation/transparency items
+                    dim = (r.get("dimension") or "").lower()
+                    r["feasibility"] = "high" if any(k in dim for k in ["transparency", "documentation"]) else "medium"
+            except Exception:
+                pass
+
+        # Build metadata and summary
+        from datetime import datetime, timezone
+
+        scores = [dim.get("score", 0.0) for dim in coverage.values()] if isinstance(coverage, dict) else []
+        avg_coverage = round(sum(scores) / len(scores), 2) if scores else 0.0
+
+        # Normalise academic sources labels like "UNESCO (2023)" -> "UNESCO 2023"
+        raw_sources = list(getattr(self.generator, "DEFAULT_SOURCES", []))
         try:
-            logger.info(f"Generating comprehensive recommendations for analysis: {analysis_id}")
-            print(f"\n🔍 Analysing policy against enhanced ethical framework...")
-            
-            # Step 1: Enhanced coverage analysis with weighted scoring
-            coverage_analysis = self.framework_analyzer.analyze_coverage(themes, text)
-            
-            print(f"📊 Enhanced Coverage Analysis (Fixed Scoring):")
-            for dimension, analysis in coverage_analysis.items():
-                status_emoji = "🟢" if analysis['status'] == 'strong' else "🟡" if analysis['status'] == 'moderate' else "🔴"
-                matched_count = analysis.get('item_count', 0)
-                phrase_count = len([i for i in analysis.get('matched_items', []) if 'PHRASE:' in i])
-                print(f"   {status_emoji} {dimension.replace('_', ' ').title()}: {analysis['score']}% ({analysis['status']}) - {matched_count} indicators, {phrase_count} phrases")
-            
-            # Step 2: Detect existing policies to inform recommendations
-            existing_policies = self.framework_analyzer.detect_existing_policies(text)
-            existing_count = sum(1 for v in existing_policies.values() if v)
-            print(f"\n🏛️ Detected {existing_count} existing policy elements:")
-            for policy, exists in existing_policies.items():
-                if exists:
-                    print(f"   ✅ {policy.replace('_', ' ').title()}")
-            
-            # Step 3: Identify gaps with proper field mapping
-            gaps = self.framework_analyzer.identify_gaps(
-                coverage_analysis, 
-                classification.get('classification', 'Unknown')
-            )
-            
-            print(f"\n🎯 Identified {len(gaps)} improvement areas:")
-            for gap in gaps[:3]:  # Show top 3
-                print(f"   📍 {gap['dimension'].replace('_', ' ').title()}: {gap['current_score']:.1f}% ({gap['type']})")
-            
-            # Step 4: Generate contextual, non-duplicate recommendations using enhanced templates
-            recommendations = self.recommendation_generator.generate_recommendations(
-                gaps, 
-                classification.get('classification', 'Unknown'),
-                themes,
-                text  # Crucial: Pass text for existing policy detection
-            )
-            
-            enhancement_count = len([r for r in recommendations if r.get('implementation_type') == 'enhancement'])
-            new_count = len([r for r in recommendations if r.get('implementation_type') == 'new'])
-            
-            print(f"💡 Generated {len(recommendations)} context-aware recommendations:")
-            print(f"    {enhancement_count} enhancements to existing policies")
-            print(f"   🆕 {new_count} new implementations")
-            
-            # Step 5: Compile comprehensive recommendation package
-            recommendation_package = {
-                'analysis_metadata': {
-                    'analysis_id': analysis_id,
-                    'generated_date': datetime.now().isoformat(),
-                    'framework_version': '2.0-enhanced',
-                    'academic_sources': ['UNESCO 2023', 'JISC 2023', 'BERA 2018'],
-                    'methodology': 'Enhanced Ethical Framework Gap Analysis with Multi-Dimensional Matching'
-                },
-                'coverage_analysis': coverage_analysis,
-                'existing_policies': existing_policies,
-                'identified_gaps': gaps,
-                'recommendations': recommendations,
-                'summary': {
-                    'total_recommendations': len(recommendations),
-                    'enhancement_recommendations': enhancement_count,
-                    'new_implementations': new_count,
-                    'high_priority_count': len([r for r in recommendations if r.get('priority') == 'high']),
-                    'coverage_scores': {dim: analysis['score'] for dim, analysis in coverage_analysis.items()},
-                    'overall_coverage': round(sum(a['score'] for a in coverage_analysis.values()) / len(coverage_analysis), 1) if coverage_analysis else 0,
-                    'existing_policy_count': existing_count,
-                    'recommendations_by_dimension': {
-                        dim: len([r for r in recommendations if r.get('dimension') == dim])
-                        for dim in coverage_analysis.keys()
-                    },
-                    'recommendations_by_priority': {
-                        'critical': len([r for r in recommendations if r.get('priority') == 'critical']),
-                        'high': len([r for r in recommendations if r.get('priority') == 'high']),
-                        'medium': len([r for r in recommendations if r.get('priority') == 'medium']),
-                        'low': len([r for r in recommendations if r.get('priority') == 'low'])
-                    }
-                }
-            }
-            
-            # Validation: Check if fixes worked for enhanced recommendations
-            transparency_score = coverage_analysis.get('transparency', {}).get('score', 0)
-            has_disclosure = existing_policies.get('disclosure_requirements', False)
-            
-            if transparency_score > 0 and has_disclosure:
-                print(f"✅ Fix validation: Transparency score {transparency_score}% with disclosure detected")
-            elif transparency_score == 0:
-                print(f"⚠️ Warning: Transparency still scoring 0% - may need further debugging")
-            
-            logger.info(f"Enhanced recommendation generation completed successfully")
-            return recommendation_package
-            
-        except Exception as e:
-            logger.error(f"Error in enhanced recommendation generation: {str(e)}")
-            print(f"❌ Error in enhanced recommendation generation: {str(e)}")
-            
-            # Enhanced fallback with debug info
-            return self._generate_enhanced_fallback(classification, themes, str(e))
+            normalised_sources = [re.sub(r"\s*\((\d{4})\)", r" \1", s) for s in raw_sources]
+        except Exception:
+            normalised_sources = raw_sources
 
-    def _generate_enhanced_fallback(self, classification: Dict, themes: List[Dict], error_msg: str) -> Dict:
-        """
-        Generate informative fallback when main process fails.
-        
-        Provides basic recommendations while preserving error information for debugging.
-        """
-        
-        basic_recommendations = [
-            {
-                'title': 'Policy Review and Enhancement',
-                'description': 'Conduct comprehensive review of current AI policy to ensure alignment with best practices and address identified gaps.',
-                'priority': 'high',
-                'source': 'Fallback',
-                'timeframe': '3-6 months',
-                'implementation_type': 'review',
-                'dimension': 'general'
-            },
-            {
-                'title': 'Stakeholder Consultation Process',
-                'description': 'Establish systematic consultation with faculty, students, and staff to gather feedback on AI policy effectiveness.',
-                'priority': 'medium', 
-                'source': 'Fallback',
-                'timeframe': '1-3 months',
-                'implementation_type': 'new',
-                'dimension': 'engagement'
-            }
-        ]
-        
-        return {
-            'analysis_metadata': {
-                'generated_date': datetime.now().isoformat(),
-                'framework_version': 'fallback-2.0',
-                'methodology': 'Enhanced Fallback Template',
-                'error_info': {
-                    'error_message': error_msg,
-                    'fallback_reason': 'Main analysis failed, using enhanced fallback'
-                }
-            },
-            'recommendations': basic_recommendations,
-            'summary': {
-                'total_recommendations': len(basic_recommendations),
-                'note': 'Enhanced fallback recommendations due to processing error',
-                'debug_available': True
-            },
-            'debug_info': {
-                'classification': classification,
-                'theme_count': len(themes) if themes else 0,
-                'error_occurred': True
-            }
-        }
-class EnhancedRecommendationGenerator:
-    """
-    Enhanced recommendation generator with comprehensive academic-grade templates.
-    
-    Implements multi-dimensional matching:
-    - Ethical dimension (accountability, transparency, human_agency, inclusiveness)
-    - Institution type (research_university, teaching_focused, technical_institute)
-    - Existing policy context (enhancement vs new implementation)
-    - Priority level (critical gaps vs improvement opportunities)
-    """
-    
-    def __init__(self):
-        """Initialise with comprehensive academic-sourced recommendation templates."""
-        
-        # Enhanced UNESCO 2023-based recommendations with specific implementation steps
-        self.unesco_2023_templates = {
-            'accountability': {
-                'research_university': {
-                    'new_implementation': [
-                        {
-                            'title': 'Establish Multi-Stakeholder AI Governance Committee',
-                            'description': 'Create institution-wide committee comprising faculty representatives, student body delegates, IT specialists, ethics experts, and senior administrators. Committee should meet monthly to review AI policy implementation, assess emerging risks, and update guidelines based on practical experience.',
-                            'implementation_steps': [
-                                'Identify and recruit diverse committee members with relevant expertise',
-                                'Develop committee charter defining roles, responsibilities, and decision-making authority',
-                                'Establish regular meeting schedule and reporting mechanisms to senior leadership',
-                                'Create standardised incident reporting and policy violation review processes'
-                            ],
-                            'success_metrics': ['Committee established within 2 months', 'Monthly meeting attendance >80%', 'Quarterly policy reviews completed'],
-                            'timeframe': '2-4 months',
-                            'priority': 'high'
-                        },
-                        {
-                            'title': 'Implement Research Integrity AI Oversight Framework',
-                            'description': 'Develop specialised oversight mechanisms for AI use in research contexts, including pre-approval processes for high-risk research applications, ongoing monitoring of AI-assisted research projects, and integration with existing research ethics review boards.',
-                            'implementation_steps': [
-                                'Extend research ethics board mandate to include AI governance oversight',
-                                'Develop risk assessment matrix for AI applications in research contexts',
-                                'Create streamlined approval process for low-risk AI research applications',
-                                'Establish quarterly compliance audits for active research projects using AI'
-                            ],
-                            'success_metrics': ['Ethics board AI protocols adopted', '>90% research project compliance', 'Risk assessment completed for all new projects'],
-                            'timeframe': '3-6 months',
-                            'priority': 'high'
-                        }
-                    ],
-                    'enhancement': [
-                        {
-                            'title': 'Strengthen Existing Governance with Formal Accountability Metrics',
-                            'description': 'Enhance current governance structures by implementing quantitative accountability measures, establishing clear performance indicators for policy effectiveness, and creating systematic feedback loops from stakeholder communities.',
-                            'implementation_steps': [
-                                'Develop KPIs for current governance structure effectiveness',
-                                'Implement quarterly stakeholder satisfaction surveys',
-                                'Create public transparency reports on governance activities and outcomes',
-                                'Establish formal escalation procedures for unresolved policy concerns'
-                            ],
-                            'success_metrics': ['KPI dashboard operational', 'Stakeholder satisfaction >75%', 'Response time to concerns <48 hours'],
-                            'timeframe': '1-3 months',
-                            'priority': 'medium'
-                        }
-                    ]
-                },
-                'teaching_focused': {
-                    'new_implementation': [
-                        {
-                            'title': 'Create Faculty-Led AI Teaching Excellence Network',
-                            'description': 'Establish collaborative network of teaching-focused faculty to develop and share best practices for AI integration in educational contexts, provide peer support for policy implementation, and ensure accountability through professional community engagement.',
-                            'implementation_steps': [
-                                'Recruit volunteer faculty champions from each academic department',
-                                'Organise monthly professional development sessions on AI pedagogy',
-                                'Create shared resource repository for AI teaching materials and assessments',
-                                'Develop peer review system for innovative AI-enhanced teaching approaches'
-                            ],
-                            'success_metrics': ['Network membership >50% of teaching faculty', 'Monthly session attendance >30', 'Resource repository with >100 materials'],
-                            'timeframe': '2-4 months',
-                            'priority': 'high'
-                        }
-                    ]
-                },
-                'technical_institute': {
-                    'new_implementation': [
-                        {
-                            'title': 'Implement Technical AI Safety and Security Oversight Board',
-                            'description': 'Establish technically-sophisticated oversight body with expertise in AI systems, cybersecurity, and educational technology to provide specialised governance for complex AI implementations in technical education contexts.',
-                            'implementation_steps': [
-                                'Recruit board members with advanced technical AI expertise',
-                                'Develop technical safety assessment protocols for AI educational tools',
-                                'Create incident response procedures for AI system failures or security breaches',
-                                'Establish integration protocols with existing IT security infrastructure'
-                            ],
-                            'success_metrics': ['Board operational with >5 technical experts', 'Safety protocols for all AI tools', 'Zero major security incidents'],
-                            'timeframe': '1-3 months',
-                            'priority': 'critical'
-                        }
-                    ]
-                }
-            },
-            'transparency': {
-                'research_university': {
-                    'new_implementation': [
-                        {
-                            'title': 'Develop Comprehensive AI Research Disclosure Framework',
-                            'description': 'Create detailed disclosure requirements for AI use in research publications, grant applications, and academic presentations. Framework should include methodology transparency, dataset acknowledgment, and limitations documentation to maintain research integrity.',
-                            'implementation_steps': [
-                                'Draft disclosure templates for different research publication types',
-                                'Integrate disclosure requirements into institutional publication guidelines',
-                                'Provide training for researchers on proper AI methodology documentation',
-                                'Create review checklist for research integrity office and journal submissions'
-                            ],
-                            'success_metrics': ['Disclosure templates adopted by all departments', '100% compliance in new publications', 'Training completed by >80% research-active faculty'],
-                            'timeframe': '3-6 months',
-                            'priority': 'high'
-                        },
-                        {
-                            'title': 'Establish Public AI Transparency Repository',
-                            'description': 'Create publicly accessible repository documenting institutional AI policies, implementation decisions, outcome assessments, and stakeholder feedback. Repository should demonstrate institutional commitment to openness and enable external scrutiny of AI governance practices.',
-                            'implementation_steps': [
-                                'Develop web-based transparency portal with searchable policy database',
-                                'Implement quarterly reporting cycle for AI policy implementation outcomes',
-                                'Create stakeholder feedback mechanism with public response commitments',
-                                'Establish annual third-party audit of transparency practices'
-                            ],
-                            'success_metrics': ['Portal launched with full policy documentation', 'Quarterly reports published on schedule', '>1000 annual portal visits'],
-                            'timeframe': '4-8 months',
-                            'priority': 'medium'
-                        }
-                    ],
-                    'enhancement': [
-                        {
-                            'title': 'Expand Existing Disclosure Requirements with Methodological Detail',
-                            'description': 'Enhance current disclosure practices by requiring detailed documentation of AI methodologies, decision-making processes, and outcome validation procedures. Focus on academic integrity and reproducibility standards.',
-                            'implementation_steps': [
-                                'Review and strengthen existing disclosure language for comprehensiveness',
-                                'Add requirements for AI methodology documentation in research contexts',
-                                'Create detailed examples and case studies for common disclosure scenarios',
-                                'Implement compliance monitoring through existing academic integrity mechanisms'
-                            ],
-                            'success_metrics': ['Enhanced disclosure guidelines published', 'Compliance monitoring system operational', 'Faculty feedback rating >4/5'],
-                            'timeframe': '1-2 months',
-                            'priority': 'medium'
-                        }
-                    ]
-                },
-                'teaching_focused': {
-                    'new_implementation': [
-                        {
-                            'title': 'Create Student-Friendly AI Transparency Dashboard',
-                            'description': 'Develop accessible, student-oriented transparency platform explaining institutional AI policies, providing clear examples of appropriate use, and offering easy access to support resources and feedback mechanisms.',
-                            'implementation_steps': [
-                                'Design user-friendly interface with clear navigation and search functionality',
-                                'Create multimedia content explaining AI policies with practical examples',
-                                'Implement live chat support for student questions about AI policy',
-                                'Develop mobile-responsive design for accessible student engagement'
-                            ],
-                            'success_metrics': ['Dashboard launched with <2 second load times', 'Student satisfaction rating >4.2/5', '>500 monthly active users'],
-                            'timeframe': '2-4 months',
-                            'priority': 'high'
-                        }
-                    ]
-                }
-            },
-            'human_agency': {
-                'research_university': {
-                    'new_implementation': [
-                        {
-                            'title': 'Implement Graduated Human Oversight Protocol for Research AI',
-                            'description': 'Establish risk-based human oversight framework requiring different levels of human control based on AI application complexity, research sensitivity, and potential impact. Protocol should preserve human authority in critical research decisions while enabling efficient AI integration.',
-                            'implementation_steps': [
-                                'Develop risk assessment matrix categorising AI applications by oversight requirements',
-                                'Create standard operating procedures for each oversight level',
-                                'Train research supervisors on appropriate oversight implementation',
-                                'Establish periodic review cycle for oversight level adjustments'
-                            ],
-                            'success_metrics': ['Risk matrix approved and implemented', 'All active research projects classified', 'Supervisor training >90% completion'],
-                            'timeframe': '2-5 months',
-                            'priority': 'high'
-                        },
-                        {
-                            'title': 'Preserve Human Authority in Academic Assessment and Evaluation',
-                            'description': 'Ensure human faculty maintain final decision-making authority over all academic assessments, grading decisions, and research evaluations. Implement safeguards preventing inappropriate delegation of academic judgment to AI systems.',
-                            'implementation_steps': [
-                                'Develop clear policy statements on human authority in academic evaluation',
-                                'Create training programmes for faculty on appropriate AI-assisted assessment',
-                                'Implement audit mechanisms to verify human oversight in grading processes',
-                                'Establish appeals process for students concerned about AI influence on evaluations'
-                            ],
-                            'success_metrics': ['Policy statements distributed to all faculty', 'Assessment audit system operational', 'Zero substantiated complaints about inappropriate AI delegation'],
-                            'timeframe': '1-3 months',
-                            'priority': 'critical'
-                        }
-                    ],
-                    'enhancement': [
-                        {
-                            'title': 'Strengthen Existing Human Oversight with Systematic Review Processes',
-                            'description': 'Enhance current human oversight practices by implementing systematic review processes, establishing clear decision-making hierarchies, and creating documentation requirements for AI-assisted decisions.',
-                            'implementation_steps': [
-                                'Audit existing oversight practices for completeness and effectiveness',
-                                'Implement standardised documentation requirements for AI-assisted decisions',
-                                'Create clear escalation procedures for complex or ambiguous cases',
-                                'Establish quarterly review meetings to assess oversight effectiveness'
-                            ],
-                            'success_metrics': ['Oversight audit completed', 'Documentation compliance >95%', 'Escalation procedures tested and functional'],
-                            'timeframe': '1-2 months',
-                            'priority': 'medium'
-                        }
-                    ]
-                },
-                'teaching_focused': {
-                    'new_implementation': [
-                        {
-                            'title': 'Empower Faculty with AI-Enhanced Teaching Authority',
-                            'description': 'Provide faculty with clear authority and practical tools to make informed decisions about AI integration in their courses, including assessment design, student support, and pedagogical innovation while maintaining educational quality standards.',
-                            'implementation_steps': [
-                                'Develop faculty decision-making framework for AI integration in courses',
-                                'Create practical toolkit with assessment examples and best practices',
-                                'Provide professional development workshops on AI-enhanced pedagogy',
-                                'Establish peer consultation network for complex teaching scenarios'
-                            ],
-                            'success_metrics': ['Decision framework adopted by >80% faculty', 'Workshop attendance >60% eligible faculty', 'Peer network membership >40 faculty'],
-                            'timeframe': '2-4 months',
-                            'priority': 'high'
-                        }
-                    ]
-                }
-            },
-            'inclusiveness': {
-                'research_university': {
-                    'new_implementation': [
-                        {
-                            'title': 'Establish Comprehensive AI Accessibility Standards',
-                            'description': 'Implement institution-wide accessibility requirements for all AI tools and platforms, ensuring compliance with disability rights legislation and promoting equitable access for students and faculty with diverse needs and capabilities.',
-                            'implementation_steps': [
-                                'Conduct accessibility audit of current AI tools and platforms',
-                                'Develop procurement requirements including accessibility criteria for new AI tools',
-                                'Create accommodation procedures for students unable to use standard AI tools',
-                                'Implement regular accessibility testing and compliance monitoring'
-                            ],
-                            'success_metrics': ['Accessibility audit completed for all AI tools', 'Procurement standards updated', 'Accommodation procedures operational'],
-                            'timeframe': '3-6 months',
-                            'priority': 'high'
-                        },
-                        {
-                            'title': 'Address Digital Equity Gaps in AI Access',
-                            'description': 'Develop comprehensive programme to ensure equitable access to AI tools across diverse student populations, addressing financial barriers, technical literacy gaps, and cultural considerations that may limit effective AI engagement.',
-                            'implementation_steps': [
-                                'Survey student population to identify access barriers and needs',
-                                'Establish AI tool lending programme for students with financial constraints',
-                                'Create multilingual support materials and culturally responsive training',
-                                'Develop partnerships with community organisations to extend support reach'
-                            ],
-                            'success_metrics': ['Student needs assessment completed', 'Lending programme operational', 'Support materials available in >3 languages'],
-                            'timeframe': '4-8 months',
-                            'priority': 'high'
-                        }
-                    ],
-                    'enhancement': [
-                        {
-                            'title': 'Expand Existing Accessibility Measures with Cultural Competency',
-                            'description': 'Enhance current accessibility practices by incorporating cultural competency considerations, addressing diverse learning styles and preferences, and ensuring AI implementations respect varied cultural and linguistic backgrounds.',
-                            'implementation_steps': [
-                                'Review existing accessibility measures for cultural inclusivity gaps',
-                                'Engage diverse student focus groups to identify additional needs',
-                                'Develop cultural competency guidelines for AI tool selection and implementation',
-                                'Create ongoing assessment mechanism for inclusive practice effectiveness'
-                            ],
-                            'success_metrics': ['Cultural inclusivity review completed', 'Focus group recommendations implemented', 'Assessment mechanism operational'],
-                            'timeframe': '2-4 months',
-                            'priority': 'medium'
-                        }
-                    ]
-                },
-                'teaching_focused': {
-                    'new_implementation': [
-                        {
-                            'title': 'Develop Alternative Assessment Pathways for Diverse Learning Needs',
-                            'description': 'Create multiple assessment options accommodating different learning styles, technical capabilities, and cultural backgrounds while maintaining academic standards and ensuring fair evaluation of student learning outcomes.',
-                            'implementation_steps': [
-                                'Design alternative assessment formats for students who cannot or prefer not to use AI',
-                                'Create flexibility guidelines for faculty to adapt assessments for diverse needs',
-                                'Develop support resources for students navigating different assessment options',
-                                'Implement quality assurance processes to ensure alternative assessments maintain academic rigour'
-                            ],
-                            'success_metrics': ['Alternative assessment options available in all courses', 'Student satisfaction with options >4/5', 'Academic standards maintained across all pathways'],
-                            'timeframe': '3-5 months',
-                            'priority': 'high'
-                        }
-                    ]
-                }
-            }
-        }
-        
-        # JISC 2023-based practical implementation templates
-        self.jisc_2023_templates = {
-            'accountability': {
-                'research_university': [
-                    {
-                        'title': 'Develop Research-Grade AI Competency Requirements',
-                        'description': 'Establish mandatory AI literacy requirements for research-active faculty, including understanding of AI capabilities and limitations, ethical considerations in research contexts, and best practices for AI-assisted scholarly work.',
-                        'implementation_steps': [
-                            'Create competency framework specific to research contexts and methodologies',
-                            'Develop assessment mechanism to verify faculty AI literacy levels',
-                            'Provide targeted training programmes for different research disciplines',
-                            'Implement continuing education requirements for faculty using AI in research'
-                        ],
-                        'success_metrics': ['Competency framework approved', 'Faculty assessment system operational', '>85% faculty meet basic competency requirements'],
-                        'timeframe': '4-6 months',
-                        'priority': 'high'
-                    }
-                ],
-                'teaching_focused': [
-                    {
-                        'title': 'Create Teaching-Focused AI Professional Development Programme',
-                        'description': 'Implement comprehensive professional development initiative specifically designed for teaching faculty, focusing on pedagogical applications of AI, assessment design in AI contexts, and student support strategies.',
-                        'implementation_steps': [
-                            'Design modular training programme addressing core teaching challenges with AI',
-                            'Create peer mentoring system pairing experienced and novice AI users',
-                            'Develop online resource library with practical teaching examples and case studies',
-                            'Establish ongoing support network for faculty implementing AI-enhanced teaching'
-                        ],
-                        'success_metrics': ['Training programme launched', 'Mentoring system operational with >50 participants', 'Resource library with >200 materials'],
-                        'timeframe': '3-5 months',
-                        'priority': 'high'
-                    }
-                ]
-            },
-            'transparency': {
-                'all_institutions': [
-                    {
-                        'title': 'Implement Comprehensive Stakeholder Communication Strategy',
-                        'description': 'Develop multi-channel communication approach ensuring all institutional stakeholders understand AI policies, implementation decisions, and ongoing developments through accessible, regular, and meaningful engagement.',
-                        'implementation_steps': [
-                            'Create stakeholder mapping identifying all relevant community groups',
-                            'Develop communication materials tailored to different audience needs and preferences',
-                            'Establish regular communication schedule with predictable updates and opportunities for feedback',
-                            'Implement feedback collection and response system with public accountability measures'
-                        ],
-                        'success_metrics': ['Communication strategy launched', 'All stakeholder groups receiving targeted updates', 'Feedback response rate >30%'],
-                        'timeframe': '2-4 months',
-                        'priority': 'medium'
-                    }
-                ]
-            }
-        }
-        
-        # BERA 2018 ethical principles adapted for AI contexts
-        self.bera_2018_templates = {
-            'human_agency': {
-                'research_university': [
-                    {
-                        'title': 'Implement Informed Consent Framework for AI-Assisted Research',
-                        'description': 'Develop comprehensive informed consent procedures for research involving AI tools, ensuring participants understand AI involvement, data usage, and potential implications while maintaining research ethics standards.',
-                        'implementation_steps': [
-                            'Update research ethics protocols to address AI-specific consent requirements',
-                            'Create template consent forms with clear AI disclosure language',
-                            'Train research ethics board members on AI-related ethical considerations',
-                            'Implement ongoing consent verification for longitudinal studies using AI'
-                        ],
-                        'success_metrics': ['Updated ethics protocols approved', 'Template forms available', 'Ethics board training completed'],
-                        'timeframe': '2-4 months',
-                        'priority': 'high'
-                    }
-                ]
-            },
-            'inclusiveness': {
-                'all_institutions': [
-                    {
-                        'title': 'Establish Participant Welfare Protection in AI Contexts',
-                        'description': 'Create robust safeguards ensuring AI implementation does not harm student welfare, academic progress, or personal development, with particular attention to vulnerable populations and those who may be disadvantaged by AI adoption.',
-                        'implementation_steps': [
-                            'Conduct impact assessment identifying potential welfare risks from AI implementation',
-                            'Develop early warning system to identify students experiencing difficulties with AI integration',
-                            'Create support services specifically addressing AI-related academic challenges',
-                            'Implement regular welfare monitoring and intervention protocols'
-                        ],
-                        'success_metrics': ['Impact assessment completed', 'Early warning system operational', 'Support services utilised by >5% student body'],
-                        'timeframe': '3-6 months',
-                        'priority': 'high'
-                    }
-                ]
-            }
-        }
-        
-        # Implementation timeframes based on complexity and urgency
-        self.implementation_timeframes = {
-            'critical': '1-2 months',
-            'high': '2-4 months', 
-            'medium': '3-6 months',
-            'low': '6-12 months',
-            'strategic': '12+ months'
-        }
-        
-        # Institution type characteristics for contextual matching
-        self.institution_characteristics = {
-            'research_university': {
-                'priorities': ['research_integrity', 'publication_ethics', 'graduate_supervision', 'grant_compliance'],
-                'stakeholders': ['faculty', 'graduate_students', 'research_staff', 'external_collaborators'],
-                'complexity_factors': ['multi_disciplinary', 'international_collaboration', 'high_risk_research']
-            },
-            'teaching_focused': {
-                'priorities': ['student_learning', 'assessment_quality', 'pedagogical_innovation', 'student_support'],
-                'stakeholders': ['undergraduate_students', 'teaching_faculty', 'academic_support_staff'],
-                'complexity_factors': ['diverse_student_body', 'varying_technical_literacy', 'resource_constraints']
-            },
-            'technical_institute': {
-                'priorities': ['technical_accuracy', 'industry_relevance', 'practical_skills', 'innovation'],
-                'stakeholders': ['technical_faculty', 'industry_partners', 'technical_students'],
-                'complexity_factors': ['rapid_technology_change', 'industry_integration', 'specialised_equipment']
-            }
-        }
-
-    def generate_recommendations(self, gaps: List[Dict], classification: str, 
-                               themes: List[Dict], text: str = "") -> List[Dict]:
-        """
-        Generate contextual, detailed recommendations using multi-dimensional matching.
-        
-        Args:
-            gaps: Identified gaps from EthicalFrameworkAnalyzer
-            classification: Policy classification (restrictive/moderate/permissive)
-            themes: Extracted themes for context
-            text: Original text for existing policy detection
-            
-        Returns:
-            List of detailed, contextual recommendations with implementation guidance
-        """
-        # Determine institution context for targeted recommendations
-        institution_context = self._analyze_institution_context(themes, text)
-        
-        # Detect existing policies to determine enhancement vs new implementation
-        existing_policies = self._detect_existing_policies(text) if text else {}
-        
-        recommendations = []
-        used_combinations = set()  # Prevent exact duplicates
-        
-        # Process each gap with sophisticated matching logic
-        for gap in gaps[:8]:  # Limit to top 8 gaps for quality over quantity
-            dimension = gap['dimension']
-            priority = gap.get('priority', 'medium')
-            current_score = gap.get('current_score', 0)
-            
-            # Determine implementation approach based on existing policies
-            has_existing = self._has_existing_provision(gap, existing_policies)
-            implementation_type = 'enhancement' if has_existing else 'new_implementation'
-            
-            # Generate contextual recommendation using multi-dimensional matching
-            recommendation = self._generate_contextual_recommendation(
-                dimension=dimension,
-                institution_context=institution_context,
-                implementation_type=implementation_type,
-                priority=priority,
-                current_score=current_score,
-                gap_details=gap
-            )
-            
-            if recommendation:
-                # Create unique identifier to prevent duplicates
-                combo_key = f"{dimension}_{implementation_type}_{institution_context.get('type', 'general')}"
-                if combo_key not in used_combinations:
-                    recommendations.append(recommendation)
-                    used_combinations.add(combo_key)
-        
-        # Sort by priority and potential impact
-        recommendations.sort(key=lambda x: (
-            x.get('priority') != 'critical',
-            x.get('priority') != 'high', 
-            -x.get('impact_score', 0)
-        ))
-        
-        return recommendations
-
-    def _analyze_institution_context(self, themes: List[Dict], text: str) -> Dict:
-        """Determine institution type and characteristics for contextual recommendations."""
-        context = {
-            'type': 'research_university',  # Default assumption
-            'focus_areas': [],
-            'complexity_level': 'medium',
-            'stakeholder_emphasis': []
-        }
-        
-        if not themes and not text:
-            return context
-        
-        # Combine theme names and text for analysis
-        theme_text = ' '.join([t.get('name', '').lower() for t in themes])
-        full_text = (text.lower() + ' ' + theme_text) if text else theme_text
-        
-        # Institution type detection based on content patterns
-        research_indicators = ['research', 'publication', 'scholarly', 'graduate', 'phd', 'faculty research']
-        teaching_indicators = ['teaching', 'student learning', 'undergraduate', 'classroom', 'pedagogy']
-        technical_indicators = ['technical', 'engineering', 'technology', 'industry', 'applied']
-        
-        research_score = sum(1 for indicator in research_indicators if indicator in full_text)
-        teaching_score = sum(1 for indicator in teaching_indicators if indicator in full_text)
-        technical_score = sum(1 for indicator in technical_indicators if indicator in full_text)
-        
-        # Determine primary institution type
-        if technical_score > max(research_score, teaching_score):
-            context['type'] = 'technical_institute'
-        elif teaching_score > research_score * 1.3:
-            context['type'] = 'teaching_focused'
-        else:
-            context['type'] = 'research_university'
-        
-        # Identify focus areas based on theme analysis
-        if any('privacy' in t.get('name', '').lower() for t in themes):
-            context['focus_areas'].append('data_governance')
-        if any('integrity' in t.get('name', '').lower() for t in themes):
-            context['focus_areas'].append('academic_integrity')
-        if any('research' in t.get('name', '').lower() for t in themes):
-            context['focus_areas'].append('research_excellence')
-        
-        return context
-
-    def _detect_existing_policies(self, text: str) -> Dict:
-        """Enhanced detection of existing policy elements."""
-        if not text:
-            return {}
-            
-        text_lower = text.lower()
-        existing_policies = {}
-        
-        # Detection patterns for various policy types
-        policy_patterns = {
-            'disclosure_requirements': [
-                'must disclose', 'require.*disclosure', 'acknowledge.*use', 'cite.*ai',
-                'transparent.*about', 'declare.*use', 'must be transparent'
-            ],
-            'approval_processes': [
-                'permission.*required', 'approval.*needed', 'instructor.*approval',
-                'prior.*authorization', 'seek.*permission', 'faculty.*consent'
-            ],
-            'governance_structure': [
-                'committee', 'working group', 'governance.*board', 'oversight.*body',
-                'ai.*team', 'policy.*committee', 'steering.*group'
-            ],
-            'training_requirements': [
-                'training.*required', 'professional.*development', 'competency.*requirements',
-                'education.*programme', 'literacy.*training', 'skill.*development'
-            ],
-            'assessment_guidelines': [
-                'assessment.*guidelines', 'evaluation.*criteria', 'grading.*standards',
-                'academic.*evaluation', 'marking.*scheme', 'assessment.*policy'
-            ],
-            'research_protocols': [
-                'research.*ethics', 'research.*integrity', 'scholarly.*standards',
-                'publication.*requirements', 'research.*guidelines', 'ethics.*review'
-            ]
-        }
-        
-        for policy_type, patterns in policy_patterns.items():
-            existing_policies[policy_type] = any(
-                re.search(pattern, text_lower) for pattern in patterns
-            )
-        
-        return existing_policies
-
-    def _has_existing_provision(self, gap: Dict, existing_policies: Dict) -> bool:
-        """Determine if gap area has existing policy coverage."""
-        dimension = gap['dimension']
-        current_score = gap.get('current_score', 0)
-        
-        # Mapping of dimensions to relevant existing policies
-        dimension_policy_map = {
-            'transparency': ['disclosure_requirements', 'assessment_guidelines'],
-            'accountability': ['governance_structure', 'approval_processes', 'training_requirements'],
-            'human_agency': ['approval_processes', 'assessment_guidelines'],
-            'inclusiveness': ['assessment_guidelines', 'training_requirements']
-        }
-        
-        if dimension in dimension_policy_map:
-            relevant_policies = dimension_policy_map[dimension]
-            if any(existing_policies.get(policy, False) for policy in relevant_policies):
-                return True
-        
-        # Also consider score-based determination
-        return current_score > 10  # Threshold for considering existing provision
-
-    def _generate_contextual_recommendation(self, dimension: str, institution_context: Dict,
-                                          implementation_type: str, priority: str,
-                                          current_score: float, gap_details: Dict) -> Dict:
-        """Generate contextual recommendation using multi-dimensional matching."""
-        
-        institution_type = institution_context.get('type', 'research_university')
-        
-        # Try UNESCO templates first (most comprehensive)
-        if dimension in self.unesco_2023_templates:
-            if institution_type in self.unesco_2023_templates[dimension]:
-                if implementation_type in self.unesco_2023_templates[dimension][institution_type]:
-                    templates = self.unesco_2023_templates[dimension][institution_type][implementation_type]
-                    selected_template = templates[0]  # Take first as primary
-                    
-                    return self._build_recommendation_from_template(
-                        selected_template, dimension, institution_context, 
-                        implementation_type, current_score, gap_details
-                    )
-        
-        # Fallback to JISC templates
-        if dimension in self.jisc_2023_templates:
-            if institution_type in self.jisc_2023_templates[dimension]:
-                templates = self.jisc_2023_templates[dimension][institution_type]
-                selected_template = templates[0]
-                
-                return self._build_recommendation_from_template(
-                    selected_template, dimension, institution_context,
-                    implementation_type, current_score, gap_details
-                )
-        
-        # Final fallback to BERA templates
-        if dimension in self.bera_2018_templates:
-            available_templates = self.bera_2018_templates[dimension].get(
-                'all_institutions', 
-                self.bera_2018_templates[dimension].get(institution_type, [])
-            )
-            if available_templates:
-                selected_template = available_templates[0]
-                
-                return self._build_recommendation_from_template(
-                    selected_template, dimension, institution_context,
-                    implementation_type, current_score, gap_details
-                )
-        
-        # Ultimate fallback - generate basic recommendation
-        return self._generate_fallback_recommendation(
-            dimension, institution_context, implementation_type, priority
+        # Build narrative (template-based, UK style, grounded in sources)
+        narrative_html, narrative_meta = self._generate_narrative(
+            recommendations=recs,
+            themes=themes,
+            classification=classification_str,
+            coverage=coverage,
+            sources=normalised_sources,
+            text=text,
+            analysis_id=analysis_id or "unknown",
         )
 
-    def _build_recommendation_from_template(self, template: Dict, dimension: str,
-                                          institution_context: Dict, implementation_type: str,
-                                          current_score: float, gap_details: Dict) -> Dict:
-        """Build comprehensive recommendation from selected template."""
-        
-        # Calculate impact score based on gap severity and template comprehensiveness
-        impact_score = self._calculate_impact_score(current_score, template, institution_context)
-        
-        # Customise title based on implementation type
-        base_title = template.get('title', f'Enhance {dimension.replace("_", " ").title()}')
-        if implementation_type == 'enhancement':
-            if not base_title.startswith('Enhance') and not base_title.startswith('Strengthen'):
-                base_title = f"Enhance {base_title}"
-        
-        # Build comprehensive recommendation object
-        recommendation = {
-            'title': base_title,
-            'description': template.get('description', ''),
-            'dimension': dimension,
-            'priority': self._adjust_priority_for_context(
-                template.get('priority', 'medium'), 
-                current_score, 
-                institution_context
-            ),
-            'implementation_type': implementation_type,
-            'timeframe': template.get('timeframe', self.implementation_timeframes.get('medium')),
-            'impact_score': impact_score,
-            'current_score': current_score,
-            'expected_improvement': self._estimate_improvement(current_score, template),
-            
-            # Detailed implementation guidance
-            'implementation_steps': template.get('implementation_steps', []),
-            'success_metrics': template.get('success_metrics', []),
-            'estimated_resources': self._estimate_resources(template, institution_context),
-            
-            # Academic sourcing and validation
-            'source': self._determine_source(template),
-            'academic_rationale': self._generate_academic_rationale(dimension, template, institution_context),
-            'related_literature': self._get_related_literature(dimension),
-            # Frontend expects a list of sources; fall back to related_literature if not provided
-            'sources': template.get('sources', self._get_related_literature(dimension)),
-            
-            # Contextual adaptations
-            'institution_specific_notes': self._generate_context_notes(institution_context, implementation_type),
-            'stakeholder_considerations': self._identify_stakeholders(dimension, institution_context),
-            'potential_challenges': self._identify_challenges(template, institution_context),
-            'mitigation_strategies': self._suggest_mitigations(template, institution_context),
-            
-            # Quality and validation metadata
-            'recommendation_confidence': self._calculate_confidence(template, institution_context),
-            'evidence_strength': self._assess_evidence_strength(template),
-            'implementation_complexity': self._assess_complexity(template, institution_context)
-        }
-        
-        return recommendation
+        # Compute extended metrics (confidence, stakeholders, risk-benefit)
+        extended = {}
+        try:
+            repo = getattr(self.generator, "lit_repo", None)
+            if compute_confidence is not None:
+                extended["confidence"] = compute_confidence(
+                    themes=themes,
+                    classification=classification if isinstance(classification, dict) else {"confidence": 0},
+                    text_length=len(text or ""),
+                    repo=repo,
+                )
+            if assess_stakeholders_impact is not None:
+                extended["stakeholders"] = assess_stakeholders_impact(themes=themes)
+            if assess_risk_benefit is not None:
+                extended["risk_benefit"] = assess_risk_benefit(themes=themes)
 
-    def _calculate_impact_score(self, current_score: float, template: Dict, 
-                               institution_context: Dict) -> float:
-        """Calculate potential impact score for recommendation."""
-        # Base impact from gap severity (lower current score = higher impact potential)
-        gap_impact = max(0, 100 - current_score) / 100 * 40
-        
-        # Template comprehensiveness bonus
-        template_bonus = len(template.get('implementation_steps', [])) * 2
-        template_bonus += len(template.get('success_metrics', [])) * 3
-        
-        # Institution context multiplier
-        context_multiplier = 1.0
-        if institution_context.get('type') == 'research_university':
-            context_multiplier = 1.2  # Research universities have higher impact potential
-        elif institution_context.get('type') == 'technical_institute':
-            context_multiplier = 1.1
-        
-        total_impact = (gap_impact + template_bonus) * context_multiplier
-        return min(100, max(10, total_impact))  # Cap between 10-100
+            # Optional: augment via advanced analysis engine (feature-flagged)
+            use_advanced = os.environ.get("FEATURE_ADVANCED_ENGINE", "0").lower() in {"1", "true", "yes", "on"}
+            if use_advanced and PolicyAnalysisEngine is not None:
+                try:
+                    engine = PolicyAnalysisEngine()
+                    context_params = {
+                        "themes": themes,
+                        "classification": classification if isinstance(classification, dict) else {"classification": str(classification or "")},
+                        "organization_profile": {},
+                        "analysis_mode": os.environ.get("ANALYSIS_MODE", "default"),
+                    }
+                    adv = engine.analyze_policy(policy_text=text or "", context_params=context_params)
+                    # Merge where applicable without overwriting existing keys unless present
+                    if isinstance(adv, dict):
+                        # Confidence
+                        adv_conf = adv.get("confidence")
+                        if adv_conf and isinstance(adv_conf, dict):
+                            extended["confidence"] = adv_conf
+                        # Dimensions
+                        dims = adv.get("dimensions") or {}
+                        if isinstance(dims, dict):
+                            if dims.get("stakeholder_impact"):
+                                extended["stakeholders"] = dims.get("stakeholder_impact")
+                            if dims.get("risk_benefit"):
+                                extended["risk_benefit"] = dims.get("risk_benefit")
+                        # Context (surfaced for templates if needed)
+                        if adv.get("context"):
+                            extended["context"] = adv.get("context")
+                except Exception:
+                    # Do not fail the flow if advanced engine errors
+                    pass
+        except Exception:
+            pass
 
-    def _adjust_priority_for_context(self, base_priority: str, current_score: float,
-                                   institution_context: Dict) -> str:
-        """Adjust recommendation priority based on context and gap severity."""
-        # Critical gaps (score < 5%) get priority boost
-        if current_score < 5:
-            return 'critical'
-        
-        # Severe gaps (score < 15%) in important contexts get high priority
-        if current_score < 15:
-            if institution_context.get('type') == 'research_university':
-                return 'high'
-            elif base_priority == 'medium':
-                return 'high'
-        
-        # Research universities get priority boost for accountability and transparency
-        if (institution_context.get('type') == 'research_university' and 
-            base_priority == 'medium'):
-            return 'high'
-        
-        return base_priority
-
-    def _estimate_improvement(self, current_score: float, template: Dict) -> str:
-        """Estimate expected improvement from implementing recommendation."""
-        # Base improvement from template comprehensiveness
-        step_count = len(template.get('implementation_steps', []))
-        metric_count = len(template.get('success_metrics', []))
-        
-        if step_count >= 4 and metric_count >= 3:
-            expected_gain = 25 + (100 - current_score) * 0.3
-        elif step_count >= 3:
-            expected_gain = 20 + (100 - current_score) * 0.2
-        else:
-            expected_gain = 15 + (100 - current_score) * 0.1
-        
-        final_score = min(100, current_score + expected_gain)
-        
-        if expected_gain >= 25:
-            return f"Significant improvement expected: {current_score:.1f}% → {final_score:.1f}%"
-        elif expected_gain >= 15:
-            return f"Moderate improvement expected: {current_score:.1f}% → {final_score:.1f}%"
-        else:
-            return f"Incremental improvement expected: {current_score:.1f}% → {final_score:.1f}%"
-
-    def _estimate_resources(self, template: Dict, institution_context: Dict) -> Dict:
-        """Estimate required resources for implementation."""
-        step_count = len(template.get('implementation_steps', []))
-        
-        # Base resource estimates
-        if step_count >= 4:
-            staff_time = "Substantial (2-3 FTE months)"
-            budget_requirement = "Medium (£10,000-£25,000)"
-        elif step_count >= 3:
-            staff_time = "Moderate (1-2 FTE months)"
-            budget_requirement = "Low-Medium (£5,000-£15,000)"
-        else:
-            staff_time = "Light (0.5-1 FTE month)"
-            budget_requirement = "Low (£1,000-£5,000)"
-        
-        # Adjust for institution type
-        if institution_context.get('type') == 'research_university':
-            budget_requirement = budget_requirement.replace('Low', 'Medium').replace('Medium', 'High')
-        
-        return {
-            'staff_time': staff_time,
-            'budget_requirement': budget_requirement,
-            'specialist_expertise': self._identify_required_expertise(template),
-            'external_support': self._assess_external_support_needs(template)
+        result = {
+            "analysis_metadata": {
+                "analysis_id": analysis_id or "unknown",
+                # Use timezone-aware UTC timestamp and keep 'Z' suffix for compatibility
+                "generated_date": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "framework_version": "1.0",
+                "methodology": "EthicalFrameworkAnalyzer + Contextual RecommendationGenerator + LiteratureRepository-backed metrics",
+                "academic_sources": normalised_sources,
+            },
+            "coverage_analysis": coverage,
+            "recommendations": recs,
+            "summary": {
+                "total_recommendations": len(recs) if isinstance(recs, list) else 0,
+                "overall_coverage": avg_coverage,
+            },
+            "narrative": {
+                "html": narrative_html,
+                "style": narrative_meta.get("style"),
+                "seed": narrative_meta.get("seed"),
+                "sources_used": narrative_meta.get("sources_used", []),
+            },
+            # Extended metrics surfaced for templates
+            "analysis": {
+                "analysis_id": analysis_id or "unknown",
+                "classification": classification_str,
+                "confidence_pct": extended.get("confidence", {}).get("overall_pct") if extended else None,
+                "confidence_factors": extended.get("confidence", {}).get("factors") if extended else None,
+                "stakeholders": extended.get("stakeholders") if extended else None,
+                "risk_benefit": extended.get("risk_benefit") if extended else None,
+            },
         }
 
-    def _determine_source(self, template: Dict) -> str:
-        """Determine primary academic source for recommendation."""
-        if 'unesco' in str(template).lower():
-            return 'UNESCO 2023'
-        elif 'jisc' in str(template).lower():
-            return 'JISC 2023'
-        elif 'bera' in str(template).lower():
-            return 'BERA 2018'
-        else:
-            return 'PolicyCraft Enhanced Framework'
+        return result
 
-    def _generate_academic_rationale(self, dimension: str, template: Dict,
-                                   institution_context: Dict) -> str:
-        """Generate academic rationale for recommendation."""
-        rationale_map = {
-            'accountability': f"Establishes clear governance structures essential for responsible AI integration in {institution_context.get('type', 'academic')} contexts, addressing institutional risk management and stakeholder trust requirements.",
-            
-            'transparency': f"Implements disclosure and communication frameworks critical for maintaining academic integrity and enabling informed decision-making by all institutional stakeholders.",
-            
-            'human_agency': f"Preserves human authority and oversight in educational processes, ensuring AI augments rather than replaces human judgment in critical academic decisions.",
-            
-            'inclusiveness': f"Addresses equity and accessibility requirements to ensure AI implementation does not create or exacerbate educational inequalities or exclude diverse student populations."
+    def _generate_narrative(
+        self,
+        recommendations: List[Dict[str, Any]] | None,
+        themes: List[Dict[str, Any]] | None,
+        classification: str,
+        coverage: Dict[str, Any] | None,
+        sources: List[str] | None,
+        text: str,
+        analysis_id: str,
+    ) -> tuple[str, Dict[str, Any]]:
+        """Generate a UK-style narrative explaining the recommendations.
+
+        Template-based (no LLM). Ensures variability using a deterministic seed from analysis_id.
+        Uses British English spelling and cites knowledge base sources inline.
+        Returns HTML and metadata.
+        """
+        recommendations = recommendations or []
+        themes = themes or []
+        sources = sources or []
+
+        # Derive seed for variability (stable per analysis, varied across analyses)
+        seed = sum(ord(c) for c in (analysis_id or "")) % 10_000
+        rng = random.Random(seed)
+
+        # Pick style variant
+        tones = [
+            ("Formal", "measured", "considered"),
+            ("Warm", "supportive", "collaborative"),
+            ("Pragmatic", "practical", "implementable"),
+        ]
+        tone = rng.choice(tones)
+        tone_name, tone_adj1, tone_adj2 = tone
+
+        # Headline and openers
+        openings = [
+            "This analysis suggests a coherent programme of work, balancing ambition with due diligence.",
+            "The findings point towards a thoughtfully sequenced programme that is both credible and proportionate.",
+            "Our review indicates a balanced programme of improvement, attentive to institutional realities.",
+        ]
+        opening = rng.choice(openings)
+
+        # Executive overview (2–3 sentences)
+        class_map = {
+            "Restrictive": "a cautious baseline that would benefit from carefully broadened provisions",
+            "Moderate": "a well-balanced baseline that invites clearer operational guidance",
+            "Permissive": "an enabling baseline that warrants stronger safeguards and documentation",
         }
-        
-        base_rationale = rationale_map.get(dimension, "Addresses critical gap in institutional AI governance.")
-        
-        # Add context-specific considerations
-        if institution_context.get('type') == 'research_university':
-            base_rationale += " Particularly important for research integrity and scholarly communication standards."
-        elif institution_context.get('type') == 'teaching_focused':
-            base_rationale += " Essential for maintaining educational quality and student support effectiveness."
-        
-        return base_rationale
+        class_phrase = class_map.get(classification, "a balanced baseline that warrants clearer articulation")
 
-    def _get_related_literature(self, dimension: str) -> List[str]:
-        """Provide related academic literature references."""
-        literature_map = {
-            'accountability': [
-                "Dabis & Csáki (2024) - AI Ethics in Higher Education Policy",
+        # Extract top themes
+        top_themes = [t.get("name", "") for t in themes[:3] if isinstance(t, dict)]
+        theme_str = ", ".join([t for t in top_themes if t]) or "governance, transparency and inclusion"
+
+        # Select 3–5 sources to cite inline (more variety), keep deterministic order (British English throughout)
+        rng.shuffle(sources)
+        cite_used = sources[:5]
+        cite_inline = "; ".join(cite_used)
+
+        # Build key actions prioritising lowest coverage dimensions (British spelling)
+        key_actions: list[str] = []
+        # Normalise dimension names and provide polished labels + tailored actions
+        def _norm_dim_name(n: str) -> str:
+            n = (n or "").strip()
+            low = n.lower().replace(" ", "_")
+            mapping = {
+                "accountability": "Accountability",
+                "transparency": "Transparency",
+                "inclusiveness": "Inclusiveness",
+                "inclusion": "Inclusiveness",
+                "human_agency": "Human Agency",
+                "agency": "Human Agency",
+                "data_governance": "Data Governance",
+                "governance": "Data Governance",
+                "assessment": "Assessment",
+            }
+            return mapping.get(low, n.title())
+
+        dim_actions = {
+            "Accountability": "Define clear ownership and decision rights; publish a RACI and escalation routes.",
+            "Transparency": "Publish a concise disclosure template and exemplar for staff/students; record disclosures centrally.",
+            "Inclusiveness": "Co‑design guidance with student reps and accessibility leads; include reasonable adjustments.",
+            "Human Agency": "Require meaningful human oversight sign‑off for high‑impact uses; document interventions.",
+            "Data Governance": "Introduce a register of datasets, provenance and retention schedules; assign data stewards.",
+            "Assessment": "Document permitted/forbidden AI uses per assessment; align with briefs and integrity policy.",
+        }
+
+        # KPIs per dimension (micro-metrics)
+        dim_kpis = {
+            "Accountability": [
+                "RACI published and owned (Yes/No)",
+                "% decisions with documented owner",
+                "# escalations resolved within 10 working days",
             ],
-            'transparency': [
-                "UNESCO (2023) - AI Transparency Guidelines",
-                "JISC (2023) - Generative AI in Teaching and Learning",
-                "Chen et al. (2024) - Global AI Policy Perspectives"            ],
-            'human_agency': [
-                "BERA (2018) - Ethical Guidelines for Educational Research",
-                "Chan & Hu (2023) - Student Perspectives on Generative AI",
-                "UNESCO (2023) - Human-Centric AI in Education",
-                "Li et al. (2024) - NLP in Policy Research"            ],
-            'inclusiveness': [
-                "JISC (2023) - Inclusive AI Implementation",
-                "Bond et al. (2024) - Equity Considerations in AI Education",
-                "An et al. (2025) - Stakeholder Engagement in AI Policies"            ]
+            "Transparency": [
+                "% modules/assessments with disclosure requirements",
+                "% staff/student disclosures submitted",
+                "Median time to update public-facing guidance (days)",
+            ],
+            "Inclusiveness": [
+                "% guidance with accessibility check passed",
+                "# consultations with SU/EDI completed",
+                "% reasonable adjustments incorporated",
+            ],
+            "Human Agency": [
+                "% high‑impact uses with sign‑off recorded",
+                "# interventions documented per term",
+                "% exceptions reviewed at governance group",
+            ],
+            "Data Governance": [
+                "% active datasets registered",
+                "% datasets with retention schedule",
+                "# data stewards assigned",
+            ],
+            "Assessment": [
+                "% briefs linked to AI use matrix",
+                "% suspected cases handled under integrity policy",
+                "Median appeal turnaround (days)",
+            ],
         }
-        
-        return literature_map.get(dimension, ["PolicyCraft Framework Documentation"])
 
-    def _generate_context_notes(self, institution_context: Dict, implementation_type: str) -> str:
-        """Generate institution-specific implementation notes."""
-        notes = []
-        
-        institution_type = institution_context.get('type', 'general')
-        
-        if institution_type == 'research_university':
-            notes.append("Consider integration with existing research ethics and integrity frameworks")
-            if implementation_type == 'enhancement':
-                notes.append("Build on established academic governance structures")
-        elif institution_type == 'teaching_focused':
-            notes.append("Prioritise student-facing aspects and teaching quality assurance")
-            notes.append("Ensure alignment with student support and academic success initiatives")
-        elif institution_type == 'technical_institute':
-            notes.append("Leverage technical expertise within institution for implementation")
-            notes.append("Consider industry partnership opportunities for practical implementation")
-        
-        if implementation_type == 'enhancement':
-            notes.append("Builds on existing policy foundation - focus on strengthening and expanding current provisions")
+        def _target_for(score: float) -> tuple[int, str]:
+            # Return (target percentage, timeframe)
+            if score < 20:
+                return 60, "90 days"
+            if score < 40:
+                return 70, "120 days"
+            if score < 60:
+                return 80, "180 days"
+            return 85, "180 days"
+
+        # Deliverables library per dimension (artefacts, owners, acceptance)
+        dim_deliverables = {
+            "Accountability": {
+                "deliverable": "RACI for AI uses and exception path",
+                "owner": "PVC Education / Registry",
+                "artefact": "1‑page RACI + escalation workflow",
+                "acceptance": "Published on policy site; owners acknowledged",
+            },
+            "Transparency": {
+                "deliverable": "AI use disclosure template + exemplars",
+                "owner": "Quality Office / Programme Leads",
+                "artefact": "Template (docx) + 2 exemplars",
+                "acceptance": ">=70% assessments include disclosure requirements",
+            },
+            "Inclusiveness": {
+                "deliverable": "Inclusive guidance with reasonable adjustments",
+                "owner": "EDI / Students’ Union",
+                "artefact": "Accessible PDF guidance (WCAG 2.1 AA)",
+                "acceptance": "Consulted with SU; accessibility check passed",
+            },
+            "Human Agency": {
+                "deliverable": "Oversight sign‑off form for high‑impact uses",
+                "owner": "Module Leaders / Ethics Committee",
+                "artefact": "1‑page sign‑off form + register",
+                "acceptance": ">=90% of high‑impact uses recorded with sign‑off",
+            },
+            "Data Governance": {
+                "deliverable": "Register of datasets and retention schedules",
+                "owner": "Information Governance / Library",
+                "artefact": "Dataset register (sheet) + retention table",
+                "acceptance": ">=80% active datasets registered",
+            },
+            "Assessment": {
+                "deliverable": "Matrix of permitted/forbidden AI uses per assessment",
+                "owner": "Programme Leads / Quality",
+                "artefact": "1‑page matrix linked to briefs",
+                "acceptance": ">=80% briefs linked to matrix",
+            },
+        }
+
+        # Derive gaps from coverage (if available)
+        gap_items: list[tuple[str, float]] = []
+        if isinstance(coverage, dict):
+            for dim, info in coverage.items():
+                try:
+                    score = float(info.get("score", 0))
+                except Exception:
+                    score = 0.0
+                gap_items.append((str(dim), score))
+            gap_items.sort(key=lambda x: x[1])
+
+        # Use either gaps from coverage or fall back to existing recs
+        if gap_items:
+            # Show up to 8 weakest dimensions in key actions to avoid artificial limit of 4
+            for dim_raw, score in gap_items[:8]:
+                dim = _norm_dim_name(dim_raw)
+                action_text = dim_actions.get(dim, "Establish lightweight controls and documentation appropriate to risk.")
+                target, timeframe = _target_for(score)
+                key_actions.append(
+                    f"<li><strong>{dim}.</strong> Raise coverage from {score:.0f}% to {target}% in {timeframe}: {action_text}</li>"
+                )
         else:
-            notes.append("New implementation required - establish foundation before building advanced features")
-        
-        return "; ".join(notes)
+            rng.shuffle(recommendations)
+            # Show up to 8 recommendations when coverage gaps are not available
+            for rec in recommendations[:8]:
+                title = rec.get("title") or rec.get("dimension") or "Recommendation"
+                rationale = rec.get("rationale") or ""
+                impl = rec.get("implementation_steps", [])
+                first_step = impl[0] if impl else "Define scope and success measures"
+                key_actions.append(f"<li><strong>{title}.</strong> {first_step}. <em>{rationale}</em></li>")
+            if not key_actions:
+                key_actions.append("<li><strong>Establish an AI governance committee.</strong> Define remit, membership and reporting lines.</li>")
 
-    def _identify_stakeholders(self, dimension: str, institution_context: Dict) -> List[str]:
-        """Identify key stakeholders for recommendation implementation."""
-        base_stakeholders = {
-            'accountability': ['Senior Leadership', 'IT Services', 'Legal/Compliance'],
-            'transparency': ['Communications Team', 'Student Services', 'Faculty Representatives'],
-            'human_agency': ['Academic Affairs', 'Faculty Senate', 'Student Representatives'],
-            'inclusiveness': ['Disability Services', 'Diversity & Inclusion Office', 'Student Support']
-        }
-        
-        stakeholders = base_stakeholders.get(dimension, ['Policy Committee'])
-        
-        # Add institution-specific stakeholders
-        if institution_context.get('type') == 'research_university':
-            stakeholders.extend(['Research Office', 'Graduate School', 'Ethics Board'])
-        elif institution_context.get('type') == 'teaching_focused':
-            stakeholders.extend(['Teaching & Learning Centre', 'Academic Support'])
-        
-        return stakeholders
+        # Build deliverables list for top 2 weakest dimensions
+        deliverables_html = ""
+        top2 = gap_items[:2] if gap_items else []
+        if top2:
+            items = []
+            for dim_raw, score in top2:
+                dim = _norm_dim_name(dim_raw)
+                d = dim_deliverables.get(dim, {
+                    "deliverable": "Lightweight controls and guidance",
+                    "owner": "Policy Owner",
+                    "artefact": "1‑page guidance",
+                    "acceptance": "Published and communicated",
+                })
+                # Example filenames to make it actionable
+                example_file = {
+                    "Accountability": "AI_Governance_RACI_v1.pdf",
+                    "Transparency": "Disclosure_Template_v1.docx",
+                    "Inclusiveness": "Inclusive_Guidance_v1.pdf",
+                    "Human Agency": "Human_Oversight_Signoff_v1.docx",
+                    "Data Governance": "Dataset_Register_v1.xlsx",
+                    "Assessment": "Assessment_AI_Use_Matrix_v1.xlsx",
+                }.get(dim, "Policy_Artefact_v1.docx")
+                items.append(
+                    f"<li><strong>{dim}.</strong> <em>{d['deliverable']}</em> — Owner: {d['owner']}; Artefact: {d['artefact']} (<code>{example_file}</code>); Acceptance: {d['acceptance']}.</li>"
+                )
+            deliverables_html = "<ul>" + "".join(items) + "</ul>"
 
-    def _identify_challenges(self, template: Dict, institution_context: Dict) -> List[str]:
-        """Identify potential implementation challenges."""
-        challenges = []
-        
-        step_count = len(template.get('implementation_steps', []))
-        if step_count >= 4:
-            challenges.append("Complex implementation requiring significant coordination")
-        
-        if institution_context.get('type') == 'research_university':
-            challenges.extend([
-                "Faculty autonomy considerations in research contexts",
-                "Integration with existing research governance structures"
-            ])
-        elif institution_context.get('type') == 'teaching_focused':
-            challenges.extend([
-                "Diverse faculty technical literacy levels",
-                "Student resistance to policy changes"
-            ])
-        
-        challenges.extend([
-            "Resource allocation and budget constraints",
-            "Timeline coordination with academic calendar",
-            "Change management and stakeholder buy-in"
-        ])
-        
-        return challenges
+        # KPI list for top three weakest dimensions
+        kpis_html = ""
+        top3 = gap_items[:3] if gap_items else []
+        if top3:
+            kpi_items = []
+            for dim_raw, _ in top3:
+                dim = _norm_dim_name(dim_raw)
+                kpis = dim_kpis.get(dim, ["% policy tasks completed", "# issues resolved", "SLA adherence (%)"])
+                bullets = "".join([f"<li>{k}</li>" for k in kpis])
+                kpi_items.append(f"<li><strong>{dim}.</strong><ul>{bullets}</ul></li>")
+            kpis_html = "<ul>" + "".join(kpi_items) + "</ul>"
 
-    def _suggest_mitigations(self, template: Dict, institution_context: Dict) -> List[str]:
-        """Suggest mitigation strategies for identified challenges."""
-        mitigations = [
-            "Establish clear project governance with defined roles and responsibilities",
-            "Implement phased rollout approach to manage complexity and risk",
-            "Provide comprehensive training and support for all stakeholders",
-            "Create feedback mechanisms for continuous improvement during implementation"
+        # Quick wins (30 days)
+        quick_wins = [
+            "Publish disclosure template and 2 exemplars; add link to all new briefs.",
+            "Stand‑up dataset register skeleton; capture at least the top 10 active datasets.",
+            "Introduce human oversight sign‑off for one high‑impact pilot and review outcomes.",
         ]
-        
-        if institution_context.get('type') == 'research_university':
-            mitigations.extend([
-                "Engage faculty governance bodies early in planning process",
-                "Align implementation with research ethics review cycles"
-            ])
-        elif institution_context.get('type') == 'teaching_focused':
-            mitigations.extend([
-                "Provide extensive faculty development and technical support",
-                "Create student advisory group to guide policy development"
-            ])
-        
-        return mitigations
+        quick_wins_html = "<ul>" + "".join([f"<li>{q}</li>" for q in quick_wins]) + "</ul>"
 
-    def _calculate_confidence(self, template: Dict, institution_context: Dict) -> str:
-        """Calculate confidence level in recommendation effectiveness."""
-        confidence_score = 0
-        
-        # Template quality indicators
-        if len(template.get('implementation_steps', [])) >= 3:
-            confidence_score += 25
-        if len(template.get('success_metrics', [])) >= 2:
-            confidence_score += 25
-        if template.get('timeframe'):
-            confidence_score += 15
-        
-        # Institution context match
-        if institution_context.get('type') in ['research_university', 'teaching_focused']:
-            confidence_score += 20
-        
-        # Source credibility
-        source = self._determine_source(template)
-        if source in ['UNESCO 2023', 'JISC 2023', 'BERA 2018']:
-            confidence_score += 15
-        
-        if confidence_score >= 80:
-            return 'High'
-        elif confidence_score >= 60:
-            return 'Medium-High'
-        elif confidence_score >= 40:
-            return 'Medium'
-        else:
-            return 'Medium-Low'
-
-    def _assess_evidence_strength(self, template: Dict) -> str:
-        """Assess strength of evidence supporting recommendation."""
-        if 'research' in template.get('description', '').lower():
-            return 'Strong - Research-based'
-        elif len(template.get('success_metrics', [])) >= 3:
-            return 'Good - Measurable outcomes defined'
-        elif len(template.get('implementation_steps', [])) >= 4:
-            return 'Moderate - Detailed implementation guidance'
-        else:
-            return 'Basic - General guidance provided'
-
-    def _assess_complexity(self, template: Dict, institution_context: Dict) -> str:
-        """Assess implementation complexity."""
-        complexity_score = 0
-        
-        complexity_score += len(template.get('implementation_steps', [])) * 10
-        complexity_score += len(template.get('success_metrics', [])) * 5
-        
-        if institution_context.get('type') == 'research_university':
-            complexity_score += 15  # Higher complexity for research contexts
-        
-        if complexity_score >= 60:
-            return 'High'
-        elif complexity_score >= 40:
-            return 'Medium'
-        else:
-            return 'Low'
-
-    def _identify_required_expertise(self, template: Dict) -> List[str]:
-        """Identify specialist expertise required for implementation."""
-        expertise = []
-        
-        description = template.get('description', '').lower()
-        steps = ' '.join(template.get('implementation_steps', [])).lower()
-        
-        if any(term in description + steps for term in ['technical', 'system', 'platform']):
-            expertise.append('Technical/IT specialist')
-        if any(term in description + steps for term in ['legal', 'compliance', 'governance']):
-            expertise.append('Legal/Compliance expert')
-        if any(term in description + steps for term in ['training', 'education', 'development']):
-            expertise.append('Professional development specialist')
-        if any(term in description + steps for term in ['assessment', 'evaluation', 'measurement']):
-            expertise.append('Assessment design expert')
-        
-        return expertise if expertise else ['General project management']
-
-    def _assess_external_support_needs(self, template: Dict) -> str:
-        """Assess whether external support/consultation is needed."""
-        complexity_indicators = len(template.get('implementation_steps', []))
-        
-        if complexity_indicators >= 4:
-            return 'Recommended - Complex implementation benefits from external expertise'
-        elif complexity_indicators >= 3:
-            return 'Optional - Consider for specialised aspects'
-        else:
-            return 'Not required - Can be implemented with internal resources'
-
-    def _generate_fallback_recommendation(self, dimension: str, institution_context: Dict,
-                                        implementation_type: str, priority: str) -> Dict:
-        """Generate basic recommendation when no specific template matches."""
-        dimension_title = dimension.replace('_', ' ').title()
-        
-        fallback_recommendations = {
-            'accountability': {
-                'title': f'Strengthen {dimension_title} Framework',
-                'description': f'Develop comprehensive {dimension_title.lower()} measures including clear governance structures, defined responsibilities, and regular compliance monitoring to ensure effective AI policy implementation.',
-                'steps': [
-                    'Establish governance committee with clear mandate and authority',
-                    'Define roles and responsibilities for AI policy oversight',
-                    'Implement regular monitoring and compliance assessment procedures',
-                    'Create escalation procedures for policy violations or concerns'
-                ],
-                'sources': [
-                    'BERA 2018 – Ethical Guidelines, Principle 2',
-                    'UNESCO 2023 – Guidance for Generative AI, pp. 10–12'
-                ]
-            },
-            'transparency': {
-                'title': f'Implement {dimension_title} Requirements',
-                'description': f'Create comprehensive {dimension_title.lower()} framework requiring clear disclosure of AI usage, accessible communication of policies, and regular stakeholder engagement.',
-                'steps': [
-                    'Develop clear disclosure requirements for AI usage',
-                    'Create accessible policy communication materials',
-                    'Establish regular stakeholder consultation processes',
-                    'Implement feedback collection and response mechanisms'
-                ],
-                'sources': [
-                    'Jisc 2023 – Generative AI Guide, Section 4.1',
-                    'UNESCO 2023 – Guidance for Generative AI, pp. 8–9'
-                ]
-            },
-            'human_agency': {
-                'title': f'Preserve {dimension_title} in AI Implementation',
-                'description': f'Ensure human authority and oversight remain central to AI-enhanced processes, maintaining human control over critical decisions and preserving educational relationships.',
-                'steps': [
-                    'Define areas requiring mandatory human oversight',
-                    'Establish clear protocols for human authority in AI-assisted decisions',
-                    'Train staff on appropriate human-AI collaboration approaches',
-                    'Implement regular review of human oversight effectiveness'
-                ],
-                'sources': [
-                    'UNESCO 2023 – Guidance for Generative AI, p. 22',
-                    'Selwyn et al. 2020 – Machine Learning & Emotional Tenor'
-                ]
-            },
-            'inclusiveness': {
-                'title': f'Develop {dimension_title} Framework',
-                'description': f'Create comprehensive {dimension_title.lower()} measures ensuring equitable AI access, addressing diverse needs, and preventing discriminatory outcomes.',
-                'steps': [
-                    'Conduct accessibility audit of AI tools and processes',
-                    'Develop alternative pathways for diverse learning needs',
-                    'Implement bias monitoring and mitigation procedures',
-                    'Create support mechanisms for underrepresented groups'
-                ],
-                'sources': [
-                    'UNESCO 2023 – Guidance for Generative AI, pp. 16–18',
-                    'Corrigan et al. 2023 – ChatGPT Pedagogical Affordances'
-                ]
-            }
-        }
-        
-        template = fallback_recommendations.get(dimension, fallback_recommendations['accountability'])
-        
-        return {
-            'title': template['title'],
-            'description': template['description'],
-            'dimension': dimension,
-            'priority': priority,
-            'implementation_type': implementation_type,
-            'timeframe': self.implementation_timeframes.get(priority, '3-6 months'),
-            'implementation_steps': template['steps'],
-            'source': 'PolicyCraft Fallback Framework',
-            'sources': template.get('sources', []),
-            'recommendation_confidence': 'Medium',
-            'implementation_complexity': 'Medium'
-        }
-
-    def _generate_enhanced_fallback(self, classification: Dict, themes: List[Dict], error_msg: str) -> Dict:
-        """
-         ENHANCED: Generate informative fallback when main process fails.
-        
-        Provides basic recommendations while preserving error information for debugging.
-        """
-        
-        basic_recommendations = [
-            {
-                'title': 'Policy Review and Enhancement',
-                'description': 'Conduct comprehensive review of current AI policy to ensure alignment with best practices and address identified gaps.',
-                'priority': 'high',
-                'source': 'Fallback',
-                'timeframe': '3-6 months',
-                'implementation_type': 'review',
-                'dimension': 'general'
-            },
-            {
-                'title': 'Stakeholder Consultation Process',
-                'description': 'Establish systematic consultation with faculty, students, and staff to gather feedback on AI policy effectiveness.',
-                'priority': 'medium', 
-                'source': 'Fallback',
-                'timeframe': '1-3 months',
-                'implementation_type': 'new',
-                'dimension': 'engagement'
-            }
+        # Risks and mitigations (templated)
+        risks = [
+            ("Scope creep", "Use phased milestones with entry/exit criteria to maintain discipline."),
+            ("Stakeholder fatigue", "Adopt lightweight consultations and clear communication points."),
+            ("Documentation burden", "Provide concise templates and exemplars to cut overheads."),
         ]
-        
-        return {
-            'analysis_metadata': {
-                'generated_date': datetime.now().isoformat(),
-                'framework_version': 'fallback-2.0',
-                'methodology': 'Enhanced Fallback Template',
-                'error_info': {
-                    'error_message': error_msg,
-                    'fallback_reason': 'Main analysis failed, using enhanced fallback'
-                }
-            },
-            'recommendations': basic_recommendations,
-            'summary': {
-                'total_recommendations': len(basic_recommendations),
-                'note': 'Enhanced fallback recommendations due to processing error',
-                'debug_available': True
-            },
-            'debug_info': {
-                'classification': classification,
-                'theme_count': len(themes) if themes else 0,
-                'error_occurred': True
-            }
-        }
+        rng.shuffle(risks)
+        risks_html = "".join([f"<li><strong>{r}.</strong> {m}</li>" for r, m in risks[:2]])
 
-# End of production code
+        # Implementation framing
+        impl_phrases = [
+            "pilot in one faculty before institution-wide scaling",
+            "sequence work over two terms with a formal mid-point review",
+            "adopt a light-touch governance cadence (monthly) with quarterly deep-dives",
+        ]
+        impl_choice = rng.choice(impl_phrases)
+
+        # Compose HTML (British spelling: organisation, programme)
+        html = f"""
+        <div class=\"narrative-card\">
+          <h2>📝 Policy Implementation Brief</h2>
+          <p><strong>Executive overview.</strong> The policy reflects {class_phrase}. {opening} The brief below sets out a {tone_adj1}, {tone_adj2} path grounded in current evidence ({cite_inline}).</p>
+          <hr class=\"narrative-sep\" />
+
+          <h3>What we recommend</h3>
+          <ul>
+            {''.join(key_actions)}
+          </ul>
+          <hr class=\"narrative-sep\" />
+
+          <h3>Why it matters</h3>
+          <p>Across the themes of {theme_str}, international guidance emphasises clear accountability, transparent documentation and meaningful human oversight. Addressing the lowest‑scoring areas first delivers the greatest risk reduction and improves staff and student confidence. The approach aligns with sector guidance cited above and the institution’s overall classification.</p>
+          <hr class=\"narrative-sep\" />
+
+          <h3>How to implement</h3>
+          <p>Start small and build confidence: {impl_choice}. Assign ownership within the organisation, publish concise documentation, and track measurable outcomes. Suggested metrics: policy disclosure coverage (%), audit completion rate (%), training completion rate (%), number of appeals resolved within target. Report progress monthly and conduct a formal mid‑point review.</p>
+
+          <h3>Key metrics</h3>
+          {kpis_html if kpis_html else '<p>Key metrics will be confirmed during the baseline audit.</p>'}
+
+          <h3>Phased plan</h3>
+          <ul>
+            <li><strong>Phase 0 (2 weeks).</strong> Appoint owners; publish disclosure template and RACI; agree metrics and targets.</li>
+            <li><strong>Phase 1 (0–3 months).</strong> Baseline audit; fix critical gaps in {', '.join([_norm_dim_name(d) for d, _ in gap_items[:2]]) if gap_items else 'priority areas'}; launch training pilots.</li>
+            <li><strong>Phase 2 (3–6 months).</strong> Scale disclosures and oversight; embed data register; integrate with assessment briefs.</li>
+            <li><strong>Phase 3 (6–9 months).</strong> Evaluate outcomes; refine guidance; publish transparency report.</li>
+          </ul>
+
+          <h3>Quick wins (30 days)</h3>
+          {quick_wins_html}
+
+          <h3>Deliverables and owners</h3>
+          {deliverables_html if deliverables_html else '<p>Deliverables will be confirmed following the baseline audit in Phase 1.</p>'}
+
+          <h3>Ownership and governance</h3>
+          <p>Establish an AI governance group (Chair: PVC Education; Members: Registry, Quality, Library, IT, Students’ Union). Use a monthly light‑touch cadence with quarterly deep‑dives. Document decisions and exceptions.</p>
+
+          <h3>Risks and mitigations</h3>
+          <ul>
+            {risks_html}
+          </ul>
+          <p><em>Notes on evidence and compliance mapping.</em> Human oversight aligns with EU AI Act Art. 14; transparency obligations align with Art. 52. UNESCO (2021/2023) emphasises governance and inclusion; BERA (2018) frames ethical practice in assessment. Citations: {cite_inline}.</p>
+
+          <div class=\"narrative-footnote\">
+            <strong>Notes on evidence.</strong> The pathway above is informed by sector guidance and recent reviews ({cite_inline}). Where appropriate, adapt language to local practice and ensure staff development is resourced.
+          </div>
+        </div>
+        """
+
+        meta = {
+            "style": f"UK/{tone_name}",
+            "seed": seed,
+            "sources_used": cite_used,
+        }
+        return html, meta

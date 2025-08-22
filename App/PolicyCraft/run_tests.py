@@ -1,4 +1,5 @@
 # !/usr/bin/env python3
+
 """
 Test execution script for PolicyCraft
 Runs comprehensive test suite with coverage reporting and detailed output.
@@ -20,23 +21,29 @@ import argparse
 import os
 from pathlib import Path
 
+# Configuration constants
+PYTEST_SHORT_TRACEBACK = "--tb=short"
+
+# Reduce noise and prevent external package DeprecationWarnings from breaking test runs
+os.environ.setdefault("PYTHONWARNINGS", "ignore::DeprecationWarning")
+
 def run_command(cmd, description):
     """Run a shell command with error handling."""
-    print(f"\n🚀 {description}")
+    print(f"\n {description}")
     print(f"Command: {' '.join(cmd)}")
     
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        print(f"✅ {description} completed successfully")
+        print(f" {description} completed successfully")
         if result.stdout:
             print("Output:", result.stdout)
         return True
     except subprocess.CalledProcessError as e:
-        print(f"❌ {description} failed")
+        print(f"ERROR: {description} failed")
         print(f"Error: {e.stderr}")
         return False
     except FileNotFoundError:
-        print(f"❌ Command not found: {cmd[0]}")
+        print(f"ERROR: Command not found: {cmd[0]}")
         print("Please ensure pytest is installed: pip install pytest pytest-cov")
         return False
 
@@ -47,27 +54,27 @@ def check_test_environment():
     # Check if pytest is available
     try:
         import pytest
-        print(f"✅ pytest version: {pytest.__version__}")
+        print(f" pytest version: {pytest.__version__}")
     except ImportError:
-        print("❌ pytest not found. Install with: pip install pytest")
+        print("ERROR: pytest not found. Install with: pip install pytest")
         return False
     
     # Check if src modules are importable
     try:
         sys.path.insert(0, str(Path.cwd()))
         from src.nlp.text_processor import TextProcessor
-        print("✅ PolicyCraft modules importable")
+        print(" PolicyCraft modules importable")
     except ImportError as e:
-        print(f"❌ Cannot import PolicyCraft modules: {e}")
+        print(f"ERROR: Cannot import PolicyCraft modules: {e}")
         print("Ensure you're running from the project root directory")
         return False
     
     # Check if test directory exists
     if not Path("tests").exists():
-        print("❌ tests/ directory not found")
+        print("ERROR: tests/ directory not found")
         return False
     
-    print("✅ Test environment ready")
+    print(" Test environment ready")
     return True
 
 def run_critical_tests():
@@ -79,12 +86,12 @@ def run_critical_tests():
         "tests/test_integration/test_analysis_pipeline.py::TestAnalysisPipeline::test_full_analysis_workflow"
     ]
     
-    cmd = ["python", "-m", "pytest"] + critical_test_files + ["-v", "--tb=short"]
+    cmd = [sys.executable, "-m", "pytest"] + critical_test_files + ["-v", PYTEST_SHORT_TRACEBACK]
     return run_command(cmd, "Critical Tests")
 
 def run_all_tests(verbose=False, coverage=False):
     """Run complete test suite."""
-    cmd = ["python", "-m", "pytest", "tests/"]
+    cmd = [sys.executable, "-m", "pytest", "tests/"]
     
     if verbose:
         cmd.append("-v")
@@ -94,7 +101,7 @@ def run_all_tests(verbose=False, coverage=False):
     if coverage:
         cmd.extend(["--cov=src", "--cov-report=html", "--cov-report=term-missing"])
     
-    cmd.extend(["--tb=short", "--durations=10"])
+    cmd.extend([PYTEST_SHORT_TRACEBACK, "--durations=10"])
     
     return run_command(cmd, "Complete Test Suite")
 
@@ -105,19 +112,19 @@ def run_specific_module(module_name):
         test_path = f"tests/test_{module_name}.py"
     
     if not Path(test_path).exists():
-        print(f"❌ Test path not found: {test_path}")
+        print(f"ERROR: Test path not found: {test_path}")
         return False
     
-    cmd = ["python", "-m", "pytest", test_path, "-v", "--tb=short"]
+    cmd = [sys.executable, "-m", "pytest", test_path, "-v", PYTEST_SHORT_TRACEBACK]
     return run_command(cmd, f"Module Tests: {module_name}")
 
 def generate_test_report():
     """Generate comprehensive test report."""
-    print("\n📊 Generating Test Report...")
+    print("\n Generating Test Report...")
     
     # Run tests with coverage and JUnit XML output
     cmd = [
-        "python", "-m", "pytest", "tests/",
+        sys.executable, "-m", "pytest", "tests/",
         "--cov=src",
         "--cov-report=html:test_reports/coverage",
         "--cov-report=xml:test_reports/coverage.xml",
@@ -133,9 +140,9 @@ def generate_test_report():
     
     if success:
         print("\n📋 Test Reports Generated:")
-        print("  📊 Coverage HTML: test_reports/coverage/index.html")
+        print("   Coverage HTML: test_reports/coverage/index.html")
         print("  📄 Coverage XML: test_reports/coverage.xml")
-        print("  🔧 JUnit XML: test_reports/junit.xml")
+        print("   JUnit XML: test_reports/junit.xml")
     
     return success
 
@@ -172,13 +179,13 @@ def main():
     print("\n" + "=" * 50)
     if success:
         print("🎉 Test execution completed successfully!")
-        print("\n💡 Next steps:")
+        print("\n Next steps:")
         print("  - Review any failed tests above")
         print("  - Check coverage report if generated")
         print("  - Run 'python run_tests.py --report' for detailed analysis")
     else:
-        print("❌ Test execution failed!")
-        print("\n🔧 Troubleshooting:")
+        print("ERROR: Test execution failed!")
+        print("\n Troubleshooting:")
         print("  - Check error messages above")
         print("  - Ensure all dependencies are installed")
         print("  - Verify you're in the project root directory")

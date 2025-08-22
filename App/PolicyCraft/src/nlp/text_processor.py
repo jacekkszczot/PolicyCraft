@@ -20,14 +20,45 @@ University: Leeds Trinity University
 import os
 import re
 import logging
+import sys  # might need this for debugging later
 from pathlib import Path
 from typing import Optional, Dict, List
+# import json  # not using currently but might be useful
 
-# PDF processing libraries
+# Error messages and status constants
+ERROR_FILE_NOT_FOUND = "File not found: {file_path}"
+ERROR_UNSUPPORTED_FORMAT = "Unsupported file format: {file_extension}"
+ERROR_EXTRACTION = "Could not extract text from {file_path}: {error}"
+ERROR_PDF_EXTRACTION = "{method} extraction failed: {error}"
+ERROR_CONTRACTION = "Could not expand contractions: {error}"
+
+# Status messages for logging
+STATUS_PDF_EXTRACTED = "PDF text extracted using {method}: {char_count} characters"
+STATUS_DOCX_EXTRACTED = "DOCX text extracted: {char_count} characters"
+STATUS_TXT_EXTRACTED = "TXT file read with {encoding}: {char_count} characters"
+STATUS_TEXT_CLEANED = "Text cleaned: {char_count} characters"
+STATUS_TOKENISED_SENTENCES = "Tokenised into {count} sentences"  # British spelling
+STATUS_TOKENISED_WORDS = "Tokenised into {count} words"          # British spelling
+STATUS_STATS_CALCULATED = "Text statistics calculated: {stats}"
+
+# Debug messages
+DEBUG_PDF_EXTRACTED = "PyPDF2 extracted {char_count} characters"
+DEBUG_PDFPLUMBER_EXTRACTED = "pdfplumber extracted {char_count} characters"
+
+# Output formatting
+OUTPUT_ORIGINAL_TEXT = "Original text ({char_count} chars):"
+OUTPUT_CLEANED_TEXT = "\nCleaned text ({char_count} chars):"
+OUTPUT_STAT_ITEM = "  {key}: {value}"
+OUTPUT_SENTENCE_ITEM = "  {index}. {sentence}"
+OUTPUT_WORDS_PREVIEW = "\nFirst 10 words: {words}"
+OUTPUT_TEXT_PREVIEW = "\nPreview (100 chars): {preview}"
+
+# PDF processing libraries - had some issues with these initially
 try:
     import pypdf
     import pdfplumber
     PDF_AVAILABLE = True
+    # print("PDF libraries loaded successfully")  # keeping for troubleshooting
 except ImportError:
     PDF_AVAILABLE = False
     print("Warning: PDF libraries not available. Install with: pip install PyPDF2 pdfplumber")
@@ -55,7 +86,7 @@ class TextProcessor:
     """
     
     def __init__(self):
-        """Initialize text processor with configuration."""
+        """Initialise text processor with configuration."""
         self.supported_formats = {'.pdf', '.docx', '.txt', '.doc'}
         
         # Common English stopwords (simplified list)
@@ -82,18 +113,19 @@ class TextProcessor:
         # Remove policy terms from stopwords
         self.stop_words = self.stop_words - self.policy_terms
         
-        print("TextProcessor initialized successfully")
+        print("TextProcessor initialised successfully")
 
     def extract_text_from_file(self, file_path: str) -> Optional[str]:
         """Extract text from various file formats with fallback methods."""
-        if not os.path.exists(file_path):
-            print(f"File not found: {file_path}")
+        file_path = Path(file_path)
+        if not file_path.exists():
+            logger.warning(ERROR_FILE_NOT_FOUND.format(file_path=file_path))
             return None
             
-        file_extension = Path(file_path).suffix.lower()
+        file_extension = file_path.suffix.lower()
         
         if file_extension not in self.supported_formats:
-            print(f"Unsupported file format: {file_extension}")
+            logger.warning(ERROR_UNSUPPORTED_FORMAT.format(file_extension=file_extension))
             return None
             
         try:
@@ -105,7 +137,7 @@ class TextProcessor:
                 return self._extract_from_txt(file_path)
                 
         except Exception as e:
-            print(f"Error extracting text from {file_path}: {str(e)}")
+            logger.warning(ERROR_EXTRACTION.format(file_path=file_path, error=str(e)))
             return None
             
         return None
@@ -113,7 +145,7 @@ class TextProcessor:
     def _extract_from_pdf(self, file_path: str) -> Optional[str]:
         """Extract text from PDF using multiple methods."""
         if not PDF_AVAILABLE:
-            print("PDF libraries not available")
+            logger.warning("PDF libraries not available")
             return None
             
         text_pypdf2 = ""
@@ -125,9 +157,9 @@ class TextProcessor:
                 pdf_reader = pypdf.PdfReader(file)
                 for page in pdf_reader.pages:
                     text_pypdf2 += page.extract_text() + "\n"
-            print(f"PyPDF2 extracted {len(text_pypdf2)} characters")
+            logger.debug(DEBUG_PDF_EXTRACTED.format(char_count=len(text_pypdf2)))
         except Exception as e:
-            print(f"PyPDF2 extraction failed: {str(e)}")
+            logger.warning(ERROR_PDF_EXTRACTION.format(method="PyPDF2", error=str(e)))
             
         # Method 2: pdfplumber
         try:
@@ -136,11 +168,11 @@ class TextProcessor:
                     page_text = page.extract_text()
                     if page_text:
                         text_pdfplumber += page_text + "\n"
-            print(f"pdfplumber extracted {len(text_pdfplumber)} characters")
+            logger.debug(DEBUG_PDFPLUMBER_EXTRACTED.format(char_count=len(text_pdfplumber)))
         except Exception as e:
-            print(f"pdfplumber extraction failed: {str(e)}")
+            logger.warning(ERROR_PDF_EXTRACTION.format(method="pdfplumber", error=str(e)))
             
-        # Choose better result
+        # Choose the best result
         if len(text_pdfplumber) > len(text_pypdf2):
             best_text = text_pdfplumber
             method = "pdfplumber"
@@ -149,16 +181,19 @@ class TextProcessor:
             method = "PyPDF2"
             
         if best_text.strip():
-            print(f"PDF text extracted successfully using {method}: {len(best_text)} characters")
+            logger.info(STATUS_PDF_EXTRACTED.format(
+                method=method,
+                char_count=len(best_text)
+            ))
             return best_text
         else:
-            print("No text could be extracted from PDF")
+            logger.warning("No text could be extracted from PDF")
             return None
 
     def _extract_from_docx(self, file_path: str) -> Optional[str]:
         """Extract text from DOCX files."""
         if not DOCX_AVAILABLE:
-            print("DOCX library not available")
+            logger.warning("DOCX library not available")
             return None
             
         try:
@@ -175,31 +210,45 @@ class TextProcessor:
                     for cell in row.cells:
                         text += cell.text + " "
                     text += "\n"
-                    
-            print(f"DOCX text extracted successfully: {len(text)} characters")
-            return text
+            
+            if text.strip():
+                logger.info(STATUS_DOCX_EXTRACTED.format(char_count=len(text)))
+                return text
+            else:
+                logger.warning("No text could be extracted from DOCX file")
+                return None
             
         except Exception as e:
-            print(f"Error extracting DOCX text: {str(e)}")
+            logger.warning(ERROR_EXTRACTION.format(
+                file_path=file_path,
+                error=str(e)
+            ))
             return None
 
     def _extract_from_txt(self, file_path: str) -> Optional[str]:
         """Extract text from TXT files with encoding detection."""
-        encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+        encodings = ['utf-8', 'latin-1', 'windows-1252', 'ascii']
         
         for encoding in encodings:
             try:
                 with open(file_path, 'r', encoding=encoding) as file:
                     text = file.read()
-                print(f"TXT file read successfully with {encoding}: {len(text)} characters")
-                return text
+                    if text.strip():
+                        logger.info(STATUS_TXT_EXTRACTED.format(
+                            encoding=encoding,
+                            char_count=len(text)
+                        ))
+                        return text
             except UnicodeDecodeError:
                 continue
             except Exception as e:
-                print(f"Error reading TXT file: {str(e)}")
+                logger.warning(ERROR_EXTRACTION.format(
+                    file_path=file_path,
+                    error=str(e)
+                ))
                 return None
                 
-        print("Could not read TXT file with any encoding")
+        logger.warning("Could not read file with any encoding: %s", file_path)
         return None
 
     def clean_text(self, text: str) -> str:
@@ -207,39 +256,78 @@ class TextProcessor:
         if not text:
             return ""
             
-        print(f"Cleaning text: {len(text)} characters")
+        logger.debug(STATUS_TEXT_CLEANED.format(char_count=len(text)))
         
-        # Basic cleaning
-        text = re.sub(r'\s+', ' ', text)
-        text = re.sub(r'\n+', '\n', text)
+        # Compile regex patterns for better performance
+        regex_patterns = {
+            'whitespace': re.compile(r'\s+'),
+            'newline': re.compile(r'\n+'),
+            'special_chars': re.compile(r'[^\w\s\.\,\!\?\;\:\-\(\)]'),
+            'punctuation_before': re.compile(r'\s+([\.!?])'),
+            'punctuation_after': re.compile(r'([\.!?])\s*'),
+            'url': re.compile(
+                r'https?://'  # http:// or https://
+                r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,}\.?|'  # domain
+                r'localhost|'  # localhost
+                r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # IP
+                r'(?::\d+)?'  # optional port
+                r'(?:(?:/|\?)[^\s]*)?',  # path and query params
+                re.IGNORECASE
+            ),
+            'email': re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'),
+            'multi_dots': re.compile(r'\.{2,}'),
+            'multi_question': re.compile(r'\?{2,}'),
+            'multi_exclaim': re.compile(r'!{2,}'),
+            'multi_hyphen': re.compile(r'-{2,}'),
+            'trailing_whitespace': re.compile(r'\s+$'),
+            'leading_whitespace': re.compile(r'^\s+'),
+            'multi_space': re.compile(r' {2,}'),
+        }
         
-        # Expand contractions
-        if CONTRACTIONS_AVAILABLE:
-            try:
-                text = contractions.fix(text)
-            except Exception:
-                pass  # Skip if contractions fails
+        try:
+            # Basic cleaning - normalize whitespace and newlines
+            text = regex_patterns['whitespace'].sub(' ', text)
+            text = regex_patterns['newline'].sub('\n', text)
+            
+            # Expand contractions if available
+            if CONTRACTIONS_AVAILABLE:
+                try:
+                    text = contractions.fix(text)
+                except Exception as e:
+                    logger.debug(ERROR_CONTRACTION.format(error=str(e)))
+            
+            # Remove special characters but preserve sentence structure
+            text = regex_patterns['special_chars'].sub(' ', text)
+            
+            # Fix spacing around punctuation
+            text = regex_patterns['punctuation_before'].sub(r'\1', text)  # Remove spaces before punctuation
+            text = regex_patterns['punctuation_after'].sub(r'\1 ', text)  # Ensure single space after punctuation
+            
+            # Remove URLs and emails
+            text = regex_patterns['url'].sub('', text)
+            text = regex_patterns['email'].sub('', text)
+            
+            # Normalize excessive punctuation
+            text = regex_patterns['multi_dots'].sub('.', text)  # Replace multiple dots with single dot
+            text = regex_patterns['multi_question'].sub('?', text)  # Replace multiple question marks with one
+            text = regex_patterns['multi_exclaim'].sub('!', text)  # Replace multiple exclamations with one
+            text = regex_patterns['multi_hyphen'].sub('-', text)  # Replace multiple hyphens with one
+            
+            # Final cleanup
+            text = regex_patterns['trailing_whitespace'].sub('', text)
+            text = regex_patterns['leading_whitespace'].sub('', text)
+            text = regex_patterns['multi_space'].sub(' ', text)
+            
+            return text.strip()
+            
+        except Exception as e:
+            logger.error("Error in text preprocessing: %s", str(e))
+            return text  # Return partially cleaned text if an error occurs
         
-        # Remove special characters but preserve sentence structure
-        text = re.sub(r'[^\w\s\.\,\!\?\;\:\-\(\)]', ' ', text)
-        
-        # Fix spacing around punctuation
-        text = re.sub(r'\s+([\.!?])', r'\1', text)
-        text = re.sub(r'([\.!?])\s*', r'\1 ', text)
-        
-        # Remove URLs and emails
-        text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', text)
-        text = re.sub(r'\S+@\S+', '', text)
-        
-        # Remove excessive punctuation
-        text = re.sub(r'\.{2,}', '.', text)
-        text = re.sub(r'\?{2,}', '?', text)
-        text = re.sub(r'!{2,}', '!', text)
-        
-        # Final cleanup
-        text = re.sub(r'\s+', ' ', text)
+        # Final whitespace normalization
+        text = whitespace_pattern.sub(' ', text).strip()
         text = text.strip()
-        
+        logger.debug("Text cleaned: %s characters", len(text))
         print(f"Text cleaned: {len(text)} characters")
         return text
 
@@ -344,12 +432,12 @@ if __name__ == "__main__":
     print(cleaned[:200] + "...")
     
     stats = processor.get_text_statistics(cleaned)
-    print(f"\nText Statistics:")
+    print("\nText Statistics:")
     for key, value in stats.items():
         print(f"  {key}: {value}")
     
     sentences = processor.tokenize_sentences(cleaned)
-    print(f"\nFirst 3 sentences:")
+    print("\nFirst 3 sentences:")
     for i, sentence in enumerate(sentences[:3], 1):
         print(f"  {i}. {sentence}")
     
@@ -359,4 +447,4 @@ if __name__ == "__main__":
     preview = processor.preview_text(cleaned, 100)
     print(f"\nPreview (100 chars): {preview}")
     
-    print("\n✅ Text processor working correctly!")
+    print("\n Text processor working correctly!")

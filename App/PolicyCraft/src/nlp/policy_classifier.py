@@ -28,38 +28,25 @@ logger = logging.getLogger(__name__)
 
 class PolicyClassifier:
     """
-    Advanced AI policy classifier using hybrid machine learning and rule-based approaches.
+    AI policy classifier using hybrid machine learning and rule-based approaches.
     
-    This classifier analyses policy documents related to AI usage in academic settings
-    and classifies them into one of three categories:
+    Classifies policy documents into three categories based on their stance toward AI usage.
+    The implementation combines keyword analysis with machine learning techniques when
+    scikit-learn is available, falling back to rule-based classification otherwise.
+    
+    Categories:
     - Restrictive: Policies that prohibit or strictly limit AI usage
-    - Permissive: Policies that encourage or allow broad AI usage
-    - Moderate: Policies that allow AI usage with specific guidelines or conditions
+    - Permissive: Policies that encourage or broadly allow AI usage  
+    - Moderate: Policies that permit AI usage with specific guidelines
     
-    The classifier employs a hybrid approach that combines:
-    - Rule-based keyword matching for interpretability
-    - Machine learning for contextual understanding
-    - Confidence scoring for result reliability
-    
-    Note:
-        For optimal performance, the scikit-learn library should be installed.
-        If not available, the classifier will fall back to rule-based classification.
+    The hybrid approach provides interpretable results whilst maintaining classification accuracy.
     """
     
     def __init__(self):
-        """
-        Initialise the policy classifier with predefined rules and training data.
+        """Setup the classifier with keyword lists and weights"""
+        # print("Setting up policy classifier...")  # kept this for debugging
         
-        This constructor sets up the classification pipeline, including:
-        - Defining policy classification categories
-        - Configuring keyword patterns and weights for rule-based classification
-        - Initialising the machine learning model (if dependencies are available)
-        
-        The classifier is pre-configured with domain-specific knowledge about
-        AI policy language and common patterns in academic policy documents.
-        """
-        
-        # Classification categories
+        # Three main types we can detect
         self.categories = ['Restrictive', 'Moderate', 'Permissive']
         
         # Rule-based classification keywords
@@ -87,7 +74,7 @@ class PolicyClassifier:
             },
             
             'Moderate': {
-                'balance': ['balanced', 'moderate', 'reasonable', 'appropriate', 'proportionate',
+                'balance': ['moderate', 'reasonable', 'appropriate', 'proportionate',
                            'thoughtful', 'careful', 'considered', 'measured', 'prudent'],
                 'conditions': ['conditions', 'guidelines', 'framework', 'principles', 'standards',
                               'criteria', 'requirements', 'considerations', 'factors'],
@@ -98,14 +85,14 @@ class PolicyClassifier:
             }
         }
         
-        # Weight multipliers for different keyword categories
+        # How much weight each type of keyword gets - had to tune these manually
         self.category_weights = {
             'Restrictive': {'prohibition': 2.0, 'control': 1.5, 'penalties': 2.0, 'mandatory': 1.3},
             'Permissive': {'encouragement': 1.8, 'flexibility': 1.5, 'benefits': 1.2, 'guidance': 1.0},
             'Moderate': {'balance': 1.5, 'conditions': 1.2, 'responsibility': 1.3, 'evaluation': 1.4}
         }
         
-        # ML pipeline
+        # ML stuff (if sklearn works)
         
         # === Explainability parameters ===
         self.top_explain_terms = 10  # default number of terms returned by explain_classification
@@ -114,7 +101,7 @@ class PolicyClassifier:
         if SKLEARN_AVAILABLE:
             self._initialize_ml_model()
         
-        print("PolicyClassifier initialized successfully")
+        print("PolicyClassifier ready")  # simple message
 
     # ------------------------------------------------------------------
     # Explainability helper
@@ -210,7 +197,7 @@ class PolicyClassifier:
             ("AI use is permitted with proper disclosure and citation of sources.", "Moderate"),
             ("Students may use AI tools responsibly, following ethical guidelines and transparency requirements.", "Moderate"),
             ("AI assistance is allowed when used appropriately and with instructor guidance.", "Moderate"),
-            ("Balanced approach to AI - permitted for research but not for final submissions without approval.", "Moderate"),
+            ("Moderate approach to AI - permitted for research but not for final submissions without approval.", "Moderate"),
             ("AI tools may be used thoughtfully, considering academic integrity and learning objectives.", "Moderate"),
             ("Responsible AI use is acceptable when following established guidelines and principles.", "Moderate")
         ]
@@ -219,7 +206,7 @@ class PolicyClassifier:
         texts = [item[0] for item in training_data]
         labels = [item[1] for item in training_data]
         
-        # Create ML pipeline
+        # Create ML pipeline (deterministic with consistent input ordering)
         self.ml_pipeline = Pipeline([
             ('tfidf', TfidfVectorizer(max_features=1000, stop_words='english', ngram_range=(1, 2))),
             ('classifier', MultinomialNB(alpha=0.1))
@@ -325,21 +312,7 @@ class PolicyClassifier:
             interpretability due to its rule-based nature.
         """
         text_lower = text.lower()
-        category_scores = {category: 0.0 for category in self.categories}
-        keyword_matches = {category: [] for category in self.categories}
-        
-        # Calculate scores for each category
-        for category in self.categories:
-            for subcategory, keywords in self.classification_keywords[category].items():
-                weight = self.category_weights[category][subcategory]
-                
-                for keyword in keywords:
-                    # Count keyword occurrences
-                    count = len(re.findall(r'\b' + re.escape(keyword) + r'\b', text_lower))
-                    if count > 0:
-                        score = count * weight
-                        category_scores[category] += score
-                        keyword_matches[category].append((keyword, count, score))
+        category_scores, keyword_matches = self._compute_rule_scores(text_lower)
         
         # Determine classification
         if max(category_scores.values()) == 0:
@@ -357,6 +330,26 @@ class PolicyClassifier:
             'keyword_matches': keyword_matches,
             'method': 'rule_based'
         }
+
+    def _compute_rule_scores(self, text_lower: str) -> Tuple[Dict[str, float], Dict[str, List[Tuple[str, int, float]]]]:
+        """Compute rule-based category scores and keyword matches for a lowercased text.
+
+        Preserves the original scoring logic exactly.
+        """
+        category_scores: Dict[str, float] = {category: 0.0 for category in self.categories}
+        keyword_matches: Dict[str, List[Tuple[str, int, float]]] = {category: [] for category in self.categories}
+
+        for category in self.categories:
+            for subcategory, keywords in self.classification_keywords[category].items():
+                weight = self.category_weights[category][subcategory]
+                for keyword in keywords:
+                    count = len(re.findall(r'\b' + re.escape(keyword) + r'\b', text_lower))
+                    if count > 0:
+                        score = count * weight
+                        category_scores[category] += score
+                        keyword_matches[category].append((keyword, count, score))
+
+        return category_scores, keyword_matches
 
     def _classify_ml_based(self, text: str) -> Optional[Dict]:
         """
@@ -457,34 +450,13 @@ class PolicyClassifier:
             }
         
         # If both methods available - weighted combination
-        rule_weight = 0.6  # Prefer rule-based for interpretability
-        ml_weight = 0.4
-        
-        # Combine scores
-        combined_scores = {}
-        for category in self.categories:
-            rule_score = rule_result['scores'].get(category, 0)
-            ml_score = ml_result['scores'].get(category, 0) * 10  # Scale ML scores
-            combined_scores[category] = (rule_score * rule_weight + ml_score * ml_weight)
-        
-        # Determine final classification
-        if max(combined_scores.values()) == 0:
-            final_classification = 'Moderate'
-            final_confidence = 40
-        else:
-            final_classification = max(combined_scores, key=combined_scores.get)
-            
-            # Calculate confidence based on agreement
-            rule_class = rule_result['classification']
-            ml_class = ml_result['classification']
-            
-            if rule_class == ml_class == final_classification:
-                # Both methods agree
-                final_confidence = min(95, int((rule_result['confidence'] + ml_result['confidence']) / 2 * 1.2))
-            else:
-                # Methods disagree
-                final_confidence = min(85, int((rule_result['confidence'] + ml_result['confidence']) / 2 * 0.8))
-        
+        combined_scores = self._combine_hybrid_scores(rule_result, ml_result)
+
+        # Determine final classification and confidence
+        final_classification, final_confidence = self._finalise_hybrid_decision(
+            combined_scores, rule_result, ml_result
+        )
+
         return {
             'classification': final_classification,
             'confidence': final_confidence,
@@ -497,6 +469,36 @@ class PolicyClassifier:
                 'agreement': rule_result['classification'] == ml_result['classification']
             }
         }
+
+    def _combine_hybrid_scores(self, rule_result: Dict, ml_result: Dict) -> Dict[str, float]:
+        """Combine rule-based and ML scores using original weights and scaling."""
+        rule_weight = 0.6  # Prefer rule-based for interpretability
+        ml_weight = 0.4
+        combined_scores: Dict[str, float] = {}
+        for category in self.categories:
+            rule_score = rule_result['scores'].get(category, 0)
+            ml_score = ml_result['scores'].get(category, 0) * 10  # Scale ML scores
+            combined_scores[category] = (rule_score * rule_weight + ml_score * ml_weight)
+        return combined_scores
+
+    def _finalise_hybrid_decision(self, combined_scores: Dict[str, float], rule_result: Dict, ml_result: Dict) -> Tuple[str, int]:
+        """Determine final class and confidence preserving original logic."""
+        if max(combined_scores.values()) == 0:
+            return 'Moderate', 40
+
+        final_classification = max(combined_scores, key=combined_scores.get)
+        rule_class = rule_result['classification']
+        ml_class = ml_result['classification']
+
+        if rule_class == ml_class == final_classification:
+            raw_conf = int((rule_result['confidence'] + ml_result['confidence']) / 2 * 1.2)
+        else:
+            raw_conf = int((rule_result['confidence'] + ml_result['confidence']) / 2 * 0.8)
+
+        # Clamp only to [0, 100] to avoid unrealistic values, no artificial 85/95 caps
+        final_confidence = max(0, min(100, raw_conf))
+
+        return final_classification, final_confidence
 
     def _generate_reasoning(self, rule_result: Dict, text: str) -> str:
         """
@@ -586,7 +588,7 @@ class PolicyClassifier:
                     'avg_sentence_length': float,# Average words per sentence
                     'strong_statements': int,    # Count of strong/mandatory statements
                     'conditional_statements': int, # Count of conditional statements
-                    'policy_tone': str           # Overall tone (Authoritative/Suggestive/Balanced)
+                    'policy_tone': str           # Overall tone (Authoritative/Suggestive/Moderate)
                 },
                 'keyword_density': Dict,        # Percentage of keywords by category
                 'classification_confidence_factors': List[str]  # Factors affecting confidence
@@ -617,7 +619,7 @@ class PolicyClassifier:
         elif conditional_statements > strong_statements:
             tone = 'Suggestive'
         else:
-            tone = 'Balanced'
+            tone = 'Moderate'
         
         details = {
             'classification_result': result,
@@ -761,4 +763,4 @@ if __name__ == "__main__":
         print(f"Policy Tone: {details['text_analysis']['policy_tone']}")
         print(f"Keyword Density: {details['keyword_density']}")
     
-    print("\n✅ Policy classifier working correctly!")
+    print("\n Policy classifier working correctly!")

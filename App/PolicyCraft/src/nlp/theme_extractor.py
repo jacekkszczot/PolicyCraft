@@ -10,7 +10,11 @@ University: Leeds Trinity University
 import re
 import logging
 from collections import defaultdict, Counter
-from typing import List, Dict, Optional
+from typing import List, Dict, Any, Optional
+
+# Common repeated literals extracted as constants to reduce duplication
+PROFESSIONAL_DEVELOPMENT = 'professional development'
+RISK_ASSESSMENT = 'risk assessment'
 
 # NLP libraries
 try:
@@ -22,6 +26,19 @@ except ImportError:
     print("Warning: spaCy not available. Install with: pip install spacy")
 
 logger = logging.getLogger(__name__)
+
+# String constants for theme categories and patterns
+ACADEMIC_INTEGRITY = "academic integrity"
+RESEARCH_ETHICS = "research ethics"
+INFORMED_CONSENT = "informed consent"
+ETHICAL_GUIDELINES = "ethical guidelines"
+DATA_PROTECTION = "data protection"
+STAKEHOLDER_ENGAGEMENT = "stakeholder engagement"
+ETHICAL_FRAMEWORK = "ethical framework"
+RESEARCH_INTEGRITY = "research integrity"
+RESPONSIBLE_AI = "responsible ai"
+ETHICAL_AI = "ethical ai"
+
 
 class ThemeExtractor:
     """
@@ -73,33 +90,33 @@ class ThemeExtractor:
                 'keywords': ['plagiarism', 'cheating', 'academic', 'integrity', 'dishonesty', 'misconduct', 
                            'citation', 'attribution', 'originality', 'authorship', 'collaboration'],
                 'patterns': [
-                    'academic integrity', 'academic misconduct', 'academic dishonesty',
+                    ACADEMIC_INTEGRITY, 'academic misconduct', 'academic dishonesty',
                     'proper citation', 'original work', 'intellectual honesty'
                 ]
             },
             
             'Research Ethics in AI': {
-                'keywords': ['research ethics', 'ethical guidelines', 'informed consent', 'participant rights',
-                           'data protection', 'privacy', 'confidentiality', 'anonymity', 'transparency',
+                'keywords': [RESEARCH_ETHICS, ETHICAL_GUIDELINES, INFORMED_CONSENT, 'participant rights',
+                           DATA_PROTECTION, 'privacy', 'confidentiality', 'anonymity', 'transparency',
                            'integrity', 'accountability', 'responsibility', 'beneficence', 'non-maleficence',
                            'justice', 'fairness', 'equity', 'respect', 'dignity', 'autonomy', 'trust',
-                           'stakeholder engagement', 'participant involvement', 'ethical oversight',
+                           STAKEHOLDER_ENGAGEMENT, 'participant involvement', 'ethical oversight',
                            'institutional review', 'research governance', 'ethical approval', 'ethical review',
-                           'ethical principles', 'ethical framework', 'ethical standards', 'ethical practices',
+                           'ethical principles', ETHICAL_FRAMEWORK, 'ethical standards', 'ethical practices',
                            'cross-institutional research', 'interdisciplinary collaboration', 'methodological rigor',
                            'empirical validation', 'systematic reviews', 'meta-analysis', 'research gaps',
                            'collaboration needs', 'methodological issues', 'rigor improvement', 'longitudinal studies',
                            'mixed-methods approaches', 'transparent reporting', 'reproducible research'],
                 'patterns': [
-                    'ethical research', 'research integrity', 'ethical approval process',
-                    'informed consent process', 'participant information sheet', 'ethical considerations',
+                    'ethical research', RESEARCH_INTEGRITY, 'ethical approval process',
+                    f'{INFORMED_CONSENT} process', 'participant information sheet', 'ethical considerations',
                     'research governance framework', 'ethical review board', 'institutional review board',
-                    'research ethics committee', 'ethical guidelines for research', 'responsible research',
-                    'ethical data collection', 'data protection in research', 'privacy in research',
+                    'research ethics committee', f'{ETHICAL_GUIDELINES} for research', 'responsible research',
+                    'ethical data collection', f'{DATA_PROTECTION} in research', 'privacy in research',
                     'confidentiality agreement', 'anonymization of data', 'pseudonymization of data',
                     'participant confidentiality', 'data security measures', 'ethical data sharing',
                     'research data management', 'ethical implications', 'risk benefit analysis',
-                    'vulnerable participants', 'informed consent form', 'voluntary participation',
+                    'vulnerable participants', f'{INFORMED_CONSENT} form', 'voluntary participation',
                     'right to withdraw', 'debriefing participants', 'ethical decision making',
                     'cross-institutional collaboration', 'interdisciplinary research teams',
                     'methodological rigor in ai research', 'empirical validation of ai tools',
@@ -108,7 +125,7 @@ class ThemeExtractor:
                     'methodological challenges in ai studies', 'improving rigor in ai research',
                     'longitudinal ai research studies', 'mixed-methods ai research',
                     'transparent research reporting', 'reproducible ai research',
-                    'ethical ai research practices'
+                    f'{ETHICAL_AI} research practices'
                 ]
             },
             
@@ -116,16 +133,16 @@ class ThemeExtractor:
                 'keywords': ['ethics', 'ethical', 'moral', 'responsible', 'harm', 'benefit',
                            'rights', 'dignity', 'respect', 'justice', 'welfare',
                            'manipulation', 'deception', 'exploitation', 'vulnerability', 'autonomy',
-                           'research ethics', 'informed consent', 'participant rights', 'data protection',
+                           RESEARCH_ETHICS, INFORMED_CONSENT, 'participant rights', DATA_PROTECTION,
                            'privacy', 'confidentiality', 'anonymity', 'integrity', 'accountability',
-                           'beneficence', 'non-maleficence', 'stakeholder engagement', 'ethical oversight'],
+                           'beneficence', 'non-maleficence', STAKEHOLDER_ENGAGEMENT, 'ethical oversight'],
                 'patterns': [
-                    'ethical ai', 'responsible ai', 'ai ethics', 'ethical considerations',
-                    'moral implications', 'ethical guidelines', 'human dignity',
+                    ETHICAL_AI, RESPONSIBLE_AI, 'ai ethics', 'ethical considerations',
+                    'moral implications', ETHICAL_GUIDELINES, 'human dignity',
                     'human manipulation', 'behavioral manipulation', 'exploitation prevention',
-                    'vulnerable groups protection', 'human autonomy', 'research ethics in ai',
-                    'ethical ai research', 'ai research governance', 'ethical ai development',
-                    'ai and research integrity', 'responsible ai research'
+                    'vulnerable groups protection', 'human autonomy', f'{RESEARCH_ETHICS} in ai',
+                    f'{ETHICAL_AI} research', 'ai research governance', f'{ETHICAL_AI} development',
+                    f'ai and {RESEARCH_INTEGRITY}', f'{RESPONSIBLE_AI} research'
                 ]
             },
             
@@ -205,30 +222,47 @@ class ThemeExtractor:
             'GenAI in Learning and Assessment': {
                 'keywords': ['generative ai', 'genai', 'ai-assisted learning', 'ai in assessment', 'automated grading',
                            'personalized learning', 'adaptive learning', 'learning analytics', 'formative assessment',
-                           'summative assessment', 'feedback generation', 'assignment design', 'assessment criteria',
-                           'visual media', 'interactive', 'multimodal', 'image generation', 'code generation',
-                           'academic integrity', 'authentic assessment', 'process-oriented', 'higher-order thinking',
-                           'alternative formats', 'oral exams', 'collaborative projects', 'in-person assessments',
-                           'prompt engineering', 'visual generation', 'interactive media', 'multimodal learning',
-                           'academic honesty', 'policy enforcement', 'educational standards', 'assignment submission',
-                           'policy compliance', 'academic conduct', 'syllabus statements', 'writing expectations',
-                           'academic violations', 'course-specific policies', 'ai detection tools', 'assignment redesign',
-                           'ferpa compliance', 'disclosure requirements', 'attribution', 'instructor autonomy',
-                           'faculty guidelines', 'student guidelines', 'researcher guidelines', 'staff guidelines',
-                           'admin guidelines'],
+                           'summative assessment', 'proctoring', 'exam integrity', 'plagiarism detection', 'ai grading',
+                           'automated feedback', 'learning analytics', 'student performance prediction', 'early warning',
+                           'learning design', 'curriculum development', 'content generation', 'automated question generation',
+                           'automated essay scoring', 'automated coding assessment', 'automated math assessment',
+                           'automated language assessment', 'automated science assessment', 'automated art assessment',
+                           'automated music assessment', 'automated design assessment', 'automated engineering assessment',
+                           'chatgpt', 'assignment', 'prompt', 'class', 'design', 'visual media', 'interactive', 'multimodal',
+                           'image generation', 'code generation', 'academic integrity', 'authentic assessment',
+                           'process-oriented', 'higher-order thinking', 'alternative formats', 'oral exams',
+                           'collaborative projects', 'in-person assessments', 'assignment design', 'prompt engineering',
+                           'visual generation', 'interactive media', 'multimodal learning', 'academic honesty',
+                           'policy enforcement', 'educational standards', 'assignment submission', 'policy compliance',
+                           'academic conduct', 'syllabus statements', 'writing expectations', 'academic violations'],
                 'patterns': [
-                    'generative ai in education', 'ai-assisted assessment', 'automated feedback systems',
-                    'personalized learning with ai', 'adaptive learning technologies', 'ai in formative assessment',
-                    'ai for summative assessment', 'intelligent tutoring systems', 'ai-generated feedback',
-                    'assignment redesign with ai', 'competency-based assessment', 'ai and learning analytics',
-                    'visual media generation', 'interactive ai tools', 'multimodal learning experiences',
-                    'ai in visual arts', 'ai for code generation', 'ai in programming education',
-                    'ai and academic integrity', 'detecting ai-generated content', 'authentic assessment design',
-                    'process-oriented assessment', 'higher-order thinking skills', 'alternative assessment formats',
-                    'oral examination with ai', 'collaborative ai projects', 'in-person assessment methods',
-                    'ai in assignment design', 'effective prompt engineering', 'visual content creation',
-                    'interactive learning tools', 'multimodal content generation', 'ai and academic honesty',
-                    'enforcing ai policies', 'academic standards with ai', 'ai in assignment submission',
+                    'ai in learning and assessment', 'generative ai in education', 'ai-assisted assessment',
+                    'automated grading systems', 'personalized learning with ai', 'adaptive learning technologies',
+                    'learning analytics dashboard', 'formative assessment with ai', 'summative assessment with ai',
+                    'ai proctoring solutions', 'exam integrity with ai', 'plagiarism detection using ai',
+                    'ai-powered feedback', 'student performance analytics', 'early warning systems in education',
+                    'learning design with ai', 'ai in curriculum development', 'automated content generation',
+                    'ai for question generation', 'automated essay evaluation', 'ai in coding assessment',
+                    'automated math problem solving', 'language learning with ai', 'ai in science education',
+                    'ai in arts education', 'music education with ai', 'design education with ai',
+                    'engineering education with ai', 'ai in medical education', 'ai in legal education',
+                    'ai in business education', 'ai in social sciences', 'ai in humanities',
+                    'ai in stem education', 'ai in steam education', 'automated assessment systems',
+                    'ai in evaluation methods', 'automated marking systems', 'ai in scoring rubrics',
+                    'genai in assignments', 'ai-assisted learning', 'automated grading', 'personalized learning with ai',
+                    'adaptive learning technologies', 'ai in formative assessment', 'ai for summative assessment',
+                    'intelligent tutoring systems', 'ai-generated feedback', 'assignment redesign with ai',
+                    'competency-based assessment', 'ai and learning analytics', 'visual media generation',
+                    'interactive ai tools', 'multimodal learning experiences', 'ai in visual arts',
+                    'ai for code generation', 'ai in programming education', 'ai and academic integrity',
+                    'detecting ai-generated content', 'authentic assessment design', 'process-oriented assessment',
+                    'higher-order thinking skills', 'alternative assessment formats', 'oral examination with ai',
+                    'collaborative ai projects', 'in-person assessment methods', 'ai in assignment design',
+                    'effective prompt engineering', 'visual content creation', 'interactive learning tools',
+                    'multimodal content generation', 'ai and academic honesty', 'enforcing ai policies',
+                    'academic standards with ai', 'ai in assignment submission', 'ai policy compliance',
+                    'ai in academic conduct', 'syllabus statements on ai', 'writing expectations with ai',
+                    'preventing ai violations', 'ai in academic integrity'
                     'ai policy compliance', 'ai in academic conduct', 'syllabus statements on ai',
                     'writing expectations with ai', 'preventing ai violations', 'ai in academic integrity',
                     'course-specific ai policies', 'ai detection in education', 'ferpa and ai tools',
@@ -266,7 +300,7 @@ class ThemeExtractor:
                     'student ai literacy', 'ethical ai use by students', 'ai and academic integrity',
                     'student ai policy awareness', 'ai for personalized learning', 'ai in coursework',
                     'student research with ai', 'ai for student productivity', 'ai and student creativity',
-                    'student concerns about ai', 'ai policy for students', 'student centered ai policies',
+                    'student concerns about ai', 'ai policy for students', 'student centred ai policies',
                     'ai in higher education', 'student ai training', 'ai for student success',
                     'student engagement with ai', 'ai and student assessment'
                 ]
@@ -305,9 +339,9 @@ class ThemeExtractor:
             
             'Faculty Guidelines': {
                 'keywords': ['faculty', 'teacher', 'instructor', 'professor', 'staff', 'educator',
-                           'teaching', 'pedagogy', 'curriculum', 'course', 'classroom',
-                           'emotional impact', 'autonomy', 'trust', 'agency', 'decision-making',
-                           'professional development', 'training', 'support', 'guidance'],
+                            'teaching', 'pedagogy', 'curriculum', 'course', 'classroom',
+                            'emotional impact', 'autonomy', 'trust', 'agency', 'decision-making',
+                            PROFESSIONAL_DEVELOPMENT, 'training', 'support', 'guidance'],
                 'patterns': [
                     'faculty guidelines', 'instructor policy', 'teaching with ai',
                     'faculty responsibilities', 'classroom ai', 'pedagogical use',
@@ -384,34 +418,6 @@ class ThemeExtractor:
                 ]
             },
             
-
-            'GenAI in Learning and Assessment': {
-                'keywords': ['genai', 'generative ai', 'chatgpt', 'assignment', 'prompt', 'learning',
-                           'assessment', 'class', 'design', 'visual media', 'interactive', 'multimodal',
-                           'image generation', 'code generation', 'academic integrity', 'authentic assessment',
-                           'process-oriented', 'higher-order thinking', 'alternative formats', 'oral exams',
-                           'collaborative projects', 'in-person assessments', 'assignment design', 'prompt engineering',
-                           'visual generation', 'interactive media', 'multimodal learning', 'academic honesty',
-                           'policy enforcement', 'educational standards', 'assignment submission', 'policy compliance',
-                           'academic conduct', 'syllabus statements', 'writing expectations', 'academic violations'],
-                'patterns': [
-                    'genai in assignments', 'ai-assisted learning', 'automated grading', 'personalized learning with ai',
-                    'adaptive learning technologies', 'ai in formative assessment', 'ai for summative assessment',
-                    'intelligent tutoring systems', 'ai-generated feedback', 'assignment redesign with ai',
-                    'competency-based assessment', 'ai and learning analytics', 'visual media generation',
-                    'interactive ai tools', 'multimodal learning experiences', 'ai in visual arts',
-                    'ai for code generation', 'ai in programming education', 'ai and academic integrity',
-                    'detecting ai-generated content', 'authentic assessment design', 'process-oriented assessment',
-                    'higher-order thinking skills', 'alternative assessment formats', 'oral examination with ai',
-                    'collaborative ai projects', 'in-person assessment methods', 'ai in assignment design',
-                    'effective prompt engineering', 'visual content creation', 'interactive learning tools',
-                    'multimodal content generation', 'ai and academic honesty', 'enforcing ai policies',
-                    'academic standards with ai', 'ai in assignment submission', 'ai policy compliance',
-                    'ai in academic conduct', 'syllabus statements on ai', 'writing expectations with ai',
-                    'preventing ai violations', 'ai in academic integrity'
-                ]
-            },
-            
             'AI in Education': {
                 'keywords': ['education', 'learning', 'teaching', 'pedagogy', 'curriculum',
                            'classroom', 'student', 'teacher', 'instructor', 'faculty',
@@ -474,14 +480,14 @@ class ThemeExtractor:
             
             'AI Literacy and Training': {
                 'keywords': ['literacy', 'training', 'skills', 'competencies', 'capacity',
-                           'professional development', 'workshop', 'seminar', 'course', 'program',
-                           'pedagogical', 'didactic', 'instructional', 'faculty development',
-                           'student training', 'digital skills', 'ai competencies', 'workshop',
-                           'tutorial', 'handbook', 'guide', 'resource', 'toolkit', 'workshop series',
-                           'certification', 'microcredentials', 'upskilling', 'reskilling',
-                           'faculty resources', 'staff development', 'continuous learning', 'capacity building'],
+                            PROFESSIONAL_DEVELOPMENT, 'workshop', 'seminar', 'course', 'program',
+                            'pedagogical', 'didactic', 'instructional', 'faculty development',
+                            'student training', 'digital skills', 'ai competencies', 'workshop',
+                            'tutorial', 'handbook', 'guide', 'resource', 'toolkit', 'workshop series',
+                            'certification', 'microcredentials', 'upskilling', 'reskilling',
+                            'faculty resources', 'staff development', 'continuous learning', 'capacity building'],
                 'patterns': [
-                    'ai literacy', 'digital literacy', 'ai training', 'professional development',
+                    'ai literacy', 'digital literacy', 'ai training', PROFESSIONAL_DEVELOPMENT,
                     'faculty training', 'student training', 'ai skills', 'digital competencies',
                     'ai education program', 'teacher training in ai', 'ai curriculum',
                     'pedagogical training', 'digital upskilling', 'ai workshops', 'training materials',
@@ -500,7 +506,7 @@ class ThemeExtractor:
                            'law enforcement', 'justice', 'democracy', 'cybersecurity', 'robustness',
                            'transparency', 'disclosure', 'labeling', 'deepfake', 'synthetic media'],
                 'patterns': [
-                    'risk assessment', 'risk mitigation', 'safety evaluations', 'compliance requirements',
+                    RISK_ASSESSMENT, 'risk mitigation', 'safety evaluations', 'compliance requirements',
                     'unacceptable risk ai', 'banned ai practices', 'harmful manipulation', 'deceptive ai',
                     'exploitation of vulnerabilities', 'social credit system', 'emotion recognition ban',
                     'real-time biometric identification', 'biometric categorization ban', 'high risk ai systems',
@@ -522,7 +528,7 @@ class ThemeExtractor:
                            'eu ai act', 'artificial intelligence act', 'ai regulation', 'legal framework'],
                 'patterns': [
                     'ai policy framework', 'governance structure', 'policy development',
-                    'compliance monitoring', 'ethics review', 'risk assessment',
+                    'compliance monitoring', 'ethics review', RISK_ASSESSMENT,
                     'stakeholder consultation', 'decision-making framework', 'transparency in ai',
                     'policy implementation', 'monitoring and evaluation', 'interdisciplinary planning',
                     'intersectoral governance', 'multistakeholder collaboration', 'global coordination',
@@ -542,7 +548,7 @@ class ThemeExtractor:
                 'patterns': [
                     'institutional governance', 'ai policy framework', 'governance structure',
                     'policy development', 'compliance monitoring', 'ethics review',
-                    'risk assessment', 'stakeholder consultation', 'decision-making framework',
+                    RISK_ASSESSMENT, 'stakeholder consultation', 'decision-making framework',
                     'transparency in ai', 'policy implementation', 'monitoring and evaluation'
                 ]
             },
@@ -561,9 +567,10 @@ class ThemeExtractor:
             }
         }
         
-        # Initialize spaCy if available
+        # Initialise spaCy if available
         if SPACY_AVAILABLE:
             self._initialize_spacy()
+            # print("spaCy initialization complete")  # debug line
         else:
             print("spaCy not available - using fallback keyword extraction")
             
@@ -586,7 +593,7 @@ class ThemeExtractor:
             self.nlp = spacy.load(self.model_name)
             print(f"spaCy model '{self.model_name}' loaded successfully")
             
-            # Initialize matchers
+            # Initialise matchers
             self.matcher = Matcher(self.nlp.vocab)
             self.phrase_matcher = PhraseMatcher(self.nlp.vocab, attr="LOWER")
             
@@ -838,19 +845,33 @@ class ThemeExtractor:
         """
         # Sort themes by score
         sorted_themes = sorted(theme_scores.items(), key=lambda x: x[1], reverse=True)
-        
+
+        # Compute document-specific scaling to prevent flat 10/100 values
+        raw_values = [float(s) for _, s in sorted_themes] or [0.0]
+        max_raw = max(raw_values) if raw_values else 0.0
+        if max_raw <= 0:
+            return []
+
         # Format output
         themes = []
         for theme_name, score in sorted_themes[:max_themes]:
             details = theme_details[theme_name]
-            
+
+            raw_score = float(score)
+            # Scale relative to the strongest theme in this document
+            rel = raw_score / max_raw
+            normalised_score = round(rel * 10.0, 2)
+
+            # Confidence mirrors relative strength in [0,100]
+            confidence = max(0, min(100, int(rel * 100)))
+
             theme_data = {
                 'name': theme_name,
-                'score': round(score, 2),
-                'frequency': int(score),
+                'score': normalised_score,
+                'frequency': int(raw_score),
                 'keywords': [kw[0] for kw in details['keywords'][:5]],  # Top 5 keywords
                 'matches': [match[0] if isinstance(match, tuple) else match for match in details['matches'][:3]],  # Top 3 matches
-                'confidence': min(100, int(score * 10))  # Convert to confidence percentage
+                'confidence': confidence
             }
             
             # Add entities if available
@@ -860,6 +881,88 @@ class ThemeExtractor:
             themes.append(theme_data)
         
         return themes
+
+    def identify_keywords(self, text: Optional[str], top_n: int = 10) -> List[str]:
+        """
+        Identify prominent keywords from text using configured theme vocab.
+        
+        This lightweight implementation counts occurrences of all configured
+        theme keywords and returns the most frequent unique tokens.
+        Falls back to simple tokenisation when no configured keyword matches.
+        """
+        if not text:
+            return []
+        text_lower = text.lower()
+        counts = Counter()
+        # Count configured keywords
+        for theme in self.theme_categories.values():
+            for kw in theme.get('keywords', []):
+                n = len(re.findall(r"\b" + re.escape(kw) + r"\b", text_lower))
+                if n:
+                    counts[kw] += n
+        # Fallback: simple tokenisation if nothing matched
+        if not counts:
+            tokens = re.findall(r"[a-zA-Z][a-zA-Z\-]{2,}", text_lower)
+            counts.update(tokens)
+        return [w for w, _ in counts.most_common(max(1, top_n))]
+
+    def calculate_theme_confidence(self, theme: str, text: Optional[str]) -> float:
+        """
+        Calculate a simple confidence score in [0,1] for a theme within text.
+        
+        Heuristic: ratio of matched keywords/pattern occurrences to a capped
+        denominator to ensure stable values.
+        """
+        if not text or not theme:
+            return 0.0
+        text_lower = text.lower()
+        theme_def = self._match_theme_def(theme)
+        if theme_def is None:
+            # Unknown theme: estimate via generic keyword presence
+            occurrences = self._count_word_occurrences(text_lower, theme.lower())
+            return min(1.0, occurrences / 5.0)
+        # Count keyword and pattern occurrences (patterns weighted x2)
+        occ = sum(self._count_word_occurrences(text_lower, kw) for kw in theme_def.get('keywords', []))
+        occ += 2 * sum(self._count_word_occurrences(text_lower, patt.lower()) for patt in theme_def.get('patterns', []))
+        # Normalise with a soft cap
+        return min(1.0, occ / 10.0)
+
+    def _match_theme_def(self, theme: str) -> Optional[dict]:
+        """Find theme definition by case-insensitive substring name match."""
+        t = (theme or '').lower()
+        for name, data in self.theme_categories.items():
+            if t in name.lower():
+                return data
+        return None
+
+    @staticmethod
+    def _count_word_occurrences(text_lower: str, token: str) -> int:
+        """Count whole-word occurrences of token within pre-lowered text."""
+        if not token:
+            return 0
+        return len(re.findall(r"\b" + re.escape(token) + r"\b", text_lower))
+
+    def categorise_themes(self, themes: List[str]) -> Dict[str, Any]:
+        """
+        Categorise a list of theme names into primary/secondary buckets and groups.
+        
+        Deterministic rule: first two are primary, rest are secondary. Also
+        provide a simple grouping by whether the theme name contains common
+        governance/economic hints to aid UI.
+        """
+        themes = themes or []
+        primary = themes[:2]
+        secondary = themes[2:]
+        categories = {
+            'governance': [t for t in themes if any(k in t.lower() for k in ['ethic', 'integrity', 'transparen'])],
+            'economic': [t for t in themes if any(k in t.lower() for k in ['econom', 'market', 'fund'])],
+            'domestic': []  # keep key present explicitly
+        }
+        return {
+            'primary_themes': primary,
+            'secondary_themes': secondary,
+            'categories': categories
+        }
 
     def get_theme_summary(self, themes: List[Dict]) -> Dict:
         """
@@ -954,17 +1057,17 @@ class ThemeExtractor:
             >>> themes = extractor.extract_themes(some_text)
             >>> viz_data = extractor.visualize_themes(themes)
             >>> # Use with a charting library like Chart.js or Matplotlib
-            >>> # plt.bar(viz_data['labels'], viz_data['scores'], color=viz_data['colors'])
+            >>> # plt.bar(viz_data['labels'], viz_data['scores'], color=viz_data['colours'])
             
         Note:
             The colour palette is fixed to ensure consistency across visualisations.
             If you have more than 10 themes, the colours will repeat.
         """
         if not themes:
-            return {'labels': [], 'scores': [], 'colors': []}
+            return {'labels': [], 'scores': [], 'colours': []}
         
-        # Color palette for themes
-        colors = [
+        # Colour palette for themes
+        colours = [
             '#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6',
             '#1abc9c', '#34495e', '#e67e22', '#95a5a6', '#16a085'
         ]
@@ -974,7 +1077,7 @@ class ThemeExtractor:
             'scores': [theme['score'] for theme in themes],
             'frequencies': [theme['frequency'] for theme in themes],
             'confidences': [theme['confidence'] for theme in themes],
-            'colors': colors[:len(themes)]
+            'colours': colours[:len(themes)]
         }
         
         return viz_data
@@ -1016,14 +1119,14 @@ if __name__ == "__main__":
     
     # Generate summary
     summary = extractor.get_theme_summary(themes)
-    print(f"\n=== Theme Summary ===")
+    print("\n=== Theme Summary ===")
     for key, value in summary.items():
         print(f"{key}: {value}")
     
-    # Visualization data
+    # Visualisation data
     viz_data = extractor.visualize_themes(themes)
-    print(f"\n=== Visualization Data ===")
+    print("\n=== Visualisation Data ===")
     print(f"Chart labels: {viz_data['labels']}")
     print(f"Chart scores: {viz_data['scores']}")
     
-    print("\n✅ Theme extractor working correctly!")
+    print("\n Theme extractor working correctly!")

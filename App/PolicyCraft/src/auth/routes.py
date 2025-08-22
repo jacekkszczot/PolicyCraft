@@ -38,6 +38,58 @@ import logging
 auth_bp = Blueprint('auth', __name__)
 logger = logging.getLogger(__name__)
 
+# Reused endpoint names
+PROFILE_ENDPOINT = 'auth.profile'
+LOGIN_TEMPLATE = 'auth/login.html'
+
+def _process_login(form: LoginForm):
+    """
+    Handle POST login logic and return an appropriate Flask response.
+    Extracted from login() to reduce cognitive complexity.
+    """
+    # Get form data
+    username_or_email = form.username_or_email.data.strip()
+    password = form.password.data
+    remember = form.remember_me.data
+
+    # Find user by username or email
+    user = User.query.filter(
+        (User.username == username_or_email) |
+        (User.email == username_or_email)
+    ).first()
+
+    # Verify user and password
+    if user and user.check_password(password):
+        if not user.is_active:
+            flash('Your account has been deactivated. Please contact support.', 'error')
+            return render_template(LOGIN_TEMPLATE, form=form)
+
+        # Log user in
+        login_user(user, remember=remember)
+        user.update_last_login()
+        db.session.commit()
+
+        # Set admin session flag if user is admin
+        if user.role == 'admin':
+            session['is_admin'] = True
+
+        logger.info("User %s logged in successfully", user.username)
+
+        # Check if this is user's first login and handle onboarding
+        if user.is_first_login():
+            from app import handle_first_login_onboarding
+            handle_first_login_onboarding(user.id)
+
+        flash(f'Welcome back, {user.get_full_name()}!', 'success')
+
+        # Redirect to intended page or dashboard
+        next_page = request.args.get('next')
+        return redirect(next_page) if next_page else redirect(url_for('admin.dashboard'))
+
+    flash('Invalid username/email or password. Please try again.', 'error')
+    return render_template(LOGIN_TEMPLATE, form=form)
+
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """
@@ -81,48 +133,12 @@ def login():
         - Session cookies are marked as secure and httpOnly
     """
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('admin.dashboard'))
     
     form = LoginForm()
-    
     if form.validate_on_submit():
-        # Get form data
-        username_or_email = form.username_or_email.data.strip()
-        password = form.password.data
-        remember = form.remember_me.data
-        
-        # Find user by username or email
-        user = User.query.filter(
-            (User.username == username_or_email) | 
-            (User.email == username_or_email)
-        ).first()
-        
-        # Verify user and password
-        if user and user.check_password(password):
-            if user.is_active:
-                # Log user in
-                login_user(user, remember=remember)
-                user.update_last_login()
-                db.session.commit()
-                
-                logger.info(f"User {user.username} logged in successfully")
-                
-                # Check if this is user's first login and handle onboarding
-                if user.is_first_login():
-                    from app import handle_first_login_onboarding
-                    handle_first_login_onboarding(user.id)
-                
-                flash(f'Welcome back, {user.get_full_name()}!', 'success')
-                
-                # Redirect to intended page or dashboard
-                next_page = request.args.get('next')
-                return redirect(next_page) if next_page else redirect(url_for('dashboard'))
-            else:
-                flash('Your account has been deactivated. Please contact support.', 'error')
-        else:
-            flash('Invalid username/email or password. Please try again.', 'error')
-    
-    return render_template('auth/login.html', form=form)
+        return _process_login(form)
+    return render_template(LOGIN_TEMPLATE, form=form)
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -173,7 +189,7 @@ def register():
         - Database transactions ensure data consistency
     """
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('admin.dashboard'))
     
     form = RegistrationForm()
     
@@ -193,14 +209,14 @@ def register():
             db.session.add(user)
             db.session.commit()
             
-            logger.info(f"New user registered: {user.username}")
+            logger.info("New user registered: %s", user.username)
             flash('Registration successful! You can now log in.', 'success')
             
             return redirect(url_for('auth.login'))
             
         except Exception as e:
             db.session.rollback()
-            logger.error(f"Registration error: {str(e)}")
+            logger.error("Registration error: %s", str(e))
             flash('Registration failed. Please try again.', 'error')
     
     return render_template('auth/register.html', form=form)
@@ -260,7 +276,7 @@ def logout():
     resp.set_cookie('remember_token', '', expires=0, httponly=True)
     
     # Log the logout
-    logger.info(f"User {username} logged out successfully")
+    logger.info("User %s logged out successfully", username)
     flash('You have been logged out successfully.', 'info')
     
     # Create response with cache headers
@@ -373,7 +389,7 @@ def update_profile():
         existing = User.query.filter_by(email=email).first()
         if existing:
             flash('Email address already in use.', 'error')
-            return redirect(url_for('auth.profile'))
+            return redirect(url_for(PROFILE_ENDPOINT))
         current_user.email = email
     
     current_user.first_name = first_name or None
@@ -384,9 +400,9 @@ def update_profile():
         flash('Profile updated successfully.', 'success')
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Profile update error for {current_user.username}: {str(e)}")
+        logger.error("Profile update error for %s: %s", current_user.username, str(e))
         flash('Failed to update profile.', 'error')
-    return redirect(url_for('auth.profile'))
+    return redirect(url_for(PROFILE_ENDPOINT))
 
 @auth_bp.route('/profile/change_password', methods=['POST'])
 @login_required
@@ -439,10 +455,10 @@ def change_password():
 
     if not current_user.check_password(current_pwd):
         flash('Current password is incorrect.', 'error')
-        return redirect(url_for('auth.profile'))
+        return redirect(url_for(PROFILE_ENDPOINT))
     if new_pwd != confirm_pwd or len(new_pwd) < 6:
         flash('New passwords do not match or are too short.', 'error')
-        return redirect(url_for('auth.profile'))
+        return redirect(url_for(PROFILE_ENDPOINT))
     
     current_user.set_password(new_pwd)
     try:
@@ -450,9 +466,9 @@ def change_password():
         flash('Password changed successfully.', 'success')
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Password change error for {current_user.username}: {str(e)}")
+        logger.error("Password change error for %s: %s", current_user.username, str(e))
         flash('Failed to change password.', 'error')
-    return redirect(url_for('auth.profile'))
+    return redirect(url_for(PROFILE_ENDPOINT))
 
 @auth_bp.route('/profile/delete', methods=['POST'])
 @login_required
@@ -503,22 +519,25 @@ def delete_account():
         # Log the user out first to invalidate session
         logout_user()
 
-        # Delete associated analyses & recommendations in Mongo
+        # SECURITY FIX: Delete associated analyses, recommendations AND files from disk
         try:
-            from app import db_operations  # late import to avoid circular deps
-            if hasattr(db_operations, "purge_user_data"):
-                db_operations.purge_user_data(user_id)
+            from src.database.mongo_operations import MongoOperations
+            mongo_ops = MongoOperations()
+            if hasattr(mongo_ops, "purge_user_data"):
+                purge_result = mongo_ops.purge_user_data(user_id)
+                if purge_result and purge_result.get('files_deleted', 0) > 0:
+                    logger.info("SECURITY FIX: Deleted %d files for user %s", purge_result['files_deleted'], user_id)
         except Exception as purge_err:
-            logger.warning(f"Could not purge Mongo data for user {user_id}: {purge_err}")
+            logger.warning("Could not purge Mongo data for user %s: %s", user_id, str(purge_err), exc_info=True)
 
         # Delete user record (and potentially cascade related data)
         User.query.filter_by(id=user_id).delete()
         db.session.commit()
 
         flash('Your account has been deleted.', 'info')
-        logger.info(f"Account deleted for user {username} (id={user_id})")
+        logger.info("Account deleted for user %s (id=%s)", username, user_id)
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Account deletion error for user {locals().get('username','unknown')}: {str(e)}")
+        logger.error("Account deletion error for user %s: %s", locals().get('username', 'unknown'), str(e))
         flash('Failed to delete account.', 'error')
     return redirect(url_for('index'))

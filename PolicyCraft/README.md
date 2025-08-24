@@ -81,30 +81,34 @@ The steps below get you from a fresh clone to a fully working application with a
    ```bash
    python -m pytest -q
    ```
+   Or from the repository root, you can use the helper script:
+   ```bash
+   python run_tests.py
+   ```
 
 ### Configuration and first run
 
-* __Automatic configuration fallback__
-  - If `PolicyCraft/config.py` is not present, the application will automatically fall back to `PolicyCraft/config.example.py` at start‑up and print a warning in the console.
-  - To provide local, machine‑specific settings (recommended), create your own config file based on the example:
+* __Configuration file (included)__
+  - The repository now includes `PolicyCraft/config.py` with a safe development default: SQLite database at `PolicyCraft-Databases/development/policycraft_dev.db`.
+  - The app will still fall back to `PolicyCraft/config.example.py` only if `PolicyCraft/config.py` is missing.
+  - Do not place secrets in `PolicyCraft/config.py`. For production, override via environment variables (e.g. `SQLALCHEMY_DATABASE_URI`, `SECRET_KEY`).
+  - You can override the DB with an env var, e.g.:
     ```bash
-    cp PolicyCraft/config.example.py PolicyCraft/config.py
+    export SQLALCHEMY_DATABASE_URI="postgresql://user:pass@host:5432/dbname"
     ```
-    Then adjust values such as `DEFAULT_ADMIN_PASSWORD` and any database or integration parameters. Keep `config.py` out of version control.
 
 * __Environment variables__
   - The app loads environment variables from `.env` automatically if present. You can copy the sample file and amend as needed:
-    ```bash
-    cp .env.example .env
-    ```
+  ```bash
+  cp .env.example .env
+  ```
 
 * __First run on a new machine__
   1. Create and activate a virtual environment
   2. `pip install -r requirements.txt`
-  3. Ensure MongoDB is installed and running (or use Docker)
+  3. Ensure MongoDB is installed and running (or use Docker) for features that use MongoDB.
   4. Optionally create `.env` from `.env.example`
-  5. Optionally create `PolicyCraft/config.py` from `PolicyCraft/config.example.py`
-  6. Start the application: `python app.py`
+  5. Start the application: `python app.py` (SQLite DB file and required folders are created automatically)
 
 ### Troubleshooting
 

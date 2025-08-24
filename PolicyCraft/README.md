@@ -4,82 +4,248 @@
 
 A web-based application for analysing university AI policies, extracting themes, classifying approaches, and generating strategic recommendations for higher education institutions.
 
-## Getting Started
+## Table of Contents
+- [System Requirements](#system-requirements)
+- [Installation Guide](#installation-guide)
+  - [1. Clone the Repository](#1-clone-the-repository)
+  - [2. Set Up Python Environment](#2-set-up-python-environment)
+  - [3. Install MongoDB](#3-install-mongodb)
+  - [4. Configure MongoDB](#4-configure-mongodb)
+  - [5. Install NLP Dependencies](#5-install-nlp-dependencies)
+  - [6. Configure Application](#6-configure-application)
+  - [7. Initialize Database](#7-initialize-database)
+  - [8. Start the Application](#8-start-the-application)
+- [Troubleshooting](#troubleshooting)
+- [Configuration](#configuration)
+- [Development](#development)
+- [Testing](#testing)
+- [Documentation](#documentation)
 
-### Prerequisites
-- Python 3.8+
-- MongoDB 6.0+
-- Git
-- pip (Python package manager)
+## System Requirements
 
-### Quick Start (macOS/Linux)
+- **Operating System**: macOS, Linux, or Windows (WSL2 recommended for Windows)
+- **Python**: 3.8 or higher
+- **MongoDB**: 6.0 or higher
+- **Git**: Latest stable version
+- **pip**: Package manager for Python
+- **Virtual Environment** (recommended)
 
-1. **Clone the repository**
-   
-   For the main branch (stable version):
-   ```bash
-   git clone https://github.com/jacekkszczot/PolicyCraft.git
-   cd PolicyCraft
-   ```
-   
-   For the laboratory branch (development version):
-   ```bash
-   git clone -b laboratory https://github.com/jacekkszczot/PolicyCraft.git
-   cd PolicyCraft
-   ```
-   
-   Or switch to laboratory branch after cloning:
-   ```bash
-   git clone https://github.com/jacekkszczot/PolicyCraft.git
-   cd PolicyCraft
-   git checkout laboratory
-   ```
+## Installation Guide
 
-2. **Set up Python environment**
-   ```bash
-   # Create and activate virtual environment
-   python -m venv venv
-   source venv/bin/activate  # On Windows: .\venv\Scripts\Activate.ps1
-   
-   # Install dependencies
-   pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
+### 1. Clone the Repository
 
-3. **Set up MongoDB**
-   ```bash
-   # Install MongoDB (macOS with Homebrew)
-   brew tap mongodb/brew
-   brew install mongodb-community
-   
-   # Start MongoDB service
-   brew services start mongodb-community
-   
-   # Verify MongoDB is running
-   mongosh --eval 'db.runCommand({ connectionStatus: 1 })'
-   ```
+#### Stable Version (Main Branch)
+```bash
+git clone https://github.com/jacekkszczot/PolicyCraft.git
+cd PolicyCraft
+```
 
-4. **Configure the application**
-   ```bash
-   # Copy and configure environment variables
-   cp .env.example .env
-   
-   # Generate a secure secret key
-   python -c 'import secrets; print(f"SECRET_KEY={secrets.token_hex(32)}")' >> .env
-   ```
+#### Development Version (Laboratory Branch)
+```bash
+git clone -b laboratory https://github.com/jacekkszczot/PolicyCraft.git
+cd PolicyCraft
+```
 
-5. **Initialize the database**
-   ```bash
-   # Create necessary database indexes and initial data
-   python -c "from app import create_app; create_app().app_context().push(); from src.database.models import init_db; init_db()"
-   ```
+### 2. Set Up Python Environment
 
-6. **Start the application**
-   ```bash
-   python app.py
-   ```
-   
-   The application should now be running at http://localhost:5000
+```bash
+# Create and activate virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows (PowerShell):
+# .\venv\Scripts\Activate.ps1
+
+# Upgrade pip and install dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### 3. Install MongoDB
+
+#### macOS (using Homebrew)
+```bash
+# Install MongoDB Community Edition
+brew tap mongodb/brew
+brew install mongodb-community
+```
+
+#### Ubuntu/Debian
+```bash
+# Import the public key
+wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
+
+# Create list file for MongoDB
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -sc)/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+
+# Update packages and install MongoDB
+sudo apt-get update
+sudo apt-get install -y mongodb-org
+```
+
+### 4. Configure MongoDB
+
+#### Automated Setup (Recommended)
+```bash
+# Make the setup script executable and run it
+chmod +x setup_mongodb.sh
+./setup_mongodb.sh
+
+# Start MongoDB with the new configuration
+~/start_mongodb.sh
+```
+
+#### Manual Setup
+```bash
+# Create data and log directories
+mkdir -p ~/mongodb_data ~/mongodb_logs
+
+# Start MongoDB with custom data directory
+mongod --dbpath ~/mongodb_data --logpath ~/mongodb_logs/mongod.log --fork
+
+# Verify MongoDB is running
+mongosh --eval 'db.runCommand({ connectionStatus: 1 })'
+```
+
+### 5. Install NLP Dependencies
+
+```bash
+# Install spaCy English model
+python -m spacy download en_core_web_sm
+
+# Download NLTK datasets
+python -c "
+import nltk
+nltk.download('wordnet')
+nltk.download('omw-1.4')
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('averaged_perceptron_tagger')
+print('NLTK resources installed')
+"
+```
+
+### 6. Configure Application
+
+```bash
+# Copy example environment file
+cp .env.example .env
+
+# Generate a secure secret key
+python -c "import secrets; print(f'SECRET_KEY={secrets.token_hex(32)}')" >> .env
+
+# Edit the .env file to configure your settings
+# nano .env  # or use your preferred text editor
+```
+
+### 7. Initialize Database
+
+```bash
+# Create database tables and indexes
+python -c "
+from app import create_app
+from src.database.models import init_db
+app = create_app()
+with app.app_context():
+    init_db()
+"
+```
+
+### 8. Start the Application
+
+```bash
+# Run the Flask development server
+python app.py
+```
+
+The application will be available at: [http://localhost:5000](http://localhost:5000)
+
+## Troubleshooting
+
+### MongoDB Connection Issues
+
+```bash
+# Check if MongoDB is running
+pgrep -l mongod
+
+# Check MongoDB logs
+tail -f ~/mongodb_logs/mongod.log
+
+# If MongoDB fails to start, try removing lock files
+rm -f ~/mongodb_data/mongod.lock
+rm -f ~/mongodb_data/WiredTiger.lock
+```
+
+### Python Dependencies
+
+```bash
+# Ensure pip is up to date
+pip install --upgrade pip setuptools wheel
+
+# Reinstall requirements
+pip install -r requirements.txt
+```
+
+## Configuration
+
+### Environment Variables
+
+Edit the `.env` file to configure:
+
+```env
+# Application
+HOST=localhost
+PORT=5000
+FLASK_ENV=development
+SECRET_KEY=your-secret-key-here
+
+# Database
+MONGODB_URI=mongodb://localhost:27017/policycraft
+
+# Optional: Email settings
+# MAIL_SERVER=smtp.example.com
+# MAIL_PORT=587
+# MAIL_USE_TLS=true
+# MAIL_USERNAME=your-email@example.com
+# MAIL_PASSWORD=your-email-password
+```
+
+## Development
+
+### Running Tests
+
+```bash
+# Run all tests
+python -m pytest
+
+# Run specific test file
+python -m pytest tests/test_module.py
+
+# Run with coverage report
+coverage run -m pytest
+coverage report -m
+```
+
+### Code Style
+
+```bash
+# Run linter
+flake8 .
+
+# Auto-format code
+black .
+
+# Sort imports
+isort .
+```
+
+## Documentation
+
+- [API Documentation](docs/API.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)
 
 ### Troubleshooting
 

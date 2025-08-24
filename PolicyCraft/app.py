@@ -700,24 +700,9 @@ def validate_dependencies():
     print("\nAll critical dependencies validated. Starting application...")
     print("=" * 50)
 
-# Import configuration with safe fallback to config.example.py if config.py is missing
-try:
-    # Prefer local config.py (not tracked in VCS)
-    from config import get_config, create_secure_directories
-except Exception:
-    # Fallback: dynamically load config.example.py from the same directory
-    try:
-        _cfg_example_path = os.path.join(os.path.dirname(__file__), 'config.example.py')
-        _spec = importlib.util.spec_from_file_location('config_example', _cfg_example_path)
-        _mod = importlib.util.module_from_spec(_spec)
-        assert _spec and _spec.loader
-        _spec.loader.exec_module(_mod)  # type: ignore[attr-defined]
-        get_config = _mod.get_config  # type: ignore[attr-defined]
-        create_secure_directories = _mod.create_secure_directories  # type: ignore[attr-defined]
-        print("WARNING: Using config.example.py as fallback configuration. Create PolicyCraft/config.py for local overrides.")
-    except Exception as _cfg_err:
-        print(f"ERROR: Failed to load configuration (config.py and config.example.py). Details: {_cfg_err}")
-        raise
+# Configuration is already imported at the top from `PolicyCraft.config` with a robust
+# fallback to `config.example.py`. Avoid re-importing from root-level `config.py`
+# to prevent overriding the correct configuration.
 
 # Import analysis modules
 # Constants for duplicated literals

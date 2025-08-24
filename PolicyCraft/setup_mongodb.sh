@@ -46,8 +46,7 @@ net:
 
 # how the process runs
 processManagement:
-  fork: true
-  pidFilePath: $MONGO_DATA_DIR/mongod.pid
+  # Fork is not supported on macOS, using nohup for background process
   timeZoneInfo: /usr/share/zoneinfo
 
 # security:
@@ -100,12 +99,14 @@ mkdir -p "$MONGO_LOG_DIR"
 
 # Start MongoDB
 echo "Starting MongoDB with data directory: $MONGO_DATA_DIR"
-"$MONGODB_BIN" --dbpath "$MONGO_DATA_DIR" \
-               --logpath "$MONGO_LOG_DIR/mongod.log" \
-               --pidfilepath "$MONGO_PID_FILE" \
-               --fork \
-               --bind_ip 127.0.0.1 \
-               --logappend
+# For macOS, we'll use nohup to run in background
+echo "Starting MongoDB in the background..."
+nohup "$MONGODB_BIN" --dbpath "$MONGO_DATA_DIR" \
+                    --logpath "$MONGO_LOG_DIR/mongod.log" \
+                    --bind_ip 127.0.0.1 \
+                    --logappend >/dev/null 2>&1 &
+echo $! > "$MONGO_PID_FILE"
+sleep 2  # Give MongoDB a moment to start
 
 # Check if MongoDB started successfully
 if [ $? -eq 0 ]; then

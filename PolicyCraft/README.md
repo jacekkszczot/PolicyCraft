@@ -129,14 +129,22 @@ pip install -r requirements.txt
      ```bash
      python -m spacy download en_core_web_sm
      ```
-   - NLTK datasets:
+   - NLTK datasets (run in Python shell):
      ```bash
-     python - <<'PY'
+     python -c "
      import nltk
-     for pkg in ['wordnet','omw-1.4','punkt','stopwords','averaged_perceptron_tagger']:
-         nltk.download(pkg, quiet=True)
+     nltk.download('wordnet')
+     nltk.download('omw-1.4')
+     nltk.download('punkt')
+     nltk.download('stopwords')
+     nltk.download('averaged_perceptron_tagger')
      print('NLTK resources installed')
-     PY
+     "
+     ```
+     
+     Or alternatively, download them one by one:
+     ```bash
+     python -m nltk.downloader wordnet omw-1.4 punkt stopwords averaged_perceptron_tagger
      ```
 
 6. **Run the app**

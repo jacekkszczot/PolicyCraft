@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Register - PolicyCraft{% endblock %}
+
+{% block content %}
+<!-- 
+    PolicyCraft - Registration Page
+    
+    This page handles new user registration for the PolicyCraft platform.
+    It collects essential user information and creates a new account.
+    
+    Key Components:
+    1. Registration Form - Collects user details and credentials
+    2. Terms & Conditions - Legal agreement for platform usage
+    3. Privacy Policy - Information about data handling
+    4. Email Verification - Account activation process
+    
+    Security Features:
+    - Password strength validation
+    - Email verification
+    - CSRF protection
+    - Input sanitization
+    - Rate limiting
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
+
+<div class="auth-container">
+    <div class="auth-card">
+        <!--    Registration Header    -->
+        <div class="auth-header">
+            <h1>Create an Account</h1>
+            <p>Join PolicyCraft to analyse AI policies</p>
+        </div>
+        
+        <form method="POST" id="register-form" aria-label="Registration form">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-row">
+                {% if form.first_name %}
+                <div class="form-group">
+                    <label for="first_name" class="form-label">
+                        First Name
+                        <span class="required" aria-hidden="true">*</span>
+                        <span class="sr-only">(required)</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="first_name" 
+                        name="first_name" 
+                        class="form-input" 
+                        placeholder="First name" 
+                        autocomplete="given-name"
+                        aria-required="true"
+                        autocomplete="given-name"
+                        aria-required="true"
+                        {% if form.first_name.data %}value="{{ form.first_name.data }}"{% endif %}
+                        required
+                    >
+                </div>
+                {% endif %}
+                
+                {% if form.last_name %}
+                <div class="form-group">
+                    <label for="last_name" class="form-label">
+                        Last Name
+                        <span class="required" aria-hidden="true">*</span>
+                        <span class="sr-only">(required)</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="last_name" 
+                        name="last_name" 
+                        class="form-input" 
+                        placeholder="Surname" 
+                        autocomplete="family-name"
+                        aria-required="true"
+                        autocomplete="family-name"
+                        aria-required="true"
+                        {% if form.last_name.data %}value="{{ form.last_name.data }}"{% endif %}
+                        required
+                    >
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if form.institution %}
+            <div class="form-group">
+                <label for="institution" class="form-label">
+                    Institution
+                    <span class="required" aria-hidden="true">*</span>
+                    <span class="sr-only">(required)</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="institution" 
+                    name="institution" 
+                    class="form-input" 
+                    placeholder="University / Institution" 
+                    autocomplete="organisation"
+                    aria-required="true"
+                    {% if form.institution.data %}value="{{ form.institution.data }}"{% endif %}
+                    required
+                >
+            </div>
+            {% endif %}
+            
+            {% if form.email %}
+            <div class="form-group">
+                <label for="email" class="form-label">
+                    Email Address
+                    <span class="required" aria-hidden="true">*</span>
+                    <span class="sr-only">(required)</span>
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-input" 
+                    placeholder="Enter your email address" 
+                    autocomplete="email"
+                    aria-required="true"
+                    {% if form.email.data %}value="{{ form.email.data }}"{% endif %}
+                    required
+                    >
+                {% if form.email.errors %}
+                    <div class="field-errors" role="alert" aria-live="polite">
+                        {% for error in form.email.errors %}
+                            <span class="error-message">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label for="password" class="form-label">
+                    Create Password
+                    <span class="required" aria-hidden="true">*</span>
+                    <span class="sr-only">(required)</span>
+                </label>
+                <div class="password-input-container">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="Create a strong password" 
+                        autocomplete="new-password"
+                        aria-required="true"
+                        required
+                        aria-describedby="password-requirements"
+                        pattern=".{8,}"
+                        oninput="validatePassword()"
+                    >
+                </div>
+                <div id="password-requirements" class="form-text" style="font-size: 0.85rem; color: #6b7280;">
+                    must be at least 8 characters long and include a mix of letters, numbers, and symbols
+                </div>
+                
+                {% if form.password.errors %}
+                    <div class="field-errors" role="alert" aria-live="polite">
+                        {% for error in form.password.errors %}
+                            <span class="error-message">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="password_confirm" class="form-label">
+                    Confirm Password
+                    <span class="required" aria-hidden="true">*</span>
+                    <span class="sr-only">(required)</span>
+                </label>
+                <div class="password-input-container">
+                    <input 
+                        type="password" 
+                        id="password_confirm" 
+                        name="password_confirm" 
+                        class="form-input" 
+                        placeholder="Confirm your password" 
+                        autocomplete="new-password"
+                        aria-required="true"
+                        required
+                        oninput="checkPasswordMatch()"
+                    >
+                </div>
+                <div id="password-match" class="form-text" aria-live="polite"></div>
+                
+                {% if form.password_confirm.errors %}
+                    <div class="field-errors" role="alert" aria-live="polite">
+                        {% for error in form.password_confirm.errors %}
+                            <span class="error-message">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-full" id="register-button" aria-label="Create your account" style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                    <span class="button-text">Create an Account</span>
+                    <span class="button-loader" aria-hidden="true" style="display: none;">
+                        <span class="spinner"></span>
+                    </span>
+                </button>
+            </div>
+        </form>
+        
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{{ url_for('auth.login') }}">Log in here</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-container {
+    min-height: calc(100vh - 160px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.auth-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-header h1 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+}
+
+.auth-header p {
+    color: #7f8c8d;
+    margin: 0;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+    font-size: 0.9rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.field-errors {
+    margin-top: 0.5rem;
+}
+
+.error-message {
+    display: block;
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+.simple-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e1e8ed;
+}
+
+.auth-footer a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .auth-container {
+        padding: 1rem;
+    }
+    
+    .auth-card {
+        padding: 2rem 1.5rem;
+    }
+}
+</style>
+{% endblock %}

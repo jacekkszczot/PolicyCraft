@@ -1,0 +1,343 @@
+/**
+ * ============================================================================
+ * PolicyCraft - Design Tokens and CSS Variables
+ * ============================================================================
+ *
+ * This file contains all the design tokens and CSS variables that define the
+ * visual language of the PolicyCraft application. These variables are used
+ * throughout the application to maintain consistency and enable theming.
+ *
+ * Table of Contents:
+ * 1. Colour System
+ * 2. Typography
+ * 3. Spacing & Sizing
+ * 4. Borders & Shadows
+ * 5. Transitions & Animations
+ * 6. Z-index Layers
+ *
+ * Colour System:
+ * - Primary Colours: Main brand colours and their variations
+ * - Secondary Colours: Supporting colours for UI elements
+ * - Semantic Colours: Colours for different states and feedback
+ * - Neutral Colours: Greyscale palette for text and backgrounds
+ * - Gradients: Reusable gradient definitions
+ *
+ * Typography:
+ * - Font Families: System UI stack with fallbacks
+ * - Font Sizes: Type scale for consistent typography
+ * - Font Weights: Standardized font weights
+ * - Line Heights: Vertical rhythm and spacing
+ *
+ * Best Practices:
+ * - Use semantic variable names that describe the purpose, not the color
+ * - Group related variables together with clear section headers
+ * - Document the intended use case for each variable
+ * - Keep the scale consistent (e.g., spacing-100, spacing-200, etc.)
+ * - Use HSL colour format for better manipulation and theming
+ *
+ * Usage Example:
+ *   .element {
+ *     color: var(--color-primary-500);
+ *     padding: var(--spacing-400);
+ *     font-size: var(--font-size-md);
+ *   }
+ *
+ * Dependencies:
+ * - This file should be imported first in the main CSS file
+ * - All other CSS files can reference these variables
+ *
+ * Author: Jacek Robert Kszczot
+ * Project: MSc Data Science & AI - COM7016
+ * University: Leeds Trinity University
+ *
+ * Theme: Academic Elegance
+ * Image Credit: Adobe Stock #1182616543 (Student License)
+ * ============================================================================
+ */
+
+/* ===========================================================================
+   1. Colour System
+   =========================================================================== */
+
+/* Primary Colours ------------------------------- */
+:root {
+  /* Base HSL values for primary colour (Deep Blue) */
+  --color-primary-h: 217;
+  --color-primary-s: 30%;
+  --color-primary-l: 23%;
+  
+  /* Primary colour variations */
+  --color-primary-50: hsl(var(--color-primary-h), 30%, 95%);
+  --color-primary-100: hsl(var(--color-primary-h), 30%, 90%);
+  --color-primary-200: hsl(var(--color-primary-h), 30%, 80%);
+  --color-primary-300: hsl(var(--color-primary-h), 30%, 70%);
+  --color-primary-400: hsl(var(--color-primary-h), 30%, 60%);
+  --color-primary-500: hsl(var(--color-primary-h), 30%, 50%);
+  --color-primary-600: hsl(var(--color-primary-h), 45%, 40%);
+  --color-primary-700: hsl(var(--color-primary-h), 50%, 30%);
+  --color-primary-800: hsl(var(--color-primary-h), 55%, 20%);
+  --color-primary-900: hsl(var(--color-primary-h), 60%, 10%);
+  
+  /* Secondary colour (Warm Orange) */
+  --color-secondary-100: #fef3c7;
+  --color-secondary-200: #fde68a;
+  --color-secondary-300: #fcd34d;
+  --color-secondary-400: #fbbf24;
+  --color-secondary-500: #d97706; /* Base secondary color */
+  --color-secondary-600: #b45309;
+  --color-secondary-700: #92400e;
+  --color-secondary-800: #78350f;
+  
+  /* Semantic Colours */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+  
+  /* Neutral Colours */
+  --color-white: #ffffff;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-black: #000000;
+  
+  /* Background Colours */
+  --color-bg-primary: var(--color-white);
+  --color-bg-secondary: var(--color-gray-50);
+  --color-bg-tertiary: var(--color-gray-100);
+  
+  /* Text Colours */
+  --color-text-primary: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-600);
+  --color-text-tertiary: var(--color-gray-500);
+  --color-text-inverse: var(--color-white);
+  
+  /* Border Colours */
+  --color-border-light: var(--color-gray-200);
+  --color-border-medium: var(--color-gray-300);
+  --color-border-dark: var(--color-gray-400);
+  
+  /* Shadow Colours */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-800) 100%);
+  --gradient-secondary: linear-gradient(135deg, var(--color-secondary-400) 0%, var(--color-secondary-600) 100%);
+}
+
+/* Dark Theme Overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg-primary: var(--color-gray-900);
+    --color-bg-secondary: var(--color-gray-800);
+    --color-bg-tertiary: var(--color-gray-700);
+    
+    --color-text-primary: var(--color-gray-100);
+    --color-text-secondary: var(--color-gray-300);
+    --color-text-tertiary: var(--color-gray-400);
+    --color-text-inverse: var(--color-gray-900);
+    
+    --color-border-light: var(--color-gray-700);
+    --color-border-medium: var(--color-gray-600);
+    --color-border-dark: var(--color-gray-500);
+  }
+}
+
+:root {
+    --primary: #1e293b;
+    --primary-dark: #0f172a;
+    --secondary: #d97706;
+    --secondary-dark: #b45309;
+    --accent: #475569;
+    --success: #059669;
+    --warning: #f59e0b;
+    --error: #dc2626;
+    --background: #f8fafc;
+    --text: #1e293b;
+    --text-light: #64748b;
+    --border: #e2e8f0;
+    
+    /* Additional variables for better readability */
+    --orange: #d97706;
+    --red: #dc2626;
+    --green: #059669;
+}
+
+/* ===========================================================================
+   2. Typography
+   =========================================================================== */
+
+:root {
+  /* Font Families */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-serif: 'Georgia', 'Times New Roman', Times, serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  
+  /* Font Weights */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Font Sizes */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  --font-size-4xl: 2.25rem;   /* 36px */
+  --font-size-5xl: 3rem;      /* 48px */
+  --font-size-6xl: 3.75rem;   /* 60px */
+  
+  /* Line Heights */
+  --line-height-none: 1;
+  --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --line-height-loose: 2;
+  
+  /* Letter Spacing */
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+}
+
+/* ===========================================================================
+   3. Spacing & Sizing
+   =========================================================================== */
+
+:root {
+  /* Base unit for consistent spacing */
+  --spacing-unit: 0.25rem; /* 4px */
+  
+  /* Spacing Scale */
+  --spacing-100: calc(1 * var(--spacing-unit));  /* 4px */
+  --spacing-200: calc(2 * var(--spacing-unit));  /* 8px */
+  --spacing-300: calc(3 * var(--spacing-unit));  /* 12px */
+  --spacing-400: calc(4 * var(--spacing-unit));  /* 16px */
+  --spacing-500: calc(6 * var(--spacing-unit));  /* 24px */
+  --spacing-600: calc(8 * var(--spacing-unit));  /* 32px */
+  --spacing-700: calc(12 * var(--spacing-unit)); /* 48px */
+  --spacing-800: calc(16 * var(--spacing-unit)); /* 64px */
+  --spacing-900: calc(24 * var(--spacing-unit)); /* 96px */
+  --spacing-1000: calc(32 * var(--spacing-unit));/* 128px */
+  
+  /* Container Widths */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+  
+  /* Max Widths */
+  --max-w-xs: 20rem;    /* 320px */
+  --max-w-sm: 24rem;    /* 384px */
+  --max-w-md: 28rem;    /* 448px */
+  --max-w-lg: 32rem;    /* 512px */
+  --max-w-xl: 36rem;    /* 576px */
+  --max-w-2xl: 42rem;   /* 672px */
+  --max-w-3xl: 48rem;   /* 768px */
+  --max-w-4xl: 56rem;   /* 896px */
+  --max-w-5xl: 64rem;   /* 1024px */
+  --max-w-6xl: 72rem;   /* 1152px */
+  --max-w-7xl: 80rem;   /* 1280px */
+  --max-w-full: 100%;
+  --max-w-screen-sm: 640px;
+  --max-w-screen-md: 768px;
+  --max-w-screen-lg: 1024px;
+  --max-w-screen-xl: 1280px;
+  --max-w-screen-2xl: 1536px;
+  
+  /* Border Radius */
+  --radius-none: 0;
+  --radius-sm: 0.125rem;  /* 2px */
+  --radius: 0.25rem;      /* 4px */
+  --radius-md: 0.375rem;  /* 6px */
+  --radius-lg: 0.5rem;    /* 8px */
+  --radius-xl: 0.75rem;   /* 12px */
+  --radius-2xl: 1rem;     /* 16px */
+  --radius-3xl: 1.5rem;   /* 24px */
+  --radius-full: 9999px;
+}
+
+/* ===========================================================================
+   4. Transitions & Animations
+   =========================================================================== */
+
+:root {
+  /* Transition Durations */
+  --duration-75: 75ms;
+  --duration-100: 100ms;
+  --duration-150: 150ms;
+  --duration-200: 200ms;
+  --duration-300: 300ms;
+  --duration-500: 500ms;
+  --duration-700: 700ms;
+  --duration-1000: 1000ms;
+  
+  /* Transition Timing Functions */
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Animation Keyframes */
+  --animate-spin: spin 1s linear infinite;
+  --animate-ping: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+  --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-bounce: bounce 1s infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+  50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+}
+
+/* ===========================================================================
+   5. Z-index Layers
+   =========================================================================== */
+
+:root {
+  --z-index-behind: -1;
+  --z-index-base: 0;
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+  --z-index-toast: 1080;
+  --z-index-overlay: 1090;
+}

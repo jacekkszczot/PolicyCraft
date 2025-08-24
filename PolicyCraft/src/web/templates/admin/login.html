@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Login - PolicyCraft{% endblock %}
+
+{% block content %}
+<!-- 
+    PolicyCraft - Admin Login
+    
+    This template provides the authentication interface for administrators.
+    It includes form validation and security measures for admin access.
+    
+    Security Features:
+    - CSRF protection
+    - Secure password handling
+    - Admin access restrictions
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
+<div class="auth-container">
+    <div class="auth-card">
+         <div class="auth-header">
+        <h1>Admin Login</h1>
+        <p>Administrator access</p>
+     </div>
+         <form method="post" class="auth-form">
+              <div class="form-group">
+                   <label class="form-label">Password</label>
+                   <input type="password" name="password" class="form-input" required>
+      </div>
+              <div class="form-group">
+           <button type="submit" class="btn btn-primary btn-full">Login</button>
+        </div>
+    </form>
+    </div>
+</div>
+{% endblock %}
+

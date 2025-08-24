@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}About PolicyCraft - AI Policy Analysis for Higher Education{% endblock %}
+
+{% block content %}
+<!-- 
+    PolicyCraft - About Page
+    
+    This page provides information about the PolicyCraft platform, its purpose,
+    features, and the team behind it. It's designed to inform potential users
+    and stakeholders about the value proposition of the application.
+    
+    Key Sections:
+    1. Hero Section - Overview of PolicyCraft
+    2. What We Do - Core features and capabilities
+    3. The Developer - Information about the creator
+    4. How It Works - Step-by-step process
+    5. Contact Section - For inquiries and support
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
+
+<div class="about-container">
+    <!-- 
+         Hero Section 
+    -->
+    <section class="about-hero">
+        <div class="container">
+            <h1>About PolicyCraft</h1>
+            <p class="hero-subtitle">Strategic and Ethical Integration of Generative AI in Higher Education</p>
+            <p class="hero-description">
+                PolicyCraft helps universities develop smarter, more effective AI policies through 
+                evidence-based analysis and expert recommendations.
+            </p>
+        </div>
+    </section>
+
+    <!-- What We Do -->
+    <section class="about-section">
+        <div class="container">
+            <h2>What We Do</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Analyse Your Policy</h3>
+                    <p>Upload your university's AI policy and get instant insights into its approach, themes, and effectiveness compared to best practices.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Understand the Landscape</h3>
+                    <p>See how your policy compares to leading universities worldwide. Identify gaps and opportunities for improvement.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">💡</div>
+                    <h3>Get Expert Recommendations</h3>
+                    <p>Receive tailored suggestions based on UNESCO guidelines, JISC frameworks, and analysis of successful policies from top institutions.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Track Progress</h3>
+                    <p>Monitor your policy development journey and ensure your institution stays ahead of AI integration challenges.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Trust PolicyCraft -->
+    <section class="about-section why-trust">
+        <div class="container">
+            <h2>Why Trust PolicyCraft?</h2>
+            
+            <div class="trust-grid">
+                <div class="trust-item">
+                    <h3>🎓 Academic Research Foundation</h3>
+                    <p>Built on comprehensive analysis of policies from 15 selected universities including Oxford, MIT, Stanford, Harvard, Cambridge, and Edinburgh.</p>
+                </div>
+                
+                <div class="trust-item">
+                    <h3>📚 Evidence-Based Framework</h3>
+                    <p>Recommendations grounded in UNESCO 2023 AI guidelines, JISC best practices, and BERA ethical research standards.</p>
+                </div>
+                
+                <div class="trust-item">
+                    <h3>🔬 Systematic Methodology</h3>
+                    <p>Uses advanced natural language processing to identify patterns and themes that might be missed in manual reviews.</p>
+                </div>
+                
+                <div class="trust-item">
+                    <h3>🌍 Global Perspective</h3>
+                    <p>Incorporates insights from diverse institutional approaches across different countries and educational contexts.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="about-section how-it-works">
+        <div class="container">
+            <h2>How It Works</h2>
+            
+            <div class="process-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Upload Your Policy</h3>
+                        <p>Simply upload your AI policy document in PDF, Word, or text format. The system handles the rest automatically.</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Instant Analysis</h3>
+                        <p>Within minutes, receive detailed insights about your policy's approach, key themes, and how it compares to best practices.</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Actionable Recommendations</h3>
+                        <p>Get specific, prioritized suggestions for improvement with clear implementation steps and timeframes.</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Strategic Implementation</h3>
+                        <p>Use the insights to strengthen your policy framework and ensure effective AI integration at your institution.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results You Can Expect -->
+    <section class="about-section results">
+        <div class="container">
+            <h2>Results You Can Expect</h2>
+            
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="result-stat">Excellent</div>
+                    <p>Policy analysis quality based on academic research standards</p>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-stat">Tailored</div>
+                    <p>Contextual recommendations per policy analysis for focused improvement</p>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-stat">15</div>
+                    <p>Selected universities analysed to benchmark best practices</p>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-stat">3 min</div>
+                    <p>Average time to complete full policy analysis and recommendations</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About the Author -->
+    <section class="about-section author">
+        <div class="container">
+            <h2>About the Developer</h2>
+            <div class="author-content">
+                <p>PolicyCraft was developed as part of advanced AI research at Leeds Trinity University, combining expertise in artificial intelligence, educational policy, and ethical technology implementation to help institutions navigate the complex landscape of AI integration in higher education.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="about-cta">
+        <div class="container">
+            <h2>Ready to Strengthen Your AI Policy?</h2>
+            <p>Join universities worldwide in developing more effective, ethical AI frameworks.</p>
+            <div class="cta-buttons">
+                {% if current_user and current_user.is_authenticated %}
+                    <a href="{{ url_for('upload_file') }}" class="btn btn-primary">Analyse Your Policy</a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline">View Dashboard</a>
+                {% else %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Get Started Free</a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

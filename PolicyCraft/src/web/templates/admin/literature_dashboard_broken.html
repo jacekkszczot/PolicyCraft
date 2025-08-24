@@ -1,0 +1,1249 @@
+<!--
+    PolicyCraft - Literature Management Dashboard
+    
+    This administrative interface provides comprehensive management of academic literature
+    processing and knowledge base integration. The dashboard displays system status,
+    processing statistics, and recent document upload history.
+    
+    Key Features:
+    - System status monitoring and health metrics
+    - Knowledge base statistics and version tracking
+    - Recent processing history with quality assessments
+    - Quick access to upload and management functions
+    - Processing capabilities and system information
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
+{% extends 'base.html' %}
+
+{% block title %}Literature Management - PolicyCraft Admin{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-content">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">📚 Literature Management</h1>
+                <p class="hero-subtitle">Manage academic literature and knowledge base</p>
+            </div>
+        </div>
+        
+        <!-- Navigation Breadcrumb -->
+        <nav class="breadcrumb-nav">
+            <a href="{{ url_for('admin.dashboard') }}" class="breadcrumb-link">Admin Dashboard</a>
+            <span class="breadcrumb-separator">→</span>
+            <span class="breadcrumb-current">Literature Management</span>
+        </nav>
+
+
+
+    <!-- Dashboard Overview -->
+    <div class="dashboard-overview">
+        <p>Manage and process academic literature for the knowledge base</p>
+    </div>
+
+    <!-- Action Cards -->
+    <div class="action-cards">
+        <div class="action-card upload-card">
+            <div class="card-icon">📄</div>
+            <div class="card-content">
+                <h3>Upload Literature</h3>
+                <p>Add new academic documents</p>
+                <a href="{{ url_for('admin.literature_upload') }}" class="btn btn-primary">Upload Documents</a>
+            </div>
+        </div>
+        
+        <div class="action-card knowledge-card">
+            <div class="card-icon">🗂️</div>
+            <div class="card-content">
+                <h3>Knowledge Base</h3>
+                <p>Browse and manage stored literature</p>
+                <a href="{{ url_for('admin.literature_knowledge_base') }}" class="btn btn-primary">Browse Knowledge Base</a>
+            </div>
+        </div>
+        
+        <div class="action-card cleanup-card">
+            <div class="card-icon">🧹</div>
+            <div class="card-content">
+                <h3>Cleanup Tools</h3>
+                <p>Remove outdated or duplicate documents</p>
+                <a href="{{ url_for('admin.literature_cleanup') }}" class="btn btn-primary">Cleanup Documents</a>
+            </div>
+        </div>
+        
+        <div class="action-card reprocess-card">
+            <div class="card-icon">🔄</div>
+            <div class="card-content">
+                <h3>Reload Literature</h3>
+                <p>Reload existing documents</p>
+                <button id="reprocessBtn" class="btn btn-primary">Reload Documents</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status Cards -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:2rem;">
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        <h4 style="margin-bottom:0.5rem; color:#333;">System Status</h4>
+        {% set status_class = 'text-success' if system_status.system_status == 'operational' else 'text-danger' %}
+        <div class="{{ status_class }}" style="font-size:1.5rem; font-weight:bold;">
+          {{ system_status.system_status|title }}
+        </div>
+        <small style="color:#666;">Last check: {{ system_status.last_check[:19] }}</small>
+      </div>
+      
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        <h4 style="margin-bottom:0.5rem; color:#333;">Documents</h4>
+        <div style="font-size:1.5rem; font-weight:bold; color:#0077cc;">{{ system_status.knowledge_base.total_documents }}</div>
+        <small style="color:#666;">Total documents</small>
+      </div>
+      
+      <div style="background:#f8f9fa; padding:1rem; border-radius:6px; text-align:center;">
+        <h4 style="margin-bottom:0.5rem; color:#333;">Versions</h4>
+        <div style="font-size:1.5rem; font-weight:bold; color:#6f42c1;">{{ system_status.knowledge_base.version_count }}</div>
+        <small style="color:#666;">Total versions</small>
+      </div>
+    </div>
+
+
+
+        <!-- Recent Processing History -->
+        <div class="history-section">
+            <h3 class="section-title">📊 Recent Processing History (Last 5)</h3>
+            {% if recent_history %}
+            <div class="history-table-container scrollable-table">
+                <div class="table-scroll-wrapper">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th class="table-header">Date</th>
+                                <th class="table-header">Document</th>
+                                <th class="table-header">Action</th>
+                                <th class="table-header">Quality</th>
+                                <th class="table-header">Insights</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in recent_history[:5] %}
+                            <tr class="table-row">
+                                <td class="table-cell">
+                                    <div class="date-cell">
+                                        <span class="date-text">{{ item.timestamp[:10] if item.timestamp }}</span>
+                                    </div>
+                                </td>
+                                <td class="table-cell">
+                                    <div class="document-cell">
+                                        <span class="document-name">{{ item.document_id }}</span>
+                                    </div>
+                                </td>
+                                <td class="table-cell">
+                                    <span class="action-badge action-{{ item.action }}">
+                                        {{ item.action|replace('_', ' ')|title if item.action }}
+                                    </span>
+                                </td>
+                                <td class="table-cell">
+                                    {% if item.quality_score %}
+                                    <div class="quality-indicator">
+                                        <div class="quality-bar">
+                                             <div class="quality-fill quality-{{ 'high' if item.quality_score >= 80 else 'medium' if item.quality_score >= 60 else 'low' }}"
+                                                  data-width="{{ item.quality_score|round }}"></div>
+                                        </div>
+                                        <span class="quality-text">{{ "%.1f%%"|format(item.quality_score) }}</span>
+                                    </div>
+                                    {% else %}
+                                    <span class="quality-na">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td class="table-cell">
+                                    <div class="insights-cell">
+                                        <span class="insights-count">{{ item.insights_count or 0 }}</span>
+                                        <small class="insights-label">insights</small>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📚</div>
+                <h4 class="empty-title">No Processing History Available</h4>
+                <p class="empty-description">Upload your first document using the Upload Literature section above to get started with literature processing</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Activity Section -->
+        <div class="activity-section">
+            <h3 class="section-title">⏱️ Recent Processing Activity (Last 5)</h3>
+            {% if recent_activity %}
+            <div class="table-container scrollable-table">
+                <div class="table-scroll-wrapper">
+                    <table class="pc-table">
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Timestamp</th>
+                                <th>Processing</th>
+                                <th>Completed</th>
+                                <th>Failed</th>
+                                <th>Deleted</th>
+                                <th>Quality</th>
+                                <th>Insights</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in recent_activity[:5] %}
+                            <tr>
+                                <td>
+                                    <span class="doc-name">{{ activity.filename }}</span>
+                                </td>
+                                <td>
+                                    {% if activity.timestamp %}
+                                        {% if activity.timestamp is string %}
+                                            {{ activity.timestamp }}
+                                        {% else %}
+                                            {{ activity.timestamp.strftime('%d/%m/%Y %H:%M') }}
+                                        {% endif %}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td class="status-col">
+                                    {% if activity.status == 'processing' %}<span class="badge badge-processing">Processing</span>{% endif %}
+                                </td>
+                                <td class="status-col">
+                                    {% if activity.status == 'completed' %}<span class="badge badge-completed">Completed</span>{% endif %}
+                                </td>
+                                <td class="status-col">
+                                    {% if activity.status == 'failed' %}<span class="badge badge-failed">Failed</span>{% endif %}
+                                </td>
+                                <td class="status-col">
+                                    {% if activity.status == 'deleted' %}<span class="badge badge-deleted">Deleted</span>{% endif %}
+                                </td>
+                                <td>
+                                    {% if activity.quality is not none %}
+                                        {{ "%.0f%%"|format(activity.quality * 100) }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ activity.insights_count or 0 }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📊</div>
+                <h4 class="empty-title">No Recent Activity</h4>
+                <p class="empty-description">No recent processing activity found. Use the Upload Literature section above to start processing documents</p>
+            </div>
+            {% endif %}
+        </div>
+
+    <!-- System Information Section -->
+    <div class="info-section">
+        <h3 class="section-title">ℹ️ System Information</h3>
+        <div class="info-grid">
+            <div class="info-card">
+                <h4>Supported Formats</h4>
+                <ul class="info-list">
+                    <li>📄 PDF Documents</li>
+                    <li>📝 Word Documents (.docx)</li>
+                    <li>📋 Plain Text (.txt)</li>
+                    <li>📖 Markdown (.md)</li>
+                </ul>
+            </div>
+            <div class="info-card">
+                <h4>Processing Capabilities</h4>
+                <ul class="info-list">
+                    <li>🔍 Automatic text extraction</li>
+                    <li>⭐ Quality assessment</li>
+                    <li>🏷️ Metadata extraction</li>
+                    <li>🔗 Knowledge base integration</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+        
+    <!-- Pending Reviews Section -->
+    <div id="pendingReviewsSection" style="margin-top: 2rem; padding: 2rem; border-top: 1px solid #e9ecef;">
+        <h3 style="margin-bottom: 1rem; color: #333;">📋 Documents Pending Review</h3>
+        <div id="pendingDocuments">
+            <p style="color: #28a745; text-align: center; padding: 2rem;">✅ Loading pending documents...</p>
+        </div>
+    </div>
+
+    <!-- Back to Dashboard Button -->
+    <div class="form-actions" style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e9ecef;">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+            ← Back to Dashboard
+        </a>
+    </div>
+    </div>
+</div>
+
+<style>
+/* Literature Dashboard Styles */
+/* Activity table styling */
+.table-container {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+/* Scrollable table styles */
+.scrollable-table {
+  position: relative;
+}
+
+.table-scroll-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border-radius: 8px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-corner {
+  background: #f1f1f1;
+}
+
+.pc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.pc-table thead th {
+  background: #f8f9fa;
+  color: #495057;
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+.pc-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f3f5;
+  vertical-align: middle;
+}
+.pc-table tbody tr:nth-child(odd) {
+  background: #fcfcfd;
+}
+.pc-table .doc-name {
+  font-weight: 600;
+  color: #212529;
+}
+.status-col { text-align: center; white-space: nowrap; }
+
+/* Status badges */
+.badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-weight: 600; font-size: 12px; }
+.badge-processing { background: #fff3cd; color: #b35400; border: 1px solid #ffe69c; }
+.badge-completed { background: #d3f9d8; color: #0f7a2a; border: 1px solid #b2f2bb; }
+.badge-failed { background: #ffe3e3; color: #c92a2a; border: 1px solid #ffa8a8; }
+.badge-deleted { background: #ffd6d9; color: #a1000f; border: 1px solid #ff9aa2; }
+.admin-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.admin-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+}
+
+.admin-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.95);
+    z-index: 1;
+}
+
+.admin-content > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* History Section Styles */
+.history-section {
+    margin: 2rem 0;
+    padding: 0 2rem;
+}
+
+.history-table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table-row {
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.table-row:hover {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.table-cell {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+.date-cell .date-text {
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.9rem;
+    color: #6c757d;
+    background: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.document-cell .document-name {
+    font-weight: 500;
+    color: #495057;
+    display: block;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.action-badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+}
+
+.action-document_merged { background: linear-gradient(135deg, #0077cc 0%, #005fa3 100%); }
+.action-new_document_created { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); }
+.action-document_updated { background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); color: #212529; }
+.action-document_deleted { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); }
+
+.quality-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quality-bar {
+    width: 60px;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.quality-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.quality-high { background: linear-gradient(90deg, #28a745 0%, #20c997 100%); }
+.quality-medium { background: linear-gradient(90deg, #ffc107 0%, #fd7e14 100%); }
+.quality-low { background: linear-gradient(90deg, #dc3545 0%, #e83e8c 100%); }
+
+.quality-text {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #495057;
+}
+
+.quality-na {
+    color: #6c757d;
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+.insights-cell {
+    text-align: center;
+}
+
+.insights-count {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #0077cc;
+}
+
+.insights-label {
+    color: #6c757d;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Activity Section Styles */
+.activity-section {
+    margin: 2rem 0;
+    padding: 0 2rem;
+}
+
+.activity-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.activity-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    transition: all 0.2s ease;
+    border-left: 4px solid transparent;
+}
+
+.activity-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.activity-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.activity-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.activity-meta {
+    flex: 1;
+}
+
+.activity-title {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
+}
+
+.activity-time {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-family: 'Monaco', 'Consolas', monospace;
+}
+
+.activity-body {
+    border-top: 1px solid #f8f9fa;
+    padding-top: 1rem;
+}
+
+.activity-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.activity-status {
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-completed {
+    background: #d4edda;
+    color: #155724;
+    border-left-color: #28a745;
+}
+
+.status-processing {
+    background: #fff3cd;
+    color: #856404;
+    border-left-color: #ffc107;
+}
+
+.status-failed {
+    background: #f8d7da;
+    color: #721c24;
+    border-left-color: #dc3545;
+}
+
+.activity-quality {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.activity-insights {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Empty State Styles */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    margin-top: 1rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+
+.empty-title {
+    color: #495057;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.empty-description {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .history-table-container {
+        overflow-x: auto;
+    }
+    
+    .activity-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .table-cell {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .activity-card {
+        padding: 1rem;
+    }
+}
+
+/* Hero section uses global styles from layout.css */
+
+.hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.breadcrumb-nav {
+    padding: 0 2rem 1rem 2rem;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 2rem;
+}
+
+.breadcrumb-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.breadcrumb-link:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb-separator {
+    margin: 0 0.5rem;
+    color: #6c757d;
+}
+
+.breadcrumb-current {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.dashboard-overview {
+    padding: 0 2rem 2rem 2rem;
+    text-align: center;
+}
+
+.dashboard-overview p {
+    font-size: 1.1rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+.action-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 0 2rem 2rem 2rem;
+    margin-bottom: 2rem;
+}
+
+.action-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+    text-align: center;
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.upload-card {
+    border-left: 4px solid #28a745;
+}
+
+.knowledge-card {
+    border-left: 4px solid #6f42c1;
+}
+
+.cleanup-card {
+    border-left: 4px solid #fd7e14;
+}
+
+.card-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.card-content h3 {
+    color: #333;
+    margin: 0 0 1rem 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.card-content p {
+    color: #6c757d;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.5;
+}
+
+.stats-section, .activity-section, .info-section {
+    padding: 0 2rem 2rem 2rem;
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+}
+
+.documents-stat {
+    border-left: 4px solid #28a745;
+}
+
+.queue-stat {
+    border-left: 4px solid #ffc107;
+}
+
+.quality-stat {
+    border-left: 4px solid #007bff;
+}
+
+.updated-stat {
+    border-left: 4px solid #6f42c1;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.activity-list {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.activity-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-details {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.status-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.info-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+}
+
+.info-card h4 {
+    color: #333;
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.info-list li {
+    padding: 0.5rem 0;
+    color: #6c757d;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.info-list li:last-child {
+    border-bottom: none;
+}
+
+.empty-state h4 {
+    color: #333;
+    margin: 0 0 0.5rem 0;
+}
+
+.empty-state p {
+    color: #6c757d;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-container {
+        margin: 1rem auto;
+        padding: 0 0.5rem;
+    }
+    
+    .hero-section {
+        padding: 2rem 1rem;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .action-cards, .stats-grid, .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .activity-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+</style>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+console.log('Literature dashboard JavaScript loaded');
+console.log('Script block loaded');
+document.addEventListener('DOMContentLoaded', function () {
+  console.log('DOMContentLoaded event fired');
+  document.querySelectorAll('.quality-fill[data-width]')
+    .forEach(el => {
+      const w = parseInt(el.getAttribute('data-width'), 10);
+      if (!isNaN(w)) el.style.width = `${Math.max(0, Math.min(100, w))}%`;
+    });
+
+  // Enhanced Reprocessing functionality
+  const reprocessBtn = document.getElementById('reprocessBtn');
+  if (reprocessBtn) {
+    reprocessBtn.addEventListener('click', async function() {
+      // Confirm action
+      if (!confirm('This will reprocess all existing documents with enhanced AI capabilities (themes, enhanced metadata, recommendations). This may take several minutes. Continue?')) {
+        return;
+      }
+
+      // Disable button and show loading state
+      const originalText = this.textContent;
+      this.disabled = true;
+      this.textContent = 'Processing...';
+      this.classList.add('loading');
+
+      try {
+        // Call reprocessing endpoint
+        const response = await fetch('/admin/literature/reprocess', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ enhanced: true })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          alert(`Success! ${result.message}\n\nEnhanced documents: ${result.results.processed}\nErrors: ${result.results.errors}`);
+          
+          // Show enhancement details if available
+          if (result.results.enhanced_documents && result.results.enhanced_documents.length > 0) {
+            let details = 'Enhancement Details:\n\n';
+            result.results.enhanced_documents.forEach(doc => {
+              details += `📄 ${doc.filename}:\n`;
+              if (doc.enhancements.length > 0) {
+                details += `  ✅ ${doc.enhancements.join(', ')}\n`;
+              } else {
+                details += `  ℹ️ No new enhancements available\n`;
+              }
+              details += '\n';
+            });
+            
+            if (confirm(details + '\nWould you like to view the enhanced knowledge base?')) {
+              window.location.href = '/admin/literature/knowledge-base';
+            }
+          } else {
+            // Refresh page to show updated stats
+            window.location.reload();
+          }
+        } else {
+          alert(`Error: ${result.error || 'Reprocessing failed'}`);
+        }
+      } catch (error) {
+        alert(`Network error: ${error.message}`);
+      } finally {
+        // Restore button state
+        this.disabled = false;
+        this.textContent = originalText;
+        this.classList.remove('loading');
+      }
+    });
+  }
+
+  // Define loadPendingDocuments function as global (before calling it)
+  window.loadPendingDocuments = async function() {
+    console.log('🔥 Starting loadPendingDocuments...');
+    try {
+      console.log('🔥 About to fetch from /admin/literature/pending-reviews');
+      const response = await fetch('/admin/literature/pending-reviews');
+      console.log('🔥 Response received, status:', response.status);
+      
+      if (!response.ok) {
+        console.error('🔥 Response not OK:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('🔥 Error response:', errorText);
+        
+        // Show detailed error to user
+        const container = document.getElementById('pendingDocuments');
+        if (container) {
+          if (response.status === 302 || response.status === 401) {
+            container.innerHTML = `<p style="color: red;">❌ Authentication error: Please refresh the page and try again. Status: ${response.status}</p>`;
+          } else {
+            container.innerHTML = `<p style="color: red;">❌ Error loading documents: ${response.status} ${response.statusText}<br><small>Check browser console for details</small></p>`;
+          }
+        }
+        return;
+      }
+      
+      const result = await response.json();
+      console.log('🔥 JSON parsed successfully, count:', result.count);
+      console.log('🔥 Full response data:', result);
+      
+      const container = document.getElementById('pendingDocuments');
+      console.log('🔥 Container found:', !!container);
+      if (!container) {
+        console.error('🔥 ERROR: pendingDocuments container not found');
+        alert('ERROR: pendingDocuments container missing from DOM!');
+        return;
+      }
+      
+      console.log('🔥 Checking result:', result.success, 'Count:', result.pending_documents?.length);
+      
+      if (result.success && result.pending_documents.length > 0) {
+        console.log('🔥 Starting to build HTML for', result.pending_documents.length, 'documents');
+        let html = '<div style="display: grid; gap: 1rem;">';
+        
+        result.pending_documents.forEach(doc => {
+          const qualityPercent = Math.round(doc.quality_score * 100);
+          const qualityColor = qualityPercent >= 80 ? '#28a745' : qualityPercent >= 60 ? '#ffc107' : '#dc3545';
+          
+          html += `
+            <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid ${qualityColor};">
+              <div style="display: flex; justify-content: between; align-items: flex-start; gap: 1rem;">
+                <div style="flex: 1;">
+                  <h4 style="margin: 0 0 0.5rem 0; color: #333;">${doc.original_filename}</h4>
+                  <p style="margin: 0 0 0.5rem 0; color: #666; font-size: 0.9rem;">
+                    📊 Quality: ${qualityPercent}% | 💡 Insights: ${doc.insights_count} | 📅 ${new Date(doc.processing_date).toLocaleDateString()}
+                  </p>
+                  ${doc.metadata.author ? `<p style="margin: 0; color: #666; font-size: 0.9rem;">👤 ${doc.metadata.author}</p>` : ''}
+                </div>
+                <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                  <button onclick="approveDocument('${doc.document_id}')" class="btn btn-success" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                    ✅ Approve
+                  </button>
+                  <button onclick="rejectDocument('${doc.document_id}')" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                    ❌ Reject
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        
+        html += '</div>';
+        console.log('🔥 Setting innerHTML with', html.length, 'characters');
+        container.innerHTML = html;
+        console.log('🔥 HTML successfully set to container');
+      } else {
+        console.log('🔥 No documents found or error. Success:', result.success, 'Length:', result.pending_documents?.length);
+        container.innerHTML = '<p style="color: #28a745; text-align: center; padding: 2rem;">✅ No documents pending review</p>';
+      }
+    } catch (error) {
+      console.error('Error loading pending documents:', error);
+      const container = document.getElementById('pendingDocuments');
+      if (container) {
+        container.innerHTML = '<p style="color: #dc3545;">Error loading pending documents: ' + error.message + '</p>';
+      }
+    }
+  }
+
+  // Load pending documents on page load
+  console.log('About to call loadPendingDocuments');
+  window.loadPendingDocuments();
+}); // Close DOMContentLoaded event listener
+
+// Global functions for approve/reject (outside DOMContentLoaded)
+window.approveDocument = async function(documentId) {
+    if (!confirm('Approve this document for integration into the knowledge base?')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch('/admin/literature/approve-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ document_id: documentId })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Document approved successfully!');
+        window.loadPendingDocuments(); // Reload the list
+      } else {
+        alert(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      alert(`Network error: ${error.message}`);
+    }
+  };
+
+  window.rejectDocument = async function(documentId) {
+    const reason = prompt('Reason for rejection (optional):') || 'No reason provided';
+    
+    if (!confirm(`Reject this document? Reason: ${reason}`)) {
+      return;
+    }
+    
+    try {
+      const response = await fetch('/admin/literature/reject-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ document_id: documentId, reason: reason })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Document rejected and removed');
+        window.loadPendingDocuments(); // Reload the list
+      } else {
+        alert(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      alert(`Network error: ${error.message}`);
+    }
+  };
+});
+
+// Simple global functions for manual testing
+window.approveDocument = async function(documentId) {
+  if (!confirm('Approve this document for integration into the knowledge base?')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch('/admin/literature/approve-document', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ document_id: documentId })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('Document approved successfully!');
+      window.location.reload();
+    } else {
+      alert(`Error: ${result.error}`);
+    }
+  } catch (error) {
+    alert(`Network error: ${error.message}`);
+  }
+};
+
+window.rejectDocument = async function(documentId) {
+  const reason = prompt('Reason for rejection (optional):') || 'No reason provided';
+  
+  if (!confirm(`Reject this document? Reason: ${reason}`)) {
+    return;
+  }
+  
+  try {
+    const response = await fetch('/admin/literature/reject-document', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ document_id: documentId, reason: reason })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('Document rejected and removed');
+      window.location.reload();
+    } else {
+      alert(`Error: ${result.error}`);
+    }
+  } catch (error) {
+    alert(`Network error: ${error.message}`);
+  }
+};
+
+</script>
+{% endblock %}

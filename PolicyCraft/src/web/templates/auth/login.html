@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Login - PolicyCraft{% endblock %}
+
+{% block content %}
+<!-- 
+    PolicyCraft - Login Template
+    
+    This page handles user authentication for the PolicyCraft platform.
+    It provides a secure login form with email/username and password fields.
+    
+    Table of Contents:
+    1. Login Form - Secure authentication form
+    2. Password Reset - Link to reset forgotten passwords
+    3. Registration Link - For new users to create an account
+    4. Social Login - Options for OAuth providers (if enabled)
+    
+    Key Features:
+    - Responsive design for all device sizes
+    - Secure password handling
+    - CSRF protection
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+    - Client-side form validation
+    - Remember me functionality
+    - Password visibility toggle
+    - Error message display
+    
+    Security Features:
+    - CSRF protection
+    - Password hashing (bcrypt)
+    - Rate limiting (5 attempts per 15 minutes)
+    - Secure session management
+    - XSS protection
+    - Clickjacking protection
+    - Secure cookie settings
+    
+    Form Validation:
+    - Required field validation
+    - Email format validation
+    - Minimum password length (8 characters)
+    - Server-side validation feedback
+    
+    Dependencies:
+    - Bootstrap 5.3.0 (CSS/JS)
+    - Font Awesome 6.4.0 for icons
+    - Custom CSS from static/css/
+    - Flask-Login for session management
+    - Flask-WTF for form handling
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+    
+-->
+
+<div class="auth-container">
+    <div class="auth-card">
+        <!--    Login Heading    -->
+        <div class="auth-header">
+            <h1>Log In to PolicyCraft</h1>
+            <p>Access your AI policy analysis dashboard</p>
+        </div>
+        
+        <!-- Login form with enhanced security and accessibility -->
+        <form method="POST" class="auth-form" id="login-form" aria-label="Login form">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                <label for="username_or_email" class="form-label">
+                    Email or Username
+                    <span class="required" aria-hidden="true">*</span>
+                    <span class="sr-only">(required)</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="username_or_email" 
+                    name="username_or_email" 
+                    class="form-input" 
+                    placeholder="Enter your email address or username"
+                    autocomplete="username"
+                    aria-required="true"
+                    {% if form.username_or_email.data %}value="{{ form.username_or_email.data }}"{% endif %}
+                    aria-describedby="email-help"
+                >
+                <small id="email-help" class="form-text">Enter the email or username associated with your account</small>
+                
+                {% if form.username_or_email.errors %}
+                    <div class="form-errors" role="alert" aria-live="polite">
+                        {% for error in form.username_or_email.errors %}
+                            <span class="error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="form-label">
+                    Password
+                    <span class="required" aria-hidden="true">*</span>
+                    <span class="sr-only">(required)</span>
+                </label>
+                <div class="password-input-container">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        aria-required="true"
+                        aria-describedby="password-help"
+                    >
+                </div>
+                <small id="password-help" class="form-text">
+                    <!-- Password reset functionality removed as per user request -->
+                </small>
+                
+                {% if form.password.errors %}
+                    <div class="form-errors" role="alert" aria-live="polite">
+                        {% for error in form.password.errors %}
+                            <span class="error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group checkbox-group">
+                <input 
+                    type="checkbox" 
+                    id="remember_me" 
+                    name="remember_me" 
+                    class="form-checkbox"
+                    value="y"
+                    {% if form.remember_me.data %}checked{% endif %}
+                >
+                <label for="remember_me" class="checkbox-label">
+                    Keep me logged in for 30 days
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-full" id="login-button" aria-label="Sign in to your account">
+                    <span class="button-text">Log In</span>
+                    <span class="button-loader" aria-hidden="true" style="display: none;">
+                        <span class="spinner"></span>
+                    </span>
+                </button>
+            </div>
+            
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="help-text" style="margin-top: 1.5rem; text-align: center; color: #6b7280; font-size: 0.9rem;">
+                If you're experiencing issues logging in, please contact the administrator.
+            </div>
+        </form>
+        
+        <!-- Registration link -->
+        <div class="auth-footer">
+                <p>Don't have an account? 
+                <a href="{{ url_for('auth.register') }}" class="auth-link">Sign up here</a>
+            </p>
+        </div>
+    </div>
+    
+   
+{% endblock %}

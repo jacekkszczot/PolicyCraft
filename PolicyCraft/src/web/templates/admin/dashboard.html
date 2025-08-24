@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - PolicyCraft{% endblock %}
+
+{% block content %}
+<!-- 
+    PolicyCraft - Admin Dashboard
+    
+    This page provides an overview of system statistics and administrative controls.
+    It displays key metrics and provides quick access to administrative functions.
+    
+    Key Features:
+    - User and analysis statistics
+    - Literature management and knowledge base updates
+    - Quick access to user management
+    - System baseline controls
+    
+    Author: Jacek Robert Kszczot
+    Project: MSc Data Science & AI - COM7016
+    University: Leeds Trinity University
+-->
+
+<div class="dashboard-container">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Admin Dashboard</h1>
+            <p class="hero-subtitle">System overview and administrative controls</p>
+        </div>
+    </div>
+    
+    <!-- Statistics Overview -->
+    <div class="stats-overview">
+        <div class="stat-card">
+            <div class="stat-number">{{ user_count }}</div>
+            <div class="stat-label">Total Users</div>
+            <div class="stat-icon">👥</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-number">{{ analysis_count }}</div>
+            <div class="stat-label">Total Analyses</div>
+            <div class="stat-icon">📊</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-number">{{ baseline_global }}</div>
+            <div class="stat-label">Global Baselines</div>
+            <div class="stat-icon">🏅</div>
+        </div>
+    </div>
+    
+    <!-- Admin Actions -->
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h2>Administrative Functions</h2>
+            <p>Manage users, system settings, and content</p>
+        </div>
+        
+        <div class="admin-actions-grid">
+            <a href="{{ url_for('admin.users') }}" class="admin-action-card primary">
+                <div class="action-icon">👥</div>
+                <h3>Manage Users</h3>
+                <p>View, edit, and manage user accounts</p>
+            </a>
+            
+            <a href="{{ url_for('admin.reset_baselines') }}" class="admin-action-card warning">
+                <div class="action-icon">🔄</div>
+                <h3>Reset Baselines</h3>
+                <p>Reset system baseline policies</p>
+            </a>
+            
+            <a href="{{ url_for('admin.change_password') }}" class="admin-action-card primary">
+                <div class="action-icon">🔐</div>
+                <h3>Change Password</h3>
+                <p>Update admin account credentials</p>
+            </a>
+            
+            <a href="{{ url_for('admin.literature_dashboard') }}" class="admin-action-card primary">
+                <div class="action-icon">📚</div>
+                <h3>Manage Literature</h3>
+                <p>Knowledge base and academic sources</p>
+            </a>
+            
+            <form action="{{ url_for('admin.reset_recommendations') }}" method="POST" onsubmit="return confirm('Are you sure you want to reset ALL recommendations? This action cannot be undone.');" class="admin-action-card danger" style="display: block; text-decoration: none; cursor: pointer;">
+                <button type="submit" style="background: none; border: none; cursor: pointer; width: 100%; padding: 0; text-align: left;">
+                    <div class="action-icon">🔄</div>
+                    <h3>Reset Recommendations</h3>
+                    <p>Remove all recommendations from the database</p>
+                </button>
+            </form>
+            
+
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.admin-action-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    text-align: center;
+}
+
+.admin-action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    text-decoration: none;
+    color: inherit;
+}
+
+.admin-action-card.primary {
+    border-color: #007bff;
+}
+
+.admin-action-card.primary:hover {
+    background: #f8f9ff;
+}
+
+.admin-action-card.warning {
+    border-color: #ffc107;
+}
+
+.admin-action-card.warning:hover {
+    background: #fffdf0;
+}
+
+.admin-action-card.success {
+    border-color: #28a745;
+}
+
+.admin-action-card.success:hover {
+    background: #f0fff4;
+}
+
+.action-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.admin-action-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.admin-action-card p {
+    margin: 0;
+    color: #666;
+    font-size: 0.95rem;
+}
+</style>
+
+{% endblock %}

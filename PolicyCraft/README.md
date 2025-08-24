@@ -14,9 +14,23 @@ A web-based application for analysing university AI policies, extracting themes,
 
 ### Quick Start (macOS/Linux)
 
-1. **Clone the repository and switch to the laboratory branch**
+1. **Clone the repository**
+   
+   For the main branch (stable version):
    ```bash
-   git clone https://github.com/yourusername/PolicyCraft.git
+   git clone https://github.com/jacekkszczot/PolicyCraft.git
+   cd PolicyCraft
+   ```
+   
+   For the laboratory branch (development version):
+   ```bash
+   git clone -b laboratory https://github.com/jacekkszczot/PolicyCraft.git
+   cd PolicyCraft
+   ```
+   
+   Or switch to laboratory branch after cloning:
+   ```bash
+   git clone https://github.com/jacekkszczot/PolicyCraft.git
    cd PolicyCraft
    git checkout laboratory
    ```

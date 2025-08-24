@@ -62,9 +62,18 @@ htmlcov/
 # Local configuration
 config.py
 
-# Large files
+
 data/
 !data/README.md
 
-# Documentation build
+## Keep heavy/derived data out of Git
+PolicyCraft/data/processed/
+PolicyCraft/data/results/
+PolicyCraft/data/policies/pdf_originals/
+
+!PolicyCraft/data/
+!PolicyCraft/data/policies/
+!PolicyCraft/data/policies/clean_dataset/
+!PolicyCraft/data/policies/clean_dataset/**
+
 _build/

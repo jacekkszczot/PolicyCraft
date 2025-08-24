@@ -92,3 +92,35 @@ config = {
     'production': ProductionConfig,
     'default': DevelopmentConfig
 }
+
+# Helper functions for application bootstrap
+def get_config(env: str | None = None):
+    """Return the appropriate configuration class based on environment.
+
+    This function is intentionally self-contained so that it works when this file
+    is imported dynamically as a fallback (i.e. without relying on config.py).
+    """
+    import os as _os
+
+    if env is None:
+        env = _os.environ.get("FLASK_ENV", "default")
+    return config.get(env, config['default'])
+
+
+def create_secure_directories():
+    """Ensure required directories exist for runtime operation.
+
+    Creates upload, processed and logs directories if they do not already exist.
+    Safe to call multiple times.
+    """
+    import os as _os
+
+    cfg_cls = get_config()
+    cfg = cfg_cls()
+    dirs = [
+        cfg.UPLOAD_FOLDER,
+        cfg.PROCESSED_FOLDER,
+        _os.path.join(_os.getcwd(), "logs"),
+    ]
+    for d in dirs:
+        _os.makedirs(d, exist_ok=True)

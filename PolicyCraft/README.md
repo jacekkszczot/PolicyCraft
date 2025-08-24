@@ -82,6 +82,30 @@ The steps below get you from a fresh clone to a fully working application with a
    python -m pytest -q
    ```
 
+### Configuration and first run
+
+* __Automatic configuration fallback__
+  - If `PolicyCraft/config.py` is not present, the application will automatically fall back to `PolicyCraft/config.example.py` at start‑up and print a warning in the console.
+  - To provide local, machine‑specific settings (recommended), create your own config file based on the example:
+    ```bash
+    cp PolicyCraft/config.example.py PolicyCraft/config.py
+    ```
+    Then adjust values such as `DEFAULT_ADMIN_PASSWORD` and any database or integration parameters. Keep `config.py` out of version control.
+
+* __Environment variables__
+  - The app loads environment variables from `.env` automatically if present. You can copy the sample file and amend as needed:
+    ```bash
+    cp .env.example .env
+    ```
+
+* __First run on a new machine__
+  1. Create and activate a virtual environment
+  2. `pip install -r requirements.txt`
+  3. Ensure MongoDB is installed and running (or use Docker)
+  4. Optionally create `.env` from `.env.example`
+  5. Optionally create `PolicyCraft/config.py` from `PolicyCraft/config.example.py`
+  6. Start the application: `python app.py`
+
 ### Troubleshooting
 
 - **Port 5001 already in use**

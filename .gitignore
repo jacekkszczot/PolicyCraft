@@ -62,18 +62,6 @@ htmlcov/
 # Local configuration
 config.py
 
-
-data/
-!data/README.md
-
-## Keep heavy/derived data out of Git
-PolicyCraft/data/processed/
-PolicyCraft/data/results/
-PolicyCraft/data/policies/pdf_originals/
-
-!PolicyCraft/data/
-!PolicyCraft/data/policies/
-!PolicyCraft/data/policies/clean_dataset/
-!PolicyCraft/data/policies/clean_dataset/**
+# (Allow data directory to be tracked in Git)
 
 _build/

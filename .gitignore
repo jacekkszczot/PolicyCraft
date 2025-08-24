@@ -60,6 +60,7 @@ htmlcov/
 .ipynb_checkpoints
 
 # Local configuration
+!PolicyCraft/config.py
 config.py
 
 # (Allow data directory to be tracked in Git)

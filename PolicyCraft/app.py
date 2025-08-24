@@ -30,6 +30,28 @@ University: Leeds Trinity University
 from dotenv import load_dotenv
 load_dotenv()
 
+# Safe imports for configuration helpers with fallback to example config
+try:
+    # Prefer real config if present
+    from PolicyCraft.config import get_config, create_secure_directories  # type: ignore
+except Exception:  # pragma: no cover - fallback path
+    # Fall back to example config which provides sane defaults and helpers
+    import importlib.util as _importlib_util
+    import sys as _sys
+    import os as _os
+    _cfg_path = _os.path.join(_os.path.dirname(__file__), 'config.example.py')
+    _spec = _importlib_util.spec_from_file_location('policycraft_fallback_config', _cfg_path)
+    if _spec and _spec.loader:
+        _mod = _importlib_util.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)  # type: ignore[attr-defined]
+        get_config = getattr(_mod, 'get_config')
+        create_secure_directories = getattr(_mod, 'create_secure_directories')
+    else:
+        raise ImportError('Unable to load fallback configuration from config.example.py')
+
+import os
+import logging
+
 def _fetch_analysis_for_recommendations(analysis_id):
     """Fetch analysis by user first, then globally, mirroring logs and test-temporary permission notes."""
     logger.info("Attempting to get user's analysis...")
@@ -830,12 +852,18 @@ def format_british_date(date_str):
     except Exception:
         return str(date_str)[:10] if len(str(date_str)) > 10 else str(date_str)
 
-# Configure logging
+# Configure logging (ensure logs directory exists first)
+try:
+    os.makedirs('logs', exist_ok=True)
+except Exception:
+    # If directory creation fails, continue with console logging only
+    pass
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('logs/application.log'),
+        logging.FileHandler('logs/application.log') if os.path.isdir('logs') else logging.StreamHandler(),
         logging.StreamHandler()
     ]
 )

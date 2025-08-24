@@ -1,0 +1,892 @@
+"Generative AI tools offer many capabilities and efficiencies that can greatly enhance our work. When using these tools, members of the University community must consider issues related to information security, privacy, compliance, and academic integrity.
+View guidance on using and procuring generative AI tools such as PhoenixAI, OpenAI’s ChatGPT, Microsoft Copilot, and Google’s Gemini.
+ 
+GUIDELINES ON USING AND PROCURING GENERATIVE AI TOOLS
+1. PROTECTION OF UNIVERSITY DATA
+The use of confidential data with publicly available generative AI tools is prohibited without prior security and privacy review. This includes personally identifiable employee data, FERPA-covered student data, HIPAA-covered patient data, and may include research that is not yet publicly available. Some grantors, including the National Institutes of Health, have policies prohibiting the use of generative AI tools in analyzing or reviewing grant applications or proposals. Information shared with publicly available generative AI tools may expose sensitive information to unauthorized parties or violate data use agreements. (Please see Policy 601 or definitions of confidential data and its use for more information.)
+
+
+
+2. RESPONSIBILITY FOR CONTENT ACCURACY AND OWNERSHIP
+AI-generated content may be misleading or inaccurate. Generative AI technology may create citations to content that does not exist. Responses from generative AI tools may contain content and materials from other authors and may be copyrighted. It is the responsibility of the tool user to review the accuracy and ownership of any AI-generated content.
+
+
+
+3. ACADEMIC INTEGRITY
+For guidance on how generative AI tools intersect with academic honesty, it is recommended that instructors contact the Chicago Center for Teaching and Learning. (See Academic Honesty & Plagiarism in the Student Manual for University policy.)
+
+
+
+4. PROCURING AND ACQUIRING GENERATIVE AI TOOLS
+Generative AI systems, applications, and software products that process, analyze, or move confidential data require a security review before they are acquired, even if the software is free. This review will help ensure the security and privacy of University data. 
+Please contact IT Services by submitting our Generative AI Tool Review form before acquiring or using any tools, add-ons, or modules that include generative AI technology with University confidential data, even if they are free. For more information, see the Policy on the Use of External Services and the Policy of Procurement and Engagement.
+CONTACTS
+If you have questions about the guidelines, please contact:
+Kevin Boyd, Chief Information Officer, at cio@uchicago.edu
+Matt Morton, Chief Information Security Officer, at ciso@uchicago.edu
+
+",Moderate,chicago
+"Generative AI Principles
+Generative AI and Study Guidance Hub
+Generative AI Principles
+These principles are intended to provide a starting point for approaches to using generative AI in teaching, learning and assessment at Imperial. Imperial supports the use of the principles to frame and underpin activities university-wide as we as a community explore the use of generative AI, progress and develop policy, and establish guidelines.
+The principles are presented with careful consideration of, and alignment with, the areas set forth in the university’s Learning and Teaching Strategy. These include growing our digital education capabilities and providing opportunities for discovery-based learning. We aim to do this while maintaining a supportive environment that fosters an increasingly diverse student community, ‘supporting staff and students to turn diverse backgrounds and cultures into an opportunity for mutual learning of different experiences and perspectives.’
+We intend to develop our approaches to teaching the competencies and skills associated with generative AI literacy, and to continue to define what it means to be a generative AI-literate learner as it relates to students and staff, including applications for lifelong learning.
+We support the idea that the use and application of generative AI will vary across academic disciplines and recognise the opportunities to learn from each other as we apply these principles. We will work collaboratively to identify, create and provide staff development opportunities related to applications of generative AI for learning, teaching, and assessment.
+The Principles
+The principles are underpinned by Imperial’s core Values. At Imperial, we take a proactive approach to generative AI. The Imperial Values and Behaviours Framework presents the opportunity to approach the use of generative AI thoughtfully and help us to develop sound approaches to ‘how’ we do things, as a critical part of ‘what’ we do. We can apply the core Values in the context of generative AI as follows:
+Respect - We value each other’s perspectives and encourage an environment where everyone can grow, pursue opportunities, and express their individuality, ensuring generative AI is used to empower, rather than diminish, individual experience, perspective and contributions.
+Collaboration - We work together to cultivate inclusive, impactful and community-driven generative AI applications and solutions.
+Excellence - We employ generative AI carefully to enhance our impact, making a positive difference and taking personal responsibility for its effective use, maintaining the highest level of quality in our work.
+Integrity - We act in a principled way with generative AI and inspire trust in our actions by using it responsibly, ethically, and transparently, while addressing challenges with honesty and openness.
+Innovation - We approach the opportunities that generative AI brings with an open mind, exploring new ideas and continuously adapting to its rapidly evolving potential, within a culture of innovation, as outlined in Imperial’s Science for Humanity Strategy. 
+The principles, below, are not intended to be exhaustive. They are indicative, providing a foundational outline for key areas of work related to our education remit.  
+The Principles - accordion
+Collapse all
+
+
+
+Promoting the critical use of generative AI in teaching, learning and assessment
+Take critical approaches to the selection, adoption and use of these tools, as well as their outputs.
+Recognise the limitations of generative AI tools and understand where use of the tools cannot and should not replace human skills and knowledge in teaching, learning and assessment.
+Encourage all in our community to consider appropriate, effective and responsible uses of generative AI in their own learning and to actively develop a mindset of continually evaluating and reflecting on their use of Gen AI as use cases and technologies change.
+Prioritise our understanding of how AI affects academic integrity standards, recognising that new challenges will arise, and that we will therefore need to adapt policy accordingly.
+Adopting a consistent ethical approach to the use of generative AI
+Adopt transparent processes in evaluating and sharing how generative AI tools are integrated, used, and maintained across the university.
+Proactively address equity related to the adoption and use of generative AI tools and remain open to feedback from our community on these issues.
+Engage in regular assessments of the carbon footprint associated with generative AI tools used across the institution and aim to reduce it through sustainable technology practices.
+Commit to regular reviews of generative AI accessibility for all students and staff, ensuring inclusive access to generative AI tools and that any identified gaps are promptly addressed.
+Building a proactive research community around the use of generative AI
+Develop our capacity to undertake research in the use and impact of generative AI in education.
+Work collaboratively to share best practices and to contribute to ongoing research in AI applications in education.
+Partner with students to evaluate the impact of the use of generative AI in education.
+The principles have been adapted from the Russell Group Principles on the use of generative AI in education, published 2023. They were drafted by the AI Futurists, in consultation with the AI Tools in Teaching and Assessment Working Party and the Centre for Academic English. The principles will be revisited and updated regularly.
+
+FAQs
+Generative AI and Study Guidance Hub
+Generative AI Principles
+Frequently Asked Questions
+Collapse all
+
+
+
+
+
+
+
+
+
+
+
+What’s the main thing I need to know before I use generative AI?
+Generative AI is not conscious or intelligent. It is a predictive text machine. This means that the outputs from AI may be inaccurate, off-topic, superficial, or illogical.
+There are consequences of this:
+Users need disciplinary knowledge to evaluate the outputs of AI platforms.
+The AI output will be unsatisfactory for tasks requiring human judgment.
+The AI output might not include accurate sources or references. You will likely have to manually insert or check these. You can find out more about accurate referencing by browsing the Library’s generative AI guidance.
+What can generative AI offer me as a student?
+Here is a list of examples of AI use, published by Open AI. These examples do not directly reference tasks such as essay or general text generation, a well-known function of large language models. If you would like to use generative AI for these purposes, it is important you stay informed of the latest developments with the particular platforms you regularly use.
+If you are ever in doubt about your use of AI platforms, please check in with teaching staff on your programme. As understanding of AI spreads across the university, it becomes likelier and likelier that such conversations will provide you with a framework to follow best practice at all times.
+How do users generate responses from generative AI?
+The user inputs a prompt into the model, leading to the model offering a response.
+A good example is shown with Prompt part 1 on the website of educationalist Philippa Hardman. In this example, the user inputs a Role, then a Task, then an Instruction. The user can then enter further prompts to obtain a refined or extended output.
+As an Imperial student you already have access to a platform in which you can try out prompts – Microsoft Copilot. You can find out more by visiting our ICT guidance webpages.
+Where can I learn more about prompting?
+There are many free short courses on the internet. You can browse a quick introduction to prompting on YouTube. The most practical advice is provided between 15’39 and 37’00.
+See also: ‘How to Write an Effective Prompt in ChatGPT’ within the LinkedIn Learning resource ‘How to Research & Write Using Generative AI Tools. ‘
+Imperial is also exploring whether we might develop our own short online courses on fundamental skills such as prompting, to support you to use AI responsibly and effectively.
+How can generative AI be used to search for information on a particular topic?
+It is crucial to understand that all AI tools are continually evolving and may sound confident and persuasive even when presenting inaccurate information. This phenomenon has been well-documented and is known as AI hallucination.
+If the topic is part of established academic understanding (e.g., physiology in Medicine) try using ChatGPT or Claude. You will need to fact-check what is being stated. Both tools are best used as a sounding board to explore new topics.
+If the topic is on a current topic, try using Perplexity. Because it cites its information (often from multiple sources), it is very easy to fact-check the provided information. Tools like Perplexity could be used like a search engine. Note that citations are from the wider internet and not limited to scientific literature.
+If the topic is on a research area, try using Scispace or Scite. Both tools enlist relevant papers to the search query. In our testing, both tools have often missed out enlisting seminal papers. However, they can be a reasonable starting point.
+Scispace additionally summarises the enlisted papers from multiple perspectives. For example – methods used, limitations, practical implications etc. Note that the summaries are often over-simplified to be of value. Scite additionally has a widget that lists how many papers in the literature are in support or in opposition to an enlisted paper.
+You can find out more about using AI as an information source by browsing the Library’s generative AI guidance.
+How could I use generative AI to summarise a research article?
+Try uploading the PDF copy of the research article to Claude or SciSpace, and query the questions you want about the article. You can start by asking it to summarise the research article. You can then proceed to ask specific questions rele",Moderate,imperial
+"Guidance	for	working	with	Generative	AI	(“GenAI”)	in	your	studies	GenAI guidance for students. The technology, ethics and use of AI is a fast-moving area. This guidance is current as of October 2024 and will be reviewed by 30th June 2025. University	position	on	GenAI	There is currently a lot of interest in Generative AI (GenAI) systems (e.g. ChatGPT, DALL-E, Microsoft Copilot, Claude, LLama, Grammarly Pro and Google Gemini). We recognise that developing skills in the responsible use of AI is important for you and will be an important part of your future life and work. We want to help you understand how GenAI may be used to support and aid your learning, research and assessments, while making you aware of the limitations and risks. All University of Edinburgh students have free access to ELM (Edinburgh (access to) Language Models), the University’s AI access and innovation platform, offering you a gateway to safer access to GenAI. ELM provides some key benefits over accessing AI through other methods. We would encourage you to use ELM over other similar tools because: 1. You can access a wider range of AI Large Language models through ELM including the very latest and most powerful versions of ChatGPT as well as, coming soon, Open Source LLMs. 2. Your data is secure and will not be retained by third party services to train their models or for any other purpose. The University has a Zero Data Retention agreement with OpenAI which assures that your data is secure and private. All your chat histories and your document downloads are kept private to you on your instance of ELM. 3. It is free to use for all staff and students, providing the same access for all. 4. You can innovate on top of ELM by writing your own AI applications through our API. 
+5. ELM is fully supported by the University through your local IT teams, EdHelp and the IS Helpline. How to get started with ELM Golden	rules	for	GenAI	use	When using any GenAI tool there are a few golden rules. By following these points, you will be able to benefit from using GenAI while also reducing the likelihood of engaging in academic misconduct. 1. Learn, don’t copy: Use GenAI to aid your learning, but never copy-paste any GenAI outputs into your own assessed work. Doing so constitutes academic misconduct. 2. Ask if uncertain: Always consult your Course Organiser if you are unclear about the use of GenAI in your assessed work. Some assessed work may encourage GenAI use, while others may impose restrictions. 3. Credit use of tools: Before handing in your assessed work, make sure you acknowledge the use of GenAI, where used. 4. Protect personal data: Avoid uploading personal data - yours or anyone else’s - to a GenAI platform, unless you are using the University’s secure platform, ELM, and complying with the University's data protection policy.  5. Respect copyrights: Never upload copyrighted materials to a GenAI platform without authorization from the copyright owner. If you are using the University’s secure platform, ELM, ensure you have the right to use the material for that purpose.   6. Verify facts: Always check GenAI output for factual accuracy, including references and citations. 7. Diversify sources: Never rely solely on GenAI; it should supplement, but not replace, traditional sources. University’s data protection policy. Acceptable	uses	of	GenAI	GenAI	and	reasonable	adjustments	Please note, guidance on acceptable uses of GenAI does not preclude the use of AI tools where they are being used in the context of a reasonable adjustment. Disabled students should register with the Disability and Learning Support 
+Service in order to put in place a Schedule of Adjustments (a list of modifications to how you experience your teaching, learning and research). Disability and Learning Support Service Before using GenAI in any assessed work, please check whether there are any restrictions. This should be mentioned in the assessment task. If not, then ask your Course Organiser. Some assessments may explicitly ask you to work with AI tools and to analyse and critique the content it generates. Other assessments may specify, for good reason, that AI tools should not be used in particular ways. Please also make sure that you follow the University’s Guidance on Proofreading of Students Assessments when using GenAI for proofreading, editing and/or translation. You will never be asked to pay to use external GenAI tools. Some of the positive, and generally acceptable, ways GenAI might be used include: • Brainstorming ideas through prompts • Getting explanations of difficult ideas, questions and concepts • Self-tutoring through conversation with the GenAI tool • Creating practice questions and self-tests • Organising and summarising your notes • Planning and structuring your writing • Summarising a text, article or book (Check first that the copyright owner permits use of GenAI for this purpose) • Helping to improve your grammar, spelling, and writing (Check for restrictions where use of language is specified as an integral part of the assessment). • Translation of texts in other languages (Check for restrictions where translation is the purpose of an assessment) • Overcoming writer’s block through dialogue with the GenAI tool • Help with writing, de-bugging code and logical reasoning 
+(check for restrictions where this is a core skill to be demonstrated in an assessment) How to use ELM with prompts  Will	I	be	penalised	for	using	GenAI	in	my	assessed	work?	You will not be penalised for using GenAI, as long as you are working within the acceptable uses of GenAI outlined, and you are adhering to any other restrictions that have been specified for a particular assessment. Please bear in mind, though, that use of GenAI carries a number of risks and limitations (outlined below) that could impact the quality of your work and, ultimately, the grade you may receive.  While you may use GenAI to aid your learning, you may be required (e.g. in an exam or other assessment) to demonstrate your abilities without the aid of such tools. Citing	and	acknowledging	the	use	of	GenAI	Where GenAI is used, it is important to be transparent about how you have used it and what content has been generated from it. You should acknowledge all use of generative AI tools to help with any aspect of planning, writing or creating your assignment. Your acknowledgement should include: • Name and version (if included) of the GenAI system used; e.g. ELM; ChatGPT-3.5 • Publisher (the company that made the GenAI system); e.g. University of Edinburgh, EDINA; OpenAI • URL of the GenAI system (for example ELM and ChatGPT)  • Brief description (single sentence) of context in which the tool was used. Example	of	citing	your	use	of	GenAI	ELM (University of Edinburgh, EDINA) was used to suggest a structure for the report and to suggest improvements to the grammar and spelling of the finished report. Check your assessment guidelines or check with your lecturer/supervisor about where the acknowledgment needs to be within your assignment. 
+If you use content generated by an AI tool within your work, for example, an AI-generated image or text from an AI chatbot, you will need to reference it in a similar way to referencing other information sources. This means including an in-text citation or footnote in the body of your work and a corresponding reference in a reference list or bibliography. The Library’s guide to using generative AI tools in academic work provides information on how to reference AI tools in a variety of referencing styles.  Further requirements regarding acknowledging the use of GenAI may be stipulated for particular assessments. These should be made clear in assessment tasks. If you are unsure, please check with Course Organisers/Lecturers. You may be asked to include the following additional information in an appendix: • The prompts used to generate material from a GenAI tool • The date the output was generated • The output obtained/or an extract of the output obtained • How the output was used, edited or incorporated into a piece of work (e.g. in the case of proof-reading by including a tracked-changes document). Risks	of	over-reliance	on	GenAI	While fully AI-generated outputs can seem impressive on the surface, they can often contain factual errors, lack nuance, critical engagement, and depth of expression and understanding. Importantly, overreliance on AI tools simply to generate written content, software code or analysis reduces your opportunity to develop and practice key skills (e.g. writing, critical thinking, evaluation, analysis, coding, reasoning). These are all important aspects of your learning at university and will continue to be required in your working life. Written work is a key way of demonstrating critical thinking and deep engagement with your course material, much of which happens during the process of writing. Relying on AI-generated output will prevent you from developing the skills you acquire when you are doing it yourself. A vital aspect of your learning at university is about developing these advanced skills, learning how to think and build an argument through writing. GenAI is no substitute for this. 
+While GenAI can be useful for some tasks, it is essential that you are aware of its many limitations that include the following: • GenAI tools are language machines rather than databases of knowledge – they work by predicting the next plausible word, image, or snippet of programming code from patterns that have been ‘learnt’ from large data sets. • They have no understanding of what they generate. • The datasets that such tools are learning from are flawed and contain inaccuracies, biases, and limitations.  • They generate text that is not always factually correct. A knowledgeable human must check the output. • GenAI can create software/code that has security flaws and bugs. Often the code or calculation produced by AI will look plausible but contains errors in detailed working on closer ",Restrictive,edinburgh university
+"Regulation No. 80 of the Rector of the Jagiellonian University of 7th July 2023 on: the use of artificial intelligence-based tools in education On the basis of Article 23 (1) of the act of 20 July 2018 – Law on higher education and science (Polish Journal of Laws of 2023 item 742, as amended) I hereby order the following: § 1 The regulation defines the rules for the use of artificial intelligence-based tools in education. § 2 Artificial intelligence, hereinafter referred to as ""AI,"" means the ability of a digital computer or computer-controlled robot to perform tasks commonly attributed to intelligent living beings, especially skills such as pattern recognition, data analysis, and decision-making. § 3 The use of AI can lead to threats in the following areas: 1) 2) 3) 4) 5) Intellectual independence and critical thinking – excessive reliance on AI by individuals studying at Jagiellonian University can lead to a lack of development in problem-solving skills, critical thinking, and creativity. Plagiarism and improper use of resources – AI tools, such as text generators, can create essays and research papers that may be incorrectly considered the work of individuals studying at Jagiellonian University, raising questions about the authenticity of the work and leading to plagiarism. It should be emphasized that only individuals studying at Jagiellonian University bear the consequences of using AI tools. Privacy and data security – the use of AI tools often involves the need to input data that may contain confidential information. If this data is not adequately protected, it can lead to privacy breaches. Ethics and responsibility – AI can be used to manipulate data, create inappropriate content, or mislead others. Technology addiction – excessive use of AI tools can lead to technology addiction, negatively impacting concentration, interpersonal communication, and a healthy and balanced lifestyle. § 4 An instructor conducting educational activities at Jagiellonian University should: 1) 2) Define transparent rules for the use of AI in their classes. Raise awareness among participants about potential threats associated with AI as mentioned in § 3.3) 4) Implement appropriate methods and forms of assessments and examinations, including diploma exams, that allow for proper verification of learning outcomes and independent work of students. Promote discussions on ethical and legal issues related to the use of AI, particularly those concerning the protection of personal data, copyright protection, disciplinary responsibility, ethics in scientific research, distortion of human behavior, discrimination, manipulation, and social control. § 5 Individuals studying at Jagiellonian University should: 1) 2) Respect the rules established by instructors. Consciously use AI, taking into account potential risks as well as ethical and legal issues. 3) When using AI, indicate which content was prepared with the use of AI tools. § 6 Individuals who misuse AI in violation of the rules outlined in this regulation, particularly by misleading others about the authorship of work, are subject to disciplinary responsibility in accordance with separate regulations. § 7 This regulation comes into effect upon signing.  
+",Restrictive,jagiellonian university
+"Support | Engage | Innovate
+ University Guidance on  the use of
+Generative Artificial 
+Intelligence by 
+students and staff, in 
+learning, teaching, and
+assessment 
+A cademic Year  2024/2025
+Authors:
+Dr Ceri Coulby, Dr Sam Saunders & Dr Claire Ellison | Date: February 2024
+Revised 2024, by Prof David Webster, Gordon Sandison, 
+Rob Lindsay, Dr Sam Saunders, Dr Claire Ellison &
+Richard McKenna
+Contents
+2
+Introduction 3
+Data Protection Policy and Your Responsibility  4
+Generative AI and Copyright  5
+Acceptable Uses of GenAI Tools  5
+Unacceptable Uses of GenAI Tools  7
+Poor Academic Practice  8
+Academic Misuse of GenAI Tools  9
+Referencing GenAI Tools 9
+Further Information/Contact 10
+Introduction
+3
+Generative Artificial Intelligence (GenAI) tools are software applications that create content 
+in any form (including but not limited to text, graphs, data, code, images, audio, and video) 
+automatically based on the prompt entered by the user. Examples include, but are not 
+limited to, OpenAI’s ChatGPT, Google Bard/Gemini, Microsoft’s Bing Chat/Copilot, DALL-E (and 
+DALL-E2/3), and Perplexity.ai. 
+Artificial intelligence tools are rapidly developing and increasingly becoming embedded into 
+everyday activities across personal and professional contexts. To ensure our graduates have 
+the skills and experience they will need in their future careers, the University of Liverpool seeks 
+to incorporate the technology in their pedagogical approach. However, it is also vital that 
+such technology is used ethically and does not undermine academic integrity principles.  
+To help students and staff to use such technologies appropriately, the University has 
+developed this guidance on acceptable and unacceptable uses of GenAI and AI (Artificial 
+Intelligence) technology and its appropriate citation. This guidance is designed to be applied 
+alongside Appendix L of the Code of Practice on Assessment (CoPA), which supersedes this 
+guidance in regulatory terms. This guidance also serves as the University’s default position 
+on usage. If module or programme/course component leaders wish students to use GenAI 
+as part of an assessment, students will be informed of this specifically in module materials 
+and assignment briefs. In these cases, specific guidance will be provided in the assignment 
+brief on what constitutes appropriate use of the GenAI tools and how the work from such tools 
+should be cited. 
+The underlying philosophy and/or ethos surrounding the use of Generative AI at the University 
+of Liverpool is one of promoting literacy around the technology in both students and staff, 
+and using the technology as openly, honestly, and transparently as possible. This ensures that 
+any engagement with the technology is in line with both the Liverpool Curriculum Framework 
+(LCF) - which promotes ‘Digital Fluency’ as a Graduate Attribute – and Strategy 2031, which 
+states that the university will work to integrate AI into its practice(s). An outright ban on 
+the use of the technology, therefore, contravenes both requirements, in addition to being 
+impossible to enforce.
+4
+In general, therefore, the guiding principle(s) of the use of Generative AI that should inform all 
+practice is that 
+1. Both students and staff should openly discuss, experiment with, and engage with the 
+technology in discursive ways where possible, to help improve general understanding of 
+its capabilities, functionalities, limitations, and problems/biases.
+2. Any use of the technology in either an assessment or any other context should always 
+be declared and evaluated/reflected on, and if necessary, cited and referenced. 
+Citations and references to AI should follow the same process as if referencing or citing 
+an academic source. This goes for both staff and students – for example, students can 
+be asked to declare their use of GenAI on an assessment cover sheet, while staff should 
+make it clear on their teaching materials where and how GenAI has been used to help 
+create them.  
+3. The technology is not used as a substitute for original thought, independent research, and 
+the production of original work. Rather, it is used to support these processes.  
+That said, the university recognises that there are some situations where the use of 
+Generative AI is simply unacceptable and will attract sanctions under Appendix L of the Code 
+of Practice on Assessment (CoPA). This guidance provides some steerage on what that 
+unacceptable use of Generative AI looks like and should be consulted in line with the relevant 
+sections of CoPA that deal with academic integrity.   
+Data Protection Policy and Your Responsibility 
+Students and Staff interacting with GAI systems bear responsibilities for ensuring the 
+Universities Data Protection Policy is followed.  
+The UK General Data Protection Regulation (GDPR) and Data Protection Act (DPA) 2018 
+emphasise the importance of not submitting sensitive or personal data unless necessary and 
+appropriate measures are in place. Users should be aware of the information they provide to 
+AI systems and avoid sharing personally identifiable information, sensitive data, or any other 
+data that could potentially violate privacy rights or lead to unethical use.
+5
+Generative AI and Copyright 
+Understanding the legal aspects of how copyright operates in the context of Generative AI 
+is central to supporting staff and students to become more Generative AI literate and to 
+mitigate the risks. 
+Staff and students must ensure that they are aware of the intellectual property and copyright 
+concerns that might arise when using Generative AI tools. These are outlined by the UK 
+National Centre for AI at: ‘An introduction to copyright law and practice in education, and the 
+concerns arising in the context of GenerativeAI’ 
+Additional guidance can also be found on the Library website pages on copyright.
+Acceptable Uses of GenAI Tools 
+In general, using GenAI tools for preparatory research work for an assignment is considered 
+acceptable practice, however such tools should never be the only source of information 
+used. GenAI tools are not academic sources; they do not produce fact-checked content, and 
+they can, and often do, reproduce inherent biases in provision of information, and they often 
+do not accurately state the sources from which the content provided has been gathered. It 
+is therefore vital that students use academic and trusted disciplinary-specific sources when 
+developing their work. None of the content generated by AI should be used in submitted work 
+unless it is quoted and referenced as such.   
+AI is at its best when it is used to help synthesise ideas, so that users are in a better position to 
+write an assignment. It may be helpful for students to consider GenAI tools in a similar light to 
+Wikipedia: as a source of information, but not always a reliable one.
+6
+See some potentially acceptable uses of GenAI here. Please note, this list is not exhaustive 
+and is indicative only
+• Initial research into a topic, idea, or concept to gain an overview for example: “what are 
+the main ethical concerns for students when using generative artificial intelligence tools?” 
+• Identifying/summarising core concepts or viewpoints in a particular disciplinary area for 
+example “what were the prevalent influences on 19th century writers?” or “what are some 
+alternative explanations to string theory?”
+• Summarising texts- Sections of text can be pasted into a GenAI tool and it asked it to 
+summarise the content. This is especially useful if you are unsure that you understand 
+what the key message or concept in a piece of text is. 
+• It is important to note that summaries cannot be pasted into work for assessment 
+purposes unless they are being used as short quotations for a specific purpose. These 
+quotations must be appropriately cited and the correct referencing conventions in the 
+subject area used.
+• Taking notes during group work discussions
+• Getting ideas on how to present work
+• Organising work
+• Formatting a reference list
+It is also possible to use GenAI tools for proof reading and self-assessment (i.e. to get 
+feedback on your work prior to submission), as deemed acceptable according to section 
+2.4 of the University’s Academic Integrity Policy (Code of Practice on Assessment, Appendix 
+L) - however, it is not clear what happens to the data submitted to Generative Artificial 
+Intelligence Tools, and so caution must be exercised. If work uploaded to GenAI platforms is 
+used to train the dataset from which it creates new responses for others, your work might be 
+used in another’s work, thereby risking plagiarism.  
+Therefore, students should not upload their work to sites that do not have clear privacy 
+policies and opt outs. Equally, it is not permissible to upload any personal or sensitive data, 
+or university materials (e.g. lecture slides, teaching content, etc.) onto these systems 
+without permission. 
+7
+Unacceptable Uses of GenAI Tools 
+The unacceptable use of Generative AI software broadly falls in line with other examples of 
+academic misconduct that exist outside of the GenAI space. Students using the technology 
+to simply circumvent the requirements of an assessment or using it to create entire 
+assessments that they then disguise as their own original work is not acceptable. The 
+requirement to declare, cite, reference and reflect on the use of Generative AI is designed to 
+prevent students from simply using the technology to create assessments that they 
+then claim as their own, and a student that refuses to declare how they have used the 
+technology, does not cite it, reference it or reflect on its outputs may be attempting to hide 
+the fact that the work is not their own. 
+Some examples of misuse of Generative AI may include, but are not necessarily limited to:  
+• Students generating an entire assignment submission and passing it off as their own
+work.
+• Submitting content generated by Generative AI tools without appropriate and cor",Moderate,guidance
+"Generative AI Policy Guidance Main content start Guidance adopted on February 16, 2023    Honor Code Implications of Generative AI Tools The Board on Conduct Affairs (BCA) has been asked to address the Honor Code implications of generative AI tools such as ChatGPT, Bard, DALL-E, and Stable Diffusion. These are novel tools, and both students and instructors have been experimenting with their use in academic settings.   While these tools have applications that foster student learning and understanding, these tools can also be used in ways that bypass key learning objectives. To give sufficient space for instructors to explore uses of generative AI tools in their courses, and to set clear guidelines to students about what uses are and are not consistent with the Stanford Honor Code, the BCA has set forth the following policy guidance regarding generative AI in the context of coursework: Absent a clear statement from a course instructor, use of or consultation with generative AI shall be treated analogously to assistance from another person. In particular, using generative AI tools to substantially complete an assignment or exam (e.g. by entering exam or assignment questions) is not permitted. Students should acknowledge the use of generative AI (other than incidental use) and default to disclosing such assistance when in doubt. 
+
+Individual course instructors are free to set their own policies regulating the use of generative AI tools in their courses, including allowing or disallowing some or all uses of such tools. Course instructors should set such policies in their course syllabi and clearly communicate such policies to students. Students who are unsure of policies regarding generative AI tools are encouraged to ask their instructors for clarification. The BCA will continue to monitor developments in these tools and their use in academic settings and may update this guidance. Members of the community are encouraged to contact the BCA to provide input, suggestions, and comments on this policy. NOTE: As part of the BCA’s guidance on clear communication of a course’s generative AI policy, OCS recommends course instructors provide clear advance notice that they may use detection software to review work submitted for use of generative AI.   
+",Permissive,stanford
+"    
+ 
+Student Academic Misconduct Policy 
+ 
+A Scope 
+ 
+A1 This guidance relates to suspected cases of student academic 
+misconduct. Matters pertaining to student conduct of a non-academic 
+nature are covered by the Student Conduct and Discipline Code. 
+Cases relating to Post Graduate Research Misconduct are not 
+considered under this procedure. 
+ 
+A2 Where there is overlap within a particular case of student conduct and 
+academic misconduct precise arrangements shall be determined by the 
+Deputy Vice-Chancellor following the principles set out in the respective 
+procedures. Such arrangements will be communicated to the student(s) 
+and staff concerned. 
+ 
+A3  These procedures will provide a framework for the investigation of 
+breaches of acceptable academic conduct to ensure that they are 
+treated equitably, without bias and in a fair and transparent manner. It 
+is not intended to be exhaustive, and it is impossible to provide for all 
+conceivable instances of misconduct within such a procedure. The 
+overall aim of the policy and procedure is to ensure that all students are 
+treated in an equitable manner and that no advantage is provided to 
+students who act without integrity or due diligence in their studies. 
+ 
+A4  The guide is one strand of Leeds Trinity’s approach to Academic 
+Integrity and is one which is invoked at the end of the assessment 
+process. However, even at the point of imposing a penalty for 
+misconduct, the underlying aim is to support learning and educate the 
+student on acceptable academic practice and to communicate what is 
+expected of Leeds Trinity University students and graduates. 
+ 
+B Definitions 
+ 
+B1. Academic Integrity 
+ 
+Rooted in its Catholic foundation, Leeds Trinity is a diverse and inclusive 
+University welcoming students from all backgrounds and beliefs which exists 
+to provide a transformational educational experience, forming students and 
+learners whose lives will flourish and find wholeness in their work and world 
+(Strategic Plan 2021 – 2026). The University therefore expects its staff and 
+students to act with personal integrity, self-discipline and respect for others in 
+their personal, professional and academic conduct. 
+Academic Integrity refers to scholarship conducted in an open, honest and 
+responsible manner. All scholarly activity builds upon the work of others and is 
+subject to scrutiny. Students are expected to show respect for the intellectual 
+November 2023 
+property of the people who have helped them develop their own ideas by 
+always attributing and acknowledging source material. 
+Leeds Trinity University students will be supported in a process of authentic 
+learning and graduates will be able to demonstrate independent thought and 
+analysis which enables the University to uphold the academic standards of its 
+awards and the value of its degrees. It is the responsibility of the student to 
+ensure that their work conforms to academic integrity.  
+ 
+B2 Academic Misconduct 
+Academic Misconduct encompasses all kinds of academic dishonesty, 
+whether deliberate or unintentional, which infringes the integrity of the 
+University’s assessment procedures. Any suspected instance of misconduct 
+will be investigated following the procedures in section C below. Below is a list 
+of the most common forms of academic misconduct, however, this list is not 
+exhaustive and occurrences of other types of suspected misconduct may be 
+investigated under these procedures. 
+November 2023 
+B2.1  Poor Scholarship1 
+Poor Scholarship is characterised as limited or inadequate technical 
+skills or adherence to academic conventions, whether through 
+negligence or lack of understanding. It is a student’s responsibility to 
+ensure that they fully understand the academic conventions described 
+in programme material, such as appropriate referencing system and 
+use of quotation marks and make use of the support that is available. 
+ 
+Failure to properly attribute the work of others may be regarded as 
+plagiarism. 
+ 
+B2.2  Reuse of material/Self-Plagiarism 
+Work submitted for each assessment must be a new, original piece of 
+work produced specifically for the assignment. Any repurposing of a 
+student’s own material must be explicitly acknowledged and referenced 
+and must show how ideas or concepts have been developed in the new 
+work. Reproducing passages verbatim should be avoided and any self-
+citations should be clearly identified. Failure to do so will be regarded 
+as an attempt to mislead the examiner and will not be considered when 
+marking the assessment. 
+ 
+If the student is required to revise and resubmit an assignment for a 
+resit attempt, this would not be classed as self-plagiarism and should 
+not be reported as a case of misconduct.  
+ 
+B2.3  Plagiarism 
+Plagiarism is a form of cheating which involves presenting another 
+person’s ideas or expressions without acknowledging the source. By not 
+referencing the source properly, paraphrasing it without 
+acknowledgement or by omitting the reference, the true origin of the 
+material is hidden from the marker. Any work submitted for 
+assessment, unless collaborative work has been specifically permitted 
+in the assignment guidelines, must be the individual student’s own 
+work. All passages quoted must be in quotation marks, and as such, 
+quotations and any passages which are paraphrased must be properly 
+attributed to the author(s). The University provides clear guidance on 
+academic writing skills and ignorance on the part of the student will not 
+be accepted as a defence in a case of plagiarism. 
+ 
+Plagiarism may take the form of direct copying (verbatim), reproducing 
+or paraphrasing ideas, sentences, drawings, or graphs, as well as 
+material from the internet or any other source and submitting them 
+without appropriate acknowledgement. Plagiarism can also relate to 
+work submitted in another language, which relates to copying the 
+translated material, copying and rearranging the material as well as 
+taking ideas and findings without proper attribution. The use of word 
+spinners is also considered plagiarism. 
+ 
+1 Also see section F.3 – Guidance Notes on Case Handling B2.1  
+November 2023 
+ 
+B2.4  Contract Cheating/Commissioning2 
+Contract cheating is where a student either commissions a third party, 
+for example an essay mill or friend or family member or uses Artificial 
+Intelligence
+3 to complete an assignment for them to submit as their own 
+work. This is not an exhaustive list. Students who commission or 
+purchase work or uses AI to complete their work which they then 
+present as their own, will be considered as breaching the Academic 
+Regulations. Unless you are explicitly informed by your Module Tutor to 
+use AI, use of AI is a breach of the Academic Misconduct Policy. 
+ 
+ 
+Any student who offers to commission or completes work for other 
+students, either at the University or Partner Institutes will be 
+investigated under this category of misconduct as this is a breach of 
+the regulations.  
+ 
+B2.5  Collusion4 
+Students who take part in unauthorised or illicit collaboration with 
+others will be regarded as having colluded regardless of whether any 
+advantage was gained or enabled for any parties involved. Collusion 
+undermines the academic integrity of assessments that are designed to 
+test an individual student’s abilities and understanding. 
+ 
+Students may not lend work which has been submitted for an 
+assessment to another student. This includes former students. 
+Students should treat their work as their own academic property, and it 
+is a student’s responsibility to protect their own work. Students should 
+also ensure that electronic copies of their work are stored securely and 
+cannot be copied or stolen by another person. Sanctions will normally be 
+applied to all students involved in cases of collusion. 
+ 
+B2.6  Fabrication and falsification 
+Any student found to have made up data or other such content, or to 
+have manipulated content or tampered with documentation will be 
+regarded as having fabricated/falsified material. This includes the 
+content of work submitted for assessment and records or 
+documentation associated with academic progress, such as entry 
+statements or qualifications, false claims for exemption or mitigating, 
+misrepresentation of a word count, falsifying references or contribution 
+to a group assessment. 
+ 
+In some cases, fabricated/falsified material may also be deemed to be 
+professional misconduct, for example in relation to teaching or 
+journalism. For further information, please see the Professional 
+ 
+2 The Process of undertaking Viva Voces is in F5  
+3 Generative Artificial Intelligence are online tools which can generate data, texts, images , coding and sounds. Both Staff and 
+Students should be aware of the University’s position of the use of AI. Further information for Staff can be found via the CELT Intranet 
+Page or from the Academic Partnership Unit. Students should discuss this with their Module/Personal Tutors.  
+4 Also see section F.4 – Guidance Notes on Case Handling  
+November 2023 
+Misconduct Policy. 
+ 
+B2.7  Research Misconduct 
+All research which contributes to the assessment of taught 
+programmes must be conducted in an ethical and responsible manner. 
+This includes requirements to secure ethical approval prior to the 
+commencement of primary research, the conduct of the research, the 
+relationship and dealings with participants and proper handling of data. 
+ 
+Research Integrity is considered in cases of research misconduct and 
+refers to data collection and secondary research (e.g., Literature 
+Reviews) conducted in an open, honest and responsible manner. 
+ 
+B2.8  Impersonation 
+Any student found to be assuming the identity of a third party or where 
+a student is impersonated by another person, to gain or enable access 
+or advantage will be deemed guilty of impersonation. 
+ 
+B2.9  Cheating in an examination 
+Any breach of the examination procedure which compromises the 
+integr",Restrictive,leeds trinity university
+" 
+1 
+ 
+Guidance on the use of AI in Assessments 2022-23 
+ 
+Introduction 
+The goal of this document is to provide guidance on how we can effectively integrate 
+or manage the use of generative AI in our assessments.  Generative AI is a type of 
+Artificial Intelligence that generates new outputs such as images, audio, or text 
+based on learned patterns and inputs. 
+The Quality Assurance Agency has recently produced a briefing paper on the threat 
+to academic integrity posed by AI, which is available on the QAA website.  The 
+briefing paper provides background on AI software tools, as well as the potential 
+implications for academic standards and actions that providers can take.  It is 
+important to stress that a blanket ban on generative AI is not viable. Instead, we 
+need to focus on responsible usage by staff and students and associated ethical 
+considerations to ensure the safe and productive deployment of this technology.  
+This requires a consideration of how to use AI in an ethical, responsible, and 
+appropriate manner that considers fairness and transparency. This is particularly 
+important as the text created through generative AI tools may not be text-matched 
+through tools such as Turnitin. This is because the text created by AI tools is original.  
+The challenge of preserving academic integrity is not a new problem and the 
+introduction of generative AIs will not change the fundamental challenges that face 
+educators.  To effectively prevent cheating, it is essential to address its root causes.  
+Research shows this can be achieved by promoting a strong culture of academic 
+integrity that emphasises the importance of honesty and integrity.  Our ultimate 
+objective is to prepare students for the dynamic and evolving job market of the 
+future. 
+ 
+Context 
+Much of the work undertaken across the HE sector in recent weeks has shown that 
+AI tools and their outputs vary.  Essentially the quality of the response from a 
+generative AI tool will depend on the quality and extent of the training material.  
+Where this is limited, then the responses will tend to be bland/generic, lack critical 
+analysis, and so on.  However, the inverse is also true and where the training data is 
+good, then the ability to answer diverse/complex questions on those topics is likely to 
+be broadly good as well. 
+ 
+Advice for Staff 
+As such our advice to staff is to be clear with students as to what you regard as a 
+permissible use of AI in any given assignment and outline how its inclusion or use 
+should be acknowledged. To do this consider: 
+• Having open and transparent discussions with students regarding the 
+acceptable and unacceptable use of AI in assessments.  This should include 
+ 
+2 
+ 
+explicit instructions on what constitutes appropriate use, such as the production of 
+original work.  Students should be required to acknowledge requirements through a 
+declaration of integrity form and be informed that any unacceptable use of AI will be 
+considered academic misconduct. 
+• Review how generative AI might enhance student learning through the assessment. 
+For example, the AI could be used to analyse and summarise relevant materials, 
+provide a draft structure or starting point, or otherwise free up time for students to 
+focus on other critical aspects of their learning such as evaluation, synthesis, critical 
+thinking, or reflection.  
+• Have a conversation with students around data privacy.  One of the key ways in 
+which many AI tools learn is through processing larger data sets.  When you register 
+with an AI tool you may be required to provide permission that any submitted data 
+and any interactions with the AI can be used to improve future versions. 
+ 
+When is it appropriate for students to use AI? 
+There are a number of assessment situations where AI can be used, for example: 
+• When it is approved for use and is part of the assessment process. 
+• For revision of a course or other materials. 
+• When the use of AI in an assignment has been referenced appropriately and 
+is allowed as part of the resources drawn upon to create an assessment. 
+• As a tool for refining writing. 
+ 
+How might you adapt assessments for students? 
+There are a number of steps that you can take to make assessments more robust: 
+• Shifting the assessment from recall of knowledge to real world application, for 
+example the requirement to include current events, research and activities.  
+• Asking students to provide an annotated bibliography to demonstrate sources 
+of evidence used. 
+• Citation presents a problem because AI is neither an author nor a source of 
+information, but a writing aid. It would be more useful for staff to know how the 
+tool was used in the writing process. Staff could provide direction or guidance 
+on acceptable references or sources of referencing for the assessment and 
+provide more explicit guidance on acceptable source material. 
+• Include the use of reflective responses that build in personal insight.  AI tools 
+are far less useful in this context. 
+• Request a critique of already written responses (including AI). 
+In addition the following types of assessment are far harder for AI tools to create in a 
+meaningful manner: 
+• Reports on independent research activities. 
+• Creative outputs, both written and non-written. 
+ 
+3 
+ 
+• Adopting a particular moral or ethical stance. 
+• Progressive/reflective portfolio-style assignments that are built up over time. 
+• Interactive oral assessments. 
+• Programme-level or synoptic assessment. 
+• Analysis of images or videos. 
+• Video-based assessments. 
+Before amending any assessment, you can run it through a tool such as ChatGPT to 
+see what kind of answer it produces and adapt or amend your assessment as 
+necessary. 
+For certain types of assessment, for example those involving mathematical 
+application or coding, the above mitigations may be less relevant.  
+ 
+What if the assessment is already being undertaken by students? 
+• Require students to ""show their work"" by submitting drafts or notes or using 
+digital versioning (documents stored on a student’s OneDrive can provide a 
+record of changes made over time).  Such material can provide insight into the 
+steps students took to arrive at their final submission. 
+• Student declaration – the QAA suggest updating any existing student 
+declarations that accompany submissions for assessment so students certify that 
+it is their own work, all sources are correctly attributed and the contribution of any 
+AI technologies is fully acknowledged.  An immediate measure which the 
+University could adopt to support academic integrity would be to update the 
+student declaration for assessment to include the following: 
+I certify that that the submission is my own work, all sources are correctly 
+attributed, and the contribution of any AI technologies is fully acknowledged. 
+• The QAA also suggest that you communicate the value of integrity - discussing 
+with students how the advancement of knowledge has relied on integrity in both 
+research and academic practice and that progress is undermined by academic 
+misconduct.  This will help them understand the values that underpin their 
+discipline and make it clear about what constitutes academic misconduct and 
+why it has consequences. 
+ 
+Procedure for Dealing with Academic Offences 
+The University has in place Procedures for Dealing with Academic Offences, for 
+investigating allegations of academic offences and imposing penalties where such 
+an offence is found to have been committed. 
+The Procedures include a non-exhaustive list of academic offences at section 2, and 
+note that: 
+ 
+4 
+ 
+‘where the conduct of a student does not fit any of the following definitions, the 
+student may be found to have committed an academic offence if they have gained or 
+attempted to gain an unfair advantage or facilitated or attempted to facilitate another 
+student to do so.’ 
+One of the offences listed within section 2 is: 
+2.7 Contract Cheating: where a student commissions or seeks to commission 
+(either paid or unpaid) another individual to complete academic work on their behalf. 
+The use of AI falls under this definition, as a commissioning offence. For 
+completeness, and to ensure that the Procedures for Dealing with Academic 
+Offences include clear reference to the use of AI by students, the following 
+amendment is proposed to the definition of Contract Cheating: 
+2.7 Contract Cheating: where a student commissions or seeks to commission 
+(either paid or unpaid) another individual or artificial intelligence software tool to 
+complete academic work on their behalf. 
+Contract Cheating is deemed to be a major academic offence (section 1.11.3(v)), 
+and therefore the Procedure for Dealing with Major Offences should be followed 
+(Section 5), with an initial review of the evidence, and an investigation stage.  
+Specific provision is made for a short viva voce to be undertaken where a student is 
+suspected of contract cheating (section 5.2.1(vii)).  Following this, a decision on 
+whether the academic offence has been committed, is made. 
+Academic Affairs can assist and support colleagues in managing cases where 
+students may be in breach of the Procedures for Dealing with Academic Offences, 
+as a result of the use of AI within assessment.   
+ 
+",Moderate,2
+"Generative AI Policy Please note that this policy is a “work in progress” as the technology, the law and the Columbia community usage evolves. PURPOSE Columbia University is dedicated to advancing knowledge and learning, and embraces generative AI tools. The landscape of Generative AI is rapidly changing, and will change the way we teach, learn, and work. We encourage you to explore and experiment with these tools. The Office of the Provost has convened a working group of faculty and senior administrators from various parts of the University to develop policies and guidelines around the responsible use of these Generative AI tools (the ”AI Team”). We ask that you review this guidance on the responsible use of generative AI in your work and study at Columbia University. Based on our collective experience with Generative AI use at the University, we anticipate that this guidance will evolve and be updated regularly. Generative AI (or “AI”) tools such as OpenAI’s ChatGPT, Google’s Bard, Stability AI’s Stable Diffusion, and others, have captured the public’s imagination as these tools become widely available for everyday use. Generative AI tools have the capacity to expedite existing processes and make possible new ones. These tools also have the potential to foster student learning and advance many aspects of research and health care delivery. While the University supports the responsible use of AI, these novel tools have notable limitations and present new risks that must be taken into consideration when using these technologies. Two key attributes of these tools are the risk that an input could potentially become public, and the risk that the output may be biased, misleading, or inaccurate. There are risks related to information security, data privacy, copyright, and academic integrity and bias, for example: • if Generative AI is given access to personal information, the technology may not respect the privacy rights of individuals, including in a manner that may be required for compliance with applicable data protection laws; • if Generative AI is given access to confidential information or trade secrets, the University may lose its intellectual property (IP) rights to that information and the information may be disclosed to unauthorized 
+third parties through their independent use of the Generative AI technology; • Generative AI outputs may violate the intellectual property rights of others, and might not themselves be protected by intellectual property laws; • Generative AI outputs might be factually inaccurate, and we might be exposed to liability if we rely on those outputs without properly reviewing them; and • Generative AI may produce decisions that are biased, discriminatory, or otherwise inconsistent with our policies, or that are otherwise in violation of applicable law.  In this initial policy, Columbia University requires that any use of Generative AI be in a manner reflective of its inherent limitations and to avoid these limitations and other emerging risks to the University, its faculty, researchers, students and staff and other stakeholders. Because AI is a rapidly evolving technology, the University will continue to monitor developments and will consider responses from the University community. This initial policy contains overarching guidelines that apply to all in the Columbia community while pursuing their Columbia activities.  After these general requirements, the policy includes specific guidelines related to instruction (for both faculty and students) and research.   SCOPE This Generative AI policy (“Policy”) governs the use of Generative AI tools by staff, faculty, students, and researchers (the “Columbia community”) in the performance of their functions for or on behalf of Columbia. Because this Policy may be updated from time to time, Columbia community members are encouraged to regularly review the most recent version of this Policy. Constructive comments from Columbia community members may be submitted here: AIpolicy@columbia.edu   DEFINITIONS • “Confidential Information” means any business or technical information or research result belonging to Columbia, a Columbia community member, collaborators or other third parties, that is not publicly known or that has been provided or received under an obligation to maintain the information as confidential. Please note this 
+includes Protected Health Information or PHI. (see also the Information Security Charter)  • “Generative AI” includes any machine-based tool designed to consider user questions, prompts, and other inputs (e.g., text, images, videos) to generate a human-like output (e.g., a response to a question, a written document, software code, or a product design). Generative AI includes both standalone offerings such as ChatGPT, Bard, Stable Diffusion, and offerings that are embedded in other software, such as Github’s Copilot. • “Personal Information” means any information that, whether alone or in combination with other available information, identifies, relates to, describes, is reasonably capable of being associated with, or could reasonably be linked, directly or indirectly, to an individual. (see also definition of Personally Identifiable Information or PII in the Information Security Charter)     POLICY Columbia expects all Columbia community members to follow these guidelines when using Generative AI tools for teaching and learning, research, and work-related functions:  • Procuring AI Tools/Software (including free tools): Contact Columbia University IT (CUIT) or CUIMC-IT, whichever is appropriate, before purchasing (or acquiring for free) AI products or products that contain functions that rely on AI to operate – especially when using  University resources or University data (as defined in the Information Security Policy). CUIT’s vendor management team will route the request to resources that can help validate the vendor’s product and verify that the contract language does not introduce undue risk to the University.  These processes can also direct you to existing vendors and potentially avoid duplicate spending. CUIT’s vendor management team can be reached at cuitvmo@columbia.edu.  CUIMC-IT’s vendor management team can be reached through CUIT. • Do not input Confidential Information: Columbia community members must not input any Confidential Information into Generative AI tools, except when permitted by validated contract language and security controls (approved by CUIT and central procurement). • Do not input Personal Information: Columbia community members must not input any Personal Information about Columbia employees, students, faculty, or other stakeholders into a Generative 
+AI tool except when permitted by validated contract language and security controls (approved by CUIT and central procurement). • Do not input information that violates IP or general contract terms and conditions: Columbia community members must be aware of the terms and conditions under which they are using AI tools. All members of the Columbia community must respect IP rights with the goal of protecting those IP rights. It is incumbent on the individual users to ensure that the inputs and the outputs of their AI tools are properly protected for reasons such as copyright and  patent laws, data protection regulations, and identity theft crimes. Such AI tools might include Large Language Models (for example, ChatGPT), Machine Learning platforms (for example, AWS SageMaker), or image recognition software (for example, Google Cloud Vision).  Please note that vendor licenses govern many of the digital resources provided by the Columbia University Libraries (“Libraries”), and some publishers are asserting that using their content with AI tools is not allowed.  Please contact the Libraries for assistance in defining acceptable uses for licensed content with an AI tool or large language model here: ai-inquiries@library.columbia.edu. • Confirm the accuracy of the output provided by Generative AI tools: Columbia community members must check the accuracy of information generated by Generative AI tools prior to relying on such information. Generative AI tools should not be relied upon without confirmation of accuracy from additional sources. It is possible for AI-generated content to be inaccurate, biased, or entirely fabricated (sometimes called “hallucinations”). Note that such AI-generated content may contain copyrighted material. You are responsible for any content that you publish that includes AI-generated material. • Check the output of Generative AI tools for bias: Columbia community membersmust  consider whether the data input into, and the output of, Generative AI tools produces decisions that may result in a disparate impact to individuals based on their protected classifications under applicable law, such as race, ethnicity, national origin, age, sexual orientation, or disability status. Do not rely on any output that is indicative of a potential bias. • Disclose the use of Generative AI tools: Columbia community members who leverage Generative AI to produce any written materials or other work product must disclose that those materials and that work product is based on or derives from the use of Generative AI. Always be transparent if you are relying on the output of a Generative AI tool. • Comply with third-party intellectual property rights:  Columbia community membersmust not hold out any output generated by Generative AI tools as their own. If you quote, paraphrase or borrow ideas from the output of Generative AI tools, confirm that the output is 
+accurate and that you are not plagiarizing another party’s existing work or otherwise violating another party’s intellectual property rights. • Do not use Generative AI tools to produce malicious content: Columbia community members are prohibited from using Generative AI tools to generate malicious content, such as malware, viruses, worms, and trojan horses that may have the ability to circumvent",Moderate,columbia
+"Policy on the use of AI tools in classes 
+Table of Contents
+[1] Try to make generative AI tools such as ChatGPT, Bing AI, and Bard do the assignments and exams you have given in the past.
+[2] Clearly state your stance as instructor on the use of generative AIs for each class and assignment.
+[3] Inform the students of the purpose of the task and the learning objectives. Emphasize the importance of the process of finding an answer rather than the final answer itself.
+[4] When possible, consider adopting tasks and questions that cannot be easily completed or answered by generative AIs.
+[5] Do not rely too heavily on tools that claim to detect whether a given piece of text was generated by AI.
+[6] Impacts and effects that bring about educational benefits
+Conclusion
+April 28, 2023
+The University of Tokyo will not uniformly prohibit the use of natural language-generation AI tools, such as ChatGPT, in educational settings. While understanding the issues associated with such technology, we will actively explore its potential applications to education, research, and university administration, and we will continue to engage in dialogue about knowledge on its use and related precautions as well as its long-term impact.
+However, in specific contexts, particularly in education, it may be appropriate to prohibit the use of such tools, depending on the educational objectives and goals in each situation. Policies regarding AI tools should be determined appropriately for each class and assignment; whatever policy is adopted in each specific case, it should be regarded as a component of the teaching methodology that the faculty involved believe to be most effective.
+Education at the University of Tokyo has always relied on the initiative, individuality, and creativity of expert faculty members (and of faculty groups, such as departments and majors) to develop high-quality teaching methods. Similarly, decisions on whether to use or not use generative AI tools, or on how to use them, should be made by the faculty members themselves with the goal of maximizing educational effectiveness.
+With that in mind, we summarize below the issues and our current thinking about generative AIs that we would like faculty to be aware of when designing and considering teaching methods.
+[1] Try to make generative AI tools such as ChatGPT, Bing AI, and Bard do the assignments and exams you have given in the past.
+Generative AIs have strengths, weaknesses, and limitations. They are said to be particularly good at writing short summaries and essays on specified topics. In educational settings, for example, they can effortlessly produce writing at a level that students would normally spend much time on.
+Determine how well your assignments can be completed by generative AI tools like ChatGPT and incorporate this understanding into the design of your educational policies and methods.
+Please note that, since exam questions are highly confidential documents, you should not, in principle, input them directly into generative AI tools.
+[2] Clearly state your stance as instructor on the use of generative AIs for each class and assignment.
+The issues mentioned above do not necessarily mean that you should avoid questions and tasks that can be easily answered using generative AIs. Rather, the tasks should be designed to maximize the educational effect (training effect) for the students. If using generative AIs to answer questions does not achieve the educational objectives, communicate this to the students and tell them to answer without using it. Instructors should decide for themselves, based on their own judgment and educational objectives, whether to allow or prohibit the use of generative AIs for their assignments, and they should clearly communicate their policies to their students.
+If you do allow the use of generative AIs, please also explain to the students the issues that are currently known, including 1) the risk of leakage of personal and confidential information, 2) the increased collection of information by a small number of companies, 3) concerns about copyright infringement, and 4) the possibility of biases in the learned content. You are also recommended to have students specify which generative AI they used when submitting reports that utilized such a tool.
+[3] Inform the students of the purpose of the task and the learning objectives. Emphasize the importance of the process of finding an answer rather than the final answer itself.
+It is beneficial to explain to students the importance of thinking about the assignments on their own, of coming up with their own innovative solutions, and of experiences that cannot be obtained simply by getting answers from generative AIs (or from other people), even if such explanations may seem obvious. These principles have always been important in education, but they are particularly crucial if you prohibit the use of generative AIs for tasks where results could be easily obtained using such tools.
+What we seek in education is not just the result, but what students learn in the process of obtaining that result. Explain this thoroughly to your students. Even when students are allowed to use generative AIs, simply copying and pasting the answers generated by the AI and submitting them should not be accepted, as that would provide no learning effect for the students. (Exceptions may include tasks that focus on improving the accuracy of the AI-generated answers.) Point out the possibility of errors in the answers generated by the generative AI, and emphasize the need for students to scrutinize the veracity of the output themselves.
+Assuming the current level of generative AIs, we make the following additional suggestions:
+[4] When possible, consider adopting tasks and questions that cannot be easily completed or answered by generative AIs.
+Whether allowing or prohibiting the use of generative AIs, consider modifying the content and format of tasks to prevent answers from being easily obtained through simple AI use.
+However, it is important to be careful not to lose track of the original educational objectives and learning goals of the tasks. For example, it would be counterproductive if the creation of questions that generative AIs cannot answer results in excessive difficulty or volume of tasks. Some examples of format adjustments that do not distort the objectives of tasks include:
+Assign short tasks during class.
+Emphasize the process leading to the answer.
+Provide options for tasks (i.e., allow students to choose tasks they want to do).
+Require students to indicate their information sources.
+(Example reference: Eberly Center, Carnegie Mellon University, “AI Tools (ChatGPT) FAQ, 3. How can I design my assignments to facilitate students generating their own work?” https://www.cmu.edu/teaching/technology/aitools/index.html)
+[5] Do not rely too heavily on tools that claim to detect whether a given piece of text was generated by AI.
+There are tools now available that claim to detect whether a text was generated by generative AIs, but those tools should not be over-relied upon as the generators themselves are changing rapidly. The judgments of such tools are insufficient to use as evidence that a student has inappropriately used generative AIs.
+[6] Impacts and effects that bring about educational benefits
+While students writing reports used to have to go to the library to find information, it is now much more common and efficient to search the Internet using Google and other search engines. Generative AIs have the potential to gain users rapidly in a similar manner.
+However, generative AIs only generate texts that their language models deem appropriate, so their reliability is more problematic than Internet search results (which also include errors). The principles used for Internet searches also apply to generative AI: do not blindly believe the AI’s responses; learn to assess the credibility of information yourself; and remember that you can obtain more credible information only by further research into primary sources.
+With the advent of generative AIs, it becomes important to teach the basics of research again, including evaluating the credibility of information sources and citing and verifying sources. This is also a valuable teaching opportunity. Raise with your students the issues of the risks associated with relying solely on easy Internet searches and generative AIs for solving problems.
+Generative AIs may offer new possibilities for higher education. For example, they can be used to support student learning. When writing a report, it is important for students to discuss with each other and with instructors, engaging in appropriate questioning and dialogue. The importance of human-to-human discussion and dialogue will not be lost in the future. However, when studying alone, students may find it useful to ask appropriate questions to generative AIs and engage in dialogue with them as a methodology for thinking and inquiry. For students who struggle with dialogue and asking questions in public, generative AIs may provide a useful platform for asking questions. They may also be used for personal brainstorming or as a sounding board when preparing presentations. These educational possibilities have just begun to emerge, so it is important to strive to improve teaching methods while carefully assessing the impact of any changes.
+More specific methods include teaching students how to experiment with prompts—that is, questions and instructions—given to generative AIs to elicit the responses closest to the desired ones, or devoting class time to identifying mistakes and limitations in AI-generated responses. Be creative in finding new directions for higher education.
+Conclusion
+In the medium to long term, the challenge will be to determine whether and how to change educational content, methods, and evaluation methods based on the assumption that generative AIs can enable the collection of useful information and mo",Moderate,tokyo
+"As AI tools and capabilities develop, this guidance, and our approach to refining it, may adapt. Suggestions and feedback are very welcome to the Head of Digital Campaigns and Communications. AI tools are changing the way we work at Oxford, whether that’s improving the quality of our written communications or helping speed up our research tasks. But it is important that we work together to ensure that their use aligns with our values and our obligations.  Oxford is committed to setting a clear, confident standard for the responsible use of AI in communications. These guidelines outline expectations for the use of generative AI tools by communicators at Oxford. Technology and approaches change rapidly; we will aim to test and review these on a regular basis and update as necessary. Our aim is not to be restrictive, but rather to ensure those using these tools feel confident in the boundaries of what is acceptable in our community. These guidelines were developed with input from Divisional Communications Leads, the AI Competency Centre and Information Security. The guidelines can be read alongside the Russell Group principles on the use of generative AI tools in education, which support the development and use of AI in a way that enables their ethical use and upholds academic rigour and integrity. Scope: context  This guidance has been developed for the use of staff in the Public Affairs Directorate. However it is written for any staff member employed as communications professionals at the University of Oxford or working with communications in their role, and we encourage its adoption across the profession. It may be of use to anyone who wishes to consider the use of GenAI in their communication and content generation. Scope: technology This guidance relates to the use of generative AI (GenAI) tools — artificial intelligence systems that simulate creativity by predicting 
+and assembling outputs based on learned patterns from the data they have been trained on, not human comprehension. Their results are intended to appear plausible but can contain inaccurate information or off topic hallucinations, requiring careful human oversight. This includes tools built on large language models (LLMs), such as ChatGPT, Claude, Gemini or Copilot, as well as those that generate images, audio or video, like Midjourney, Notebook LM or Sora. GenAI is increasingly embedded within the platforms and systems we already use, enhancing functionality and speeding up tasks when used effectively. For this reason, it is important to remember that GenAI and LLMs do not comprehend information in any way akin to humans. Their neural networks can generate outputs that are factually inaccurate and misleading. This guidance applies to both standalone GenAI tools and AI-powered features within other software or platforms. It does not cover all forms of artificial intelligence used across the University – only tools that generate content. However, some of the broad principles outlined here may be useful in other contexts too. Understanding what AI is – and what it isn’t – is critical for its effective use. Here are a few helpful guides: • PAD’s AI campaign material – ‘What is AI?’ • A quick intro to generative AI from the University of South Australia (5 minutes) • Google’s Introduction to Generative AI video (22 minutes) • What is generative AI and how does it work? – The Turing Lectures with Mirella Lapata (46 minutes) • Generative AI exists because of the transformer: this is how it works (The FT) Summary Our guidelines can be summarised by the following principles: 1. We prioritise human creativity, curiosity and judgement. 
+2. Oxford's reputation stands on the trustworthiness of our research and our communications. We are transparent with each other and with our audiences about our use of AI and ensure that AI is not used to conceal or alter original intent or meaning. 3. As communications professionals, we are responsible for the quality and accuracy of the content we produce. The use of any AI tool should therefore be seen as a supportive mechanism to create value and enable productivity, with the recognition that outputs from generative AI are susceptible to bias, mistakes and misinformation. All AI-assisted outputs must undergo a human review for factual accuracy, appropriate tone and ethical integrity before public release.  4. We work to ensure we have the skills to use the right GenAI tools in the right way, working to understand the context of the tools we’re using and the benefits and risks they offer. This includes using tools appropriately, in line with University guidance, and taking appropriate data and security precautions. Use of AI and text  In general, we may use AI as a supportive tool rather than a way to generate a final product; AI should never be ‘the author’ of anything we publish. We may use AI tools to help us: • research a topic, including helping us understand audiences, research papers and trends, or to provide insight and information  • generate ideas or act as a thought partner • work on drafts for written content such as press releases, social media posts, articles, reports, etc, with humans always providing input and finalising • generate meeting minutes or transcripts using University-approved methods (please note that the use 
+of unapproved AI transcription bots in Teams meetings is not allowed) • improve written content, for example by applying style guidance or targeting certain audiences, or reformat existing content for new uses • generate alt text • improve our work and make it more efficient, for example by speeding up manual tasks We will not publish text that has been written 100% by AI tools or text generators, unless there is a clear, relevant and stated reason for doing so (eg demonstrating the capabilities of a tool). Output from generative AI is susceptible to bias, mistakes and misinformation, and should always be checked and edited appropriately. Communications professionals need a thorough and accurate understanding of the original material, and elements like quotations and facts and figures should be paid particular mind. Additionally, the tone and approach of AI-generated content may not be appropriate for our audiences; care should be taken to ensure that generated content is edited and improved based on the University’s style and tone of voice guidelines.   Use of AI and images and audiovisual outputs  We may use AI tools to: •    speed up editing, streamline tasks and generate ideas  •    enhance image or video (eg upscaling, denoising, colour correction or lighting adjustments) •    help with edits and corrections •    support us in generating scripts and code •    generate draft transcripts or subtitles We will use AI tools ethically, particularly when images or videos involve people.  Users must recognise that AI tools can reflect and reinforce societal biases. All outputs should be reviewed through an equity and inclusion lens to prevent harm and ensure fairness. Ethical use of AI 
+includes avoiding misrepresentation, reinforcing harmful stereotypes or misleading audiences about provenance. For example, we will not edit the expression of a person, remove relevant context or attempt to display events in a different way. We may publish images or videos fully generated by AI, but only when they meet a specific need that cannot be met by using existing photographs or illustrations, taking or commissioning new ones or using human-created stock images. We value the role of human creativity. We will always be transparent about our use of AI-generated images and will work to ensure copyright, IP and GDPR considerations are accounted for. We will not use voice clone generators or create deepfake videos, which use AI tools to create ‘fake’ videos or audio – for example, face swapping or attributing fake speech to a real individual. Use of AI in other areas of our work  We may use AI to assist with communications-related analysis, research or reporting, such as analysis of data, content or other inputs, monitoring of content and sentiment, or automated reporting of trends. We will not rely on AI summaries alone to understand research outputs or make judgments about their findings. As communications professionals, our understanding of the material is an essential part of our work. We may use AI to help with website-related tasks, such as analysing or improving code. We will always explore new uses and opportunities for using AI, but will evaluate them against our principles and guidelines. Privacy, security and ethics  We will ensure that sensitive, embargoed, internal and confidential information is handled with care. Many generative AI tools allow you to paste content or upload images easily to assist with tasks. While useful, this can introduce risks to intellectual property, privacy and security when not used thoughtfully. 
+The terms of use on tools vary widely, and may allow use or access to inputs in ways that don’t fit the University’s needs or regulations. The InfoSec team has produced specific guidance around University-licensed ChatGPT Edu and Copilot, which can be used for confidential data but still require good data practices and care. You should not input any confidential or sensitive data into tools that haven’t been reviewed and cleared for internal or confidential data. A good rule of thumb is that these other tools should generally be used only for content which is in the public domain and which you wouldn’t be worried about being made public. Tools can be evaluated for more extensive types of use. If you have another tool you’d like to investigate further, the University’s Info Sec teams have produced more in depth guidance on how to evaluate generative AI tools’ security; new tools may need to go through a Third Party Security Assessment (TPSA), and users will need to consider what sort of information is suitable for pasting or using with them. The same level of care should b",Moderate,oxford
+"Information Systems and Technology (IS&T) is providing this initial guidance to encourage community members to consider factors including information security, data privacy, regulatory and policy compliance, compliance with confidentiality restrictions concerning third party information and data, intellectual property (e.g., copyright and patent), and academic integrity when choosing to use or purchase software that makes use of generative artificial intelligence (AI). For	MIT	faculty	and	instructors: MIT's Chair of the Faculty has	recommended the use of these	resources	on	generative	AI	and	teaching provided by the Teaching and Learning Laboratory. This guidance does not address all issues for consideration when using generative AI tools as part of MIT research, nor does this guidance focus on when MIT researchers are creating generative AI tools or publicly releasing datasets/information that could become ingestible data for use by MIT researchers or third parties for training generative AI tools. Please contact mitogc@mit.edu for further guidance on research-related applications or development of AI tools. Consult with IS&T before purchasing or using generative AI tools IS&T is working closely with the MIT IT	Governance	Committee, Information	Technology	Policy	Committee and the Office	of	General	Counsel to determine appropriate terms for vendor agreements relating to generative AI. • IS&T	recommends	MIT	community	members	first	consider	using	tools	and	services	which	have	already	been	licensed	by	IS&T	for	use	by	the	MIT	community.	• Before	entering	into	any	license	agreements	for	a	new	AI	tool	or	service,	we	recommend	reaching	out	to	ai-guidance@mit.edu	for	a	consultation	on	your	planned	use	of	AI	and	an	assessment	of	the	tool	or	service	before	it	is	used.	• If	an	MIT	DLCI	is	already	using	a	generative	AI	tool	or	service,	ensure	that	the	tool	complies	with	all	Institute	policies	and	Information	Protection	guidelines.	Contact	ai-guidance@mit.edu	if	you	have	a	need	for	a	consultation	or	assessment.	• Do	not	use	generative	AI	for	purposes	that	may	require	in-depth	risk	assessments	without	contacting	ai-guidance@mit.edu.	Examples	include:	recruitment	and	hiring	of	
+employees,	evaluating	student	academic	performance,	making	investment	decisions,	and	complaint	and	dispute	resolution.	Protect MIT information and confidential data As with any use of information technology at MIT, ensure that your use of generative AI tools and services complies with all applicable federal and state laws and orders (including, without limitation, FERPA, HIPAA, Massachusetts	Data	Protection	Standards, export control laws, and Executive	Order	on	the	Safe,	Secure,	and	Trustworthy	Development	and	Use	of	Artificial	Intelligence), Institute	policies (including 10.1	Academic	and	Research	Misconduct, 11.0	Privacy	and	Disclosure	of	Personal	Information, and 13.0	Information	Policies), follows all guidelines outlined on Information	Protection, the Institute's Written Information Security Program (WISP), and complies with any additional policies established by your department, lab, center, or institute (DLCI). Do not enter MIT information or research/administrative data classified	as	Medium	Risk	or	High	Risk into publicly available generative AI tools or services not subject to an Institute licensing agreement. Examples of such information and data include non-public research results and data, unpublished research papers, confidential information received from third parties (such as research sponsors and collaborators), unpublished invention disclosures and patent applications, Institute financial and human resources information, personally identifiable information (including, for example, student records, medical records), any information subject to legal or regulatory requirements necessitating its proper safeguarding and handling, and any other information not intended to be freely available to the general public, or to the MIT community without access controls. Ensure accuracy before publishing AI-generated information Be aware that information generated by AI may be inaccurate, incomplete, misleading, biased, fabricated, or may contain material subject to a third party’s intellectual property ownership. You are responsible for the accuracy of any information you publish, including AI-generated content. Be transparent about your use of AI tools 
+You should disclose the use of generative AI tools for all academic, educational, and research-related uses.  Do not publish research results that rely on content generated through the use of a generative AI tool without disclosing the nature of the use of such generative AI tool in producing the content.  
+",Moderate,mit
+"In Spring 2024, with a goal of inspiring other instructors through the sharing of new ideas, methods, and strategies at Cornell, five faculty were recognized for their creative classroom experiences and teaching implementations using – or creatively precluding use of – generative AI. Learn about the projects here: Teaching Innovation Case Studies: Creative Responses to Generative AI
+Since the release of new generative artificial intelligence (AI) tools, including ChatGPT, we have all been navigating our way through both the landscape of AI in education and its implications for teaching. As we adapt to these quickly evolving tools and observe how students are using them, many of us are still formulating our own values around what this means for our classes. 
+Our CTI resources aim to provide support on what these tools are and how they work. We'll address common concerns and considerations in the context of AI, such as academic integrity, accessibility and ethical uses of the technology. We'll also explore practical applications and pedagogical strategies for teaching and assignment design as you determine what approaches and policies regarding AI are the right fit for your classes.
+Cornell University Committee Report on Generative Artificial Intelligence for Education and Pedagogy
+What is Generative Artificial Intelligence (AI)?
+How Will Generative AI Affect Higher Education?
+The Upside: Possibilities for Generative AI to Benefit Learning Environments 
+Generative AI Literacy
+Stay Engaged and Informed
+What is Generative Artificial Intelligence (AI)?
+Generative artificial intelligence is a subset of AI that utilizes machine learning models to create new, original content, such as images, text, or music, based on patterns and structures learned from existing data. A prominent model type used by generative AI is the large language model (LLM). 
+An LLM, like ChatGPT, is a type of generative AI system that can produce natural language texts based on a given input, such as a prompt, a keyword, or a query. LLMs typically consist of millions or billions of parameters that are “trained” on massive amounts of text data, such as books, articles, websites, and social media posts, and can perform various tasks, such as answering questions, summarizing texts, writing essays, creating captions, and generating stories. LLMs can also learn from their own outputs and are likely to improve over time.
+It’s important to note that while LLMs can answer questions and provide explanations, they are not human and thus do not have knowledge or understanding of the material they generate. Rather, LLMs generate new content based on patterns in existing content, and build text by predicting most likely words. 
+Because of how LLMs work, it is possible for these tools to generate content, explanations, or answers that are untrue. LLMs may state false facts as true because they do not truly understand the fact and fiction of what they produce. These generated fictions presented as fact are known as “hallucinations.""
+back to top
+How Will Generative AI Affect Higher Education?
+Nobody knows the true impact that generative AI will have on higher education. These technologies are rapidly evolving in complexity and type of use. What we do know is that generative AI is opening up a world of possibilities, while also generating significant concerns about academic integrity, ethics, access and bias.
+
+Before we dig too deep into whether and how to incorporate generative AI into your courses, here are a few general steps you can take as you consider what generative AI means for your classroom: 
+Reflect: How do you feel about generative AI? Concerned? Excited? A little of both? What additional information do you need to feel able to make informed decisions about whether or not to incorporate it into your courses? 
+Try it out: Experiment with generative AI platforms relevant to your discipline, like ChatGPT, Gemini (formerly known as Bard), or DALL-E 2. Choose a tool, then ask it to complete an assignment you’d give your students. What are the results? Ask it to revise the assignment, and see how it responds. Can you identify possible areas of concern for academic integrity, or opportunities for student learning? 
+Predict and inquire: How might students use this technology in your course? Can you ask students how they are currently using generative AI tools? What clarity will students need to distinguish between appropriate and inappropriate uses of these tools? Consider how you might adjust assignments to either incorporate generative AI into your course, or to identify areas where students may lean on the technology, and turn those hot spots into opportunities to encourage deeper and more critical thinking. How might you use these tools to assist your teaching? For example, could generative AI help generate practice problems for students?
+Learn more: This technology is evolving, and none of us are experts yet. Be open to continuing to learn more and to having ongoing conversations with colleagues, your department, people in your discipline, and even your students about the impact generative AI is having. 
+Set your parameters: Decide whether and when you want students to use the technology in your courses, and clearly communicate your parameters and expectations with them. Keep in mind that students will likely have instructors with different ideas about how to use, or why or why not to use, generative AI tools. Be transparent and direct about your expectations.
+back to top
+The Upside: Possibilities for Generative AI to Benefit Learning Environments 
+We all want to discourage students from using generative AI to complete assignments at the expense of learning critical skills that will impact their success in their majors and careers. 
+However, we’d also like to take some time to focus on the possibilities that generative AI presents. Here are a few ways it can be useful to students and faculty alike: 
+Generative AI can potentially be used by both faculty and students to: 
+Provide instant access to vast amounts of information quickly
+Aid diverse learners with different learning abilities, linguistic backgrounds or accessibility needs
+Accelerate exploration and creativity, spark curiosity, suggest new ideas and ways of thinking
+Students might explore using Generative AI to:
+Be more efficient with course work and tasks
+Help with studying
+Generate ideas for brainstorming
+Get further explanation of a topic a teacher is covering for class
+Improve their writing
+Get instant feedback
+Practice language skills in a safe environment
+Faculty might explore using Generative AI to:
+Generate content and course materials including lesson plans, quiz questions, sample problems, or writing scenarios
+Assist in research tasks including analyzing large datasets, identifying patterns, and generating insights and research directions
+Write learning objectives, course descriptions, syllabi statements, or course policies
+As you and your students prepare to investigate the use of generative AI tools, we recommend discussing course policies and expectations around their use, and clearly communicating with your students when and in what ways use of generative AI tools are permitted – or not. We also recommend that you consider the accessibility of generative AI tools as you explore their potential uses, especially those that students may be required to interact with. Finally, it’s important to take into account the ethical considerations of using such tools. These topics are fundamental if considering using AI tools in your assignment design.
+back to top
+Generative AI Literacy
+While ChatGPT and other LLMs can assist learners in various tasks and activities, they cannot replace human creativity, judgment, ethics, or responsibility, all of which are essential for learning. LLMs may help a learner write a paper or a report, but they cannot teach the learner how to conduct original research, synthesize information from multiple sources, formulate arguments, express opinions, or cite sources properly. Thus, the need for AI literacy is essential for students and faculty alike.
+We can think of ethical generative AI literacies as the ability to understand, evaluate, and critically engage with generative AI technologies. Generative AI literacy includes skills such as recognizing when and how generative AI is used in various domains; assessing the reliability and validity of AI-generated outputs; identifying the ethical and social implications of AI applications; and creating and communicating with generative AI systems in ways that are appropriate to your course.
+Just as we adapt to the changing media environment, developing AI literacy will be an ongoing process, but one that is vital to helping you and your students become more informed and responsible users and creators of AI technologies.
+back to top
+Stay Engaged and Informed
+The range of AI applications and their abilities continue to develop rapidly, bringing both opportunities and challenges for educators wanting to stay current and informed. As the higher Ed landscape changes with the advent of this new technology, CTI aims to be a dependable partner and resource for faculty working to incorporate generative AI into their courses. Our goal is to support faculty in enhancing their teaching and learning experiences with the latest AI technologies and tools. As such, we look forward to providing various opportunities for professional development and peer learning. 
+As you further explore, you may be interested in CTI’s generative AI events. If you want to explore generative AI beyond our available resources and events, please reach out to schedule a consultation.
+
+
+",Permissive,cornell
+" 
+1 
+ 
+Guidance on the use of AI in Assessments 2022-23 
+ 
+Introduction 
+The goal of this document is to provide guidance on how we can effectively integrate 
+or manage the use of generative AI in our assessments.  Generative AI is a type of 
+Artificial Intelligence that generates new outputs such as images, audio, or text 
+based on learned patterns and inputs. 
+The Quality Assurance Agency has recently produced a briefing paper on the threat 
+to academic integrity posed by AI, which is available on the QAA website.  The 
+briefing paper provides background on AI software tools, as well as the potential 
+implications for academic standards and actions that providers can take.  It is 
+important to stress that a blanket ban on generative AI is not viable. Instead, we 
+need to focus on responsible usage by staff and students and associated ethical 
+considerations to ensure the safe and productive deployment of this technology.  
+This requires a consideration of how to use AI in an ethical, responsible, and 
+appropriate manner that considers fairness and transparency. This is particularly 
+important as the text created through generative AI tools may not be text-matched 
+through tools such as Turnitin. This is because the text created by AI tools is original.  
+The challenge of preserving academic integrity is not a new problem and the 
+introduction of generative AIs will not change the fundamental challenges that face 
+educators.  To effectively prevent cheating, it is essential to address its root causes.  
+Research shows this can be achieved by promoting a strong culture of academic 
+integrity that emphasises the importance of honesty and integrity.  Our ultimate 
+objective is to prepare students for the dynamic and evolving job market of the 
+future. 
+ 
+Context 
+Much of the work undertaken across the HE sector in recent weeks has shown that 
+AI tools and their outputs vary.  Essentially the quality of the response from a 
+generative AI tool will depend on the quality and extent of the training material.  
+Where this is limited, then the responses will tend to be bland/generic, lack critical 
+analysis, and so on.  However, the inverse is also true and where the training data is 
+good, then the ability to answer diverse/complex questions on those topics is likely to 
+be broadly good as well. 
+ 
+Advice for Staff 
+As such our advice to staff is to be clear with students as to what you regard as a 
+permissible use of AI in any given assignment and outline how its inclusion or use 
+should be acknowledged. To do this consider: 
+• Having open and transparent discussions with students regarding the 
+acceptable and unacceptable use of AI in assessments.  This should include 
+ 
+2 
+ 
+explicit instructions on what constitutes appropriate use, such as the production of 
+original work.  Students should be required to acknowledge requirements through a 
+declaration of integrity form and be informed that any unacceptable use of AI will be 
+considered academic misconduct. 
+• Review how generative AI might enhance student learning through the assessment. 
+For example, the AI could be used to analyse and summarise relevant materials, 
+provide a draft structure or starting point, or otherwise free up time for students to 
+focus on other critical aspects of their learning such as evaluation, synthesis, critical 
+thinking, or reflection.  
+• Have a conversation with students around data privacy.  One of the key ways in 
+which many AI tools learn is through processing larger data sets.  When you register 
+with an AI tool you may be required to provide permission that any submitted data 
+and any interactions with the AI can be used to improve future versions. 
+ 
+When is it appropriate for students to use AI? 
+There are a number of assessment situations where AI can be used, for example: 
+• When it is approved for use and is part of the assessment process. 
+• For revision of a course or other materials. 
+• When the use of AI in an assignment has been referenced appropriately and 
+is allowed as part of the resources drawn upon to create an assessment. 
+• As a tool for refining writing. 
+ 
+How might you adapt assessments for students? 
+There are a number of steps that you can take to make assessments more robust: 
+• Shifting the assessment from recall of knowledge to real world application, for 
+example the requirement to include current events, research and activities.  
+• Asking students to provide an annotated bibliography to demonstrate sources 
+of evidence used. 
+• Citation presents a problem because AI is neither an author nor a source of 
+information, but a writing aid. It would be more useful for staff to know how the 
+tool was used in the writing process. Staff could provide direction or guidance 
+on acceptable references or sources of referencing for the assessment and 
+provide more explicit guidance on acceptable source material. 
+• Include the use of reflective responses that build in personal insight.  AI tools 
+are far less useful in this context. 
+• Request a critique of already written responses (including AI). 
+In addition the following types of assessment are far harder for AI tools to create in a 
+meaningful manner: 
+• Reports on independent research activities. 
+• Creative outputs, both written and non-written. 
+ 
+3 
+ 
+• Adopting a particular moral or ethical stance. 
+• Progressive/reflective portfolio-style assignments that are built up over time. 
+• Interactive oral assessments. 
+• Programme-level or synoptic assessment. 
+• Analysis of images or videos. 
+• Video-based assessments. 
+Before amending any assessment, you can run it through a tool such as ChatGPT to 
+see what kind of answer it produces and adapt or amend your assessment as 
+necessary. 
+For certain types of assessment, for example those involving mathematical 
+application or coding, the above mitigations may be less relevant.  
+ 
+What if the assessment is already being undertaken by students? 
+• Require students to ""show their work"" by submitting drafts or notes or using 
+digital versioning (documents stored on a student’s OneDrive can provide a 
+record of changes made over time).  Such material can provide insight into the 
+steps students took to arrive at their final submission. 
+• Student declaration – the QAA suggest updating any existing student 
+declarations that accompany submissions for assessment so students certify that 
+it is their own work, all sources are correctly attributed and the contribution of any 
+AI technologies is fully acknowledged.  An immediate measure which the 
+University could adopt to support academic integrity would be to update the 
+student declaration for assessment to include the following: 
+I certify that that the submission is my own work, all sources are correctly 
+attributed, and the contribution of any AI technologies is fully acknowledged. 
+• The QAA also suggest that you communicate the value of integrity - discussing 
+with students how the advancement of knowledge has relied on integrity in both 
+research and academic practice and that progress is undermined by academic 
+misconduct.  This will help them understand the values that underpin their 
+discipline and make it clear about what constitutes academic misconduct and 
+why it has consequences. 
+ 
+Procedure for Dealing with Academic Offences 
+The University has in place Procedures for Dealing with Academic Offences, for 
+investigating allegations of academic offences and imposing penalties where such 
+an offence is found to have been committed. 
+The Procedures include a non-exhaustive list of academic offences at section 2, and 
+note that: 
+ 
+4 
+ 
+‘where the conduct of a student does not fit any of the following definitions, the 
+student may be found to have committed an academic offence if they have gained or 
+attempted to gain an unfair advantage or facilitated or attempted to facilitate another 
+student to do so.’ 
+One of the offences listed within section 2 is: 
+2.7 Contract Cheating: where a student commissions or seeks to commission 
+(either paid or unpaid) another individual to complete academic work on their behalf. 
+The use of AI falls under this definition, as a commissioning offence. For 
+completeness, and to ensure that the Procedures for Dealing with Academic 
+Offences include clear reference to the use of AI by students, the following 
+amendment is proposed to the definition of Contract Cheating: 
+2.7 Contract Cheating: where a student commissions or seeks to commission 
+(either paid or unpaid) another individual or artificial intelligence software tool to 
+complete academic work on their behalf. 
+Contract Cheating is deemed to be a major academic offence (section 1.11.3(v)), 
+and therefore the Procedure for Dealing with Major Offences should be followed 
+(Section 5), with an initial review of the evidence, and an investigation stage.  
+Specific provision is made for a short viva voce to be undertaken where a student is 
+suspected of contract cheating (section 5.2.1(vii)).  Following this, a decision on 
+whether the academic offence has been committed, is made. 
+Academic Affairs can assist and support colleagues in managing cases where 
+students may be in breach of the Procedures for Dealing with Academic Offences, 
+as a result of the use of AI within assessment.   
+ 
+",Moderate,belfast university
+"Whether it’s ChatGPT or DALL·E, generative AI tools are changing the communications sector fast.  As a team of writers, designers and strategists who communicate the work of the University of Cambridge to the world, we’re interested in how these tools could support our efforts to share ground-breaking research or create campaigns to attract students. From speeding up tasks like transcribing audio to sparking ideas for news features, we can see lots of opportunities for how these tools can support our work.  But it’s also imperative that we acknowledge the risks when using generative AI tools and understand how to utilise them properly. Upholding factual accuracy, observing ethical usage and investing in our skills are all imperative and especially relevant as the University is built on over 800 years of knowledge.  Through research and workshops, we have created these new guidelines to support our teams in using generative AI tools safely, ethically and effectively.   The guidelines can be read alongside the Russell Group principles on the use of generative AI tools in education, which include that universities will support students and staff to become AI-literate, universities will ensure academic rigour and integrity is upheld, and universities will work collaboratively to share best practice as the technology and its application in education evolves.     Using AI text generators like ChatGPT, Bard and LaMDA  We may use text generator tools to help us research a topic  Generative AI tools like ChatGPT are capable of processing vast amounts of information to quickly produce an easy-to-understand summary of a complex topic. This can help us work faster and understand new ideas.  For example, if a research communications manager is writing a feature on the discovery of DNA, they could ask ChatGPT to summarise the key moments in 500 words and use the answer generated as a starting point for whom to interview or which journal articles to read next. We may use these tools in a similar way to how we use search engines for researching topics and will always carefully fact-check before publication.   We may use text generators to spark inspiration  The ability of generative AI tools to analyse huge datasets can also be used to help spark creative inspiration. This can help us if we’re struggling for time or battling writer’s block.  
+For example, if a social media manager is looking for ideas on how to engage alumni on Instagram, they could ask ChatGPT for suggestions based on recent popular content. They could then pick the best ideas from ChatGPT’s response and adapt them. We may use these tools in a similar way to how we ask a colleague for an idea on how to approach a creative task.  We do not publish any content that has been written 100% by text generators  We will be critical and responsible users of generative AI tools – and that means not publishing anything written completely by ChatGPT and being aware of the many reasons why we shouldn’t.  First, our experience with these tools so far is that the default written style and tone of content produced by generative AI is not appropriate for our audiences in its unedited form. We always need to apply the University’s brand and tone of voice guidelines to all content.  Second, generative AI tools do not produce neutral answers because the information sources they are drawing from have all been created by humans and contain our biases and stereotypes. These tools also often create content that contains errors and ‘hallucinations’. As a seat of learning, it is imperative that the University only publishes unbiased and factual written content.  Thirdly, the risk of plagiarism is high with lifting something completely from an AI content generator, and these tools are often opaque about their original sources and who owns the output. It is essential that our outputs are original and do not plagiarise.  For all of these reasons, we will not publish any press releases, articles, social media posts, blog posts, internal emails or other written content that is 100% produced by generative AI. We will always apply brand guidelines, fact-check responses, and re-write in our own words. The one exception to this is if we are publishing something about AI and would like to demonstrate what AI can do, and we will always make that clear to audiences.     Using AI photo editor tools and image generator tools like DALL·E and Midjourney  We may use image tools to correct and make minor edits  Image editing with AI tools can speed up work for several teams. We may use these tools to make minor changes to a photo to make it more usable without changing the subject matter or original essence.  For example, if a website manager needs a photo in a landscape ratio but only has one in a portrait ratio, they could use Photoshop’s inbuilt AI tools to extend the background of the photo to create an image with the correct dimensions for the website. 
+ We will use image editing tools ethically  We do not use any image editing tools to change the essence of any original images on our website, social media, or anywhere else. For example, we do not change the expressions, appearance, ethnicity or any other core features of those captured in our photography.  Where we do use AI image editing tools for corrections and minor edits, we will work with the original photographer or designer so they are aware.  We do not publish any images that have been created from scratch by image generators  Just like not publishing any text created completely by text generator tools, we will also not publish any images created 100% by image generator tools like DALL·E and Midjourney.  Our experience with these tools shows that what they produce is not always appropriate for the University channels and needs heavy application of the University’s brand guidelines.  The only situation where we would use an AI generated image would be if we were publishing a news story on AI and wanted to show what AI can produce, and we will always make that clear to audiences.     Using AI audio and video tools like Adobe Podcast, Descript and Pictory  We may use audio and video tools to remove distractions for audiences  Just like image tools and text generators, AI audio and video tools can also help us save time with creative projects. For example, our video producers can save hours of editing time by using audio clean-up tools to remove unwanted background noise or using video clean-up apps to remove distractions in shots in seconds.  We do not use voice clone generators or create deepfake videos  
+We do not use AI tools to recreate the voice or appearance of anyone, as there are major ethical implications and risks attached to this.  Again, the exception is if we are publishing something about AI and want to demonstrate what these tools can do. In these cases, we will only ever work with the consent of the original speaker and we will always make that clear to audiences.     Managing privacy risks and being transparent  We do not input any sensitive, private or embargoed information  Text generators allow users to paste in articles or data and build a prompt around them, such as ‘write a social media post about this article’ or ‘analyse this data and tell me about the trends’.  However, there are risks to privacy and intellectual property associated with the information we enter into these tools. The Terms of Use in many AI tools are not clear on how the inputs are stored or may be accessed in the future. We must only input information that is already in the public domain. We will not input any confidential or restricted data, in the same way that we do not share this on social media, in an external email, or discuss in public.  For example, if a media officer was working on an embargoed story about a new scholarship and they wanted to get some inspiration for the copy, there are only a few ways they could use AI tools. They could not paste their draft copy or web link into ChatGPT in advance of the embargo lifting, or paste in raw philanthropic data kept on a private SharePoint site, or type in text that included the unpublished names of students who receive the scholarship.  We always share with each other how we’re using AI tools in our daily work  When we use any generative AI tool, we will let our manager know and, when relevant, show them the before and after version. This could be in the form of a quick conversation over a laptop at the desk or sharing links over Teams. Some teams have a standard AI tools item in their regular meeting, to foster a culture of trust, transparency and learning.  We will create a training guide and invest in our teams  Our teams are made up of skilled writers, photographers, designers and strategists who want to use these tools to support – not replace – their creativity.  
+We will create a list of approved tools our teams can use, and create an internal training guide on SharePoint with examples to help new team members understand how we can and can’t use these tools. We will invest in training for our teams on writing prompts and fact-checking.  About the guidelines  These guidelines were created for the University of Cambridge's Office of External Affairs and Communications.  We will update this guidance regularly to keep pace with this rapidly moving sector.   
+",Permissive,cambridge
+"Guidelines for Using ChatGPT and other Generative AI tools at Harvard  Dear Members of the Harvard Community,   We write today with initial guidelines on the use and procurement of generative artificial intelligence (AI) tools, such as OpenAI’s ChatGPT and Google Bard. The University supports responsible experimentation with generative AI tools, but there are important considerations to keep in mind when using these tools, including information security and data privacy, compliance, copyright, and academic integrity.   Generative AI is a rapidly evolving technology, and the University will continue to monitor developments and incorporate feedback from the Harvard community to update our guidelines accordingly.   Initial guidelines for use of generative AI tools: • Protect confidential data: You should not enter data classified as confidential (Level 2 and above), including non-public research data, into publicly-available generative AI tools, in accordance with the University’s Information Security Policy. Information shared with generative AI tools using default settings is not private and could expose proprietary or sensitive information to unauthorized parties. • You are responsible for any content that you produce or publish that includes AI-generated material: AI-generated content can be inaccurate, misleading, or entirely fabricated (sometimes called “hallucinations”), or may contain copyrighted material. Review your AI-generated content before publication. • Adhere to current policies on academic integrity: Review your School’s student and faculty handbooks and policies. We expect that Schools will be developing and updating their policies as we better understand the implications of using generative AI tools. In the meantime, faculty should be clear with students they’re teaching and advising about their policies on permitted uses, if any, of generative AI in classes and on academic work. Students are also encouraged to ask their instructors for clarification about these policies as needed. • Be alert for AI-enabled phishing: Generative AI has made it easier for malicious actors to create sophisticated scams at a far greater scale. Continue to follow security best practices and report suspicious messages to phishing@harvard.edu. • Connect with HUIT before procuring generative AI tools: The University is working to ensure that tools procured on behalf of Harvard have the appropriate privacy and security protections and provide the best use of Harvard funds. o If you have procured or are considering procuring generative AI tools or have questions, contact HUIT at ithelp@harvard.edu.  o Vendor generative AI tools must be assessed for risk by Harvard’s Information Security and Data Privacy office prior to use. It is important to note that these guidelines are not new University policy; rather, they leverage existing University policies. You can find more information about generative AI, including a survey to collect data on its potential use, on the HUIT website, which will be updated as new information becomes available.   
+",Moderate,harvard

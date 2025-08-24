@@ -20,7 +20,13 @@ class Config:
         'host': os.environ.get('MONGODB_HOST', 'localhost'),
         'port': int(os.environ.get('MONGODB_PORT', 27017)),
         'username': os.environ.get('MONGODB_USERNAME', ''),
-        'password': os.environ.get('MONGODB_PASSWORD', '')
+        'password': os.environ.get('MONGODB_PASSWORD', ''),
+        'connectTimeoutMS': 10000,  # 10 seconds connection timeout
+        'socketTimeoutMS': 30000,   # 30 seconds socket timeout
+        'serverSelectionTimeoutMS': 5000,  # 5 seconds server selection timeout
+        'connect': False,  # Use connect=False to handle connection errors gracefully
+        'retryWrites': True,
+        'w': 'majority'
     }
 
     # File upload configuration

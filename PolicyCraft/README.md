@@ -6,42 +6,96 @@ A web-based application for analysing university AI policies, extracting themes,
 
 ## Getting Started
 
-### Quick start: full functionality (macOS/Windows/Linux)
+### Prerequisites
+- Python 3.8+
+- MongoDB 6.0+
+- Git
+- pip (Python package manager)
 
-The steps below get you from a fresh clone to a fully working application with all features enabled, including MongoDB, NLP resources, and tests.
+### Quick Start (macOS/Linux)
 
-1. **Create and activate a virtual environment**
+1. **Clone the repository and switch to the laboratory branch**
    ```bash
-   python -m venv venv
-   source venv/bin/activate    # Windows PowerShell:  .\venv\Scripts\Activate.ps1
+   git clone https://github.com/yourusername/PolicyCraft.git
+   cd PolicyCraft
+   git checkout laboratory
    ```
 
-2. **Install Python dependencies**
+2. **Set up Python environment**
    ```bash
+   # Create and activate virtual environment
+   python -m venv venv
+   source venv/bin/activate  # On Windows: .\venv\Scripts\Activate.ps1
+   
+   # Install dependencies
+   pip install --upgrade pip
    pip install -r requirements.txt
    ```
 
-3. **Install and start MongoDB**
+3. **Set up MongoDB**
    ```bash
-   # macOS (Homebrew)
+   # Install MongoDB (macOS with Homebrew)
    brew tap mongodb/brew
    brew install mongodb-community
+   
+   # Start MongoDB service
    brew services start mongodb-community
+   
+   # Verify MongoDB is running
+   mongosh --eval 'db.runCommand({ connectionStatus: 1 })'
    ```
-   If you previously had MongoDB 7.x installed on macOS, you may need to relink:
-   ```bash
-   brew unlink mongodb-community@7.0 && brew link --overwrite mongodb-community
-   brew services start mongodb-community
-   ```
-   Windows/Linux alternatives:
-   - Windows: install the "MongoDB Community Server" using the official installer (mongodb.com/try/download/community) and start the "MongoDB" service.
-   - Linux: use your package manager (e.g. `sudo apt install mongodb-org`) or Docker (see below).
 
-4. **Create a .env file (copy from example; loaded automatically)**
-   Quick way:
+4. **Configure the application**
    ```bash
+   # Copy and configure environment variables
    cp .env.example .env
+   
+   # Generate a secure secret key
+   python -c 'import secrets; print(f"SECRET_KEY={secrets.token_hex(32)}")' >> .env
    ```
+
+5. **Initialize the database**
+   ```bash
+   # Create necessary database indexes and initial data
+   python -c "from app import create_app; create_app().app_context().push(); from src.database.models import init_db; init_db()"
+   ```
+
+6. **Start the application**
+   ```bash
+   python app.py
+   ```
+   
+   The application should now be running at http://localhost:5000
+
+### Troubleshooting
+
+#### MongoDB Connection Issues
+If you see connection errors:
+
+1. Check if MongoDB is running:
+   ```bash
+   brew services list | grep mongo
+   ```
+
+2. If not, start it manually:
+   ```bash
+   # Remove any lock files
+   sudo rm -f /opt/homebrew/var/mongodb/mongod.lock
+   sudo rm -f /opt/homebrew/var/mongodb/WiredTiger.lock
+   
+   # Start MongoDB
+   mongod --config /opt/homebrew/etc/mongod.conf --fork --logpath /tmp/mongod.log
+   ```
+
+#### Python Dependencies
+If you encounter dependency issues:
+```bash
+# Ensure pip is up to date
+pip install --upgrade pip setuptools wheel
+
+# Reinstall requirements
+pip install -r requirements.txt
+```
    Then adjust the values in `PolicyCraft/.env` (example below):
    ```env
    HOST=localhost

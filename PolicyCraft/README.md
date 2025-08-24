@@ -70,14 +70,19 @@ The steps below get you from a fresh clone to a fully working application with a
      print('NLTK resources installed')
      PY
      ```
+6. - **Create required directories**  
+  Before the first run, make sure the following directories exist (otherwise you may see `FileNotFoundError: logs/application.log`):  
 
-6. **Run the app**
+  ```bash
+  mkdir -p PolicyCraft/logs PolicyCraft/data/processed PolicyCraft/data/policies/pdf_originals
+
+7. **Run the app**
    ```bash
    python app.py
    ```
    The site will be available at: `http://localhost:5001`.
 
-7. **Run the tests (optional but recommended)**
+8. **Run the tests (optional but recommended)**
    ```bash
    python -m pytest -q
    ```

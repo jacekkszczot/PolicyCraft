@@ -185,19 +185,39 @@ pip install -r requirements.txt
 
 **Note**: MongoDB is **required** for the application to function. It stores policy analyses, recommendations, literature, and knowledge base data.
 
-Follow the installation instructions below:
-
 #### macOS (using Homebrew)
-```bash
-# Install MongoDB Community Edition
-brew tap mongodb/brew
-brew install mongodb-community
 
-# Start MongoDB service
-brew services start mongodb-community
+**For Apple Silicon (M1/M2):**
+```bash
+# Install MongoDB
+brew install mongodb/brew/mongodb-community
+
+# Create required directories
+sudo mkdir -p /opt/homebrew/var/log/mongodb
+sudo mkdir -p /opt/homebrew/var/mongodb
+sudo chown -R $(whoami) /opt/homebrew/var/log/mongodb
+sudo chown -R $(whoami) /opt/homebrew/var/mongodb
+
+# Start MongoDB
+mongod --dbpath /opt/homebrew/var/mongodb --logpath /opt/homebrew/var/log/mongodb/mongo.log --fork
 ```
 
-#### Ubuntu/Debian
+**For Intel Mac:**
+```bash
+# Install MongoDB
+brew install mongodb/brew/mongodb-community
+
+# Start MongoDB service
+brew services start mongodb/brew/mongodb-community
+```
+
+**Alternative - Manual start:**
+```bash
+# Start MongoDB manually
+mongod --config /usr/local/etc/mongod.conf
+```
+
+#### Linux (Ubuntu/Debian)
 ```bash
 # Import the public key
 wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
@@ -383,28 +403,82 @@ The application will be available at: [http://localhost:5001](http://localhost:5
 
 ## Troubleshooting
 
-### MongoDB Connection Issues
+### Login Issues
 
+If you cannot log in with the default admin credentials:
+
+1. **Check MongoDB status:**
+   ```bash
+   brew services list | grep mongodb
+   ```
+
+2. **Reset admin password:**
+   ```bash
+   python reset_admin_password.py
+   ```
+
+3. **Re-run setup:**
+   ```bash
+   ./setup_new_dev.sh
+   ```
+
+4. **Check database:**
+   ```bash
+   python -c "
+   from src.database.models import User, db
+   from app import create_app
+   app = create_app()
+   with app.app_context():
+       admin = User.query.filter_by(email='admin@policycraft.ai').first()
+       if admin:
+           print(f'Admin exists: {admin.username}, role: {admin.role}')
+       else:
+           print('Admin user not found')
+   "
+   ```
+
+### Common Issues
+
+- **MongoDB not running**: Start with `brew services start mongodb/brew/mongodb-community`
+- **Database errors**: Remove old database files and re-run setup
+- **Import errors**: Make sure virtual environment is activated
+- **Port conflicts**: Application runs on port 5001, not 5000
+
+### MongoDB Issues
+
+**MongoDB service error:**
 ```bash
-# Check if MongoDB is running
-pgrep -l mongod
+# Check MongoDB status
+brew services list | grep mongodb
 
-# Check MongoDB logs
-tail -f ~/mongodb_logs/mongod.log
-
-# If MongoDB fails to start, try removing lock files
-rm -f ~/mongodb_data/mongod.lock
-rm -f ~/mongodb_data/WiredTiger.lock
+# Stop and restart MongoDB
+brew services stop mongodb/brew/mongodb-community
+brew services start mongodb/brew/mongodb-community
 ```
 
-### Python Dependencies
-
+**Apple Silicon (M1/M2) specific:**
 ```bash
-# Ensure pip is up to date
-pip install --upgrade pip setuptools wheel
+# MongoDB is installed in /opt/homebrew/ on Apple Silicon
+which mongod
+# Should show: /opt/homebrew/bin/mongod
 
-# Reinstall requirements
-pip install -r requirements.txt
+# Create directories manually if needed
+sudo mkdir -p /opt/homebrew/var/log/mongodb
+sudo mkdir -p /opt/homebrew/var/mongodb
+sudo chown -R $(whoami) /opt/homebrew/var/log/mongodb
+sudo chown -R $(whoami) /opt/homebrew/var/mongodb
+
+# Start MongoDB manually
+mongod --dbpath /opt/homebrew/var/mongodb --logpath /opt/homebrew/var/log/mongodb/mongo.log --fork
+```
+
+**Check MongoDB logs:**
+```bash
+# Apple Silicon
+tail -f /opt/homebrew/var/log/mongodb/mongo.log
+
+# Intel Mac
+tail -f /usr/local/var/log/mongodb/mongo.log
 ```
 
 ## Configuration

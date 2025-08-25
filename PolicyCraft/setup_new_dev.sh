@@ -12,6 +12,13 @@ cd "$SCRIPT_DIR"
 mkdir -p PolicyCraft-Databases/{development,production,backups}
 echo "✓ Database directories created"
 
+# Remove old database files to ensure clean setup
+echo "Removing old database files..."
+rm -f PolicyCraft-Databases/development/*.db
+rm -f instance/policycraft.db
+rm -f instance/*.db
+echo "✓ Old database files removed"
+
 # Setup virtual environment
 echo "Setting up Python virtual environment..."
 
@@ -71,20 +78,71 @@ mkdir -p logs
 touch logs/.gitkeep
 echo "✓ Logs directory created"
 
-# Check MongoDB status
-echo "Checking MongoDB status..."
+# Check MongoDB status and setup
+echo "Checking MongoDB status and setup..."
 if command -v mongod &> /dev/null; then
+    # Detect MongoDB installation path
+    MONGODB_BIN=$(which mongod)
+    if [[ "$MONGODB_BIN" == "/opt/homebrew/bin/mongod" ]]; then
+        # Apple Silicon (M1/M2)
+        MONGODB_CONFIG="/opt/homebrew/etc/mongod.conf"
+        MONGODB_VAR="/opt/homebrew/var"
+        echo "🔍 Detected Apple Silicon MongoDB installation"
+    elif [[ "$MONGODB_BIN" == "/usr/local/bin/mongod" ]]; then
+        # Intel Mac
+        MONGODB_CONFIG="/usr/local/etc/mongod.conf"
+        MONGODB_VAR="/usr/local/var"
+        echo "🔍 Detected Intel Mac MongoDB installation"
+    else
+        # Other systems
+        MONGODB_CONFIG="/etc/mongod.conf"
+        MONGODB_VAR="/var/lib/mongodb"
+        echo "🔍 Detected other system MongoDB installation"
+    fi
+    
+    # Create MongoDB directories if they don't exist
+    echo "Creating MongoDB directories..."
+    sudo mkdir -p "$MONGODB_VAR/log/mongodb"
+    sudo mkdir -p "$MONGODB_VAR/mongodb"
+    sudo chown -R $(whoami) "$MONGODB_VAR/log/mongodb"
+    sudo chown -R $(whoami) "$MONGODB_VAR/mongodb"
+    echo "✅ MongoDB directories created"
+    
+    # Check if MongoDB is running
     if pgrep -x "mongod" > /dev/null; then
         echo "✓ MongoDB is running"
     else
         echo "⚠ MongoDB is installed but not running"
-        echo "   Start MongoDB with: brew services start mongodb/brew/mongodb-community"
-        echo "   Or: mongod --config /usr/local/etc/mongod.conf"
+        echo "   Starting MongoDB..."
+        
+        # Try to start MongoDB with detected paths
+        if [ -f "$MONGODB_CONFIG" ]; then
+            echo "   Using config file: $MONGODB_CONFIG"
+            mongod --config "$MONGODB_CONFIG" --dbpath "$MONGODB_VAR/mongodb" --logpath "$MONGODB_VAR/log/mongodb/mongo.log" --fork
+        else
+            echo "   No config file found, starting with default settings"
+            mongod --dbpath "$MONGODB_VAR/mongodb" --logpath "$MONGODB_VAR/log/mongodb/mongo.log" --fork
+        fi
+        
+        # Wait a moment and check if it's running
+        sleep 2
+        if pgrep -x "mongod" > /dev/null; then
+            echo "✅ MongoDB started successfully"
+        else
+            echo "❌ Failed to start MongoDB"
+            echo "   Please start MongoDB manually:"
+            echo "   mongod --dbpath $MONGODB_VAR/mongodb --logpath $MONGODB_VAR/log/mongodb/mongo.log"
+        fi
     fi
 else
     echo "❌ MongoDB is not installed"
-    echo "   Install MongoDB first: brew install mongodb/brew/mongodb-community"
-    echo "   Then start it: brew services start mongodb/brew/mongodb-community"
+    echo "   Install MongoDB first:"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "   brew install mongodb/brew/mongodb-community"
+        echo "   Then start it: brew services start mongodb/brew/mongodb-community"
+    else
+        echo "   Follow MongoDB installation guide for your system"
+    fi
 fi
 
 # Initialize database using the new configuration
@@ -149,29 +207,30 @@ except Exception as e:
 # Create all tables and set up admin user
 with app.app_context():
     try:
-        # Create tables
+        # Drop all tables first to ensure clean slate
+        print('🔄 Dropping existing tables...')
+        db.drop_all()
+        print('✅ Existing tables dropped')
+        
+        # Create tables with new model
         print('🔄 Creating database tables...')
         db.create_all()
         print('✅ Database tables created')
         
-        # Create admin user if it doesn't exist
-        admin = User.query.filter_by(email='admin@policycraft.ai').first()
-        if not admin:
-            print('🔄 Creating admin user...')
-            admin = User(
-                username='admin',
-                email='admin@policycraft.ai',
-                password=generate_password_hash('admin1'),
-                first_name='Admin',
-                last_name='User',
-                role='admin',
-                is_verified=True
-            )
-            db.session.add(admin)
-            db.session.commit()
-            print('✅ Admin user created with username: admin, password: admin1')
-        else:
-            print('ℹ️  Admin user already exists')
+        # Create admin user
+        print('🔄 Creating admin user...')
+        admin = User(
+            username='admin',
+            email='admin@policycraft.ai',
+            password='admin1',  # This will be hashed by User.__init__
+            first_name='Admin',
+            last_name='User',
+            role='admin',
+            is_verified=True
+        )
+        db.session.add(admin)
+        db.session.commit()
+        print('✅ Admin user created with username: admin, password: admin1')
             
         # Update .env with database URI
         try:
@@ -233,12 +292,18 @@ echo ""
 echo "Next steps:"
 echo "1. Ensure MongoDB is running: brew services start mongodb/brew/mongodb-community"
 echo "2. Run the application: python app.py"
-echo "3. Access the admin panel at: http://localhost:5000/admin"
-echo "4. Change the default admin password after first login"
+echo "3. Access the application at: http://localhost:5001"
+echo "4. Log in with admin credentials above"
+echo "5. Change the default admin password after first login"
 echo ""
 echo "⚠️  SECURITY WARNING: Change the default admin password immediately!"
 echo ""
 echo "📝 Note: This setup uses the new dual-database configuration:"
 echo "   - SQLite: User accounts and basic data"
 echo "   - MongoDB: Policy analyses, recommendations, and knowledge base"
+echo ""
+echo "🔧 If you have login issues:"
+echo "   - Make sure MongoDB is running"
+echo "   - Check that the database was created successfully"
+echo "   - Verify admin user exists in the database"
 echo "========================================"

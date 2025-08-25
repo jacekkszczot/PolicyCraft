@@ -71,8 +71,24 @@ mkdir -p logs
 touch logs/.gitkeep
 echo "✓ Logs directory created"
 
-# Initialize empty SQLite database
-echo "Initializing database..."
+# Check MongoDB status
+echo "Checking MongoDB status..."
+if command -v mongod &> /dev/null; then
+    if pgrep -x "mongod" > /dev/null; then
+        echo "✓ MongoDB is running"
+    else
+        echo "⚠ MongoDB is installed but not running"
+        echo "   Start MongoDB with: brew services start mongodb/brew/mongodb-community"
+        echo "   Or: mongod --config /usr/local/etc/mongod.conf"
+    fi
+else
+    echo "❌ MongoDB is not installed"
+    echo "   Install MongoDB first: brew install mongodb/brew/mongodb-community"
+    echo "   Then start it: brew services start mongodb/brew/mongodb-community"
+fi
+
+# Initialize database using the new configuration
+echo "Initializing database with new configuration..."
 python -c "
 import os, sys
 from pathlib import Path
@@ -81,25 +97,36 @@ from werkzeug.security import generate_password_hash
 
 # Add current directory to path
 sys.path.insert(0, '.')
-from config import get_config, create_secure_directories
+
+try:
+    from config import get_config, create_secure_directories
+    print('✅ Config loaded successfully')
+except ImportError as e:
+    print(f'❌ Error importing config: {e}')
+    print('Make sure config.py exists and is properly configured')
+    sys.exit(1)
 
 # Get the current working directory as base path
 BASE_DIR = Path(os.getcwd()).absolute()
-# Ensure we're in the right directory by changing to the script's location
-script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-if script_dir != str(BASE_DIR):
-    os.chdir(script_dir)
-    BASE_DIR = Path(script_dir).absolute()
+print(f'🔧 Working directory: {BASE_DIR}')
 
-# Configure database path
-INSTANCE_DIR = BASE_DIR / 'instance'
-DB_PATH = INSTANCE_DIR / 'policycraft.db'
-DB_URI = f'sqlite:///{DB_PATH}'
+# Create secure directories
+try:
+    create_secure_directories()
+    print('✅ Secure directories created')
+except Exception as e:
+    print(f'⚠ Warning creating secure directories: {e}')
 
-# Create instance directory with proper permissions
-INSTANCE_DIR.mkdir(mode=0o755, parents=True, exist_ok=True)
-print(f'🔧 Database path: {DB_PATH}')
-print(f'🔧 Instance directory: {INSTANCE_DIR}')
+# Configure database path using the new config structure
+try:
+    config = get_config()
+    DB_URI = config.SQLALCHEMY_DATABASE_URI
+    print(f'🔧 Database URI from config: {DB_URI}')
+except Exception as e:
+    print(f'❌ Error getting config: {e}')
+    # Fallback to default path
+    DB_URI = f'sqlite:///{BASE_DIR}/PolicyCraft-Databases/development/policycraft_dev.db'
+    print(f'🔧 Using fallback database URI: {DB_URI}')
 
 # Create and configure the Flask application
 app = Flask(__name__)
@@ -111,12 +138,13 @@ app.config.update(
 )
 
 # Initialise SQLAlchemy
-from src.database.models import db, User
-db.init_app(app)
-
-print(f'🔍 Database path: {DB_PATH}')
-print(f'🔍 Instance directory exists: {INSTANCE_DIR.exists()}')
-print(f'🔍 Instance directory permissions: {oct(INSTANCE_DIR.stat().st_mode & 0o777)}')
+try:
+    from src.database.models import db, User
+    db.init_app(app)
+    print('✅ SQLAlchemy initialized')
+except Exception as e:
+    print(f'❌ Error initializing SQLAlchemy: {e}')
+    sys.exit(1)
 
 # Create all tables and set up admin user
 with app.app_context():
@@ -124,6 +152,7 @@ with app.app_context():
         # Create tables
         print('🔄 Creating database tables...')
         db.create_all()
+        print('✅ Database tables created')
         
         # Create admin user if it doesn't exist
         admin = User.query.filter_by(email='admin@policycraft.ai').first()
@@ -146,7 +175,6 @@ with app.app_context():
             
         # Update .env with database URI
         try:
-            # Read current .env or create if not exists
             env_path = Path('.env')
             if not env_path.exists():
                 env_path.touch()
@@ -167,13 +195,14 @@ with app.app_context():
             # Add SQLALCHEMY_DATABASE_URI if it wasn't in the file
             if not db_uri_updated:
                 env_content += f'\n# Database configuration\nSQLALCHEMY_DATABASE_URI={DB_URI}\nSQLALCHEMY_TRACK_MODIFICATIONS=False\n'
+            
             # Write back to .env
             with open(env_path, 'w') as f:
                 f.write(env_content)
             
             # Set proper permissions
             env_path.chmod(0o600)  # Only owner can read/write
-            print('✓ Database configuration updated in .env')
+            print('✅ Database configuration updated in .env')
             print(f'   Database URI: {DB_URI}')
             
         except Exception as e:
@@ -182,17 +211,13 @@ with app.app_context():
             print(f'SQLALCHEMY_DATABASE_URI={DB_URI}')
             print('SQLALCHEMY_TRACK_MODIFICATIONS=False')
             
-        print(f'✅ Database initialised successfully at {DB_PATH}')
+        print(f'✅ Database initialized successfully')
         
     except Exception as e:
         import traceback
-        print('❌ Error during database initialisation:')
+        print('❌ Error during database initialization:')
         print(traceback.format_exc())
         print(f'Current working directory: {os.getcwd()}')
-        if INSTANCE_DIR.exists():
-            print(f'Instance directory contents: {os.listdir(INSTANCE_DIR)}')
-        else:
-            print('Instance directory does not exist')
         sys.exit(1)
 "
 
@@ -206,10 +231,14 @@ echo "- Email: admin@policycraft.ai"
 echo "- Password: admin1"
 echo ""
 echo "Next steps:"
-echo "1. Start MongoDB: brew services start mongodb/brew/mongodb-community"
+echo "1. Ensure MongoDB is running: brew services start mongodb/brew/mongodb-community"
 echo "2. Run the application: python app.py"
 echo "3. Access the admin panel at: http://localhost:5000/admin"
 echo "4. Change the default admin password after first login"
 echo ""
 echo "⚠️  SECURITY WARNING: Change the default admin password immediately!"
+echo ""
+echo "📝 Note: This setup uses the new dual-database configuration:"
+echo "   - SQLite: User accounts and basic data"
+echo "   - MongoDB: Policy analyses, recommendations, and knowledge base"
 echo "========================================"

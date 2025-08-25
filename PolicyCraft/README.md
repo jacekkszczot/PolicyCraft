@@ -4,6 +4,22 @@
 
 A web-based application for analysing university AI policies, extracting themes, classifying approaches, and generating strategic recommendations for higher education institutions.
 
+## Live Application
+
+**PolicyCraft is accessible online at:** [https://policycraft.jaai.co.uk](https://policycraft.jaai.co.uk)
+
+The application has been successfully deployed and is available for use.
+
+## Copyright and Legal Protection
+
+**This work is protected under international copyright law and academic integrity policies.**
+
+- **Copyright (c) 2025 Jacek Kszczot (jacekkszczot)**
+- **All Rights Reserved**
+- **Academic submission for Leeds Trinity University, Module COM7016**
+
+See [COPYRIGHT_NOTICE.md](COPYRIGHT_NOTICE.md) for detailed legal information and usage restrictions.
+
 ## Table of Contents
 - [System Requirements](#system-requirements)
 - [Quick Start (Automatic Setup)](#quick-start-automatic-setup)

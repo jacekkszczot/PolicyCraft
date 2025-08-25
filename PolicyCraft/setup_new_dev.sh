@@ -29,9 +29,18 @@ except:
     print('⚠ NLTK download failed - will try during runtime')
 "
 
+# Set default admin credentials
+DEFAULT_ADMIN_EMAIL="admin@policycraft.ai"
+DEFAULT_ADMIN_PASSWORD="admin1"
+
 # Copy environment template
 cp .env.example .env
-echo "✓ Environment file created"
+
+# Add default admin credentials to .env
+echo "\n# Default admin credentials" >> .env
+echo "DEFAULT_ADMIN_EMAIL=$DEFAULT_ADMIN_EMAIL" >> .env
+echo "DEFAULT_ADMIN_PASSWORD=$DEFAULT_ADMIN_PASSWORD" >> .env
+echo "✓ Environment file created with default admin credentials"
 
 # Create logs directory
 mkdir -p logs
@@ -50,14 +59,49 @@ app.config.from_object(get_config())
 create_secure_directories()
 
 from flask_sqlalchemy import SQLAlchemy
+from src.database.models import User, db as models_db
+
+# Initialize the database
 with app.app_context():
+    # Initialize SQLAlchemy
     db = SQLAlchemy(app)
+    
+    # Create all tables
     db.create_all()
-    print('✓ SQLite database structure created')
+    
+    # Create admin user if not exists
+    admin = User.query.filter_by(email='admin@policycraft.ai').first()
+    if not admin:
+        admin = User(
+            username='admin',
+            email='admin@policycraft.ai',
+            password='admin1',
+            first_name='Admin',
+            last_name='User',
+            role='admin',
+            is_verified=True
+        )
+        db.session.add(admin)
+        db.session.commit()
+        print('✓ Admin user created with username: admin, password: admin1')
+    
+    print('✓ Database initialization complete')
 "
 
 echo ""
-echo "Setup complete! Next steps:"
-echo "1. Configure .env file if needed"
-echo "2. Start MongoDB: brew services start mongodb/brew/mongodb-community"
-echo "3. Run: python app.py"
+echo ""
+echo "========================================"
+echo "🚀 Setup complete!"
+echo ""
+echo "Admin access:"
+echo "- Email: admin@policycraft.ai"
+echo "- Password: admin1"
+echo ""
+echo "Next steps:"
+echo "1. Start MongoDB: brew services start mongodb/brew/mongodb-community"
+echo "2. Run the application: python app.py"
+echo "3. Access the admin panel at: http://localhost:5000/admin"
+echo "4. Change the default admin password after first login"
+echo ""
+echo "⚠️  SECURITY WARNING: Change the default admin password immediately!"
+echo "========================================"

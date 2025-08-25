@@ -43,24 +43,35 @@ cd PolicyCraft
 # Run the setup script
 chmod +x setup_new_dev.sh
 ./setup_new_dev.sh
-
-# Start MongoDB (if not already running)
-brew services start mongodb-community  # macOS with Homebrew
-# or
-# sudo systemctl start mongod         # Linux with systemd
-
-# Start the application
-cd PolicyCraft
-python app.py
 ```
 
-This will:
-1. Set up a Python virtual environment
-2. Install all required dependencies
-3. Download necessary NLTK data
-4. Create required directories
-5. Initialize the SQLite database
-6. Configure the application
+### Default Admin Account
+
+After running the setup script, you can log in with the following credentials:
+
+- **Email:** `admin@policycraft.ai`
+- **Password:** `admin1`
+
+**Important:** For security reasons, please change the default password after your first login.
+
+### Start the Application
+
+1. Start MongoDB (if not already running):
+   ```bash
+   # On macOS with Homebrew
+   brew services start mongodb-community
+   
+   # On Linux with systemd
+   # sudo systemctl start mongod
+   ```
+
+2. Start the application:
+   ```bash
+   cd PolicyCraft
+   python app.py
+   ```
+
+3. Open your browser and go to: http://localhost:5000
 
 ## Manual Installation Guide
 

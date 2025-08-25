@@ -78,20 +78,22 @@ from flask import Flask
 sys.path.insert(0, '.')
 from config import get_config, create_secure_directories
 
+# First, create the Flask app and configure it
 app = Flask(__name__)
 app.config.from_object(get_config())
 create_secure_directories()
 
-from flask_sqlalchemy import SQLAlchemy
-from src.database.models import User, db as models_db
+# Initialize SQLAlchemy with the app
+from src.database.models import db as models_db
+models_db.init_app(app)
 
-# Initialize the database
+# Now import User model after db is initialized
+from src.database.models import User
+
+# Create all tables and set up admin user
 with app.app_context():
-    # Initialize SQLAlchemy
-    db = SQLAlchemy(app)
-    
     # Create all tables
-    db.create_all()
+    models_db.create_all()
     
     # Create admin user if not exists
     admin = User.query.filter_by(email='admin@policycraft.ai').first()

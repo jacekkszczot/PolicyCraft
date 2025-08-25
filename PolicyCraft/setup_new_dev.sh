@@ -72,6 +72,7 @@ touch logs/.gitkeep
 echo "✓ Logs directory created"
 
 # Initialize empty SQLite database
+echo "Initializing database..."
 python -c "
 import os, sys
 from pathlib import Path
@@ -97,6 +98,8 @@ DB_URI = f'sqlite:///{DB_PATH}'
 
 # Create instance directory with proper permissions
 INSTANCE_DIR.mkdir(mode=0o755, parents=True, exist_ok=True)
+print(f'🔧 Database path: {DB_PATH}')
+print(f'🔧 Instance directory: {INSTANCE_DIR}')
 
 # Create and configure the Flask application
 app = Flask(__name__)
@@ -140,6 +143,44 @@ with app.app_context():
             print('✅ Admin user created with username: admin, password: admin1')
         else:
             print('ℹ️  Admin user already exists')
+            
+        # Update .env with database URI
+        try:
+            # Read current .env or create if not exists
+            env_path = Path('.env')
+            if not env_path.exists():
+                env_path.touch()
+            
+            # Read existing content
+            env_content = ''
+            db_uri_updated = False
+            
+            if env_path.stat().st_size > 0:
+                with open(env_path, 'r') as f:
+                    for line in f:
+                        if line.startswith('SQLALCHEMY_DATABASE_URI='):
+                            env_content += f'SQLALCHEMY_DATABASE_URI={DB_URI}\n'
+                            db_uri_updated = True
+                        else:
+                            env_content += line
+            
+            # Add SQLALCHEMY_DATABASE_URI if it wasn't in the file
+            if not db_uri_updated:
+                env_content += f'\n# Database configuration\nSQLALCHEMY_DATABASE_URI={DB_URI}\nSQLALCHEMY_TRACK_MODIFICATIONS=False\n'
+            # Write back to .env
+            with open(env_path, 'w') as f:
+                f.write(env_content)
+            
+            # Set proper permissions
+            env_path.chmod(0o600)  # Only owner can read/write
+            print('✓ Database configuration updated in .env')
+            print(f'   Database URI: {DB_URI}')
+            
+        except Exception as e:
+            print(f'⚠ Could not update .env: {e}')
+            print(f'Please manually add to your .env file:')
+            print(f'SQLALCHEMY_DATABASE_URI={DB_URI}')
+            print('SQLALCHEMY_TRACK_MODIFICATIONS=False')
             
         print(f'✅ Database initialised successfully at {DB_PATH}')
         

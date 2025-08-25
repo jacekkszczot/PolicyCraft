@@ -6,7 +6,8 @@ A web-based application for analysing university AI policies, extracting themes,
 
 ## Table of Contents
 - [System Requirements](#system-requirements)
-- [Installation Guide](#installation-guide)
+- [Quick Start (Automatic Setup)](#quick-start-automatic-setup)
+- [Manual Installation Guide](#manual-installation-guide)
   - [1. Clone the Repository](#1-clone-the-repository)
   - [2. Set Up Python Environment](#2-set-up-python-environment)
   - [3. Install MongoDB](#3-install-mongodb)
@@ -30,7 +31,40 @@ A web-based application for analysing university AI policies, extracting themes,
 - **pip**: Package manager for Python
 - **Virtual Environment** (recommended)
 
-## Installation Guide
+## Quick Start (Automatic Setup)
+
+For most users, we recommend using the automated setup script:
+
+```bash
+# Clone the repository
+git clone -b laboratory https://github.com/jacekkszczot/PolicyCraft.git
+cd PolicyCraft
+
+# Run the setup script
+chmod +x setup_new_dev.sh
+./setup_new_dev.sh
+
+# Start MongoDB (if not already running)
+brew services start mongodb-community  # macOS with Homebrew
+# or
+# sudo systemctl start mongod         # Linux with systemd
+
+# Start the application
+cd PolicyCraft
+python app.py
+```
+
+This will:
+1. Set up a Python virtual environment
+2. Install all required dependencies
+3. Download necessary NLTK data
+4. Create required directories
+5. Initialize the SQLite database
+6. Configure the application
+
+## Manual Installation Guide
+
+Follow these steps if you prefer manual setup or need custom configuration:
 
 ### 1. Clone the Repository
 
@@ -254,17 +288,24 @@ If you see connection errors:
 
 1. Check if MongoDB is running:
    ```bash
+   # On macOS with Homebrew
    brew services list | grep mongo
+   
+   # On Linux with systemd
+   # sudo systemctl status mongod
    ```
 
 2. If not, start it manually:
    ```bash
-   # Remove any lock files
-   sudo rm -f /opt/homebrew/var/mongodb/mongod.lock
-   sudo rm -f /opt/homebrew/var/mongodb/WiredTiger.lock
+   # On macOS with Homebrew
+   brew services start mongodb-community
    
-   # Start MongoDB
-   mongod --config /opt/homebrew/etc/mongod.conf --fork --logpath /tmp/mongod.log
+   # On Linux with systemd
+   # sudo systemctl start mongod
+   
+   # If you encounter lock files:
+   # macOS: sudo rm -f /opt/homebrew/var/mongodb/mongod.lock
+   # Linux: sudo rm -f /var/lib/mongodb/mongod.lock
    ```
 
 #### Python Dependencies
@@ -408,7 +449,7 @@ pip install -r requirements.txt
 
 ### Getting Started
 
-1. **Register Account**: Create user account for personalized analysis tracking
+1. **Register Account**: Create user account for personalised analysis tracking
 2. **Upload Policy**: Select AI policy document (PDF/DOCX/TXT format)
 3. **View Analysis**: Review extracted themes, classification, and visualisations
 4. **Generate Recommendations**: Access detailed, academic-grade improvement suggestions
@@ -416,7 +457,7 @@ pip install -r requirements.txt
 
 ### Batch Analysis
 
-For institutions analyzing multiple policies:
+For institutions analysing multiple policies:
 
 1. Navigate to Upload page
 2. Select multiple files (up to 10 simultaneously)

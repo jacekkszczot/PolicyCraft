@@ -11,6 +11,7 @@ PolicyCraft-Databases/backups/*
 data/policies/pdf_originals/*
 data/processed/*
 logs/*.log
+!logs/.gitkeep
 instance/*
 
 # Environment secrets

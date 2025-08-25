@@ -473,7 +473,7 @@ def validate_dependencies():
     critical_failures = []
     warnings = []
     
-    print("🔍 PolicyCraft Dependency Validation")
+    print("PolicyCraft Dependency Validation")
     print("=" * 50)
     
     # Core Python packages

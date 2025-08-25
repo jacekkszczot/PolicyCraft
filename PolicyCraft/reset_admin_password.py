@@ -27,7 +27,7 @@ def reset_admin_password():
         from app import create_app
         from werkzeug.security import generate_password_hash
         
-        print("🔧 Resetting admin password...")
+        print("Resetting admin password...")
         
         # Create Flask app context
         app = create_app()
@@ -37,7 +37,7 @@ def reset_admin_password():
             admin = User.query.filter_by(email='admin@policycraft.ai').first()
             
             if not admin:
-                print("❌ Admin user not found!")
+                print("Admin user not found!")
                 print("   Make sure you have run setup_new_dev.sh first")
                 return False
             
@@ -45,22 +45,22 @@ def reset_admin_password():
             admin.password_hash = generate_password_hash('admin1')
             db.session.commit()
             
-            print("✅ Admin password reset successfully!")
+            print("Admin password reset successfully!")
             print("   Email: admin@policycraft.ai")
             print("   Password: admin1")
             print("")
-            print("⚠️  SECURITY WARNING: Change this password immediately after logging in!")
+            print("SECURITY WARNING: Change this password immediately after logging in!")
             
             return True
             
     except ImportError as e:
-        print(f"❌ Error importing modules: {e}")
+        print(f"Error importing modules: {e}")
         print("   Make sure you are in the PolicyCraft directory")
         print("   and have activated the virtual environment")
         return False
         
     except Exception as e:
-        print(f"❌ Error resetting password: {e}")
+        print(f"Error resetting password: {e}")
         return False
 
 def main():
@@ -71,20 +71,20 @@ def main():
     
     # Check if we're in the right directory
     if not Path('app.py').exists():
-        print("❌ Error: app.py not found!")
+        print("Error: app.py not found!")
         print("   Please run this script from the PolicyCraft directory")
         sys.exit(1)
     
     # Check if virtual environment is activated
     if not hasattr(sys, 'real_prefix') and not (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
-        print("⚠️  Warning: Virtual environment may not be activated")
+        print("Warning: Virtual environment may not be activated")
         print("   Consider running: source venv/bin/activate")
         print("")
     
     # Reset password
     if reset_admin_password():
         print("")
-        print("🚀 You can now log in with:")
+        print("You can now log in with:")
         print("   Email: admin@policycraft.ai")
         print("   Password: admin1")
         print("")
@@ -95,7 +95,7 @@ def main():
         print("4. Change the password immediately!")
     else:
         print("")
-        print("❌ Password reset failed!")
+        print("Password reset failed!")
         print("   Please check the error messages above")
         sys.exit(1)
 

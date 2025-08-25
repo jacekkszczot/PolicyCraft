@@ -87,17 +87,17 @@ if command -v mongod &> /dev/null; then
         # Apple Silicon (M1/M2)
         MONGODB_CONFIG="/opt/homebrew/etc/mongod.conf"
         MONGODB_VAR="/opt/homebrew/var"
-        echo "🔍 Detected Apple Silicon MongoDB installation"
+        echo "Detected Apple Silicon MongoDB installation"
     elif [[ "$MONGODB_BIN" == "/usr/local/bin/mongod" ]]; then
         # Intel Mac
         MONGODB_CONFIG="/usr/local/etc/mongod.conf"
         MONGODB_VAR="/usr/local/var"
-        echo "🔍 Detected Intel Mac MongoDB installation"
+        echo "Detected Intel Mac MongoDB installation"
     else
         # Other systems
         MONGODB_CONFIG="/etc/mongod.conf"
         MONGODB_VAR="/var/lib/mongodb"
-        echo "🔍 Detected other system MongoDB installation"
+        echo "Detected other system MongoDB installation"
     fi
     
     # Create MongoDB directories if they don't exist
@@ -106,42 +106,42 @@ if command -v mongod &> /dev/null; then
     sudo mkdir -p "$MONGODB_VAR/mongodb"
     sudo chown -R $(whoami) "$MONGODB_VAR/log/mongodb"
     sudo chown -R $(whoami) "$MONGODB_VAR/mongodb"
-    echo "✅ MongoDB directories created"
+    echo "MongoDB directories created"
     
     # Check if MongoDB is running
     if pgrep -x "mongod" > /dev/null; then
-        echo "✓ MongoDB is running"
+        echo "MongoDB is running"
     else
-        echo "⚠ MongoDB is installed but not running"
-        echo "   Starting MongoDB..."
+        echo "MongoDB is installed but not running"
+        echo "Starting MongoDB..."
         
         # Try to start MongoDB with detected paths
         if [ -f "$MONGODB_CONFIG" ]; then
-            echo "   Using config file: $MONGODB_CONFIG"
+            echo "Using config file: $MONGODB_CONFIG"
             mongod --config "$MONGODB_CONFIG" --dbpath "$MONGODB_VAR/mongodb" --logpath "$MONGODB_VAR/log/mongodb/mongo.log" --fork
         else
-            echo "   No config file found, starting with default settings"
+            echo "No config file found, starting with default settings"
             mongod --dbpath "$MONGODB_VAR/mongodb" --logpath "$MONGODB_VAR/log/mongodb/mongo.log" --fork
         fi
         
         # Wait a moment and check if it's running
         sleep 2
         if pgrep -x "mongod" > /dev/null; then
-            echo "✅ MongoDB started successfully"
+            echo "MongoDB started successfully"
         else
-            echo "❌ Failed to start MongoDB"
-            echo "   Please start MongoDB manually:"
-            echo "   mongod --dbpath $MONGODB_VAR/mongodb --logpath $MONGODB_VAR/log/mongodb/mongo.log"
+            echo "Failed to start MongoDB"
+            echo "Please start MongoDB manually:"
+            echo "mongod --dbpath $MONGODB_VAR/mongodb --logpath $MONGODB_VAR/log/mongodb/mongo.log"
         fi
     fi
 else
-    echo "❌ MongoDB is not installed"
-    echo "   Install MongoDB first:"
+    echo "MongoDB is not installed"
+    echo "Install MongoDB first:"
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        echo "   brew install mongodb/brew/mongodb-community"
-        echo "   Then start it: brew services start mongodb/brew/mongodb-community"
+        echo "brew install mongodb/brew/mongodb-community"
+        echo "Then start it: brew services start mongodb/brew/mongodb-community"
     else
-        echo "   Follow MongoDB installation guide for your system"
+        echo "Follow MongoDB installation guide for your system"
     fi
 fi
 
@@ -158,33 +158,33 @@ sys.path.insert(0, '.')
 
 try:
     from config import get_config, create_secure_directories
-    print('✅ Config loaded successfully')
+    print('Config loaded successfully')
 except ImportError as e:
-    print(f'❌ Error importing config: {e}')
+    print(f'Error importing config: {e}')
     print('Make sure config.py exists and is properly configured')
     sys.exit(1)
 
 # Get the current working directory as base path
 BASE_DIR = Path(os.getcwd()).absolute()
-print(f'🔧 Working directory: {BASE_DIR}')
+print(f'Working directory: {BASE_DIR}')
 
 # Create secure directories
 try:
     create_secure_directories()
-    print('✅ Secure directories created')
+    print('Secure directories created')
 except Exception as e:
-    print(f'⚠ Warning creating secure directories: {e}')
+    print(f'Warning creating secure directories: {e}')
 
 # Configure database path using the new config structure
 try:
     config = get_config()
     DB_URI = config.SQLALCHEMY_DATABASE_URI
-    print(f'🔧 Database URI from config: {DB_URI}')
+    print(f'Database URI from config: {DB_URI}')
 except Exception as e:
-    print(f'❌ Error getting config: {e}')
+    print(f'Error getting config: {e}')
     # Fallback to default path
     DB_URI = f'sqlite:///{BASE_DIR}/PolicyCraft-Databases/development/policycraft_dev.db'
-    print(f'🔧 Using fallback database URI: {DB_URI}')
+    print(f'Using fallback database URI: {DB_URI}')
 
 # Create and configure the Flask application
 app = Flask(__name__)
@@ -199,26 +199,26 @@ app.config.update(
 try:
     from src.database.models import db, User
     db.init_app(app)
-    print('✅ SQLAlchemy initialized')
+    print('SQLAlchemy initialized')
 except Exception as e:
-    print(f'❌ Error initializing SQLAlchemy: {e}')
+    print(f'Error initializing SQLAlchemy: {e}')
     sys.exit(1)
 
 # Create all tables and set up admin user
 with app.app_context():
     try:
         # Drop all tables first to ensure clean slate
-        print('🔄 Dropping existing tables...')
+        print('Dropping existing tables...')
         db.drop_all()
-        print('✅ Existing tables dropped')
+        print('Existing tables dropped')
         
         # Create tables with new model
-        print('🔄 Creating database tables...')
+        print('Creating database tables...')
         db.create_all()
-        print('✅ Database tables created')
+        print('Database tables created')
         
         # Create admin user
-        print('🔄 Creating admin user...')
+        print('Creating admin user...')
         admin = User(
             username='admin',
             email='admin@policycraft.ai',
@@ -230,7 +230,7 @@ with app.app_context():
         )
         db.session.add(admin)
         db.session.commit()
-        print('✅ Admin user created with username: admin, password: admin1')
+        print('Admin user created with username: admin, password: admin1')
             
         # Update .env with database URI
         try:
@@ -261,20 +261,20 @@ with app.app_context():
             
             # Set proper permissions
             env_path.chmod(0o600)  # Only owner can read/write
-            print('✅ Database configuration updated in .env')
-            print(f'   Database URI: {DB_URI}')
+            print('Database configuration updated in .env')
+            print(f'Database URI: {DB_URI}')
             
         except Exception as e:
-            print(f'⚠ Could not update .env: {e}')
+            print(f'Could not update .env: {e}')
             print(f'Please manually add to your .env file:')
             print(f'SQLALCHEMY_DATABASE_URI={DB_URI}')
             print('SQLALCHEMY_TRACK_MODIFICATIONS=False')
             
-        print(f'✅ Database initialized successfully')
+        print(f'Database initialized successfully')
         
     except Exception as e:
         import traceback
-        print('❌ Error during database initialization:')
+        print('Error during database initialization:')
         print(traceback.format_exc())
         print(f'Current working directory: {os.getcwd()}')
         sys.exit(1)
@@ -283,7 +283,7 @@ with app.app_context():
 echo ""
 echo ""
 echo "========================================"
-echo "🚀 Setup complete!"
+echo "Setup complete!"
 echo ""
 echo "Admin access:"
 echo "- Email: admin@policycraft.ai"
@@ -296,13 +296,13 @@ echo "3. Access the application at: http://localhost:5001"
 echo "4. Log in with admin credentials above"
 echo "5. Change the default admin password after first login"
 echo ""
-echo "⚠️  SECURITY WARNING: Change the default admin password immediately!"
+echo "SECURITY WARNING: Change the default admin password immediately!"
 echo ""
-echo "📝 Note: This setup uses the new dual-database configuration:"
+echo "Note: This setup uses the new dual-database configuration:"
 echo "   - SQLite: User accounts and basic data"
 echo "   - MongoDB: Policy analyses, recommendations, and knowledge base"
 echo ""
-echo "🔧 If you have login issues:"
+echo "If you have login issues:"
 echo "   - Make sure MongoDB is running"
 echo "   - Check that the database was created successfully"
 echo "   - Verify admin user exists in the database"

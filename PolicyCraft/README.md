@@ -252,6 +252,86 @@ print('NLTK resources installed')
 "
 ```
 
+## 5A. Troubleshooting NLTK Installation
+
+If you see warnings such as:
+WARNING: NLTK resource missing: wordnet
+WARNING: NLTK resource missing: punkt
+WARNING: NLTK resource missing: stopwords
+WARNING: NLTK resource missing: averaged_perceptron_tagger
+
+
+…it means the application cannot find the required NLTK datasets.  
+This sometimes happens when `nltk.download()` fails due to network restrictions or permissions.  
+
+Follow these steps to install the resources manually:  
+
+---
+
+### 1. Open a terminal and go to your application’s folder
+```bash
+cd path/to/your/application
+
+### Create a new shell script:
+nano install_nltk_resources.sh
+
+### Paste the following content into the file:
+
+!/bin/bash
+set -e
+
+# Base directory for NLTK data
+NLTK_DIR="$HOME/nltk_data"
+CORPORA_DIR="$NLTK_DIR/corpora"
+TAGGERS_DIR="$NLTK_DIR/taggers"
+TOKENIZERS_DIR="$NLTK_DIR/tokenizers"
+
+echo "Creating directories..."
+mkdir -p "$CORPORA_DIR" "$TAGGERS_DIR" "$TOKENIZERS_DIR"
+
+# URLs of NLTK packages
+WORDNET_URL="https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/wordnet.zip"
+STOPWORDS_URL="https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/stopwords.zip"
+TAGGER_URL="https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/taggers/averaged_perceptron_tagger.zip"
+PUNKT_URL="https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/tokenizers/punkt.zip"
+
+# Download resources
+echo "Downloading WordNet..."
+curl -L -o /tmp/wordnet.zip "$WORDNET_URL"
+
+echo "Downloading Stopwords..."
+curl -L -o /tmp/stopwords.zip "$STOPWORDS_URL"
+
+echo "Downloading Averaged Perceptron Tagger..."
+curl -L -o /tmp/averaged_perceptron_tagger.zip "$TAGGER_URL"
+
+echo "Downloading Punkt..."
+curl -L -o /tmp/punkt.zip "$PUNKT_URL"
+
+# Unpack into the correct folders
+echo "Unpacking WordNet..."
+unzip -o /tmp/wordnet.zip -d "$CORPORA_DIR"
+
+echo "Unpacking Stopwords..."
+unzip -o /tmp/stopwords.zip -d "$CORPORA_DIR"
+
+echo "Unpacking Averaged Perceptron Tagger..."
+unzip -o /tmp/averaged_perceptron_tagger.zip -d "$TAGGERS_DIR"
+
+echo "Unpacking Punkt..."
+unzip -o /tmp/punkt.zip -d "$TOKENIZERS_DIR"
+
+echo "✓ NLTK resources installed in $NLTK_DIR"
+echo "If your application still cannot find them, run:"
+echo "   export NLTK_DATA=\"$NLTK_DIR\""
+
+### 3. Make the script executable
+chmod +x install_nltk_resources.sh
+
+###4. Run the script
+./install_nltk_resources.sh
+
+
 ### 6. Configure Application
 
 ```bash

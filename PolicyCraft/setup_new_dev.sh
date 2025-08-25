@@ -75,41 +75,66 @@ echo "✓ Logs directory created"
 python -c "
 import os, sys
 from flask import Flask
+from werkzeug.security import generate_password_hash
+
 sys.path.insert(0, '.')
 from config import get_config, create_secure_directories
 
-# First, create the Flask app and configure it
+# First, create and configure the Flask application
 app = Flask(__name__)
 app.config.from_object(get_config())
 create_secure_directories()
 
-# Initialize SQLAlchemy with the app
-from src.database.models import db as models_db
-models_db.init_app(app)
-
-# Now import User model after db is initialized
+# Initialise SQLAlchemy with the application
+from src.database.models import db
 from src.database.models import User
+
+db.init_app(app)
 
 # Create all tables and set up admin user
 with app.app_context():
     # Create all tables
-    models_db.create_all()
+    db.create_all()
     
-    # Create admin user if not exists
+    # Create admin user if it does not exist
     admin = User.query.filter_by(email='admin@policycraft.ai').first()
     if not admin:
-        admin = User(
-            username='admin',
-            email='admin@policycraft.ai',
-            password='admin1',
-            first_name='Admin',
-            last_name='User',
-            role='admin',
-            is_verified=True
-        )
-        db.session.add(admin)
-        db.session.commit()
-        print('✓ Admin user created with username: admin, password: admin1')
+        try:
+            admin = User(
+                username='admin',
+                email='admin@policycraft.ai',
+                password=generate_password_hash('admin1'),
+                first_name='Admin',
+                last_name='User',
+                role='admin',
+                is_verified=True
+            )
+            db.session.add(admin)
+            db.session.commit()
+            print('✓ Admin user created with username: admin, password: admin1')
+        except Exception as e:
+            print(f'⚠ Error creating admin user: {str(e)}')
+            # Try an alternative approach
+            try:
+                from werkzeug.security import generate_password_hash
+                from src.database.models import User, db
+                
+                admin = User(
+                    username='admin',
+                    email='admin@policycraft.ai',
+                    password=generate_password_hash('admin1'),
+                    first_name='Admin',
+                    last_name='User',
+                    role='admin',
+                    is_verified=True
+                )
+                db.session.add(admin)
+                db.session.commit()
+                print('✓ Admin user created (second attempt)')
+            except Exception as e2:
+                print(f'⚠ Second attempt failed: {str(e2)}')
+    else:
+        print('✓ Admin user already exists')
     
     print('✓ Database initialization complete')
 "

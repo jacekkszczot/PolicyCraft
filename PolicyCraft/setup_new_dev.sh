@@ -74,72 +74,78 @@ echo "✓ Logs directory created"
 # Initialize empty SQLite database
 python -c "
 import os, sys
+from pathlib import Path
 from flask import Flask
 from werkzeug.security import generate_password_hash
 
+# Add current directory to path
 sys.path.insert(0, '.')
 from config import get_config, create_secure_directories
 
-# First, create and configure the Flask application
+# Ensure we're in the correct directory
+BASE_DIR = Path(__file__).parent.absolute()
+os.chdir(BASE_DIR)
+
+# Configure database path
+INSTANCE_DIR = BASE_DIR / 'instance'
+DB_PATH = INSTANCE_DIR / 'policycraft.db'
+DB_URI = f'sqlite:///{DB_PATH}'
+
+# Create instance directory with proper permissions
+INSTANCE_DIR.mkdir(mode=0o755, parents=True, exist_ok=True)
+
+# Create and configure the Flask application
 app = Flask(__name__)
-app.config.from_object(get_config())
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/policycraft.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['DEFAULT_ADMIN_EMAIL'] = 'admin@policycraft.ai'
-app.config['DEFAULT_ADMIN_PASSWORD'] = 'admin1'
+app.config.update(
+    SQLALCHEMY_DATABASE_URI=DB_URI,
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    DEFAULT_ADMIN_EMAIL='admin@policycraft.ai',
+    DEFAULT_ADMIN_PASSWORD='admin1'
+)
 
-create_secure_directories()
-
-# Ensure instance directory exists
-os.makedirs('instance', exist_ok=True)
-
-# Initialise SQLAlchemy with the application
-from src.database.models import db, User, init_db
-
+# Initialise SQLAlchemy
+from src.database.models import db, User
 db.init_app(app)
+
+print(f'🔍 Database path: {DB_PATH}')
+print(f'🔍 Instance directory exists: {INSTANCE_DIR.exists()}')
+print(f'🔍 Instance directory permissions: {oct(INSTANCE_DIR.stat().st_mode & 0o777)}')
 
 # Create all tables and set up admin user
 with app.app_context():
-    # Initialize database and create tables
-    db_initialized = False
     try:
-        # Try to create tables
+        # Create tables
+        print('🔄 Creating database tables...')
         db.create_all()
-        db_initialized = True
-    except Exception as e:
-        print(f'⚠ Error initializing database: {str(e)}')
-    
-    if not db_initialized:
-        # If tables couldn't be created, try with checkfirst=False
-        try:
-            db.create_all(checkfirst=False)
-            db_initialized = True
-        except Exception as e:
-            print(f'⚠ Second attempt to initialize database failed: {str(e)}')
-    
-    if db_initialized:
-        # Create admin user if it does not exist
+        
+        # Create admin user if it doesn't exist
         admin = User.query.filter_by(email='admin@policycraft.ai').first()
         if not admin:
-            try:
-                admin = User(
-                    username='admin',
-                    email='admin@policycraft.ai',
-                    password=generate_password_hash('admin1'),
-                    first_name='Admin',
-                    last_name='User',
-                    role='admin',
-                    is_verified=True
-                )
-                db.session.add(admin)
-                db.session.commit()
-                print('✓ Admin user created with username: admin, password: admin1')
-            except Exception as e:
-                print(f'⚠ Error creating admin user: {str(e)}')
+            print('🔄 Creating admin user...')
+            admin = User(
+                username='admin',
+                email='admin@policycraft.ai',
+                password=generate_password_hash('admin1'),
+                first_name='Admin',
+                last_name='User',
+                role='admin',
+                is_verified=True
+            )
+            db.session.add(admin)
+            db.session.commit()
+            print('✅ Admin user created with username: admin, password: admin1')
         else:
-            print('✓ Admin user already exists')
-    
-    print('✓ Database initialization complete')
+            print('ℹ️  Admin user already exists')
+            
+        print(f'✅ Database initialised successfully at {DB_PATH}')
+        
+    except Exception as e:
+        import traceback
+        print('❌ Error during database initialisation:')
+        print(traceback.format_exc())
+        print(f'Current working directory: {os.getcwd()}')
+        print(f'Instance directory contents: {os.listdir(INSTANCE_DIR) if INSTANCE_DIR.exists() else "Does not exist"}')
+        sys.exit(1)
 "
 
 echo ""

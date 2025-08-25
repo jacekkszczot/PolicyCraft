@@ -7,10 +7,29 @@ mkdir -p PolicyCraft-Databases/{development,production,backups}
 echo "✓ Database directories created"
 
 # Setup virtual environment
+echo "Setting up Python virtual environment..."
 cd PolicyCraft
+
+# Remove existing venv if it exists
+if [ -d "venv" ]; then
+    echo "Removing existing virtual environment..."
+    rm -rf venv
+fi
+
+# Create new virtual environment
 python -m venv venv
-source venv/bin/activate
-echo "✓ Virtual environment created"
+
+# Activate the virtual environment
+if [ "$OSTYPE" = "msys" ] || [ "$OSTYPE" = "cygwin" ]; then
+    # Windows
+    source venv/Scripts/activate
+else
+    # Unix/Linux/MacOS
+    source venv/bin/activate
+fi
+
+echo "✓ Virtual environment created and activated"
+echo "Python path: $(which python)"
 
 # Install dependencies
 pip install -r requirements.txt

@@ -25,24 +25,50 @@ A web-based application for analysing university AI policies, extracting themes,
 ## System Requirements
 
 - **Operating System**: macOS, Linux, or Windows (WSL2 recommended for Windows)
-- **Python**: 3.8 or higher
-- **MongoDB**: 6.0 or higher
+- **Python**: 3.8 or higher (with venv module)
+- **MongoDB**: 6.0 or higher (see installation instructions below)
 - **Git**: Latest stable version
-- **pip**: Package manager for Python
-- **Virtual Environment** (recommended)
 
 ## Quick Start (Automatic Setup)
 
-For most users, we recommend using the automated setup script:
+For most users, we recommend using the automated setup script. The script will:
+1. Create a Python virtual environment (requires Python 3.8+ to be pre-installed)
+2. Install all required Python dependencies
+3. Set up the database
+4. Create an admin account
+
+### Before You Begin
+
+Ensure you have completed all prerequisites above, then verify the venv module is available:
 
 ```bash
-# Clone the repository
+# On Debian/Ubuntu
+sudo apt-get install python3-venv
+
+# On RHEL/CentOS
+sudo yum install python3-venv
+
+# On macOS (if not already installed with Python)
+python3 -m ensurepip --upgrade
+python3 -m pip install --upgrade pip
+
+# On Windows (usually included with Python installation)
+python -m ensurepip --upgrade
+```
+
+### Running the Setup Script
+
+```bash
+# 1. Clone the repository
 git clone -b laboratory https://github.com/jacekkszczot/PolicyCraft.git
 cd PolicyCraft
 
-# Run the setup script
+# 2. Make the setup script executable and run it
 chmod +x setup_new_dev.sh
 ./setup_new_dev.sh
+
+# The script will automatically create and activate a virtual environment
+# and install all required dependencies
 ```
 
 ### Default Admin Account
@@ -56,7 +82,26 @@ After running the setup script, you can log in with the following credentials:
 
 ### Start the Application
 
-1. Start MongoDB (if not already running):
+1. **Activate the virtual environment** (required every time you open a new terminal):
+   ```bash
+   # Navigate to the project directory if you're not already there
+   cd PolicyCraft
+
+   # Activate the virtual environment
+   # On macOS/Linux
+   source venv/bin/activate
+   
+   # On Windows (Command Prompt)
+   # venv\Scripts\activate.bat
+   
+   # On Windows (PowerShell)
+   # .\venv\Scripts\Activate.ps1
+   
+   # You should see (venv) at the beginning of your command prompt
+   # indicating the virtual environment is active
+   ```
+
+2. Start MongoDB (if not already running):
    ```bash
    # On macOS with Homebrew
    brew services start mongodb-community
@@ -65,13 +110,13 @@ After running the setup script, you can log in with the following credentials:
    # sudo systemctl start mongod
    ```
 
-2. Start the application:
+3. Start the application:
    ```bash
    cd PolicyCraft
    python app.py
    ```
 
-3. Open your browser and go to: http://localhost:5000
+3. Open your browser and go to: http://localhost:5001
 
 ## Manual Installation Guide
 
@@ -115,6 +160,9 @@ pip install -r requirements.txt
 # Install MongoDB Community Edition
 brew tap mongodb/brew
 brew install mongodb-community
+
+# Start MongoDB service
+brew services start mongodb-community
 ```
 
 #### Ubuntu/Debian
@@ -128,6 +176,20 @@ echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu $(lsb_release
 # Update packages and install MongoDB
 sudo apt-get update
 sudo apt-get install -y mongodb-org
+
+# Start MongoDB service
+sudo systemctl start mongod
+sudo systemctl enable mongod
+```
+
+#### Windows
+1. Download the installer from [MongoDB Download Center](https://www.mongodb.com/try/download/community)
+2. Run the installer and follow the setup wizard
+3. MongoDB will be installed as a Windows Service and started automatically
+
+#### Using Docker (all platforms)
+```bash
+docker run -d -p 27017:27017 --name mongo -v mongo_data:/data/db mongo:7
 ```
 
 ### 4. Configure MongoDB
@@ -185,7 +247,7 @@ python -c "import secrets; print(f'SECRET_KEY={secrets.token_hex(32)}')" >> .env
 # nano .env  # or use your preferred text editor
 ```
 
-### 7. Initialize Database
+### 7. Initialise Database
 
 ```bash
 # Create database tables and indexes
@@ -205,7 +267,7 @@ with app.app_context():
 python app.py
 ```
 
-The application will be available at: [http://localhost:5000](http://localhost:5000)
+The application will be available at: [http://localhost:5001](http://localhost:5001)
 
 ## Troubleshooting
 
@@ -242,7 +304,7 @@ Edit the `.env` file to configure:
 ```env
 # Application
 HOST=localhost
-PORT=5000
+PORT=5001
 FLASK_ENV=development
 SECRET_KEY=your-secret-key-here
 
@@ -421,13 +483,26 @@ pip install -r requirements.txt
   Confirm the service is running and the URI matches your `.env`:
   `brew services list` and `MONGODB_URI=mongodb://localhost:27017/policycraft`.
 
-### Windows and Linux notes
+### Verifying MongoDB Installation
 
-- Windows: install MongoDB Community Server from the official installer or use Docker.
-- Linux: use your package manager (e.g. `apt install mongodb-org`) or Docker.
-- Docker alternative (any OS):
-  ```bash
-  docker run -d -p 27017:27017 --name mongo -v mongo_data:/data/db mongo:7
+After installation, verify MongoDB is running:
+
+```bash
+mongod --version
+mongo --version
+```
+
+To check if the MongoDB service is running:
+
+```bash
+# On macOS
+brew services list | grep mongo
+
+# On Linux
+sudo systemctl status mongod
+
+# On Windows
+Get-Service -Name MongoDB
   ```
 
 #### Windows command equivalents
@@ -490,7 +565,7 @@ For institutions analysing multiple policies:
 The app can auto‑create a default admin user if an admin password is provided at initialisation (`src/database/models.py::init_db()`):
 
 - Email: `admin@policycraft.ai`
-- Username: `admin`
+- Username: `admin1`
 
 Option A — one‑off initialisation command:
 
@@ -618,7 +693,7 @@ This project is licensed under the MIT License. See LICENSE file for details.
 ## Contact
 
 **Jacek Robert Kszczot**  
-MSc Data Science & AI Student  
+MSc Data Science & AI   
 Leeds Trinity University  
 Email: jacek.kszczot@icloud.com  
 Project Repository: [[GitHub URL](https://github.com/jacekkszczot/PolicyCraft.git)]

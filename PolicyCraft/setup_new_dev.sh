@@ -144,7 +144,10 @@ with app.app_context():
         print('❌ Error during database initialisation:')
         print(traceback.format_exc())
         print(f'Current working directory: {os.getcwd()}')
-        print(f'Instance directory contents: {os.listdir(INSTANCE_DIR) if INSTANCE_DIR.exists() else "Does not exist"}')
+        if INSTANCE_DIR.exists():
+            print(f'Instance directory contents: {os.listdir(INSTANCE_DIR)}')
+        else:
+            print('Instance directory does not exist')
         sys.exit(1)
 "
 

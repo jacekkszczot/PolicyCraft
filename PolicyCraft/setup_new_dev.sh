@@ -2,13 +2,18 @@
 echo "PolicyCraft Development Setup"
 echo "=============================="
 
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Change to the script's directory
+cd "$SCRIPT_DIR"
+
 # Create database directory structure (your security architecture)
 mkdir -p PolicyCraft-Databases/{development,production,backups}
 echo "✓ Database directories created"
 
 # Setup virtual environment
 echo "Setting up Python virtual environment..."
-cd PolicyCraft
 
 # Remove existing venv if it exists
 if [ -d "venv" ]; then

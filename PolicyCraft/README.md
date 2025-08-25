@@ -63,7 +63,10 @@ python -m ensurepip --upgrade
 git clone -b laboratory https://github.com/jacekkszczot/PolicyCraft.git
 cd PolicyCraft
 
-# 2. Make the setup script executable and run it
+# 2. Ensure you are in the application directory
+#    (you should see files like setup_new_dev.sh and README.md in this directory)
+
+# 3. Make the setup script executable and run it
 chmod +x setup_new_dev.sh
 ./setup_new_dev.sh
 

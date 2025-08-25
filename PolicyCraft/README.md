@@ -56,23 +56,38 @@ python3 -m pip install --upgrade pip
 python -m ensurepip --upgrade
 ```
 
-### Running the Setup Script
+### Setting Up the Development Environment
 
-```bash
-# 1. Clone the repository
-git clone -b laboratory https://github.com/jacekkszczot/PolicyCraft.git
-cd PolicyCraft
+1. **Clone the repository**
+   ```bash
+   git clone -b laboratory https://github.com/jacekkszczot/PolicyCraft.git
+   cd PolicyCraft
+   ```
 
-# 2. Ensure you are in the application directory
-#    (you should see files like setup_new_dev.sh and README.md in this directory)
+2. **Create and activate a virtual environment**
+   ```bash
+   # Create a virtual environment
+   python -m venv venv
+   
+   # Activate the virtual environment
+   # On macOS/Linux:
+   source venv/bin/activate
+   # On Windows Command Prompt:
+   # venv\Scripts\activate.bat
+   # On Windows PowerShell:
+   # .\venv\Scripts\Activate.ps1
+   
+   # You should see (venv) in your command prompt
+   ```
 
-# 3. Make the setup script executable and run it
-chmod +x setup_new_dev.sh
-./setup_new_dev.sh
-
-# The script will automatically create and activate a virtual environment
-# and install all required dependencies
-```
+3. **Run the setup script**
+   ```bash
+   # Make the script executable (Linux/macOS)
+   chmod +x setup_new_dev.sh
+   
+   # Run the setup script
+   ./setup_new_dev.sh
+   ```
 
 ### Default Admin Account
 

@@ -59,85 +59,6 @@ def _extract_cleaned_text_with_logging(analysis):
     logger.info(f"Text data length: {len(cleaned_text) if cleaned_text else 0} chars")
     return cleaned_text
 
-def _norm_title(rec):
-    """Normalise recommendation title for matching (lowercase, stripped)."""
-    t = (rec or {}).get('title')
-    return (t or '').strip().lower()
-
-def _to_list(srcs, single):
-    """Normalise sources to a list, keeping single source if provided."""
-    if srcs:
-        return list(srcs)
-    if single:
-        return [single]
-    return []
-
-def _build_engine_title_index(engine_recs):
-    return { _norm_title(r): r for r in (engine_recs or []) if _norm_title(r) }
-
-def _merge_single_rec(stored, base):
-    stored = stored or {}
-    base = base or {}
-
-    def coalesce(key):
-        return stored.get(key) or base.get(key)
-
-    def pick_sources():
-        s_sources = _to_list(stored.get('sources'), stored.get('source'))
-        e_sources = _to_list(base.get('sources'), base.get('source'))
-        return s_sources or e_sources
-
-    merged = dict(base)
-    merged.update(stored)
-
-    merged['title'] = coalesce('title')
-    merged['description'] = coalesce('description')
-    merged['priority'] = coalesce('priority')
-    merged['timeframe'] = coalesce('timeframe')
-    merged['implementation_steps'] = stored.get('implementation_steps') or base.get('implementation_steps') or []
-
-    sources = pick_sources()
-    merged['sources'] = sources
-    if isinstance(sources, list) and len(sources) == 1:
-        merged['source'] = sources[0]
-    else:
-        merged['source'] = stored.get('source') or base.get('source')
-
-    return merged
-
-def _select_base_rec(idx, stored, engine_by_title, engine_recs):
-    key = _norm_title(stored)
-    if key and key in engine_by_title:
-        return engine_by_title[key], key
-    if idx < len(engine_recs or []):
-        return (engine_recs or [])[idx], None
-    return {}, None
-
-def _should_append_engine_rec(used_engine_titles, merged, engine_rec):
-    key = _norm_title(engine_rec)
-    if key and key in used_engine_titles:
-        return False
-    if any(_norm_title(x) and _norm_title(x) == key for x in merged):
-        return False
-    return True
-
-def _merge_stored_and_engine_recommendations(stored_recs, engine_recs):
-    """Merge stored recommendations with engine output, preserving user edits."""
-    engine_by_title = _build_engine_title_index(engine_recs)
-    used_engine_titles, merged = set(), []
-
-    for idx, s in enumerate(stored_recs or []):
-        base, title_key = _select_base_rec(idx, s, engine_by_title, engine_recs)
-        if title_key:
-            used_engine_titles.add(title_key)
-        merged.append(_merge_single_rec(s, base))
-
-    for e in (engine_recs or []):
-        if _should_append_engine_rec(used_engine_titles, merged, e):
-            merged.append(e)
-
-    return merged
-
 def _load_or_generate_recommendations(analysis_id, cleaned_text, themes=None, classification=None):
     """Load stored recommendations; always (re)build narrative and metadata.
 
@@ -157,8 +78,75 @@ def _load_or_generate_recommendations(analysis_id, cleaned_text, themes=None, cl
         )
 
         if stored_recs:
+            # Merge recommendations: keep rich fields from engine (e.g. sources, implementation_steps),
+            # but include user content/edits from storage. Link by title; no title → by index.
             engine_recs = engine_package.get('recommendations', []) or []
-            merged = _merge_stored_and_engine_recommendations(stored_recs, engine_recs)
+
+            def norm_title(rec):
+                t = (rec or {}).get('title')
+                return (t or '').strip().lower()
+
+            engine_by_title = {norm_title(r): r for r in engine_recs if norm_title(r)}
+            used_engine_titles = set()
+            merged = []
+
+            for idx, s in enumerate(stored_recs):
+                base = None
+                key = norm_title(s)
+                if key and key in engine_by_title:
+                    base = engine_by_title[key]
+                    used_engine_titles.add(key)
+                elif idx < len(engine_recs):
+                    base = engine_recs[idx]
+                else:
+                    base = {}
+
+                # Merge fields: prefer stored when present, otherwise engine
+                m = {}
+                m['title'] = s.get('title') or base.get('title')
+                m['description'] = s.get('description') or base.get('description')
+                m['priority'] = (s.get('priority') or base.get('priority'))
+                m['timeframe'] = (s.get('timeframe') or base.get('timeframe'))
+
+                # Implementation steps: prefer stored, else engine
+                steps = s.get('implementation_steps') or base.get('implementation_steps') or []
+                m['implementation_steps'] = steps
+
+                # Sources: normalise to list and preserve richest available
+                def to_list(srcs, single):
+                    if srcs:
+                        return list(srcs)
+                    if single:
+                        return [single]
+                    return []
+
+                s_sources = to_list(s.get('sources'), s.get('source'))
+                e_sources = to_list(base.get('sources'), base.get('source'))
+                m['sources'] = s_sources or e_sources
+                # Keep backward compatibility: also set single 'source' if only one
+                m['source'] = m['sources'][0] if isinstance(m.get('sources'), list) and len(m['sources']) == 1 else s.get('source') or base.get('source')
+
+                # Include any additional engine fields not explicitly handled
+                for k, v in (base or {}).items():
+                    if k not in m and v is not None:
+                        m[k] = v
+                # Overlay any additional stored fields
+                for k, v in (s or {}).items():
+                    if v is not None:
+                        m[k] = v
+
+                merged.append(m)
+
+            # Append engine-only recommendations not matched by title
+            for e in engine_recs:
+                key = norm_title(e)
+                if key and key in used_engine_titles:
+                    continue
+                # avoid duplicates by simple title check against merged
+                if any(norm_title(x) and norm_title(x) == key for x in merged):
+                    continue
+                merged.append(e)
+
             engine_package['recommendations'] = merged
             # Mark metadata that recommendations come from database and engine
             meta = engine_package.get('analysis_metadata', {})
@@ -254,7 +242,7 @@ def _require_analysis_or_redirect(analysis_id):
         return None, redirect(url_for('recommendations'))
     return analysis, None
 
-def _require_recommendations_or_redirect(_analysis_id):
+def _require_recommendations_or_redirect(analysis_id):
     """Ensure recommendations exist; otherwise flash and redirect to generator."""
     # This function is no longer needed since export works directly from recommendations page
     return None, None
@@ -372,12 +360,35 @@ def _build_recommendation_data(analysis_id, analysis, themes, classification, re
     }
     
     # Debug the final template data
-    logger.info("Export view: Final template data structure:")
+    logger.info(f"Export view: Final template data structure:")
     logger.info(f"  - analysis.confidence_factors: {template_data['analysis'].get('confidence_factors')}")
     logger.info(f"  - analysis.stakeholders: {template_data['analysis'].get('stakeholders')}")
     logger.info(f"  - analysis.risk_benefit: {template_data['analysis'].get('risk_benefit')}")
     
     return template_data
+
+    return {
+        'analysis': {
+            'filename': analysis.get('filename', 'Unknown'),
+            'classification': classification.get('classification', 'Unknown'),
+            'confidence': classification.get('confidence', 0),
+            'confidence_pct': conf_pct,
+            'confidence_factors': extended.get('confidence_factors') or extended.get('confidence', {}).get('factors'),
+            'stakeholders': extended.get('stakeholders'),
+            'risk_benefit': extended.get('risk_benefit'),
+            'analysis_id': analysis_id,
+            'themes_count': len(themes)
+        },
+        'recommendations': recommendation_package.get('recommendations', []),
+        'coverage_analysis': recommendation_package.get('coverage_analysis', {}),
+        'gaps': recommendation_package.get('identified_gaps', []),
+        'generated_date': recommendation_package.get('analysis_metadata', {}).get('generated_date', datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+        'methodology': recommendation_package.get('analysis_metadata', {}).get('methodology', 'Ethical Framework Analysis'),
+        'academic_sources': recommendation_package.get('analysis_metadata', {}).get('academic_sources', []),
+        'summary': recommendation_package.get('summary', {}),
+        'total_recommendations': len(recommendation_package.get('recommendations', [])),
+        'narrative': recommendation_package.get('narrative', {})
+    }
 
 def _store_recommendations_safe(analysis_id, recommendation_package):
     """Store recommendations, logging but not failing flow on errors."""
@@ -451,117 +462,6 @@ import os
 from werkzeug.utils import secure_filename
 import logging
 from datetime import datetime
-import importlib.util
-
-def _check_packages(packages, treat_missing_as_critical=True):
-    """Generic package import validator.
-    Returns (validation_results, warnings, critical_failures).
-    If treat_missing_as_critical is False, missing packages go to warnings.
-    """
-    validation_results, warnings, critical_failures = [], [], []
-    for package, description in packages:
-        try:
-            __import__(package.replace('-', '_'))
-            validation_results.append(f" {description}: {package}")
-        except ImportError as e:
-            msg = f"ERROR: {description}: {package} - {str(e)}" if treat_missing_as_critical else f"WARNING:  {description}: {package} - {str(e)}"
-            if treat_missing_as_critical:
-                critical_failures.append(msg)
-            else:
-                warnings.append(msg)
-    return validation_results, warnings, critical_failures
-
-def _validate_spacy_model():
-    results, warnings, critical = [], [], []
-    try:
-        import spacy
-        _ = spacy.load('en_core_web_sm')
-        results.append(" spaCy English model: en_core_web_sm")
-        print(" spaCy en_core_web_sm model loaded successfully")
-    except Exception as e:
-        critical.append(f"ERROR: spaCy English model: en_core_web_sm - {str(e)}")
-        print(f"ERROR: spaCy model error: {str(e)}")
-    return results, warnings, critical
-
-def _validate_sentence_transformer():
-    results, warnings, critical = [], [], []
-    try:
-        from sentence_transformers import SentenceTransformer
-        _ = SentenceTransformer('all-MiniLM-L6-v2')
-        results.append(" SentenceTransformer model: all-MiniLM-L6-v2")
-        print(" SentenceTransformer all-MiniLM-L6-v2 model loaded successfully")
-    except Exception as e:
-        critical.append(f"ERROR: SentenceTransformer model: all-MiniLM-L6-v2 - {str(e)}")
-        print(f"ERROR: SentenceTransformer error: {str(e)}")
-    return results, warnings, critical
-
-def _validate_nltk_data():
-    results, warnings, critical = [], [], []
-    try:
-        import nltk
-        nltk_resources = ['punkt', 'stopwords', 'wordnet', 'averaged_perceptron_tagger']
-        for resource in nltk_resources:
-            try:
-                if resource == 'punkt':
-                    path = f'tokenizers/{resource}'
-                elif resource in ['stopwords', 'wordnet']:
-                    path = f'corpora/{resource}'
-                else:
-                    path = f'taggers/{resource}'
-                nltk.data.find(path)
-                results.append(f" NLTK resource: {resource}")
-            except LookupError:
-                warnings.append(f"WARNING:  NLTK resource missing: {resource}")
-    except ImportError as e:
-        warnings.append(f"WARNING:  NLTK validation failed: {str(e)}")
-    return results, warnings, critical
-
-def _validate_recommendation_components(kb_path):
-    results, warnings, critical = [], [], []
-    try:
-        from src.recommendation.engine import RecommendationEngine
-        from src.analysis_engine.engine import PolicyAnalysisEngine
-
-        if os.path.exists(kb_path):
-            try:
-                _ = RecommendationEngine(knowledge_base_path=kb_path)
-                results.append("RecommendationEngine: Initialized successfully")
-                print("RecommendationEngine initialized with knowledge base")
-            except Exception as e:
-                msg = str(e)
-                if "knowledge base is not available" in msg:
-                    warnings.append("RecommendationEngine: Knowledge base empty (will be populated on document upload)")
-                    print("Knowledge base empty - recommendations available after document upload")
-                else:
-                    critical.append(f"RecommendationEngine error: {str(e)}")
-        else:
-            warnings.append("Knowledge base directory missing (will be created on first use)")
-            print("Knowledge base directory will be created on first use")
-
-        try:
-            _ = PolicyAnalysisEngine()
-            results.append("Advanced PolicyAnalysisEngine: Available")
-            print("Advanced analysis engine loaded successfully")
-        except Exception as e:
-            warnings.append(f"Advanced analysis engine: {str(e)}")
-            print(f"Advanced analysis engine error: {str(e)}")
-
-    except ImportError as e:
-        critical.append(f"Recommendation engine components: {str(e)}")
-        print(f"Recommendation engine import error: {str(e)}")
-    return results, warnings, critical
-
-def _validate_env_vars(env_vars):
-    results, warnings, critical = [], [], []
-    for var, description in env_vars:
-        value = os.environ.get(var)
-        if value:
-            results.append(f"{description}: {var} = {value}")
-            print(f"{description}: {var} = {value}")
-        else:
-            warnings.append(f"{description}: {var} not set")
-            print(f"{description}: {var} not set")
-    return results, warnings, critical
 
 def validate_dependencies():
     """
@@ -573,7 +473,7 @@ def validate_dependencies():
     critical_failures = []
     warnings = []
     
-    print("🔍 PolicyCraft Dependency Validation")
+    print("PolicyCraft Dependency Validation")
     print("=" * 50)
     
     # Core Python packages
@@ -585,9 +485,14 @@ def validate_dependencies():
         ('requests', 'HTTP client'),
         ('dotenv', 'Environment variables (python-dotenv)')
     ]
-    res, warn, crit = _check_packages(core_packages, treat_missing_as_critical=True)
-    validation_results += res; warnings += warn; critical_failures += crit
-
+    
+    for package, description in core_packages:
+        try:
+            __import__(package.replace('-', '_'))
+            validation_results.append(f" {description}: {package}")
+        except ImportError as e:
+            critical_failures.append(f"ERROR: {description}: {package} - {str(e)}")
+    
     # NLP and ML packages
     nlp_packages = [
         ('spacy', 'Natural Language Processing'),
@@ -596,49 +501,120 @@ def validate_dependencies():
         ('sentence_transformers', 'Sentence embeddings'),
         ('contractions', 'Text preprocessing')
     ]
-    res, warn, crit = _check_packages(nlp_packages, treat_missing_as_critical=True)
-    validation_results += res; warnings += warn; critical_failures += crit
-
-    # Document processing packages (non-critical)
+    
+    for package, description in nlp_packages:
+        try:
+            __import__(package.replace('-', '_'))
+            validation_results.append(f" {description}: {package}")
+        except ImportError as e:
+            critical_failures.append(f"ERROR: {description}: {package} - {str(e)}")
+    
+    # Document processing packages
     doc_packages = [
         ('pypdf', 'PDF processing'),
         ('docx', 'Word document processing (python-docx)'),
         ('fitz', 'Advanced PDF processing (PyMuPDF)'),
         ('pdfplumber', 'PDF text extraction')
     ]
-    res, warn, crit = _check_packages(doc_packages, treat_missing_as_critical=False)
-    validation_results += res; warnings += warn; critical_failures += crit
-
-    # Visualization packages (non-critical)
+    
+    for package, description in doc_packages:
+        try:
+            __import__(package)
+            validation_results.append(f" {description}: {package}")
+        except ImportError as e:
+            warnings.append(f"WARNING:  {description}: {package} - {str(e)}")
+    
+    # Visualization packages
     viz_packages = [
         ('plotly', 'Interactive visualisations'),
         ('kaleido', 'Static image export'),
         ('reportlab', 'PDF generation'),
         ('xlsxwriter', 'Excel export')
     ]
-    res, warn, crit = _check_packages(viz_packages, treat_missing_as_critical=False)
-    validation_results += res; warnings += warn; critical_failures += crit
+    
+    for package, description in viz_packages:
+        try:
+            __import__(package)
+            validation_results.append(f" {description}: {package}")
+        except ImportError as e:
+            warnings.append(f"WARNING:  {description}: {package} - {str(e)}")
     
     # Critical NLP models and data
     print("\n🧠 NLP Models and Data Validation")
     print("-" * 30)
     
-    # spaCy + SentenceTransformer + NLTK data
-    res, warn, crit = _validate_spacy_model()
-    validation_results += res; warnings += warn; critical_failures += crit
-    res, warn, crit = _validate_sentence_transformer()
-    validation_results += res; warnings += warn; critical_failures += crit
-    res, warn, crit = _validate_nltk_data()
-    validation_results += res; warnings += warn; critical_failures += crit
+    # spaCy model validation
+    try:
+        import spacy
+        nlp = spacy.load('en_core_web_sm')
+        validation_results.append(" spaCy English model: en_core_web_sm")
+        print(" spaCy en_core_web_sm model loaded successfully")
+    except Exception as e:
+        critical_failures.append(f"ERROR: spaCy English model: en_core_web_sm - {str(e)}")
+        print(f"ERROR: spaCy model error: {str(e)}")
+    
+    # SentenceTransformer model validation
+    try:
+        from sentence_transformers import SentenceTransformer
+        embedder = SentenceTransformer('all-MiniLM-L6-v2')
+        validation_results.append(" SentenceTransformer model: all-MiniLM-L6-v2")
+        print(" SentenceTransformer all-MiniLM-L6-v2 model loaded successfully")
+    except Exception as e:
+        critical_failures.append(f"ERROR: SentenceTransformer model: all-MiniLM-L6-v2 - {str(e)}")
+        print(f"ERROR: SentenceTransformer error: {str(e)}")
+    
+    # NLTK data validation
+    try:
+        import nltk
+        nltk_resources = ['punkt', 'stopwords', 'wordnet', 'averaged_perceptron_tagger']
+        for resource in nltk_resources:
+            try:
+                nltk.data.find(f'tokenizers/{resource}' if resource == 'punkt' else 
+                              f'corpora/{resource}' if resource in ['stopwords', 'wordnet'] else 
+                              f'taggers/{resource}')
+                validation_results.append(f" NLTK resource: {resource}")
+            except LookupError:
+                warnings.append(f"WARNING:  NLTK resource missing: {resource}")
+    except ImportError as e:
+        warnings.append(f"WARNING:  NLTK validation failed: {str(e)}")
     
     # Recommendation Engine validation
     print("\n🎯 Recommendation Engine Validation")
     print("-" * 30)
     
-    # Recommendation Engine validation
-    kb_path = 'docs/knowledge_base'
-    res, warn, crit = _validate_recommendation_components(kb_path)
-    validation_results += res; warnings += warn; critical_failures += crit
+    try:
+        from src.recommendation.engine import RecommendationEngine
+        from src.analysis_engine.engine import PolicyAnalysisEngine
+        
+        # Test knowledge base integration
+        kb_path = 'docs/knowledge_base'
+        if os.path.exists(kb_path):
+            try:
+                engine = RecommendationEngine(knowledge_base_path=kb_path)
+                validation_results.append("RecommendationEngine: Initialized successfully")
+                print("RecommendationEngine initialized with knowledge base")
+            except Exception as e:
+                if "knowledge base is not available" in str(e):
+                    warnings.append("RecommendationEngine: Knowledge base empty (will be populated on document upload)")
+                    print("Knowledge base empty - recommendations available after document upload")
+                else:
+                    critical_failures.append(f"RecommendationEngine error: {str(e)}")
+        else:
+            warnings.append("Knowledge base directory missing (will be created on first use)")
+            print("Knowledge base directory will be created on first use")
+        
+        # Test advanced analysis engine
+        try:
+            analysis_engine = PolicyAnalysisEngine()
+            validation_results.append("Advanced PolicyAnalysisEngine: Available")
+            print("Advanced analysis engine loaded successfully")
+        except Exception as e:
+            warnings.append(f"Advanced analysis engine: {str(e)}")
+            print(f"Advanced analysis engine error: {str(e)}")
+            
+    except ImportError as e:
+        critical_failures.append(f"Recommendation engine components: {str(e)}")
+        print(f"Recommendation engine import error: {str(e)}")
 
     # Environment variables validation
     print("\nEnvironment Configuration")
@@ -649,8 +625,15 @@ def validate_dependencies():
         ('MONGODB_URI', 'MongoDB connection (optional)'),
         ('SECRET_KEY', 'Flask secret key (optional)')
     ]
-    res, warn, crit = _validate_env_vars(env_vars)
-    validation_results += res; warnings += warn; critical_failures += crit
+    
+    for var, description in env_vars:
+        value = os.environ.get(var)
+        if value:
+            validation_results.append(f"{description}: {var} = {value}")
+            print(f"{description}: {var} = {value}")
+        else:
+            warnings.append(f"{description}: {var} not set")
+            print(f"{description}: {var} not set")
     
     # Summary
     print("\nValidation Summary")
@@ -678,24 +661,8 @@ def validate_dependencies():
     print("\nAll critical dependencies validated. Starting application...")
     print("=" * 50)
 
-# Import configuration with safe fallback to config.example.py if config.py is missing
-try:
-    # Prefer local config.py (not tracked in VCS)
-    from config import get_config, create_secure_directories
-except Exception:
-    # Fallback: dynamically load config.example.py from the same directory
-    try:
-        _cfg_example_path = os.path.join(os.path.dirname(__file__), 'config.example.py')
-        _spec = importlib.util.spec_from_file_location('config_example', _cfg_example_path)
-        _mod = importlib.util.module_from_spec(_spec)
-        assert _spec and _spec.loader
-        _spec.loader.exec_module(_mod)  # type: ignore[attr-defined]
-        get_config = _mod.get_config  # type: ignore[attr-defined]
-        create_secure_directories = _mod.create_secure_directories  # type: ignore[attr-defined]
-        print("WARNING: Using config.example.py as fallback configuration. Create PolicyCraft/config.py for local overrides.")
-    except Exception as _cfg_err:
-        print(f"ERROR: Failed to load configuration (config.py and config.example.py). Details: {_cfg_err}")
-        raise
+# Import configuration
+from config import get_config, create_secure_directories
 
 # Import analysis modules
 # Constants for duplicated literals

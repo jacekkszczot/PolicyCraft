@@ -34,11 +34,16 @@ class TestConfig:
         assert isinstance(mongodb_settings, dict)
         assert 'db' in mongodb_settings
     
-    @patch.dict(os.environ, {'SECRET_KEY': 'test_secret_key'})
+    @patch.dict(os.environ, {'SECRET_KEY': 'test_secret_key'}, clear=True)
     def test_environment_variable_override(self):
         """Test that environment variables properly override defaults."""
-        config = Config()
-        assert config.SECRET_KEY == 'test_secret_key'
+        # Force reload of config module to pick up new environment variable
+        import importlib
+        import config
+        importlib.reload(config)
+        
+        config_instance = config.Config()
+        assert config_instance.SECRET_KEY == 'test_secret_key'
     
     def test_security_configuration(self):
         """Test security-related configuration."""

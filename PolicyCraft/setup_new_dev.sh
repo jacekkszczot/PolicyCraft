@@ -82,14 +82,13 @@ from werkzeug.security import generate_password_hash
 sys.path.insert(0, '.')
 from config import get_config, create_secure_directories
 
-# Get the current directory as base path
+# Get the current working directory as base path
 BASE_DIR = Path(os.getcwd()).absolute()
-# Change to the script's directory if running from another location
-if __file__ in globals():
-    script_dir = Path(__file__).parent.absolute()
-    if script_dir != BASE_DIR:
-        os.chdir(script_dir)
-        BASE_DIR = script_dir
+# Ensure we're in the right directory by changing to the script's location
+script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+if script_dir != str(BASE_DIR):
+    os.chdir(script_dir)
+    BASE_DIR = Path(script_dir).absolute()
 
 # Configure database path
 INSTANCE_DIR = BASE_DIR / 'instance'

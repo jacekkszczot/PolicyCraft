@@ -165,7 +165,7 @@ if __name__ == "__main__":
     raw_folder = Path("raw_policies")
     
     if raw_folder.exists():
-        print(f"🔄 Processing files in {raw_folder}")
+        print(f"Processing files in {raw_folder}")
         
         for file_path in raw_folder.glob("*"):
             if file_path.suffix.lower() in ['.pdf', '.docx', '.doc']:

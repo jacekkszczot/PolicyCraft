@@ -848,7 +848,7 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_id):
         """Load user for Flask-Login session management."""
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
     
     # Register blueprints (eager)
     app.register_blueprint(auth_bp)
@@ -2386,7 +2386,7 @@ def handle_first_login_onboarding(user_id: int) -> bool:
     try:
         from src.database.models import User
 
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             return False
 

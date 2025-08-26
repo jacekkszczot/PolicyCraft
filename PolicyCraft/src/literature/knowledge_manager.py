@@ -731,84 +731,146 @@ class KnowledgeBaseManager:
                     
                 # Extract title (multiple formats)
                 if line.startswith("# ") and metadata["title"] == "Untitled Document":
-                    title = line[2:].strip()
-                    metadata["title"] = title
-                    
-                    # Extract year from title if present (e.g., "UNESCO (2021)")
-                    import re
-                    year_match = re.search(r'\((\d{4})\)', title)
-                    if year_match and not metadata["publication_date"]:
-                        metadata["publication_date"] = f"{year_match.group(1)}-01-01"
+                    try:
+                        title = line[2:].strip()
+                        if title:
+                            metadata["title"] = title
+                            
+                            # Extract year from title if present (e.g., "UNESCO (2021)")
+                            import re
+                            year_match = re.search(r'\((\d{4})\)', title)
+                            if year_match and not metadata["publication_date"]:
+                                metadata["publication_date"] = f"{year_match.group(1)}-01-01"
+                        else:
+                            logger.warning(f"Empty title extracted from line: {line}")
+                    except Exception as e:
+                        logger.warning(f"Failed to extract title from line: {line}, error: {str(e)}")
                 
                 # Extract author (multiple formats including knowledge base format)
                 elif any(pattern in line.lower() for pattern in ["**author**:", "**authors**:", "**author(s)**:", "author:", "by:"]):
                     try:
+                        author_str = ""
                         # Knowledge base format: - **Author**: value or - **Authors**: value or - **Author(s)**: value
                         if line.strip().startswith("- **Author"):
                             if "**Author**:" in line:
-                                metadata["author"] = line.split("**Author**:", 1)[1].strip()
+                                parts = line.split("**Author**:", 1)
+                                if len(parts) > 1:
+                                    author_str = parts[1].strip()
                             elif "**Authors**:" in line:
-                                metadata["author"] = line.split("**Authors**:", 1)[1].strip()
+                                parts = line.split("**Authors**:", 1)
+                                if len(parts) > 1:
+                                    author_str = parts[1].strip()
                             elif "**Author(s)**:" in line:
-                                metadata["author"] = line.split("**Author(s)**:", 1)[1].strip()
+                                parts = line.split("**Author(s)**:", 1)
+                                if len(parts) > 1:
+                                    author_str = parts[1].strip()
                         # Standard formats
                         elif "**author**:" in line.lower():
-                            metadata["author"] = line.split("**Author**:", 1)[1].strip()
+                            parts = line.split("**Author**:", 1)
+                            if len(parts) > 1:
+                                author_str = parts[1].strip()
                         elif "author:" in line.lower():
-                            metadata["author"] = line.split("author:", 1)[1].strip()
+                            parts = line.split("author:", 1)
+                            if len(parts) > 1:
+                                author_str = parts[1].strip()
                         elif "by:" in line.lower():
-                            metadata["author"] = line.split("by:", 1)[1].strip()
+                            parts = line.split("by:", 1)
+                            if len(parts) > 1:
+                                author_str = parts[1].strip()
+                        
+                        if author_str:
+                            metadata["author"] = author_str
+                        else:
+                            logger.warning(f"Empty author string extracted from line: {line}")
                     except (IndexError, AttributeError) as e:
                         logger.warning(f"Failed to extract author from line: {line}, error: {str(e)}")
                 
-                # Extract publication date (multiple formats)
+                # Extract publication date
                 elif any(pattern in line.lower() for pattern in ["**publication date**:", "publication date:", "published:", "date:"]):
                     try:
-                        # Try different splitting patterns
+                        date_str = ""
                         if "**publication date**:" in line.lower():
-                            # Find the actual pattern in the line (case-insensitive)
-                            if "**Publication Date**:" in line:
-                                metadata["publication_date"] = line.split("**Publication Date**:", 1)[1].strip()
-                            elif "**publication date**:" in line:
-                                metadata["publication_date"] = line.split("**publication date**:", 1)[1].strip()
+                            parts = line.split("**Publication Date**:", 1)
+                            if len(parts) > 1:
+                                date_str = parts[1].strip()
                         elif "publication date:" in line.lower():
-                            metadata["publication_date"] = line.split("publication date:", 1)[1].strip()
+                            parts = line.split("publication date:", 1)
+                            if len(parts) > 1:
+                                date_str = parts[1].strip()
                         elif "published:" in line.lower():
-                            metadata["publication_date"] = line.split("published:", 1)[1].strip()
+                            parts = line.split("published:", 1)
+                            if len(parts) > 1:
+                                date_str = parts[1].strip()
                         elif "date:" in line.lower():
-                            metadata["publication_date"] = line.split("date:", 1)[1].strip()
+                            parts = line.split("date:", 1)
+                            if len(parts) > 1:
+                                date_str = parts[1].strip()
+                        
+                        if date_str:
+                            metadata["publication_date"] = date_str
+                        else:
+                            logger.warning(f"Empty publication date string extracted from line: {line}")
                     except (IndexError, AttributeError) as e:
                         logger.warning(f"Failed to extract publication date from line: {line}, error: {str(e)}")
                 
                 # Extract processing date
                 elif any(pattern in line.lower() for pattern in ["**processing date**:", "processing date:", "processed:"]):
                     try:
+                        date_str = ""
                         if "**processing date**:" in line.lower():
-                            metadata["processing_date"] = line.split("**Processing Date**:", 1)[1].strip()
+                            parts = line.split("**Processing Date**:", 1)
+                            if len(parts) > 1:
+                                date_str = parts[1].strip()
                         elif "processing date:" in line.lower():
-                            metadata["processing_date"] = line.split("processing date:", 1)[1].strip()
+                            parts = line.split("processing date:", 1)
+                            if len(parts) > 1:
+                                date_str = parts[1].strip()
                         elif "processed:" in line.lower():
-                            metadata["processing_date"] = line.split("processed:", 1)[1].strip()
+                            parts = line.split("processed:", 1)
+                            if len(parts) > 1:
+                                date_str = parts[1].strip()
+                        
+                        if date_str:
+                            metadata["processing_date"] = date_str
+                        else:
+                            logger.warning(f"Empty processing date string extracted from line: {line}")
                     except (IndexError, AttributeError) as e:
                         logger.warning(f"Failed to extract processing date from line: {line}, error: {str(e)}")
                 
                 # Extract quality score
                 elif any(pattern in line.lower() for pattern in ["**quality score**:", "quality score:", "quality:", "score:"]):
                     try:
+                        score_str = ""
                         if "**quality score**:" in line.lower():
-                            score_str = line.split("**Quality Score**:", 1)[1].strip()
+                            parts = line.split("**Quality Score**:", 1)
+                            if len(parts) > 1:
+                                score_str = parts[1].strip()
                         elif "quality score:" in line.lower():
-                            score_str = line.split("quality score:", 1)[1].strip()
+                            parts = line.split("quality score:", 1)
+                            if len(parts) > 1:
+                                score_str = parts[1].strip()
                         elif "quality:" in line.lower():
-                            score_str = line.split("quality:", 1)[1].strip()
+                            parts = line.split("quality:", 1)
+                            if len(parts) > 1:
+                                score_str = parts[1].strip()
                         elif "score:" in line.lower():
-                            score_str = line.split("score:", 1)[1].strip()
+                            parts = line.split("score:", 1)
+                            if len(parts) > 1:
+                                score_str = parts[1].strip()
                         
-                        # Convert to float if possible
-                        try:
-                            metadata["quality_score"] = float(score_str)
-                        except ValueError:
-                            logger.warning(f"Could not convert quality score to float: {score_str}")
+                        # Clean up the score string and convert to float if possible
+                        if score_str:
+                            # Remove common suffixes like %), ), etc.
+                            score_str = re.sub(r'[%)]\s*$', '', score_str.strip())
+                            # Remove any trailing text after the number
+                            score_str = re.sub(r'\s+.*$', '', score_str.strip())
+                            
+                            try:
+                                metadata["quality_score"] = float(score_str)
+                            except ValueError:
+                                logger.warning(f"Could not convert quality score to float: {score_str}")
+                        else:
+                            logger.warning(f"Empty quality score string extracted from line: {line}")
                     except (IndexError, AttributeError) as e:
                         logger.warning(f"Failed to extract quality score from line: {line}, error: {str(e)}")
             

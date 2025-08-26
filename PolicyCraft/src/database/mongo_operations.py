@@ -98,20 +98,40 @@ class MongoOperations:
         """
         uri = uri or os.getenv("MONGO_URI", "mongodb://localhost:27017")
         db_name = db_name or os.getenv("MONGO_DB", "policycraft")
-        self.client = MongoClient(uri)
-        self.db = self.client[db_name]
-
-        self.analyses: Collection = self.db["analyses"]
-        self.recommendations: Collection = self.db["recommendations"]
-
-        # Ensure indexes for performance optimisation
-        # Non-unique index to accelerate lookup; duplicates handled at application level
+        
         try:
-            self.analyses.create_index([("user_id", ASCENDING), ("filename", ASCENDING)])
-        except Exception as e:
-            logger.warning("[MongoOperations] Index creation warning: %s", e)
+            self.client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+            self.db = self.client[db_name]
+            self.analyses: Collection = self.db["analyses"]
+            self.recommendations: Collection = self.db["recommendations"]
+            
+            # Test connection
+            self.client.admin.command('ping')
+            self._connected = True
+            
+            # Ensure indexes for performance optimisation
+            # Non-unique index to accelerate lookup; duplicates handled at application level
+            try:
+                self.analyses.create_index([("user_id", ASCENDING), ("filename", ASCENDING)])
+            except Exception as e:
+                logger.warning("[MongoOperations] Index creation warning: %s", e)
 
-        self.recommendations.create_index([("analysis_id", ASCENDING), ("user_id", ASCENDING)])
+            try:
+                self.recommendations.create_index([("analysis_id", ASCENDING), ("user_id", ASCENDING)])
+            except Exception as e:
+                logger.warning("[MongoOperations] Index creation warning: %s", e)
+                
+        except Exception as e:
+            logger.warning(f"[MongoOperations] Connection failed: {e}")
+            self._connected = False
+            self.client = None
+            self.db = None
+            self.analyses = None
+            self.recommendations = None
+    
+    def is_connected(self) -> bool:
+        """Check if MongoDB connection is available."""
+        return getattr(self, '_connected', False) and self.client is not None
 
     # Analysis CRUD operations
 
@@ -146,6 +166,10 @@ class MongoOperations:
         Returns:
             str: MongoDB document ID of the stored analysis
         """
+        if not self.is_connected():
+            logger.warning("[MongoOperations] MongoDB not available, skipping analysis storage")
+            return "no_mongodb"
+            
         # Check if this user already analysed this file to avoid duplicates
         existing = self.analyses.find_one({"user_id": user_id, "filename": filename})
         if existing:

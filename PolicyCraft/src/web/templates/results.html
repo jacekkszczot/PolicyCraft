@@ -588,7 +588,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load Plotly charts
     {% if results.charts.themes_bar %}
     try {
-        const themesData = {{ results.charts.themes_bar|safe }};
+        const themesData = JSON.parse('{{ results.charts.themes_bar|safe }}');
         Plotly.newPlot('themesChart', themesData.data, themesData.layout);
     } catch(e) {
         console.log('Themes chart error:', e);
@@ -597,7 +597,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     {% if results.charts.classification_gauge %}
     try {
-        const gaugeData = {{ results.charts.classification_gauge|safe }};
+        const gaugeData = JSON.parse('{{ results.charts.classification_gauge|safe }}');
         Plotly.newPlot('classificationGauge', gaugeData.data, gaugeData.layout);
     } catch(e) {
         console.log('Gauge chart error:', e);
@@ -606,7 +606,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     {% if results.charts.themes_pie %}
     try {
-        const pieData = {{ results.charts.themes_pie|safe }};
+        const pieData = JSON.parse('{{ results.charts.themes_pie|safe }}');
         Plotly.newPlot('themePieChart', pieData.data, pieData.layout);
     } catch(e) {
         console.log('Pie chart error:', e);
@@ -615,7 +615,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     {% if results.charts.ethics_radar %}
     try {
-        const radarData = {{ results.charts.ethics_radar|safe }};
+        const radarData = JSON.parse('{{ results.charts.ethics_radar|safe }}');
         Plotly.newPlot('ethicsRadarChart', radarData.data, radarData.layout);
     } catch(e) {
         console.log('Radar chart error:', e);

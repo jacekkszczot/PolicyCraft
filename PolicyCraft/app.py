@@ -855,7 +855,12 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix='/admin')
 
     # CSRF protection and csrf_token for templates (available for all app instances)
-    CSRFProtect(app)
+    if app.config.get('WTF_CSRF_ENABLED', False):
+        CSRFProtect(app)
+        logger.info("CSRF protection enabled")
+    else:
+        logger.info("CSRF protection disabled")
+    
     # Ensure csrf_token available globally in Jinja
     from flask_wtf.csrf import generate_csrf
     app.jinja_env.globals['csrf_token'] = generate_csrf
@@ -1319,8 +1324,7 @@ def _store_baseline_or_placeholder(analyses_by_filename: dict,
             cleaned_text=cleaned_text,
             themes=themes,
             classification=classification,
-            document_id=missing_file,
-            metadata=metadata
+            document_id=missing_file
         )
 
         logger.info(f"Dashboard: Successfully stored baseline analysis with ID {analysis_id}")
@@ -1940,12 +1944,25 @@ def _build_results_payload(filename, analysis_id, themes, classification, charts
                            text_stats, theme_summary, classification_details,
                            extracted_text, cleaned_text):
     """Build the results dict passed to results.html, preserving original structure."""
+    
+    # Convert Plotly Figure objects to JSON for template rendering
+    import plotly.utils
+    charts_json = {}
+    if charts:
+        for chart_name, chart_obj in charts.items():
+            if hasattr(chart_obj, 'to_json'):
+                # It's a Plotly Figure object
+                charts_json[chart_name] = chart_obj.to_json()
+            else:
+                # It's already a string or other format
+                charts_json[chart_name] = chart_obj
+    
     return {
         'filename': filename,
         'analysis_id': analysis_id,
         'themes': themes,
         'classification': classification,
-        'charts': charts,
+        'charts': charts_json,
         'text_stats': text_stats,
         'theme_summary': theme_summary,
         'classification_details': classification_details,

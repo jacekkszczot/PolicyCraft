@@ -63,6 +63,8 @@ For most users, we recommend using the automated setup script. The script will:
 3. Set up both databases (SQLite and MongoDB)
 4. Create an admin account
 
+
+
 ### Before You Begin
 
 Ensure you have completed all prerequisites above, then verify the venv module is available:
@@ -586,11 +588,6 @@ isort .
 - [API Documentation](docs/API.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
-
-### Troubleshooting
-
-#### MongoDB Connection Issues
-If you see connection errors:
-
-1. Check if MongoDB is running:
-   ```
+- [Troubleshooting Guide](docs/troubleshooting_guide.md)
+- [User Manual](docs/user_manual.md)
+- [Model Card](docs/model_card.md)

@@ -1,73 +1,50 @@
+# Virtual environments
+venv/
+../venv/
+
+# Database files (keep structure, exclude data)
+PolicyCraft-Databases/development/*.db
+PolicyCraft-Databases/production/*.db
+PolicyCraft-Databases/backups/*
+
+# Application runtime data
+data/policies/pdf_originals/*
+data/processed/*
+logs/*.log
+!logs/.gitkeep
+instance/*
+
+# Environment secrets and configuration
+.env
+.env.local
+.env.production
+.env.staging
+config_local.py
+secrets.py
+
 # Python
 __pycache__/
-**/__pycache__/
-*.py[cod]
-*$py.class
 *.pyc
-*.pyo
+.pytest_cache/
 
-# Logs
-logs/
-*.log
-
-# Exports and temporary files
-exports/
-*.tmp
-*.temp
-*.cache
-
-# IDE
+# IDE and editor files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# macOS
+# OS generated files
 .DS_Store
-.AppleDouble
-.LSOverride
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Virtual Environment (exclude user-specific environments)
-venv/
-env/
-ENV/
-policycraft-env/
-
-# Flask instance and local data
-instance/
-instance/uploads/
-
-# Test cache
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Database files (exclude only user-specific databases, not configuration)
-*.db
-# Note: PolicyCraft-Databases/ contains configuration templates - DO NOT ignore
-# Only ignore user-specific database instances
-
-# SonarQube local artifacts
-.scannerwork/
-
-# Backup files
+# Temporary files
+*.tmp
+*.temp
 *.bak
-*.old
-*.orig
-
-# Duplicate files (created during merges or operations)
-* 2.*
-* 2/
-
-# R temporary files
-.Rhistory
-.RData
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# Environment variables
-.env
-.env.local
-.env.*.local
+*.backup

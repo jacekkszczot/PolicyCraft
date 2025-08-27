@@ -98,8 +98,26 @@ PolicyCraft is a specialised platform designed to analyse AI policies within hig
 
 **Confidence Indicators**:
 - **High Confidence (≥80%)**: Clear policy language and positioning
-- **Medium Confidence (60-79%)**: Some ambiguity requiring review
-- **Low Confidence (<60%)**: Manual interpretation recommended
+- **Medium Confidence (60-79%)**: Some ambiguity requiring interpretation
+- **Low Confidence (<60%)**: Significant uncertainty in classification
+
+### Interactive Visualisations
+**Chart Types Available**:
+- **Themes Bar Chart**: Horizontal bar chart showing identified policy themes with confidence scores
+- **Classification Gauge**: Circular gauge displaying policy classification confidence
+- **Themes Pie Chart**: Distribution of identified themes across the policy document
+- **Ethics Radar Chart**: Multi-dimensional assessment of ethical considerations
+
+**Chart Features**:
+- **Interactive Elements**: Hover for detailed information, zoom capabilities
+- **Responsive Design**: Automatically adjusts to different screen sizes
+- **Export Options**: Download charts as images or include in reports
+- **Real-time Updates**: Charts reflect current analysis results
+
+**Troubleshooting Charts**:
+- If charts don't display, refresh the page and check browser console
+- Ensure JavaScript is enabled in your browser
+- Charts are automatically generated and should appear without manual intervention
 
 ### Theme Analysis
 **Key Policy Dimensions**:

@@ -178,17 +178,24 @@ class TextProcessor:
                     logger.info(f"OCR extraction successful: {len(text_ocr)} characters")
             except Exception as e:
                 logger.warning(f"OCR extraction failed: {e}")
-            
+            finally:
+                # Normalise None from OCR to empty string for safe handling below
+                if text_ocr is None:
+                    text_ocr = ""
+        
         # Choose the best result
         texts = [
-            (text_pypdf2, "PyPDF2"),
-            (text_pdfplumber, "pdfplumber"), 
-            (text_ocr, "OCR")
+            (text_pypdf2 or "", "PyPDF2"),
+            (text_pdfplumber or "", "pdfplumber"), 
+            (text_ocr or "", "OCR")
         ]
-        
-        best_text, method = max(texts, key=lambda x: len(x[0].strip()))
+
+        def _safe_len(t: Optional[str]) -> int:
+            return len((t or "").strip())
+
+        best_text, method = max(texts, key=lambda x: _safe_len(x[0]))
             
-        if best_text.strip():
+        if (best_text or "").strip():
             logger.info(STATUS_PDF_EXTRACTED.format(
                 method=method,
                 char_count=len(best_text)

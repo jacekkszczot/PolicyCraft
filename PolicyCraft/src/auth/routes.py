@@ -82,14 +82,19 @@ def _process_login(form: LoginForm):
 
         flash(f'Welcome back, {user.get_full_name()}!', 'success')
 
-        # Redirect to intended page or dashboard
+        # Redirect based on user role
         next_page = request.args.get('next')
         if next_page:
             return redirect(next_page)
-        # Redirect based on user role
+            
+        # Redirect to appropriate dashboard based on role
         if user.role == 'admin':
             return redirect(url_for('admin.dashboard'))
+        elif user.role == 'researcher':
+            # Researcher role uses the main application dashboard
+            return redirect(url_for('dashboard'))
         else:
+            # Default dashboard for regular users
             return redirect(url_for('dashboard'))
 
     flash('Invalid username/email or password. Please try again.', 'error')
@@ -139,11 +144,7 @@ def login():
         - Session cookies are marked as secure and httpOnly
     """
     if current_user.is_authenticated:
-        # Redirect based on user role
-        if current_user.role == 'admin':
-            return redirect(url_for('admin.dashboard'))
-        else:
-            return redirect(url_for('dashboard'))
+        return redirect(url_for('dashboard'))
     
     form = LoginForm()
     if form.validate_on_submit():
@@ -199,24 +200,21 @@ def register():
         - Database transactions ensure data consistency
     """
     if current_user.is_authenticated:
-        # Redirect based on user role
-        if current_user.role == 'admin':
-            return redirect(url_for('admin.dashboard'))
-        else:
-            return redirect(url_for('dashboard'))
+        return redirect(url_for('dashboard'))
     
     form = RegistrationForm()
     
     if form.validate_on_submit():
         try:
-            # Create new user
+            # Create new user with default role
             user = User(
                 username=form.email.data.strip().lower(),
                 email=form.email.data.strip().lower(),
                 password=form.password.data,
                 first_name=form.first_name.data.strip() if form.first_name.data else None,
                 last_name=form.last_name.data.strip() if form.last_name.data else None,
-                institution=form.institution.data.strip()
+                institution=form.institution.data.strip(),
+                role='user'  # Default role for new users
             )
             
             # Save to database

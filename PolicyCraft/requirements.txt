@@ -1,65 +1,71 @@
 # PolicyCraft - Core Dependencies
 # ============================
 # This file contains all the core dependencies required to run the PolicyCraft application.
-# Includes OCR capabilities for scanned PDF documents.
 # For development dependencies, see requirements-dev.txt
+# For production deployment, see requirements-production.txt
 
 # ===== Web Framework & Core =====
 Flask==3.0.0
 Werkzeug==3.0.1
-Jinja2>=3.1.0
+Jinja2==3.1.2
+itsdangerous==2.1.2
+click==8.1.7
+MarkupSafe==2.1.3
 
 # ===== Authentication & Security =====
-Flask-Login>=0.6.3
-Flask-WTF>=1.2.0
-WTForms>=3.1.0
-email_validator>=2.2.0  # Required for WTForms email validation
+Flask-Login==0.6.3
+Flask-WTF==1.2.1
+WTForms==3.1.1
+email-validator==2.1.0.post1
+Flask-Session==0.8.0
 
 # ===== Database =====
-pymongo>=4.6.0
-python-dotenv>=1.0.0  # For environment variable management
-Flask-SQLAlchemy>=3.1.0  # SQLAlchemy integration for Flask (align with production)
+pymongo==4.6.1
+python-dotenv==1.0.0
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.23
+pymongo[srv]==4.6.1
 
 # ===== Data Processing =====
-pandas>=2.1.0
-numpy>=1.24.0
-python-dateutil>=2.8.2  # Required by pandas
-pytz>=2023.3  # Timezone support for datetime
+pandas==2.1.3
+numpy==1.26.2
+python-dateutil==2.8.2  # Required by pandas
+pytz==2023.3.post1  # Timezone support for datetime
 
 # ===== Natural Language Processing =====
-spacy>=3.7.0
-scikit-learn>=1.3.0
-nltk>=3.8.1  # For text processing and tokenization
-contractions>=0.1.73  # For expanding contractions in text
-# Core ML dependencies required by spaCy and sentence-transformers
-torch>=2.0.0  # PyTorch - required by sentence-transformers and spaCy
-thinc>=8.0.0  # Neural network library required by spaCy
+spacy==3.7.2
+scikit-learn==1.3.2
+nltk==3.8.1
+contractions==0.1.73
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.0/en_core_web_sm-3.7.0-py3-none-any.whl
 
 # ===== Document Processing =====
-pypdf>=6.0.0  # For PDF processing
-python-docx>=1.1.0  # For Word document processing
+pypdf==4.0.0
+python-docx==1.0.1
+python-magic==0.4.27  # For file type detection
 
 # ===== Data Visualisation =====
-plotly>=5.17.0
-kaleido>=0.2.1  # Required for static image export with Plotly
+plotly==5.18.0
+kaleido==0.2.1  # Required for static image export with Plotly
 
 # ===== Utilities =====
-tqdm>=4.66.0  # For progress bars
-python-slugify>=8.0.1  # For URL-friendly strings
-requests>=2.31.0  # For HTTP requests
-typer>=0.9.0  # Command-line interface utilities
+tqdm==4.66.1
+python-slugify==8.0.1
+requests==2.31.0
+python-multipart==0.0.6  # For file uploads
 
 # ===== Logging =====
-python-json-logger>=2.0.7  # For structured logging
+python-json-logger==2.0.7
+structlog==23.2.0  # Structured logging
 
 # IMPORTANT: POST-INSTALLATION STEPS
 # ===================================
-# After installing requirements, run these commands to ensure full functionality:
+# After installing requirements, run these commands:
 #
-# 1. Download spaCy English model (required for NLP processing):
+# 1. Download spaCy English model:
 #    python -m spacy download en_core_web_sm
 #
-# 2. Download NLTK data (for enhanced text processing and analysis):
+# 2. Download NLTK data (for enhanced text processing):
 #    python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('averaged_perceptron_tagger')"
 #
 # 3. Install system dependencies for OCR (macOS):
@@ -67,20 +73,14 @@ python-json-logger>=2.0.7  # For structured logging
 #    # For Ubuntu/Debian: sudo apt-get install tesseract-ocr poppler-utils
 #    # For Windows: Download from https://github.com/UB-Mannheim/tesseract/wiki
 #
-# 4. Set environment variables (optional but recommended for production):
+# 4. Set environment variables (optional but recommended):
 #    echo "FEATURE_ADVANCED_ENGINE=1" >> .env
-#    echo "SECRET_KEY=your-secret-key-here" >> .env
-#
-# 5. Create virtual environment (recommended):
-#    python -m venv policycraft-env
-#    source policycraft-env/bin/activate  # On Windows: policycraft-env\Scripts\activate
-#    pip install -r requirements.txt
 #
 # For development dependencies, install from requirements-dev.txt:
 # pip install -r requirements-dev.txt
 #
 # The application includes comprehensive dependency validation and will
-# report any missing components at startup with clear installation instructions.
+# report any missing components at startup with installation instructions.
 
 # ===== File and Document libs =====
 PyMuPDF>=1.23.0

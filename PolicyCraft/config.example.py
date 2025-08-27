@@ -1,6 +1,6 @@
 """
-Configuration for PolicyCraft.
-This file contains the actual configuration settings for the application.
+Configuration template for PolicyCraft.
+Copy this file to config.py and update the values as needed.
 
 Note: Never commit sensitive information to version control.
 """
@@ -13,13 +13,6 @@ class Config:
     
     # Basic Flask configuration
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    
-    # SQLAlchemy configuration (required by Flask-SQLAlchemy)
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        'SQLALCHEMY_DATABASE_URI',
-        f'sqlite:///{os.path.join(os.getcwd(), "PolicyCraft-Databases", "development", "policycraft_dev.db")}'
-    )
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # MongoDB configuration
     MONGODB_SETTINGS = {
@@ -69,9 +62,6 @@ class Config:
     APP_VERSION = "1.0.0"
     DEBUG = os.environ.get('FLASK_DEBUG', 'false').lower() in ('true', '1', 't')
     TESTING = False
-    
-    # Flask-WTF configuration
-    WTF_CSRF_ENABLED = os.environ.get('WTF_CSRF_ENABLED', 'false').lower() in ('true', '1', 't')
 
     # API Keys (if any)
     # Example: OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
@@ -88,8 +78,6 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     """Testing configuration."""
     TESTING = True
-    # Use in-memory SQLite for tests
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     MONGODB_SETTINGS = {
         'db': 'policycraft_test',
         'host': 'localhost',
@@ -139,9 +127,6 @@ def create_secure_directories():
         cfg.UPLOAD_FOLDER,
         cfg.PROCESSED_FOLDER,
         _os.path.join(_os.getcwd(), "logs"),
-        # Create database directory for SQLite
-        os.path.dirname(cfg.SQLALCHEMY_DATABASE_URI.replace('sqlite:///', '')) if cfg.SQLALCHEMY_DATABASE_URI.startswith('sqlite:///') else None,
     ]
     for d in dirs:
-        if d:  # Skip None values
-            _os.makedirs(d, exist_ok=True)
+        _os.makedirs(d, exist_ok=True)

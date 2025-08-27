@@ -16,7 +16,7 @@ Key Features:
 
 Architecture:
 - Flask web framework with Blueprint-based modular routing
-- MongoDB for persistent data storage with lazy-loaded operations
+- MongoDB for persistent data storage
 - Integrated NLP pipeline using spaCy and custom classification models
 - Literature processing engine with knowledge base management
 - Export capabilities supporting PDF, Word, Excel, and JSON formats
@@ -25,6 +25,10 @@ Author: Jacek Robert Kszczot
 Project: MSc Data Science & AI - COM7016
 University: Leeds Trinity University
 """
+
+# Load environment variables from a .env file if present
+from dotenv import load_dotenv
+load_dotenv()
 
 def _fetch_analysis_for_recommendations(analysis_id):
     """Fetch analysis by user first, then globally, mirroring logs and test-temporary permission notes."""
@@ -469,7 +473,7 @@ def validate_dependencies():
     critical_failures = []
     warnings = []
     
-    print("🔍 PolicyCraft Dependency Validation")
+    print("PolicyCraft Dependency Validation")
     print("=" * 50)
     
     # Core Python packages
@@ -660,11 +664,6 @@ def validate_dependencies():
 # Import configuration
 from config import get_config, create_secure_directories
 
-# Import authentication components
-from src.database.models import User, db, init_db
-from src.auth.routes import auth_bp
-from src.admin.routes import admin_bp
-
 # Import analysis modules
 # Constants for duplicated literals
 DOCX_EXTENSION = '.docx'
@@ -686,6 +685,9 @@ from src.nlp.policy_classifier import PolicyClassifier
 from src.database.mongo_operations import MongoOperations as DatabaseOperations
 from src.recommendation.engine import RecommendationEngine
 from src.export.export_engine import ExportEngine
+from src.auth.routes import auth_bp
+from src.admin.routes import admin_bp
+from src.database.models import db, User
 from src.literature.literature_engine import LiteratureEngine
 from src.literature.knowledge_manager import KnowledgeBaseManager as KnowledgeManager
 from src.utils.auto_document_manager import AutoDocumentManager
@@ -810,8 +812,10 @@ def create_app():
     """
     Application factory function for PolicyCraft Flask application.
     
-    Initialises and configures the Flask application with all necessary
+    Initializes and configures the Flask application with all necessary
     extensions, blueprints, and database connections.
+    
+    Resources are initialised eagerly during startup.
     """
     # CRITICAL: Validate all dependencies before creating app (production)
     validate_dependencies()
@@ -844,14 +848,19 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_id):
         """Load user for Flask-Login session management."""
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
     
-    # Register blueprints (auth without prefix to expose /login and /logout)
+    # Register blueprints (eager)
     app.register_blueprint(auth_bp)
-    app.register_blueprint(admin_bp)
+    app.register_blueprint(admin_bp, url_prefix='/admin')
 
     # CSRF protection and csrf_token for templates (available for all app instances)
-    CSRFProtect(app)
+    if app.config.get('WTF_CSRF_ENABLED', False):
+        CSRFProtect(app)
+        logger.info("CSRF protection enabled")
+    else:
+        logger.info("CSRF protection disabled")
+    
     # Ensure csrf_token available globally in Jinja
     from flask_wtf.csrf import generate_csrf
     app.jinja_env.globals['csrf_token'] = generate_csrf
@@ -887,9 +896,10 @@ def create_app():
             return render_template(ABOUT_TEMPLATE)
         return "About PolicyCraft", 200, {"Content-Type": "text/plain; charset=utf-8"}
 
-    # Initialise database and create tables
+    # Initialize database tables eagerly at startup (Flask 3 removed before_first_request)
     with app.app_context():
-        init_db(app)
+        from src.database.models import init_db
+        init_db(app)  # Initialise database tables with app context
     
     return app
 
@@ -1314,8 +1324,7 @@ def _store_baseline_or_placeholder(analyses_by_filename: dict,
             cleaned_text=cleaned_text,
             themes=themes,
             classification=classification,
-            document_id=missing_file,
-            metadata=metadata
+            document_id=missing_file
         )
 
         logger.info(f"Dashboard: Successfully stored baseline analysis with ID {analysis_id}")
@@ -1584,7 +1593,8 @@ def dashboard():
 
 def _get_clean_dataset_dir():
     """Return absolute path to clean_dataset directory."""
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'policies', 'clean_dataset')
+    from pathlib import Path
+    return Path(__file__).resolve().parent / 'data' / 'policies' / 'clean_dataset'
 
 def _list_clean_dataset_files(clean_dataset_dir):
     """List valid policy files from clean_dataset directory."""
@@ -1934,12 +1944,25 @@ def _build_results_payload(filename, analysis_id, themes, classification, charts
                            text_stats, theme_summary, classification_details,
                            extracted_text, cleaned_text):
     """Build the results dict passed to results.html, preserving original structure."""
+    
+    # Convert Plotly Figure objects to JSON for template rendering
+    import plotly.utils
+    charts_json = {}
+    if charts:
+        for chart_name, chart_obj in charts.items():
+            if hasattr(chart_obj, 'to_json'):
+                # It's a Plotly Figure object
+                charts_json[chart_name] = chart_obj.to_json()
+            else:
+                # It's already a string or other format
+                charts_json[chart_name] = chart_obj
+    
     return {
         'filename': filename,
         'analysis_id': analysis_id,
         'themes': themes,
         'classification': classification,
-        'charts': charts,
+        'charts': charts_json,
         'text_stats': text_stats,
         'theme_summary': theme_summary,
         'classification_details': classification_details,
@@ -2191,7 +2214,7 @@ def delete_analysis(analysis_id):
         # Delete the analysis record
         if _delete_analysis_record(current_user.id, analysis_id):
             # Clean up associated files
-            _cleanup_analysis_files_after_deletion(analysis, UPLOAD_FOLDER)
+            _cleanup_analysis_files_after_deletion(analysis, app.config['UPLOAD_FOLDER'])
             flash('Analysis deleted successfully.', 'success')
         else:
             flash('Failed to delete analysis.', 'error')
@@ -2363,7 +2386,7 @@ def handle_first_login_onboarding(user_id: int) -> bool:
     try:
         from src.database.models import User
 
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             return False
 
@@ -2419,8 +2442,15 @@ if __name__ == '__main__':
     # Documents are now processed on-demand when uploaded via admin interface
     logger.info("Automatic document scanning disabled - documents processed on upload")
     
-    print("PolicyCraft starting at: http://localhost:5001")
+    # Respect environment variables for host/port; default to localhost:5001
+    host = os.getenv('HOST', 'localhost')
+    try:
+        port = int(os.getenv('PORT', '5001'))
+    except ValueError:
+        port = 5001
+
+    print(f"PolicyCraft starting at: http://{host}:{port}")
     
     # Disable the auto-reloader to avoid infinite restart loops caused by
     # file change notifications in venv/site-packages (macOS fsevents).
-    app.run(debug=True, host='localhost', port=5001, use_reloader=False)
+    app.run(debug=True, host=host, port=port, use_reloader=False)

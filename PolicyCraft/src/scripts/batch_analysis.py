@@ -89,12 +89,15 @@ def run_batch_analysis():
             base_name = file_path.stem
             uni_info = university_info.get(base_name, {'name': base_name, 'country': 'Unknown', 'type': 'Unknown'})
             
-            print(f"🏛️  University: {uni_info['name']}")
-            print(f"🌍 Country: {uni_info['country']}")
-            print(f"🎓 Type: {uni_info['type']}")
+            print(f"University: {uni_info['name']}")
+            print(f"Policy file: {file_path.name}")
+            print(f"Policy type: {uni_info['type']}")
+            print(f"File size: {round(file_path.stat().st_size / (1024 * 1024), 2)} MB")
+            print(f"Last modified: {datetime.fromtimestamp(file_path.stat().st_mtime).strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"Processing status: In Progress")
             
             # STEP 1: Text Extraction
-            print("\n🔍 STEP 1: Text extraction...")
+            print("\nSTEP 1: Text extraction...")
             extracted_text = text_processor.extract_text_from_file(str(file_path))
             if not extracted_text:
                 raise Exception("Text extraction failed")
@@ -195,7 +198,15 @@ def run_batch_analysis():
                 f"{dim.replace('_', ' ').title()}: {data['score']:.1f}%" 
                 for dim, data in detailed_coverage.items()
             ]))
-            print(f"🏛️ Existing policies detected: {existing_policy_count} ({', '.join(key_existing_policies[:3])})")
+            # Check for existing policies
+            existing_policy_count = len(existing_policies)
+            if existing_policy_count > 0:
+                key_existing_policies = list(existing_policies.keys())[:5]
+                print(f"Existing policies detected: {existing_policy_count} ({', '.join(key_existing_policies[:3])})")
+                if existing_policy_count > 5:
+                    print(f"Additional {existing_policy_count - 5} policies found")
+            else:
+                print("No existing policies found for this university")
             print(f" Recommendation mix: {enhancement_count} enhancements, {new_implementations} new implementations")
             
             # STEP 6: Generate Charts
@@ -211,7 +222,7 @@ def run_batch_analysis():
             
             # Calculate processing time
             processing_time = round(time.time() - start_time, 2)
-            print(f"⏱️  Processing time: {processing_time}s")
+            print(f"Processing time: {processing_time}s")
             
             # Enhanced Results Storage with Full Recommendation Data
             result = {
@@ -323,23 +334,23 @@ def run_batch_analysis():
         avg_confidence = round(sum(r['classification']['confidence'] for r in all_results) / successful, 1)
         avg_coverage = round(sum(r['recommendations']['overall_coverage'] for r in all_results) / successful, 1)
         
-        print("\n📈 AGGREGATE STATISTICS:")
-        print(f"   ⏱️  Average processing time: {avg_processing_time}s")
-        print(f"   🎯 Average themes per policy: {avg_themes_count}")
+        print("\nAGGREGATE STATISTICS:")
+        print(f"   Average processing time: {avg_processing_time}s")
+        print(f"   Average themes per policy: {avg_themes_count}")
         print(f"    Average classification confidence: {avg_confidence}%")
         print(f"    Average coverage score: {avg_coverage}%")
         
         # Classification distribution
         classifications = [r['classification']['type'] for r in all_results]
         classification_counts = {cls: classifications.count(cls) for cls in set(classifications)}
-        print("\n🏷️  CLASSIFICATION DISTRIBUTION:")
+        print("\nCLASSIFICATION DISTRIBUTION:")
         for cls, count in classification_counts.items():
             print(f"   {cls}: {count} policies ({count/successful*100:.1f}%)")
         
         # Country breakdown
         countries = [r['country'] for r in all_results]
-        country_counts = {country: countries.count(country) for country in set(countries)}
-        print("\n🌍 COUNTRY BREAKDOWN:")
+        country_counts = {country: countries.count(country) for country in set(country_counts)}
+        print("\nCOUNTRY BREAKDOWN:")
         for country, count in country_counts.items():
             print(f"   {country}: {count} policies")
     
@@ -358,7 +369,7 @@ def run_batch_analysis():
             'failed_analyses': failed_analyses
         }, f, indent=2)
     
-    print(f"\n💾 Detailed results saved to: {results_file}")
+    print(f"\nDetailed results saved to: {results_file}")
     
     # Create CSV summary for easy analysis
     if all_results:
@@ -388,10 +399,9 @@ def run_batch_analysis():
             csv_data.append(row)
         
         generate_enhanced_csv_summary(all_results, csv_file)
-        print(f"📈 CSV summary saved to: {csv_file}")
+        print(f"CSV summary saved to: {csv_file}")
     
-    print("\n🎉 BATCH ANALYSIS COMPLETED!")
-    print("Ready for validation and report writing! 📝")
+    print("Ready for validation and report writing!")
     
     return all_results
 
@@ -462,12 +472,11 @@ def generate_enhanced_csv_summary(all_results, csv_file):
     print(f"📈 Enhanced CSV summary saved with {len(df.columns)} metrics: {csv_file}")
     
     # Print summary of enhanced metrics
-    print("\n🔍 ENHANCED METRICS SUMMARY:")
-    print(f"    Average overall coverage: {df['Overall_Coverage_Score'].mean():.1f}%")
-    print(f"   🎯 Average recommendations per policy: {df['Recommendations_Count'].mean():.1f}")
+    print("\nENHANCED METRICS SUMMARY:")
+    print(f"   Average recommendations per policy: {df['Recommendations_Count'].mean():.1f}")
     print(f"    Enhancement vs New ratio: {df['Enhancement_Recs'].sum()}:{df['New_Implementation_Recs'].sum()}")
-    print(f"   🏛️ Policies with existing governance: {df['Has_Governance_Structure'].sum()}/{len(df)}")
-    print(f"   📋 Policies with disclosure requirements: {df['Has_Disclosure_Requirements'].sum()}/{len(df)}")
+    print(f"   Policies with existing governance: {df['Has_Governance_Structure'].sum()}/{len(df)}")
+    print(f"   Policies with disclosure requirements: {df['Has_Disclosure_Requirements'].sum()}/{len(df)}")
     
     # Dimensional analysis
     dimension_averages = {

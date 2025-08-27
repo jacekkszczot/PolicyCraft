@@ -67,12 +67,14 @@ PolicyCraft is a comprehensive AI policy analysis platform designed for higher e
 - **Error Handling**: Graceful degradation with informative user feedback
 - **Performance Monitoring**: Comprehensive logging and dependency tracking
 - **Backup Systems**: Automated preservation of analyses and knowledge base state
+- **MongoDB Resilience**: Automatic connection management with fallback when database unavailable
 
 ### Output Quality
 - **Recommendation Generation**: Evidence-based suggestions grounded in academic literature
 - **Export Consistency**: Professional formatting across PDF, Word, and Excel outputs
 - **Citation Integration**: Automatic linking between recommendations and supporting sources
-- **Visualisation Accuracy**: Interactive charts with proper data representation
+- **Visualisation Accuracy**: Interactive charts with proper data representation and JSON conversion
+- **Chart Generation**: Reliable Plotly-based visualisations with automatic error handling
 
 ## Intended Use Cases
 

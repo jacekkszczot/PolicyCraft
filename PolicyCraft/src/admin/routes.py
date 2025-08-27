@@ -169,11 +169,23 @@ def logout():
 @admin_required
 def dashboard():
     user_count = User.query.count()
-    analysis_count = mongo_db.analyses.count_documents({})
-    baseline_global = mongo_db.analyses.count_documents({
-        "user_id": -1,
-        "filename": {"$regex": r"^\[BASELINE\]", "$options": "i"}
-    })
+    
+    # Check if MongoDB is available before accessing collections
+    if mongo_db.is_connected() and mongo_db.analyses is not None:
+        try:
+            analysis_count = mongo_db.analyses.count_documents({})
+            baseline_global = mongo_db.analyses.count_documents({
+                "user_id": -1,
+                "filename": {"$regex": r"^\[BASELINE\]", "$options": "i"}
+            })
+        except Exception as e:
+            logger.warning(f"Error accessing MongoDB in dashboard: {e}")
+            analysis_count = 0
+            baseline_global = 0
+    else:
+        analysis_count = 0
+        baseline_global = 0
+        
     return render_template("admin/dashboard.html", user_count=user_count, analysis_count=analysis_count, baseline_global=baseline_global)
 
 # ---------------------------------------------------------------------------
@@ -272,6 +284,16 @@ def reset_progress():
     """Stream progress updates during baseline reset."""
     def generate():
         try:
+            # Check if MongoDB is available
+            if not mongo_db.is_connected() or mongo_db.analyses is None:
+                yield SSE_DATA_PREFIX + json.dumps({
+                    'step': 0, 
+                    'message': 'MongoDB not available - Baseline reset requires MongoDB connection', 
+                    'error': True,
+                    'details': 'To use baseline reset functionality, please ensure MongoDB is running. You can: 1) Start MongoDB service, 2) Use the application without baseline policies, or 3) Contact system administrator.'
+                }) + "\n\n"
+                return
+                
             # Step 1: Remove existing baseline docs
             delete_result = mongo_db.analyses.delete_many({"user_id": -1})
             deleted_count = delete_result.deleted_count if hasattr(delete_result, 'deleted_count') else 0

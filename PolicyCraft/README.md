@@ -39,6 +39,7 @@ See [COPYRIGHT_NOTICE.md](COPYRIGHT_NOTICE.md) for detailed legal information an
 - [Development](#development)
 - [Testing](#testing)
 - [Documentation](#documentation)
+- [Quick Reference](#quick-reference)
 
 ## System Requirements
 
@@ -48,6 +49,9 @@ See [COPYRIGHT_NOTICE.md](COPYRIGHT_NOTICE.md) for detailed legal information an
   - **SQLite** (SQLAlchemy) - for user authentication, accounts, and basic data
   - **MongoDB** (required) - for policy analyses, recommendations, literature management, and knowledge base
 - **Git**: Latest stable version
+- **Docker** (optional) - for easy MongoDB setup
+
+**Note:** The automated setup script will handle most of the configuration automatically, including environment variables and database setup.
 
 **Note**: The application uses **two databases simultaneously**:
 - **SQLite** handles user accounts, authentication, and basic application data
@@ -55,19 +59,52 @@ See [COPYRIGHT_NOTICE.md](COPYRIGHT_NOTICE.md) for detailed legal information an
 
 Both databases are required for the application to function properly.
 
+**The automated setup script will configure both databases automatically.**
+
 ## Quick Start (Automatic Setup)
 
-For most users, we recommend using the automated setup script. The script will:
+**For most users, we recommend using the automated setup script.**
+
+The `setup_new_dev.sh` script will automatically:
 1. Create a Python virtual environment (requires Python 3.8+ to be pre-installed)
 2. Install all required Python dependencies
 3. Set up both databases (SQLite and MongoDB)
-4. Create an admin account
+4. Configure all environment variables automatically
+5. Start MongoDB (local or Docker)
+6. Create an admin account
+7. Test the application
+
+**One-command setup:**
+```bash
+chmod +x setup_new_dev.sh
+./setup_new_dev.sh
+```
+
+**After setup, run:**
+```bash
+python app.py
+```
+
+**Access:** http://localhost:5001
+**Login credentials:** admin@policycraft.ai / admin1
 
 
 
 ### Before You Begin
 
-Ensure you have completed all prerequisites above, then verify the venv module is available:
+**Prerequisites:**
+- Python 3.8+ with venv module
+- Git
+- Docker (optional, for MongoDB)
+
+**Note:** The automated setup script will handle most of the configuration automatically, including environment variables and database setup.
+
+**For most users, execute:**
+```bash
+./setup_new_dev.sh
+```
+
+**For manual setup:** Ensure you have completed all prerequisites above, then verify the venv module is available:
 
 ```bash
 # On Debian/Ubuntu
@@ -86,13 +123,29 @@ python -m ensurepip --upgrade
 
 ### Setting Up the Development Environment
 
+**Quick setup (RECOMMENDED):**
+```bash
+git clone -b laboratory https://github.com/jacekkszczot/PolicyCraft.git
+cd PolicyCraft
+chmod +x setup_new_dev.sh
+./setup_new_dev.sh
+```
+
+**Manual setup:**
+
 1. **Clone the repository**
    ```bash
    git clone -b laboratory https://github.com/jacekkszczot/PolicyCraft.git
    cd PolicyCraft
    ```
 
-2. **Create and activate a virtual environment**
+2. **Use the automated setup script (RECOMMENDED)**
+   ```bash
+   chmod +x setup_new_dev.sh
+   ./setup_new_dev.sh
+   ```
+   
+   **OR manually create and activate a virtual environment:**
    ```bash
    # Create a virtual environment
    python -m venv venv
@@ -119,7 +172,7 @@ python -m ensurepip --upgrade
 
 ### Default Admin Account
 
-After running the setup script, you can log in with the following credentials:
+After running the setup script (automated or manual), you can log in with the following credentials:
 
 - **Email:** `admin@policycraft.ai`
 - **Password:** `admin1`
@@ -127,6 +180,15 @@ After running the setup script, you can log in with the following credentials:
 **Important:** For security reasons, please change the default password after your first login.
 
 ### Start the Application
+
+**If you used the automated setup script, MongoDB should already be running and you can skip to step 3.**
+
+**Quick start (after automated setup):**
+```bash
+python app.py
+```
+
+**Manual start:**
 
 1. **Activate the virtual environment** (required every time you open a new terminal):
    ```bash
@@ -162,11 +224,16 @@ After running the setup script, you can log in with the following credentials:
    python app.py
    ```
 
-3. Open your browser and go to: http://localhost:5001
+4. Open your browser and go to: http://localhost:5001
 
 ## Manual Installation Guide
 
-Follow these steps if you prefer manual setup or need custom configuration:
+**Note:** We strongly recommend using the automated setup script above for most users. Follow these steps only if you prefer manual setup or need custom configuration.
+
+**For most users, execute:**
+```bash
+./setup_new_dev.sh
+```
 
 ### 1. Clone the Repository
 
@@ -182,7 +249,15 @@ git clone -b laboratory https://github.com/jacekkszczot/PolicyCraft.git
 cd PolicyCraft
 ```
 
+**After cloning, run the automated setup:**
+```bash
+chmod +x setup_new_dev.sh
+./setup_new_dev.sh
+```
+
 ### 2. Set Up Python Environment
+
+**Skip this step if using automated setup.**
 
 ```bash
 # Create and activate virtual environment
@@ -203,6 +278,8 @@ pip install -r requirements.txt
 
 **Note**: MongoDB is **required** for the application to function. It stores policy analyses, recommendations, literature, and knowledge base data.
 
+**Skip this step if using automated setup - it will handle MongoDB automatically.**
+
 #### macOS (using Homebrew)
 
 **For Apple Silicon (M1/M2):**
@@ -220,6 +297,8 @@ sudo chown -R $(whoami) /opt/homebrew/var/mongodb
 mongod --dbpath /opt/homebrew/var/mongodb --logpath /opt/homebrew/var/log/mongodb/mongo.log --fork
 ```
 
+**Note:** The automated setup script will handle this automatically on macOS.
+
 **For Intel Mac:**
 ```bash
 # Install MongoDB
@@ -229,11 +308,15 @@ brew install mongodb/brew/mongodb-community
 brew services start mongodb/brew/mongodb-community
 ```
 
+**Note:** The automated setup script will handle this automatically on macOS.
+
 **Alternative - Manual start:**
 ```bash
 # Start MongoDB manually
 mongod --config /usr/local/etc/mongod.conf
 ```
+
+**Note:** The automated setup script will handle this automatically on macOS.
 
 #### Linux (Ubuntu/Debian)
 ```bash
@@ -241,7 +324,7 @@ mongod --config /usr/local/etc/mongod.conf
 wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
 
 # Create list file for MongoDB
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -sc)/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu $(lsb_release -sc)/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org/6.0.list
 
 # Update packages and install MongoDB
 sudo apt-get update
@@ -252,17 +335,25 @@ sudo systemctl start mongod
 sudo systemctl enable mongod
 ```
 
+**Note:** The automated setup script will handle this automatically on Linux.
+
 #### Windows
 1. Download the installer from [MongoDB Download Center](https://www.mongodb.com/try/download/community)
 2. Run the installer and follow the setup wizard
 3. MongoDB will be installed as a Windows Service and started automatically
+
+**Note:** The automated setup script will handle this automatically on Windows (WSL2 recommended).
 
 #### Using Docker (all platforms)
 ```bash
 docker run -d -p 27017:27017 --name mongo -v mongo_data:/data/db mongo:7
 ```
 
+**Note:** The automated setup script will handle Docker setup automatically.
+
 ### 4. Configure MongoDB
+
+**Skip this step if using automated setup - it will handle MongoDB automatically.**
 
 #### Automated Setup (Recommended)
 ```bash
@@ -286,7 +377,11 @@ mongod --dbpath ~/mongodb_data --logpath ~/mongodb_logs/mongod.log --fork
 mongosh --eval 'db.runCommand({ connectionStatus: 1 })'
 ```
 
+**Note:** The automated setup script will handle this automatically and is much easier.
+
 ### 5. Install NLP Dependencies
+
+**Skip this step if using automated setup - it will handle NLP dependencies automatically.**
 
 ```bash
 # Install spaCy English model
@@ -306,6 +401,11 @@ print('NLTK resources installed')
 
 ## 5A. Troubleshooting NLTK Installation
 
+**Quick fix - use automated setup:**
+```bash
+./setup_new_dev.sh
+```
+
 If you see warnings such as:
 WARNING: NLTK resource missing: wordnet
 WARNING: NLTK resource missing: punkt
@@ -316,7 +416,7 @@ WARNING: NLTK resource missing: averaged_perceptron_tagger
 …it means the application cannot find the required NLTK datasets.  
 This sometimes happens when `nltk.download()` fails due to network restrictions or permissions.  
 
-Follow these steps to install the resources manually:  
+**For manual installation, follow these steps:**  
 
 ---
 
@@ -324,7 +424,7 @@ Follow these steps to install the resources manually:
 ```bash
 cd path/to/your/application
 
-### Create a new shell script:
+### Create a new shell script (or use the included one):
 nano install_nltk_resources.sh
 
 ### Paste the following content into the file:
@@ -380,14 +480,18 @@ echo "   export NLTK_DATA=\"$NLTK_DIR\""
 ### 3. Make the script executable
 chmod +x install_nltk_resources.sh
 
-###4. Run the script
+### 4. Run the script
 ./install_nltk_resources.sh
+
+**Note:** The automated setup script (`setup_new_dev.sh`) will handle this automatically.
 
 
 ### 6. Configure Application
 
+**Note:** The automated setup script handles this automatically. For manual setup:
+
 ```bash
-# Copy example environment file
+# Copy example environment file (includes all required variables)
 cp .env.example .env
 
 # Generate a secure secret key
@@ -398,6 +502,8 @@ python -c "import secrets; print(f'SECRET_KEY={secrets.token_hex(32)}')" >> .env
 ```
 
 ### 7. Initialise Database
+
+**Note:** The automated setup script handles this automatically. For manual setup:
 
 ```bash
 # Create database tables and indexes
@@ -412,6 +518,8 @@ with app.app_context():
 
 ### 8. Start the Application
 
+**Note:** The automated setup script handles this automatically. For manual setup:
+
 ```bash
 # Run the Flask development server
 python app.py
@@ -420,6 +528,15 @@ python app.py
 The application will be available at: [http://localhost:5001](http://localhost:5001)
 
 ## Troubleshooting
+
+### Quick Fix
+
+**If you're having issues, try the automated setup script first:**
+```bash
+./setup_new_dev.sh
+```
+
+This will automatically fix most common configuration issues.
 
 ### Login Issues
 
@@ -435,10 +552,11 @@ If you cannot log in with the default admin credentials:
    python reset_admin_password.py
    ```
 
-3. **Re-run setup:**
+3. **Re-run automated setup (RECOMMENDED):**
    ```bash
    ./setup_new_dev.sh
    ```
+   This will automatically fix most issues and reconfigure everything.
 
 4. **Check database:**
    ```bash
@@ -457,12 +575,27 @@ If you cannot log in with the default admin credentials:
 
 ### Common Issues
 
+**Most issues can be fixed automatically by running:**
+```bash
+./setup_new_dev.sh
+```
+
+**Manual fixes:**
 - **MongoDB not running**: Start with `brew services start mongodb/brew/mongodb-community`
 - **Database errors**: Remove old database files and re-run setup
 - **Import errors**: Make sure virtual environment is activated
 - **Port conflicts**: Application runs on port 5001, not 5000
+- **Environment variables missing**: Run setup script to auto-configure `.env`
 
 ### MongoDB Issues
+
+**Quick fix - use automated setup:**
+```bash
+./setup_new_dev.sh
+```
+This will automatically start MongoDB (local or Docker) and configure everything.
+
+**Manual fixes:**
 
 **MongoDB service error:**
 ```bash
@@ -490,6 +623,11 @@ sudo chown -R $(whoami) /opt/homebrew/var/mongodb
 mongod --dbpath /opt/homebrew/var/mongodb --logpath /opt/homebrew/var/log/mongodb/mongo.log --fork
 ```
 
+**Or use Docker (easier):**
+```bash
+docker run -d -p 27017:27017 --name mongodb-policycraft mongo:latest
+```
+
 **Check MongoDB logs:**
 ```bash
 # Apple Silicon
@@ -497,6 +635,9 @@ tail -f /opt/homebrew/var/log/mongodb/mongo.log
 
 # Intel Mac
 tail -f /usr/local/var/log/mongodb/mongo.log
+
+# Docker
+docker logs mongodb-policycraft
 ```
 
 ## Configuration
@@ -520,21 +661,49 @@ tail -f /usr/local/var/log/mongodb/mongo.log
   - **Both databases are required** - the application cannot function without either one
 
 * __Environment variables__
-  - The app loads environment variables from `.env` automatically if present. You can copy the sample file and amend as needed:
+  - The app loads environment variables from `.env` automatically if present
+  - **Automated setup**: The `setup_new_dev.sh` script automatically creates and configures `.env` with all required variables
+  - **Manual setup**: Copy the sample file and amend as needed:
   ```bash
   cp .env.example .env
   ```
+  - **Required variables** (automatically set by setup script):
+    - `FEATURE_ADVANCED_ENGINE=true` - enables full functionality
+    - `MONGODB_URI=mongodb://localhost:27017/policycraft` - MongoDB connection
+    - `SECRET_KEY` - automatically generated secure key
 
-* __First run on a new machine__
+* __First run on a new machine (RECOMMENDED)__
+  1. **Use the automated setup script** (recommended for new users):
+     ```bash
+     chmod +x setup_new_dev.sh
+     ./setup_new_dev.sh
+     ```
+     This script will:
+     - Create virtual environment
+     - Install all dependencies
+     - Set up databases automatically
+     - Configure all environment variables
+     - Start MongoDB (local or Docker)
+     - Create admin user
+     - Test the application
+     - Set up databases automatically
+     - Configure all environment variables
+     - Start MongoDB (local or Docker)
+     - Create admin user
+     - Test the application
+
+* __Manual setup (alternative)__
   1. Create and activate a virtual environment
   2. `pip install -r requirements.txt`
   3. **Install and configure MongoDB** (required for application functionality)
-  4. Optionally create `.env` from `.env.example`
+  4. Create `.env` from `.env.example` (includes all required variables)
   5. Start the application: `python app.py` (SQLite DB file and required folders are created automatically)
+
+**Note:** Manual setup requires more configuration and is more error-prone. We strongly recommend using the automated setup script.
 
 ### Environment Variables
 
-Edit the `.env` file to configure:
+**The automated setup script handles this automatically!** For manual configuration, edit the `.env` file:
 
 ```env
 # Application
@@ -555,6 +724,13 @@ MONGODB_URI=mongodb://localhost:27017/policycraft
 ```
 
 ## Development
+
+**For new developers, start with:**
+```bash
+./setup_new_dev.sh
+```
+
+This will set up everything you need for development.
 
 ### Running Tests
 
@@ -591,3 +767,19 @@ isort .
 - [Troubleshooting Guide](docs/troubleshooting_guide.md)
 - [User Manual](docs/user_manual.md)
 - [Model Card](docs/model_card.md)
+
+## Quick Reference
+
+**One-command setup:**
+```bash
+chmod +x setup_new_dev.sh
+./setup_new_dev.sh
+```
+
+**Start application:**
+```bash
+python app.py
+```
+
+**Access:** http://localhost:5001
+**Login:** admin@policycraft.ai / admin1

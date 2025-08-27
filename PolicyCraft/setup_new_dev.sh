@@ -237,8 +237,11 @@ PORT=5001
 # Database Configuration
 SQLALCHEMY_TRACK_MODIFICATIONS=false
 
-# MongoDB Configuration (optional)
+# MongoDB Configuration (required for full functionality)
 MONGODB_URI=mongodb://localhost:27017/policycraft
+
+# Feature Flags (enable full functionality)
+FEATURE_ADVANCED_ENGINE=true
 
 # Default Admin Credentials
 DEFAULT_ADMIN_EMAIL=admin@policycraft.ai
@@ -259,6 +262,42 @@ if ! grep -q "DEFAULT_ADMIN_EMAIL" .env; then
     echo "DEFAULT_ADMIN_EMAIL=admin@policycraft.ai" >> .env
     echo "DEFAULT_ADMIN_PASSWORD=admin1" >> .env
     print_status "Default admin credentials added to .env"
+fi
+
+# Add required environment variables if not already present
+print_info "Checking and adding required environment variables..."
+
+# Add FEATURE_ADVANCED_ENGINE if not present
+if ! grep -q "FEATURE_ADVANCED_ENGINE" .env; then
+    echo "" >> .env
+    echo "# Feature Flags (enable full functionality)" >> .env
+    echo "FEATURE_ADVANCED_ENGINE=true" >> .env
+    print_status "FEATURE_ADVANCED_ENGINE=true added to .env"
+fi
+
+# Add MONGODB_URI if not present
+if ! grep -q "MONGODB_URI" .env; then
+    echo "" >> .env
+    echo "# MongoDB Configuration (required for full functionality)" >> .env
+    echo "MONGODB_URI=mongodb://localhost:27017/policycraft" >> .env
+    print_status "MONGODB_URI added to .env"
+fi
+
+# Add SECRET_KEY if not present
+if ! grep -q "SECRET_KEY=" .env || grep -q "SECRET_KEY=your-secret-key-here" .env; then
+    # Generate a secure random key
+    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))" 2>/dev/null || echo "24054ea12ad3c218bfe4c492b62598b85b893aac596e306a56a18330db2bc85f")
+    
+    # Replace existing SECRET_KEY or add new one
+    if grep -q "SECRET_KEY=" .env; then
+        sed -i.bak "s/SECRET_KEY=.*/SECRET_KEY=$SECRET_KEY/" .env
+        rm -f .env.bak
+    else
+        echo "" >> .env
+        echo "# Security Configuration" >> .env
+        echo "SECRET_KEY=$SECRET_KEY" >> .env
+    fi
+    print_status "Secure SECRET_KEY generated and added to .env"
 fi
 
 # Create logs directory
@@ -365,7 +404,37 @@ else
         echo "  Follow MongoDB installation guide for your system:"
         echo "  https://docs.mongodb.com/manual/installation/"
     fi
-    print_info "You can also use Docker: docker run -d -p 27017:27017 --name mongodb-policycraft mongo:7"
+    
+    # Offer to start MongoDB with Docker
+    print_info "Starting MongoDB with Docker as alternative..."
+    if command -v docker &> /dev/null; then
+        # Check if Docker is running
+        if docker info &> /dev/null; then
+            print_info "Docker is available and running"
+            # Check if MongoDB container already exists
+            if docker ps -a --format "table {{.Names}}" | grep -q "mongodb-policycraft"; then
+                print_info "MongoDB container already exists, starting it..."
+                docker start mongodb-policycraft
+                if docker ps --format "table {{.Names}}" | grep -q "mongodb-policycraft"; then
+                    print_status "MongoDB container started successfully"
+                else
+                    print_warning "Failed to start existing MongoDB container"
+                fi
+            else
+                print_info "Creating new MongoDB container..."
+                docker run -d --name mongodb-policycraft -p 27017:27017 -v mongodb_data:/data/db mongo:latest
+                if docker ps --format "table {{.Names}}" | grep -q "mongodb-policycraft"; then
+                    print_status "MongoDB container created and started successfully"
+                else
+                    print_warning "Failed to create MongoDB container"
+                fi
+            fi
+        else
+            print_warning "Docker is not running. Start Docker Desktop first."
+        fi
+    else
+        print_info "Docker is not installed. You can also use Docker: docker run -d -p 27017:27017 --name mongodb-policycraft mongo:latest"
+    fi
 fi
 
 # Initialize database using the new configuration
@@ -504,6 +573,18 @@ with app.app_context():
         print('ℹ Please check the error above and try again')
         sys.exit(1)
 "
+
+# Test MongoDB connection
+print_info "Testing MongoDB connection..."
+if command -v mongod &> /dev/null && pgrep -x "mongod" > /dev/null; then
+    print_status "MongoDB is running locally"
+elif docker ps --format "table {{.Names}}" | grep -q "mongodb-policycraft"; then
+    print_status "MongoDB is running in Docker"
+else
+    print_warning "MongoDB is not running. Please start it manually:"
+    print_info "  - Local: brew services start mongodb/brew/mongodb-community (macOS)"
+    print_info "  - Docker: docker run -d -p 27017:27017 --name mongodb-policycraft mongo:latest"
+fi
 
 # Test the application
 print_info "Testing application startup..."

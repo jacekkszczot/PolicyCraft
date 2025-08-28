@@ -174,7 +174,7 @@ chmod +x setup_new_dev.sh
 
 After running the setup script (automated or manual), you can log in with the following credentials:
 
-- **Email:** `admin@policycraft.ai`
+- **Email:** `admin or admin@policycraft.ai`
 - **Password:** `admin1`
 
 **Important:** For security reasons, please change the default password after your first login.

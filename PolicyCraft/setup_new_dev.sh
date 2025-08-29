@@ -457,14 +457,14 @@ except ImportError as e:
 
 # Get the current working directory as base path
 BASE_DIR = Path(os.getcwd()).absolute()
-    print(f'INFO: Working directory: {BASE_DIR}')
+print(f'INFO: Working directory: {BASE_DIR}')
 
 # Create secure directories
 try:
     create_secure_directories()
     print('✓ Secure directories created')
 except Exception as e:
-            print(f'WARNING: Error creating secure directories: {e}')
+    print(f'WARNING: Error creating secure directories: {e}')
 
 # Configure database path using the new config structure
 try:
@@ -472,7 +472,7 @@ try:
     DB_URI = config.SQLALCHEMY_DATABASE_URI
     print(f'✓ Database URI from config: {DB_URI}')
 except Exception as e:
-            print(f'WARNING: Error getting config: {e}')
+    print(f'WARNING: Error getting config: {e}')
     # Fallback to default path
     DB_URI = f'sqlite:///{BASE_DIR}/PolicyCraft-Databases/development/policycraft_dev.db'
     print(f'INFO: Using fallback database URI: {DB_URI}')

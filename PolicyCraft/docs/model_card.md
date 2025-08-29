@@ -50,14 +50,14 @@ PolicyCraft is a comprehensive AI policy analysis platform designed for higher e
 
 ### Validation Standards
 - **Verification**: All sources verified through publisher websites with direct links
-- **Academic Rigour**: Peer-reviewed publications prioritised
+- **Academic Rigour**: Peer-reviewed publications prioritized
 - **Citation Transparency**: Clear attribution with doi/url references where available
 - **Update Protocols**: Regular review cycles for maintaining currency
 
 ## Performance Characteristics
 
 ### Classification Accuracy
-- **Policy Categorisation**: Hybrid approach achieving consistent classification across policy types
+- **Policy Categorization**: Hybrid approach achieving consistent classification across policy types
 - **Confidence Assessment**: Multi-factor scoring providing transparency about reliability
 - **Theme Extraction**: Semantic analysis identifying key policy dimensions with confidence weighting
 - **Quality Control**: Document processing with automated quality thresholds and manual review options
@@ -74,7 +74,7 @@ PolicyCraft is a comprehensive AI policy analysis platform designed for higher e
 - **Export Consistency**: Professional formatting across PDF, Word, and Excel outputs
 - **Citation Integration**: Automatic linking between recommendations and supporting sources
 - **Visualisation Accuracy**: Interactive charts with proper data representation and JSON conversion
-- **Chart Generation**: Reliable Plotly-based visualisations with automatic error handling
+- **Chart Generation**: Reliable Plotly-based visualizations with automatic error handling
 
 ## Intended Use Cases
 
@@ -99,7 +99,7 @@ PolicyCraft is a comprehensive AI policy analysis platform designed for higher e
 ## Limitations & Constraints
 
 ### Language & Context
-- **Primary Language**: Optimised for formal academic English (British and American variants)
+- **Primary Language**: Optimized for formal academic English (British and American variants)
 - **Cultural Context**: Training data predominantly represents Western higher education frameworks
 - **Domain Specificity**: Focused on higher education AI policies rather than broader policy domains
 - **Temporal Scope**: Contemporary focus (2018-2025) may not capture historical policy evolution

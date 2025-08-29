@@ -17,7 +17,7 @@ Below is the canonical list of peer-reviewed and institutional sources that grou
 | 3 | Chan, C.K.Y., & Hu, W. (2023). *Students' voices on generative AI: Perceptions, benefits and challenges in higher education*. | [DOI](https://www.tandfonline.com/doi/full/10.1080/17439884.2020.1798995) | Complete | Comprehensive synthesis of LLM opportunities & risks informing our policy taxonomy. | 96% |
 | 4 | An, Y., Yu, J.H., & James, S. (2025). *Investigating the higher education institutions' guidelines and policies regarding the use of generative AI in teaching, learning, research and administration*. | [DOI](https://link.springer.com/articles/10.1186/s41239-023-00436-z) | Complete | Meta-review of 66 systematic reviews highlighting AI ethics gaps our system addresses. | 66% |
 | 5 | BERA Ethical Guidelines for Educational Research (2018). *Fourth Edition*. | [Link](https://www.bera.ac.uk/publication/ethical-guidelines-for-educational-research-2018) | Complete | Baseline ethical framework for our coverage assessment and recommendation engine. | 95% |
-| 6 | Chan, C.K.Y. (2023). *A comprehensive AI policy education framework for university teaching and learning*. | [DOI](https://link.springer.com/articles/10.1186/s41239-023-00398-2) | Complete | Comprehensive AI policy framework informing our policy categorisation and assessment metrics. | 87% |
+| 6 | Chan, C.K.Y. (2023). *A comprehensive AI policy education framework for university teaching and learning*. | [DOI](https://link.springer.com/articles/10.1186/s41239-023-00398-2) | Complete | Comprehensive AI policy framework informing our policy categorization and assessment metrics. | 87% |
 | 7 | Dabis, A., & Csaki, C. (2024). *AI and ethics: Investigating the first policy responses of higher education institutions to the challenge of generative AI*. | [DOI](https://link.springer.com/articles/10.1186/s41239-023-00411-8) | Complete | Student perspective research informing user experience and accessibility design. | 70% |
 | 8 | Historical Threads, Missing Links and Future Directions in AI in Education (2020). *Special Issue*. | [DOI](https://www.nature.com/articles/s41599-024-03526-z) | Complete | Empirical analysis of 30 leading universities' policy responses, providing our ethical framework foundation. | 69% |
 | 9 | European Union (2024). *Regulation (EU) 2024/1689 laying down harmonised rules on artificial intelligence (AI Act)*. | [Link](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689) | Complete | First comprehensive AI legal framework worldwide, providing regulatory context for institutional AI policy development. | 66% |
@@ -56,9 +56,9 @@ Below is the canonical list of peer-reviewed and institutional sources that grou
 
 ## Access Information
 
-- 🟢 **Open Access**: 14 sources are freely accessible
-- 🟡 **Institutional Access**: 3 sources may require university library access
-- ✅ **All links verified**: Direct access tested (August 2025)
+- **Open Access**: 14 sources are freely accessible
+- **Institutional Access**: 3 sources may require university library access
+- **All links verified**: Direct access tested (August 2025)
 
 ## Coverage Areas
 
@@ -92,12 +92,12 @@ Below is the canonical list of peer-reviewed and institutional sources that grou
 
 ## Verification Status
 
-✅ All 17 references verified through publisher websites  
-✅ Direct links to full articles provided where available  
-✅ Quality scores based on actual knowledge base assessment  
-✅ No fabricated or placeholder citations  
-✅ Academic integrity maintained throughout the system  
-✅ All sources currently active in PolicyCraft knowledge base
+**All 17 references verified through publisher websites**  
+**Direct links to full articles provided where available**  
+**Quality scores based on actual knowledge base assessment**  
+**No fabricated or placeholder citations**  
+**Academic integrity maintained throughout the system**  
+**All sources currently active in PolicyCraft knowledge base**
 
 ---
 *This reference list reflects all academic sources currently integrated into the PolicyCraft knowledge base as of August 2025. Regular updates ensure alignment between cited sources and system capabilities.*

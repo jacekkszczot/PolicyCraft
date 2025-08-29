@@ -299,9 +299,7 @@ docker run -d -p 27017:27017 --name mongodb-policycraft mongo:latest
 
 ## Documentation
 
-- [API Documentation](docs/API.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Deployment Guide](docs/DEPLOYMENT.md)
-- [Troubleshooting Guide](docs/troubleshooting_guide.md)
-- [User Manual](docs/user_manual.md)
+- [Architecture](docs/architecture.md)
+- [Ethics](docs/ethics.md)
 - [Model Card](docs/model_card.md)
+- [WCAG Checklist](docs/wcag_checklist.md)

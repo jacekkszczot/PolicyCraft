@@ -25,12 +25,12 @@ PolicyCraft demonstrates strong commitment to digital accessibility, achieving 9
 |-----------|--------|----------------|-------|
 | 1.1.1 Non-text Content | Complete | Alt text for all images, icons, and charts | Plotly charts include descriptive titles |
 | Image Context | Complete | Decorative images marked appropriately | Empty alt="" for decorative elements |
-| Chart Accessibility | Complete | Data tables provided alongside visualisations | Export includes tabular data |
+| Chart Accessibility | Complete | Data tables provided alongside visualizations | Export includes tabular data |
 
 ### 1.2 Time-based Media
 | Guideline | Status | Implementation | Notes |
 |-----------|--------|----------------|-------|
-| 1.2.1 Audio/Video | 🟡 Not Applicable | No audio or video content present | Static platform with text-based interface |
+| 1.2.1 Audio/Video | Not Applicable | No audio or video content present | Static platform with text-based interface |
 
 ### 1.3 Adaptable Content
 
@@ -177,7 +177,7 @@ PolicyCraft demonstrates strong commitment to digital accessibility, achieving 9
 **Issue**: Complex chart data needs enhanced alternative access
 - **Current State**: Basic alt text provided for chart images
 - **Enhancement Needed**: Detailed data table alternatives
-- **Proposed Solution**: Expandable data table view for all visualisations
+- **Proposed Solution**: Expandable data table view for all visualizations
 - **Implementation**: Additional table generation in chart export functions
 
 ## Accessibility Features Implemented

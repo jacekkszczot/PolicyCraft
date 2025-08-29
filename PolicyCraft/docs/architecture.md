@@ -72,7 +72,7 @@ graph TD
 ### 1. Web Application Layer
 - **Frontend Framework**: Responsive HTML5/CSS3 with progressive enhancement
 - **Template Engine**: Jinja2 with custom filters for policy formatting
-- **Client-Side Enhancement**: Vanilla JavaScript with Plotly.js for visualisations
+- **Client-Side Enhancement**: Vanilla JavaScript with Plotly.js for visualizations
 - **Accessibility Compliance**: WCAG 2.2 AA standards throughout interface
 - **Responsive Design**: Mobile-first approach supporting all device types
 
@@ -92,7 +92,7 @@ graph TD
 
 ### 4. Advanced Analysis Engine
 - **NLP Pipeline**: Multi-stage processing using spaCy and custom models
-- **Policy Classification**: Hybrid rule-based and ML approach for categorisation
+- **Policy Classification**: Hybrid rule-based and ML approach for categorization
 - **Theme Extraction**: Semantic analysis identifying key policy dimensions
 - **Confidence Metrics**: Multi-factor assessment of analysis reliability
 - **Contextual Analysis**: Integration with academic literature for enhanced insights
@@ -104,7 +104,7 @@ graph TD
 - **Version Control**: Systematic updates and maintenance protocols
 
 ### 6. Visualisation & Export Engine
-- **Interactive Charts**: Plotly-based visualisations for policy analysis
+- **Interactive Charts**: Plotly-based visualizations for policy analysis
 - **Chart Generation**: Automated creation of themes, classification, and distribution charts
 - **Export Formats**: Professional PDF, Word, and Excel reports
 - **Data Integration**: Seamless connection between analysis results and visual outputs
@@ -113,7 +113,7 @@ graph TD
 - **Dual Database Architecture**: SQLite for user management, MongoDB for analysis data
 - **MongoDB Integration**: Robust document storage with graceful connection handling
 - **Error Resilience**: Automatic fallback when MongoDB is unavailable
-- **Data Validation**: Comprehensive input validation and sanitisation
+- **Data Validation**: Comprehensive input validation and sanitization
 
 ## Data Architecture
 
@@ -140,7 +140,7 @@ graph TD
 - **Retention Policies**: Configurable data lifecycle management
 
 ### System Security
-- **Input Validation**: Comprehensive sanitisation of all user inputs
+- **Input Validation**: Comprehensive sanitization of all user inputs
 - **CSRF Protection**: Token-based protection for state-changing operations
 - **Session Management**: Secure cookie configuration with appropriate expiration
 - **Dependency Management**: Regular security updates and vulnerability scanning
@@ -155,7 +155,7 @@ graph TD
 
 ### Optimisation Strategies
 - **Caching Systems**: Strategic caching of expensive NLP operations
-- **Database Indexing**: Optimised queries for common access patterns
+- **Database Indexing**: Optimized queries for common access patterns
 - **Lazy Loading**: Progressive enhancement for improved perceived performance
 - **Resource Management**: Efficient memory usage during document processing
 

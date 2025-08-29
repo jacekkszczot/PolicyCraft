@@ -21,7 +21,7 @@ PolicyCraft's development and deployment adheres to the British Educational Rese
 - **Research Standards**: Compliance with university research ethics requirements
 
 ### Knowledge Base Integrity
-- **Quality Control**: Peer-reviewed sources prioritised (Quality scores: 66-97%)
+- **Quality Control**: Peer-reviewed sources prioritized (Quality scores: 66-97%)
 - **Version Management**: Comprehensive tracking of literature updates and modifications  
 - **Bias Documentation**: Transparent reporting of knowledge base composition and limitations
 - **Update Protocols**: Regular review cycles for maintaining currency of academic sources

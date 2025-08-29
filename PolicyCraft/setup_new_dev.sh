@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # PolicyCraft Development Setup Script
-# ===================================
 # This script sets up the PolicyCraft development environment
 # Compatible with: macOS, Linux, Windows (WSL2)
 
@@ -437,8 +436,8 @@ else
     fi
 fi
 
-# Initialize database using the new configuration
-print_info "Initializing database with new configuration..."
+# Initialise database using the new configuration
+print_info "Initialising database with new configuration..."
 python -c "
 import os, sys
 from pathlib import Path
@@ -491,9 +490,9 @@ app.config.update(
 try:
     from src.database.models import db, User
     db.init_app(app)
-    print('✓ SQLAlchemy initialized')
+    print('✓ SQLAlchemy initialised')
 except Exception as e:
-    print(f'✗ Error initializing SQLAlchemy: {e}')
+    print(f'✗ Error initialising SQLAlchemy: {e}')
     print('Please check that all dependencies are installed correctly')
     sys.exit(1)
 
@@ -563,11 +562,11 @@ with app.app_context():
             print(f'SQLALCHEMY_DATABASE_URI={DB_URI}')
             print('SQLALCHEMY_TRACK_MODIFICATIONS=False')
             
-        print('✓ Database initialized successfully')
+        print('✓ Database initialised successfully')
         
     except Exception as e:
         import traceback
-        print('✗ Error during database initialization:')
+        print('✗ Error during database initialisation:')
         print(traceback.format_exc())
         print(f'ℹ Current working directory: {os.getcwd()}')
         print('ℹ Please check the error above and try again')

@@ -540,7 +540,7 @@ def validate_dependencies():
             warnings.append(f"WARNING:  {description}: {package} - {str(e)}")
     
     # Critical NLP models and data
-    print("\n🧠 NLP Models and Data Validation")
+    print("\nNLP Models and Data Validation")
     print("-" * 30)
     
     # spaCy model validation
@@ -579,7 +579,7 @@ def validate_dependencies():
         warnings.append(f"WARNING:  NLTK validation failed: {str(e)}")
     
     # Recommendation Engine validation
-    print("\n🎯 Recommendation Engine Validation")
+    print("\nRecommendation Engine Validation")
     print("-" * 30)
     
     try:

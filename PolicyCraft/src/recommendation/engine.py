@@ -1943,7 +1943,7 @@ class RecommendationEngine:
           <ul>
             {risks_html}
           </ul>
-          <p><em>Notes on evidence and compliance mapping.</em> Human oversight aligns with EU AI Act Art. 14; transparency obligations align with Art. 52. UNESCO (2021/2023) emphasises governance and inclusion; BERA (2018) frames ethical practice in assessment. Citations: {cite_inline}.</p>
+          <p><em>Notes on evidence and compliance mapping.</em> Human oversight aligns with EU AI Act Art. 14; transparency obligations align with Art. 52. UNESCO (2021/2023) emphasises governance and inclusion; BERA (2018) frames ethical practice in assessment.</p>
 
         </div>
         """

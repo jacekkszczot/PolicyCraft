@@ -303,3 +303,8 @@ docker run -d -p 27017:27017 --name mongodb-policycraft mongo:latest
 - [Ethics](docs/ethics.md)
 - [Model Card](docs/model_card.md)
 - [WCAG Checklist](docs/wcag_checklist.md)
+
+AI Usage Statement
+This project used generative AI tools such as ChatGPT and Claude during the development phase for brainstorming, planning, feedback, and editing. Adobe Stock AI was used to generate application interface images.
+* Note: While AI tools were used during development, screenshots and conversation logs were not preserved at the time.  
+* This transparency statement is being added retrospectively to ensure compliance with academic requirements.

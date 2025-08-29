@@ -98,25 +98,22 @@ graph TD
 - **Contextual Analysis**: Integration with academic literature for enhanced insights
 
 ### 5. Knowledge Base Management
-- **Literature Repository**: Curated collection of 17+ peer-reviewed sources
-- **Citation Integration**: Automatic reference validation and linking
-- **Version Control**: Comprehensive tracking of knowledge base updates
-- **Quality Assessment**: Scoring system for source reliability and relevance
-- **Backup & Recovery**: Automated preservation of knowledge base state
+- **Literature Repository**: Curated academic sources with quality validation
+- **Citation Management**: Automated reference tracking and verification
+- **Knowledge Integration**: Seamless connection between policies and research
+- **Version Control**: Systematic updates and maintenance protocols
 
-### 6. Recommendation Generation System
-- **Multi-dimensional Analysis**: Stakeholder perspectives and implementation timelines
-- **Evidence-based Suggestions**: Grounded in academic literature and best practices
-- **Contextual Recommendations**: Tailored to specific policy types and institutions
-- **Impact Assessment**: Urgency-feasibility-impact matrix for prioritisation
-- **Implementation Guidance**: Pilot programmes and evaluation frameworks
+### 6. Visualisation & Export Engine
+- **Interactive Charts**: Plotly-based visualisations for policy analysis
+- **Chart Generation**: Automated creation of themes, classification, and distribution charts
+- **Export Formats**: Professional PDF, Word, and Excel reports
+- **Data Integration**: Seamless connection between analysis results and visual outputs
 
-### 7. Export & Reporting Infrastructure
-- **PDF Generation**: Professional reports using ReportLab with custom styling
-- **Word Documents**: Native .docx export with proper formatting and tables
-- **Excel Workbooks**: Multi-sheet data exports with embedded analytics
-- **Interactive Charts**: Plotly-powered visualisations with export capabilities
-- **Consistent Branding**: Unified design across all export formats
+### 7. Data Persistence & Management
+- **Dual Database Architecture**: SQLite for user management, MongoDB for analysis data
+- **MongoDB Integration**: Robust document storage with graceful connection handling
+- **Error Resilience**: Automatic fallback when MongoDB is unavailable
+- **Data Validation**: Comprehensive input validation and sanitisation
 
 ## Data Architecture
 
@@ -181,6 +178,20 @@ graph TD
 - **Version Control**: Pinned versions ensuring reproducible deployments
 - **Security Updates**: Regular dependency auditing and update procedures
 - **Documentation**: Clear installation and setup procedures
+
+## Technical Implementation Details
+
+### MongoDB Integration
+- **Connection Management**: Automatic connection testing with timeout handling
+- **Graceful Degradation**: Application continues functioning when MongoDB is unavailable
+- **Collection Safety**: Proper handling of PyMongo Collection objects (no boolean testing)
+- **Connection Status**: Real-time monitoring of database availability
+
+### Chart Generation System
+- **Plotly Integration**: Native Plotly Figure objects for optimal performance
+- **Automatic Conversion**: JSON serialization for web display and export
+- **Error Handling**: Robust fallback when chart generation fails
+- **Template Integration**: Seamless rendering in Jinja2 templates
 
 ---
 

@@ -126,7 +126,7 @@ class ChartGenerator:
             
         return charts
 
-    def _create_themes_bar_chart(self, themes: List[Dict]) -> str:
+    def _create_themes_bar_chart(self, themes: List[Dict]):
         """Create horizontal bar chart for themes."""
         if not themes:
             return ""
@@ -161,14 +161,14 @@ class ChartGenerator:
             height=420,
             showlegend=False,
             margin={'l': 100, 'r': 40, 't': 10, 'b': 40},
-            yaxis={'automargin': True, 'ticklabelposition': 'outside', 'ticklabelstandoff': 8},
+            yaxis={'automargin': True, 'ticklabelposition': 'outside', 'ticklabelstep': 1},
             xaxis={'automargin': True},
             **{k: v for k, v in self.default_layout.items() if k not in ('margin', 'showlegend')}
         )
         
-        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+        return fig
 
-    def _create_classification_gauge(self, classification: Dict) -> str:
+    def _create_classification_gauge(self, classification: Dict):
         """Create gauge chart for classification confidence."""
         confidence = classification.get('confidence', 0)
         class_type = classification.get('classification', 'Unknown')
@@ -198,9 +198,9 @@ class ChartGenerator:
         
         fig.update_layout(height=320, showlegend=False, margin={'l': 20, 'r': 20, 't': 10, 'b': 20},
                           **{k: v for k, v in self.default_layout.items() if k not in ('margin', 'showlegend')})
-        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+        return fig
 
-    def _create_themes_pie_chart(self, themes: List[Dict]) -> str:
+    def _create_themes_pie_chart(self, themes: List[Dict]):
         """Create pie chart for theme distribution."""
         if not themes:
             return ""
@@ -222,9 +222,9 @@ class ChartGenerator:
         
         fig.update_layout(height=420, margin={'l': 20, 'r': 20, 't': 10, 'b': 20},
                           **{k: v for k, v in self.default_layout.items() if k != 'margin'})
-        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+        return fig
 
-    def _create_classification_distribution(self, analyses: List[Dict]) -> str:
+    def _create_classification_distribution(self, analyses: List[Dict]):
         """Create distribution chart of classifications."""
         classifications = []
         for analysis in analyses:
@@ -262,9 +262,9 @@ class ChartGenerator:
             **self.default_layout
         )
         
-        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+        return fig
 
-    def _create_theme_frequency_chart(self, analyses: List[Dict]) -> str:
+    def _create_theme_frequency_chart(self, analyses: List[Dict]):
         """Create chart showing most frequent themes across analyses."""
         all_themes = []
         for analysis in analyses:
@@ -295,9 +295,9 @@ class ChartGenerator:
             **{k: v for k, v in self.default_layout.items() if k not in ('margin', 'showlegend')}
         )
         
-        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+        return fig
 
-    def _create_ethics_radar_chart(self, text: str) -> str:
+    def _create_ethics_radar_chart(self, text: str):
         """Create radar chart showing ethical dimension coverage."""
         if not text:
             return ""
@@ -333,7 +333,7 @@ class ChartGenerator:
                           margin={'l': 120, 'r': 90, 't': 10, 'b': 70},
                           legend={'orientation': 'h', 'x': 0.5, 'xanchor': 'center', 'y': -0.05},
                           **{k: v for k, v in self.default_layout.items() if k not in ('margin',)})
-        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+        return fig
 
     def _generate_fallback_charts(self, themes: List[Dict], classification: Dict) -> Dict:
         """Generate fallback chart data when Plotly is not available."""

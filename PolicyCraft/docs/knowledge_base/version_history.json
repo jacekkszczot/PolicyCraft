@@ -347,7 +347,7 @@
     "action": "new_document_created",
     "filename": "document_chatgpt_for_good_on_opportunities_and_challenges_o_2023_20250817_142012_kasneci_e._sessler_k._kuchemann_s._et_al._2023._chatgpt_for_good_on_opportunities_and_challenges_of_large_language_models_for_education._b37f6db6.md",
     "backup_id": "20250817_233307",
-    "quality_score": 0.66,
+    "quality_score": 66.0,
     "insights_count": 15,
     "metadata": {
       "title": "ChatGPT for good? On opportunities and challenges of large language models for education",
@@ -378,5 +378,29 @@
       "publication_date": "2023-01-01",
       "display_name": "ChatGPT for good? On opportunities and challenges of large language models for education (20250817_142012_Kasneci_E._Sessler_K._Kuchemann_S._et_al._2023._ChatGPT_for_good_On_opportunities_and_challenges_of_large_language_models_for_education._b37f6db6)"
     }
+  },
+  {
+    "timestamp": "2025-08-29T01:53:12.259473",
+    "action": "backup_restore",
+    "backup_id": "20250829_015231",
+    "current_backup_id": "20250829_015312",
+    "restored_files": [
+      "document_students_voices_on_generative_ai_perceptions_benef_2023_20250816_230613_chan_c._k._y.__hu_w._2023._students_voices_on_generative_ai-_perceptions_benefits_and_challenges_in_higher_education.__c8575ea0.md",
+      "document_generative_ai_-_a_primer_2024_20250817_141210_generative-ai-primer-aug-2024_32eac838.md",
+      "document_generative_artificial_intelligence_ai_in_higher_ed_2024_20250817_142311_michal_bobula_5bc4c3fa.md",
+      "document_a_comprehensive_ai_policy_education_framework_for__2023_20250817_135816_chan_c.k.y._2023._a_comprehensive_ai_policy_education_framework_for_university_teaching_and_learning_67876173.md",
+      "document_chatgpt_and_artificial_intelligence_in_higher_educ_2023_20250817_142838_unesco._2023._chatgpt_and_artificial_intelligence_in_higher_education-_quick_start_guide_074a345a.md",
+      "document_historical_threads_missing_links_and_future_direct_2020_20250817_141540_historical_threads_missing_links_and_future_directions_in_ai_in_education_5c44b710.md",
+      "document_ai_and_education_guidance_for_policy-makers_2030_20250817_142133_miao_f._holmes_w._huang_r.__zhang_h._2021._ai_and_education-_guidance_for_policy-makers_2ae15f64.md",
+      "document_chatgpt_for_good_on_opportunities_and_challenges_o_2023_20250817_142012_kasneci_e._sessler_k._kuchemann_s._et_al._2023._chatgpt_for_good_on_opportunities_and_challenges_of_large_language_models_for_education._b37f6db6.md",
+      "document_regulation_eu_20241689_laying_down_harmonised_rule_2024_20250817_140200_european_union_2024._regulation_eu_20241689_laying_down_harmonised_rules_on_artificial_intelligence_ai_act_afc8c38d.md",
+      "document_higher_education_act_for_ai_heat-ai_a_framework_to_2025_20250817_142449_temper_m._tjoa_s.__david_l._2025._higher_education_act_for_ai_heat-ai-_a_framework_to_regulate_the_usage_of_ai_in_higher_education_institutions_19b06b0e.md",
+      "document_a_meta_systematic_review_of_artificial_2024_20250817_144722_bond_m._khosravi_h._de_laat_m._et_al._2024._a_meta_systematic_review_of_artificial_intelligence_in_higher_education-_a_call_for_increased_ethics_collaboration_and_rigour_57b13f9b.md",
+      "document_ai_and_ethics_investigating_the_first_policy_respo_2024_20250816_230921_dabis_a.__csaki_c._2024._ai_and_ethics-_investigating_the_first_policy_responses_of_higher_education_institutions_to_the_challenge_of_generative_ai_58a9523e.md",
+      "document_navigating_the_ethical_terrain_of_ai_in_higher_edu_2024_20250817_134857_barnes_e.__hutson_j._2024._navigating_the_ethical_terrain_of_ai_in_higher_education-_strategies_for_mitigating_bias_and_promoting_fairness._7d255e15.md",
+      "document_ethical_guidelines_for_educational_research_2018_20250817_135029_bera_ethical_guidelines_for_educational_research_fourth_edition_2018_b14b64bc.md",
+      "document_investigating_the_hi_2024_20250817_134713_an_y._yu_j.h.__james_s._2025._investigating_the_higher_education_institutions_guidelines_and_policies_regarding_the_use_of_generative_ai_in_teaching_learning_research_and_administration.__ae2eb6c3.md"
+    ],
+    "errors": []
   }
 ]

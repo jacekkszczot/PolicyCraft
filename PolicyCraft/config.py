@@ -69,6 +69,9 @@ class Config:
     APP_VERSION = "1.0.0"
     DEBUG = os.environ.get('FLASK_DEBUG', 'false').lower() in ('true', '1', 't')
     TESTING = False
+    
+    # Flask-WTF configuration
+    WTF_CSRF_ENABLED = os.environ.get('WTF_CSRF_ENABLED', 'false').lower() in ('true', '1', 't')
 
     # API Keys (if any)
     # Example: OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')

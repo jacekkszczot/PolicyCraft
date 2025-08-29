@@ -19,7 +19,7 @@ print_status() {
 }
 
 print_warning() {
-    echo -e "${YELLOW}WARNING${NC} $1"
+    echo -e "${YELLOW}⚠${NC} $1"
 }
 
 print_error() {
@@ -27,11 +27,10 @@ print_error() {
 }
 
 print_info() {
-    echo -e "${BLUE}INFO${NC} $1"
+    echo -e "${BLUE}ℹ${NC} $1"
 }
 
 echo "PolicyCraft Development Setup"
-echo "=============================="
 
 # Check if running as root (not recommended)
 if [[ $EUID -eq 0 ]]; then
@@ -218,7 +217,7 @@ try:
     nltk.download('averaged_perceptron_tagger', quiet=True)
     print('✓ NLTK data downloaded successfully')
 except Exception as e:
-    print(f'WARNING: NLTK download failed: {e}')
+    print(f'⚠ NLTK download failed: {e}')
     print('Will try during runtime')
 "
 
@@ -437,7 +436,7 @@ else
 fi
 
 # Initialise database using the new configuration
-print_info "Initialising database with new configuration..."
+print_info "Initializing database with new configuration..."
 python -c "
 import os, sys
 from pathlib import Path
@@ -457,14 +456,14 @@ except ImportError as e:
 
 # Get the current working directory as base path
 BASE_DIR = Path(os.getcwd()).absolute()
-print(f'INFO: Working directory: {BASE_DIR}')
+print(f'ℹ Working directory: {BASE_DIR}')
 
 # Create secure directories
 try:
     create_secure_directories()
     print('✓ Secure directories created')
 except Exception as e:
-    print(f'WARNING: Error creating secure directories: {e}')
+    print(f'⚠ Warning creating secure directories: {e}')
 
 # Configure database path using the new config structure
 try:
@@ -472,10 +471,10 @@ try:
     DB_URI = config.SQLALCHEMY_DATABASE_URI
     print(f'✓ Database URI from config: {DB_URI}')
 except Exception as e:
-    print(f'WARNING: Error getting config: {e}')
+    print(f'⚠ Error getting config: {e}')
     # Fallback to default path
     DB_URI = f'sqlite:///{BASE_DIR}/PolicyCraft-Databases/development/policycraft_dev.db'
-    print(f'INFO: Using fallback database URI: {DB_URI}')
+    print(f'ℹ Using fallback database URI: {DB_URI}')
 
 # Create and configure the Flask application
 app = Flask(__name__)
@@ -490,9 +489,9 @@ app.config.update(
 try:
     from src.database.models import db, User
     db.init_app(app)
-    print('✓ SQLAlchemy initialised')
+    print('✓ SQLAlchemy initialized')
 except Exception as e:
-    print(f'✗ Error initialising SQLAlchemy: {e}')
+    print(f'✗ Error initializing SQLAlchemy: {e}')
     print('Please check that all dependencies are installed correctly')
     sys.exit(1)
 
@@ -500,17 +499,17 @@ except Exception as e:
 with app.app_context():
     try:
         # Drop all tables first to ensure clean slate
-        print('INFO: Dropping existing tables...')
+        print('ℹ Dropping existing tables...')
         db.drop_all()
         print('✓ Existing tables dropped')
         
         # Create tables with new model
-        print('INFO: Creating database tables...')
+        print('ℹ Creating database tables...')
         db.create_all()
         print('✓ Database tables created')
         
         # Create admin user
-        print('INFO: Creating admin user...')
+        print('ℹ Creating admin user...')
         admin = User(
             username='admin',
             email='admin@policycraft.ai',
@@ -554,22 +553,22 @@ with app.app_context():
             # Set proper permissions
             env_path.chmod(0o600)  # Only owner can read/write
             print('✓ Database configuration updated in .env')
-            print(f'INFO: Database URI: {DB_URI}')
+            print(f'ℹ Database URI: {DB_URI}')
             
         except Exception as e:
-            print(f'WARNING: Could not update .env: {e}')
+            print(f'⚠ Could not update .env: {e}')
             print(f'Please manually add to your .env file:')
             print(f'SQLALCHEMY_DATABASE_URI={DB_URI}')
             print('SQLALCHEMY_TRACK_MODIFICATIONS=False')
             
-        print('✓ Database initialised successfully')
+        print('✓ Database initialized successfully')
         
     except Exception as e:
         import traceback
-        print('✗ Error during database initialisation:')
+        print('✗ Error during database initialization:')
         print(traceback.format_exc())
-            print(f'INFO: Current working directory: {os.getcwd()}')
-    print('INFO: Please check the error above and try again')
+        print(f'ℹ Current working directory: {os.getcwd()}')
+        print('ℹ Please check the error above and try again')
         sys.exit(1)
 "
 
@@ -606,14 +605,13 @@ fi
 
 echo ""
 echo ""
-echo "========================================"
-echo "Setup complete!"
+echo " Setup complete!"
 echo ""
-echo "Admin access:"
+echo " Admin access:"
 echo "   - Email: admin@policycraft.ai"
 echo "   - Password: admin1"
 echo ""
-echo "Next steps:"
+echo " Next steps:"
 echo "1. Ensure MongoDB is running:"
 if [[ "$OSTYPE" == "darwin"* ]]; then
     echo "   brew services start mongodb/brew/mongodb-community"
@@ -627,23 +625,22 @@ echo "3. Access the application at: http://localhost:5001"
 echo "4. Log in with admin credentials above"
 echo "5. Change the default admin password after first login"
 echo ""
-echo "SECURITY WARNING: Change the default admin password immediately!"
+echo "  SECURITY WARNING: Change the default admin password immediately!"
 echo ""
-echo "Note: This setup uses the new dual-database configuration:"
+echo "  Note: This setup uses the new dual-database configuration:"
 echo "   - SQLite: User accounts and basic data"
 echo "   - MongoDB: Policy analyses, recommendations, and knowledge base"
 echo ""
-echo "If you have login issues:"
+echo " If you have login issues:"
 echo "   - Make sure MongoDB is running"
 echo "   - Check that the database was created successfully"
 echo "   - Verify admin user exists in the database"
 echo "   - Check the logs directory for error messages"
 echo ""
-echo "Alternative MongoDB setup (Docker):"
+echo " Alternative MongoDB setup (Docker):"
 echo "   docker run -d -p 27017:27017 --name mongodb-policycraft mongo:7"
 echo "   docker logs mongodb-policycraft"
 echo ""
-echo "For more help, see:"
+echo " For more help, see:"
 echo "   - docs/troubleshooting_guide.md"
 echo "   - README.md"
-echo "========================================"

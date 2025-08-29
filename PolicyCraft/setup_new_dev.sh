@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # PolicyCraft Development Setup Script
-# ===================================
 # This script sets up the PolicyCraft development environment
 # Compatible with: macOS, Linux, Windows (WSL2)
 
@@ -32,7 +31,6 @@ print_info() {
 }
 
 echo "PolicyCraft Development Setup"
-echo "=============================="
 
 # Check if running as root (not recommended)
 if [[ $EUID -eq 0 ]]; then
@@ -607,14 +605,13 @@ fi
 
 echo ""
 echo ""
-echo "========================================"
-echo "🎉 Setup complete!"
+echo " Setup complete!"
 echo ""
-echo "🔐 Admin access:"
+echo " Admin access:"
 echo "   - Email: admin@policycraft.ai"
 echo "   - Password: admin1"
 echo ""
-echo "📋 Next steps:"
+echo " Next steps:"
 echo "1. Ensure MongoDB is running:"
 if [[ "$OSTYPE" == "darwin"* ]]; then
     echo "   brew services start mongodb/brew/mongodb-community"
@@ -628,23 +625,22 @@ echo "3. Access the application at: http://localhost:5001"
 echo "4. Log in with admin credentials above"
 echo "5. Change the default admin password after first login"
 echo ""
-echo "⚠️  SECURITY WARNING: Change the default admin password immediately!"
+echo "  SECURITY WARNING: Change the default admin password immediately!"
 echo ""
-echo "ℹ️  Note: This setup uses the new dual-database configuration:"
+echo "  Note: This setup uses the new dual-database configuration:"
 echo "   - SQLite: User accounts and basic data"
 echo "   - MongoDB: Policy analyses, recommendations, and knowledge base"
 echo ""
-echo "🔧 If you have login issues:"
+echo " If you have login issues:"
 echo "   - Make sure MongoDB is running"
 echo "   - Check that the database was created successfully"
 echo "   - Verify admin user exists in the database"
 echo "   - Check the logs directory for error messages"
 echo ""
-echo "🐳 Alternative MongoDB setup (Docker):"
+echo " Alternative MongoDB setup (Docker):"
 echo "   docker run -d -p 27017:27017 --name mongodb-policycraft mongo:7"
 echo "   docker logs mongodb-policycraft"
 echo ""
-echo "📚 For more help, see:"
+echo " For more help, see:"
 echo "   - docs/troubleshooting_guide.md"
 echo "   - README.md"
-echo "========================================"

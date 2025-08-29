@@ -218,7 +218,7 @@ try:
     nltk.download('averaged_perceptron_tagger', quiet=True)
     print('✓ NLTK data downloaded successfully')
 except Exception as e:
-            print(f'WARNING: NLTK download failed: {e}')
+    print(f'WARNING: NLTK download failed: {e}')
     print('Will try during runtime')
 "
 

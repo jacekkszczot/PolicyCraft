@@ -1,0 +1,69 @@
+# PolicyCraft - Windows Specific Dependencies
+# This file contains dependencies optimized for Windows (WSL2) environment
+
+# Web Framework & Core
+Flask==3.0.0
+Werkzeug==3.0.1
+Jinja2==3.1.2
+itsdangerous==2.1.2
+click==8.1.7
+MarkupSafe==2.1.3
+
+# Authentication & Security
+Flask-Login==0.6.3
+Flask-WTF==1.2.1
+WTForms==3.1.1
+email-validator==2.1.0.post1
+Flask-Session==0.8.0
+
+# Database
+pymongo==4.6.1
+python-dotenv==1.0.0
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.23
+pymongo[srv]==4.6.1
+
+# Data Processing
+pandas==2.1.3
+numpy==1.26.2
+python-dateutil==2.8.2
+pytz==2023.3.post1
+
+# Natural Language Processing
+spacy==3.7.2
+scikit-learn==1.3.2
+nltk==3.8.1
+contractions==0.1.73
+
+# Use a smaller English model for Windows to save space and improve performance
+# Install with: python -m spacy download en_core_web_sm
+
+# Document Processing
+pypdf==4.0.0
+python-docx==1.0.1
+python-magic-bin==0.4.14; platform_system=='Windows'
+python-magic==0.4.27; platform_system!='Windows'
+
+# Data Visualization
+plotly==5.18.0
+kaleido==0.2.1
+
+# Windows-specific optimizations
+pywin32==306; platform_system=='Windows'
+wmi==1.5.1; platform_system=='Windows'
+
+# Utilities
+python-slugify==8.0.1
+tqdm==4.66.1
+requests==2.31.0
+beautifulsoup4==4.12.2
+lxml==5.0.0
+
+# Development tools (optional)
+pytest==8.0.0
+pytest-cov==4.1.0
+black==23.11.0
+flake8==6.1.0
+
+# Fix for Windows file system watcher
+watchdog==3.0.0
